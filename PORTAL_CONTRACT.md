@@ -22,6 +22,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - `GET /api/session` → `{ owner, tenant, permissions }`
 - `GET /api/customers` and `POST /api/customers` → list or create tenant-owned customer profiles
 - `GET /api/customers/:id` → return one tenant-scoped customer profile with related jobs, assets, estimates, invoices, plans, and activities
+- `POST /api/customers/:id/locations` → add a tenant-scoped service address to a customer profile
 - `GET /api/dashboard?range=week` → `{ metrics, pipeline, tasks, schedule, activity }`
 - `GET /api/reports/overview` → tenant-scoped funnel, scheduling, cash, recurring-revenue, and touchpoint metrics
 - `GET /api/team` → tenant-scoped technician roster with derived availability and active-job counts used for assignment validation

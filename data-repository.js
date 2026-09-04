@@ -151,6 +151,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async createLocation(customerId, label, address) {
+    if (!this.remote) throw new Error('API required for locations');
+    const response = await fetch(`/api/customers/${encodeURIComponent(customerId)}/locations`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ label, address }) });
+    if (!response.ok) throw new Error('location creation failed');
+    return response.json();
+  }
+
   async createJob(customerId, service, time) {
     if (!this.remote) throw new Error('API required for job creation');
     const response = await fetch('/api/jobs', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ customerId, service, time }) });
