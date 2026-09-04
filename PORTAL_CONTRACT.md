@@ -48,7 +48,7 @@ System events such as web-form lead capture, customer estimate approval, and rec
 - `POST /api/estimates` → create a draft estimate
 - `POST /api/estimates/:id/approve` → approve a tenant-owned estimate
 - `POST /api/invoices` → create an invoice only from an approved estimate
-- `POST /api/invoices/:id/pay` → record payment against a tenant-owned invoice
+- `POST /api/invoices/:id/pay` → record a full or partial tenant-owned invoice payment with method/reference; returns updated balance and payment ledger entry
 
 ## Data model starting point
 
