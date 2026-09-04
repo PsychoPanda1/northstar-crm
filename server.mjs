@@ -80,7 +80,7 @@ const sendStatic = (req, res) => {
   const relative = requested === '/' ? 'index.html' : requested.replace(/^\/+/, '');
   const file = normalize(join(ROOT, relative));
   if (!file.startsWith(ROOT + sep) || !existsSync(file) || !statSync(file).isFile()) return json(res, 404, { error: 'not_found' });
-  res.writeHead(200, { 'content-type': MIME[extname(file)] || 'application/octet-stream' }); createReadStream(file).pipe(res);
+  res.writeHead(200, { 'content-type': MIME[extname(file)] || 'application/octet-stream', 'cache-control': 'no-store' }); createReadStream(file).pipe(res);
 };
 
 const server = createServer(async (req, res) => {
