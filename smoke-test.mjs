@@ -8,6 +8,7 @@ const base = `http://127.0.0.1:${port}`;
 const tempDir = mkdtempSync(join(tmpdir(), 'northstar-smoke-'));
 const dataFile = join(tempDir, 'state.json');
 const server = spawn(process.execPath, ['server.mjs'], { cwd: new URL('.', import.meta.url), env: { ...process.env, PORT: String(port), NORTHSTAR_DATA_FILE: dataFile, NORTHSTAR_ALLOWED_ORIGINS: 'https://plumbing.example' }, stdio: 'ignore' });
+let restartedServer;
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 const request = async (path, options = {}) => { const response = await fetch(`${base}${path}`, options); const body = await response.json().catch(() => ({})); return { response, body }; };
 const jsonOptions = (method, body, token) => ({ method, headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify(body) });
@@ -139,5 +140,10 @@ try {
   const logout = await request('/api/auth/logout', jsonOptions('POST', {}, token));
   const revoked = await request('/api/session', { headers: { authorization: `Bearer ${token}` } });
   assert(logout.response.ok && revoked.response.status === 401, 'logout revocation failed');
-  console.log('Northstar smoke test passed: intake, conversion, quote-to-cash, isolation, logout');
-} finally { server.kill(); rmSync(tempDir, { recursive: true, force: true }); }
+  server.kill(); await new Promise((resolve) => setTimeout(resolve, 100));
+  restartedServer = spawn(process.execPath, ['server.mjs'], { cwd: new URL('.', import.meta.url), env: { ...process.env, PORT: String(port), NORTHSTAR_DATA_FILE: dataFile, NORTHSTAR_ALLOWED_ORIGINS: 'https://plumbing.example' }, stdio: 'ignore' });
+  for (let attempt = 0; attempt < 40; attempt += 1) { try { if ((await fetch(`${base}/api/health`)).ok) break; } catch {} await new Promise((resolve) => setTimeout(resolve, 50)); if (attempt === 39) throw new Error('server did not restart'); }
+  const revokedAfterRestart = await request('/api/session', { headers: { authorization: `Bearer ${token}` } });
+  assert(revokedAfterRestart.response.status === 401, 'logout revocation did not survive restart');
+  console.log('Northstar smoke test passed: intake, conversion, quote-to-cash, isolation, logout, restart revocation');
+} finally { server.kill(); restartedServer?.kill(); rmSync(tempDir, { recursive: true, force: true }); }

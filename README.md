@@ -32,6 +32,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Job profitability workspace combining material cost, logged labor, revenue, and gross margin
 - Labor entries feed customer timelines and job-cost reporting
 - Structured SMS/email message queue with explicit provider-pending status and timeline capture
+- Durable session revocation survives API restarts in the local adapter
 - New landing-page leads appear in the owner action queue for immediate follow-up
 - Landing-page retries can use an idempotency key to prevent duplicate leads
 - Owners can acknowledge active notifications while preserving the source record
@@ -72,4 +73,4 @@ Available local API routes include `GET /api/health`, `POST /api/auth/demo-login
 
 ## Next product slices
 
-The next implementation layer should replace demo auth with a real identity provider, add full customer/location/assets profiles, drag-and-drop dispatch, technician mobile workflows, payment-provider integration, and durable audit storage. The local API now includes server-enforced demo role permissions for owner, dispatcher, technician, and accountant workflows; production identity claims should map to the same permission names.
+The next implementation layer should replace demo auth with a real identity provider, add full customer/location/assets profiles, drag-and-drop dispatch, payment-provider webhooks, and durable audit storage. The local API includes server-enforced demo role permissions and restart-safe session revocation; production identity claims and revocation events should map to the same boundaries.
