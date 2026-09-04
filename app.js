@@ -26,3 +26,6 @@ document.querySelector('#workspace-switcher').addEventListener('click', () => lo
 document.querySelector('#owner-account').addEventListener('click', () => loginDialog.showModal());
 document.querySelector('#close-login').addEventListener('click', () => loginDialog.close());
 document.querySelector('#demo-login').addEventListener('click', () => { loginDialog.close(); showToast(`Demo session active for ${tenant.businessName}.`); });
+document.querySelectorAll('[data-action]').forEach((button) => {
+  button.addEventListener('click', () => showToast(`${button.dataset.action} workspace ready to configure.`));
+});
