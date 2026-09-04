@@ -27,6 +27,8 @@ Then visit http://localhost:4173.
 
 To preview a service-specific tenant, use `http://localhost:4173/?service=plumbing`, `powerwashing`, `electrician`, or `carwash`.
 
+Run `node smoke-test.mjs` to launch an isolated temporary server and verify public intake, lead conversion, quote-to-cash, tenant isolation, and session revocation together. `npm run test:smoke` is also available when npm is configured.
+
 See [PORTAL_CONTRACT.md](PORTAL_CONTRACT.md) before adding authentication, APIs, or landing-page integrations.
 
 See [COMPETITIVE_RESEARCH.md](COMPETITIVE_RESEARCH.md) for the current ServiceTitan, Jobber, Housecall Pro, and FieldEdge benchmark and Northstar build order.

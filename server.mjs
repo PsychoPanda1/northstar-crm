@@ -7,7 +7,7 @@ import { createServer } from 'node:http';
 const ROOT = fileURLToPath(new URL('.', import.meta.url)).replace(/[\\/]$/, '');
 const PORT = Number(process.env.PORT || 4173);
 const SECRET = process.env.NORTHSTAR_SESSION_SECRET || 'northstar-local-demo-secret-change-me';
-const DATA_FILE = join(ROOT, '.northstar-data.json');
+const DATA_FILE = process.env.NORTHSTAR_DATA_FILE || join(ROOT, '.northstar-data.json');
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.md': 'text/markdown; charset=utf-8' };
 
 const tenants = {
