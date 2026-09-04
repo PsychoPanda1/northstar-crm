@@ -47,8 +47,11 @@ try {
   const techView = await request(`/api/public/technician-job${techUrl.search}`);
   const techEnRoute = await request(`/api/public/technician-job/status${techUrl.search}`, jsonOptions('POST', { status: 'En route' }));
   const techStarted = await request(`/api/public/technician-job/status${techUrl.search}`, jsonOptions('POST', { status: 'In progress' }));
+  const checklistBeforeComplete = await request(`/api/public/technician-job${techUrl.search}`);
+  const techIncomplete = await request(`/api/public/technician-job/complete${techUrl.search}`, jsonOptions('POST', { note: 'Attempted early completion.' }));
+  for (let index = 0; index < checklistBeforeComplete.body.checklist.length; index += 1) await request(`/api/public/technician-job/checklist${techUrl.search}`, jsonOptions('POST', { index, completed: true }));
   const techComplete = await request(`/api/public/technician-job/complete${techUrl.search}`, jsonOptions('POST', { note: 'Inspected fittings and documented follow-up recommendations.' }));
-  assert(techLink.response.ok && techView.body.technician === 'Alex Rivera' && techEnRoute.body.status === 'En route' && techStarted.body.status === 'In progress' && techComplete.body.status === 'Completed', 'technician mobile workflow failed');
+  assert(techLink.response.ok && techView.body.technician === 'Alex Rivera' && checklistBeforeComplete.body.checklist.length === 3 && techEnRoute.body.status === 'En route' && techStarted.body.status === 'In progress' && techIncomplete.response.status === 409 && techIncomplete.body.error === 'checklist_incomplete' && techComplete.body.status === 'Completed', 'technician mobile workflow failed');
   const customerLink = await request(`/api/jobs/${fieldJob.body.id}/customer-link`, jsonOptions('POST', {}, token));
   const customerUrl = new URL(customerLink.body.url, base);
   const customerPortal = await request(`/api/public/customer-portal${customerUrl.search}`);
