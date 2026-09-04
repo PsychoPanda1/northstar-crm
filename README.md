@@ -23,6 +23,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Server-side technician conflict detection for assignment and rescheduling
 - Service-plan renewal can schedule the next recurring visit and records the renewal event
 - Invoice payments support partial collection, remaining balances, payment methods, and references
+- Dispatch assignment, status changes, and rescheduling are recorded in the customer timeline
 
 ## Run locally
 
