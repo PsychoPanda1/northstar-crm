@@ -7,7 +7,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - `tenant-config.js` contains presentation-only configurations for plumbing, power washing, electrical, mobile car wash, and a home-services default.
 - `app.js` applies the selected tenant name, service label, accent, and dashboard focus line.
 - The owner sign-in dialog is intentionally a demo boundary. It does not collect, transmit, or validate credentials.
-- `server.mjs` provides a dependency-free local API with signed demo sessions and tenant-scoped dashboard/task/action routes.
+- `server.mjs` provides a dependency-free local API with signed demo sessions, tenant-scoped record routes, and restart-safe development persistence.
 
 ## Production boundary
 

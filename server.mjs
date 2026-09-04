@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { createReadStream, existsSync, readFileSync, statSync } from 'node:fs';
+import { createReadStream, existsSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs';
 import { extname, join, normalize, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createServer } from 'node:http';
@@ -7,6 +7,7 @@ import { createServer } from 'node:http';
 const ROOT = fileURLToPath(new URL('.', import.meta.url)).replace(/[\\/]$/, '');
 const PORT = Number(process.env.PORT || 4173);
 const SECRET = process.env.NORTHSTAR_SESSION_SECRET || 'northstar-local-demo-secret-change-me';
+const DATA_FILE = join(ROOT, '.northstar-data.json');
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.md': 'text/markdown; charset=utf-8' };
 
 const tenants = {
@@ -17,7 +18,10 @@ const tenants = {
   'harbor-shine': { slug: 'harbor-shine', businessName: 'Harbor Shine Mobile', serviceLabel: 'Mobile car wash' }
 };
 const owners = { jordan: { id: 'owner_jordan', name: 'Jordan Smith', role: 'owner', tenantId: 'johnson-service-co' } };
-const state = new Map(Object.keys(tenants).map((tenantId) => [tenantId, { completedTasks: [], lastAction: null, leads: [], jobs: [] }]));
+const blankState = () => ({ completedTasks: [], lastAction: null, leads: [], jobs: [] });
+const persisted = existsSync(DATA_FILE) ? JSON.parse(readFileSync(DATA_FILE, 'utf8')) : {};
+const state = new Map(Object.keys(tenants).map((tenantId) => [tenantId, { ...blankState(), ...(persisted[tenantId] || {}) }]));
+const persist = () => { const snapshot = Object.fromEntries(state); writeFileSync(`${DATA_FILE}.tmp`, JSON.stringify(snapshot, null, 2)); renameSync(`${DATA_FILE}.tmp`, DATA_FILE); };
 
 const json = (res, status, body) => { res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' }); res.end(JSON.stringify(body)); };
 const readBody = async (req) => { let body = ''; for await (const chunk of req) body += chunk; return body ? JSON.parse(body) : {}; };
@@ -67,11 +71,11 @@ const server = createServer(async (req, res) => {
     if (req.url === '/api/dashboard' && req.method === 'GET') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); return json(res, 200, dashboardFor(claims.tenantId)); }
     const recordsMatch = req.url.match(/^\/api\/(customers|leads|estimates|invoices|dispatch)(?:\?search=([^&]*))?$/);
     if (recordsMatch && req.method === 'GET') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); return json(res, 200, { items: recordsFor(claims.tenantId, recordsMatch[1], decodeURIComponent(recordsMatch[2] || '')), tenantId: claims.tenantId }); }
-    if (req.url === '/api/leads' && req.method === 'POST') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); const body = await readBody(req); if (!body.name || !body.source) return json(res, 422, { error: 'name_and_source_required' }); const lead = { id: `${claims.tenantId}_lead_${Date.now()}`, tenantId: claims.tenantId, name: String(body.name).slice(0, 100), service: String(body.service || tenants[claims.tenantId].serviceLabel).slice(0, 80), source: String(body.source).slice(0, 80), age: 'Just now', value: '$0' }; state.get(claims.tenantId).leads.unshift(lead); return json(res, 201, lead); }
-    if (req.url === '/api/jobs' && req.method === 'POST') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); const body = await readBody(req); if (!body.customerId || !body.time) return json(res, 422, { error: 'customer_and_time_required' }); const job = { id: `${claims.tenantId}_job_${Date.now()}`, tenantId: claims.tenantId, customerId: String(body.customerId), service: String(body.service || tenants[claims.tenantId].serviceLabel), technician: null, status: 'Unassigned', time: String(body.time) }; state.get(claims.tenantId).jobs.unshift(job); return json(res, 201, job); }
+    if (req.url === '/api/leads' && req.method === 'POST') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); const body = await readBody(req); if (!body.name || !body.source) return json(res, 422, { error: 'name_and_source_required' }); const lead = { id: `${claims.tenantId}_lead_${Date.now()}`, tenantId: claims.tenantId, name: String(body.name).slice(0, 100), service: String(body.service || tenants[claims.tenantId].serviceLabel).slice(0, 80), source: String(body.source).slice(0, 80), age: 'Just now', value: '$0' }; state.get(claims.tenantId).leads.unshift(lead); persist(); return json(res, 201, lead); }
+    if (req.url === '/api/jobs' && req.method === 'POST') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); const body = await readBody(req); if (!body.customerId || !body.time) return json(res, 422, { error: 'customer_and_time_required' }); const job = { id: `${claims.tenantId}_job_${Date.now()}`, tenantId: claims.tenantId, customerId: String(body.customerId), service: String(body.service || tenants[claims.tenantId].serviceLabel), technician: null, status: 'Unassigned', time: String(body.time) }; state.get(claims.tenantId).jobs.unshift(job); persist(); return json(res, 201, job); }
     const taskMatch = req.url.match(/^\/api\/tasks\/(\d+)$/);
-    if (taskMatch && req.method === 'POST') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); const body = await readBody(req); const index = Number(taskMatch[1]); const saved = state.get(claims.tenantId); saved.completedTasks = saved.completedTasks.filter((item) => item !== index); if (body.completed) saved.completedTasks.push(index); return json(res, 200, { completedTasks: saved.completedTasks }); }
-    if (req.url === '/api/actions' && req.method === 'POST') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); const body = await readBody(req); state.get(claims.tenantId).lastAction = { action: String(body.action || '').slice(0, 80), at: new Date().toISOString() }; return json(res, 201, { ok: true }); }
+    if (taskMatch && req.method === 'POST') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); const body = await readBody(req); const index = Number(taskMatch[1]); const saved = state.get(claims.tenantId); saved.completedTasks = saved.completedTasks.filter((item) => item !== index); if (body.completed) saved.completedTasks.push(index); persist(); return json(res, 200, { completedTasks: saved.completedTasks }); }
+    if (req.url === '/api/actions' && req.method === 'POST') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); const body = await readBody(req); state.get(claims.tenantId).lastAction = { action: String(body.action || '').slice(0, 80), at: new Date().toISOString() }; persist(); return json(res, 201, { ok: true }); }
     if (req.method === 'GET') return sendStatic(req, res);
     return json(res, 405, { error: 'method_not_allowed' });
   } catch (error) { console.error(error); return json(res, 400, { error: 'bad_request' }); }
