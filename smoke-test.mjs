@@ -44,6 +44,11 @@ try {
   const techStarted = await request(`/api/public/technician-job/status${techUrl.search}`, jsonOptions('POST', { status: 'In progress' }));
   const techComplete = await request(`/api/public/technician-job/complete${techUrl.search}`, jsonOptions('POST', { note: 'Inspected fittings and documented follow-up recommendations.' }));
   assert(techLink.response.ok && techView.body.technician === 'Alex Rivera' && techEnRoute.body.status === 'En route' && techStarted.body.status === 'In progress' && techComplete.body.status === 'Completed', 'technician mobile workflow failed');
+  const guardJob = await request('/api/jobs', jsonOptions('POST', { customerId: converted.body.customer.id, service: 'Capacity check', time: 'Next Monday 10:00 AM' }, token));
+  await request(`/api/jobs/${guardJob.body.id}/assign`, jsonOptions('POST', { technician: 'Alex Rivera' }, token));
+  const conflictJob = await request('/api/jobs', jsonOptions('POST', { customerId: converted.body.customer.id, service: 'Same-time service', time: 'Next Monday 10:00 AM' }, token));
+  const conflictAssign = await request(`/api/jobs/${conflictJob.body.id}/assign`, jsonOptions('POST', { technician: 'Alex Rivera' }, token));
+  assert(conflictAssign.response.status === 409 && conflictAssign.body.error === 'technician_schedule_conflict', 'technician conflict protection failed');
   const estimate = await request('/api/estimates', jsonOptions('POST', { customer: 'Smoke Customer', service: 'Leak repair', amount: 425 }, token));
   const publicEstimate = await request(`/api/public/estimate?token=${encodeURIComponent(estimate.body.estimateApprovalToken)}`);
   const approved = await request(`/api/public/estimate/approve?token=${encodeURIComponent(estimate.body.estimateApprovalToken)}`, jsonOptions('POST', {}));
