@@ -20,8 +20,11 @@ Object.entries(dashboard.actions).forEach(([key, value]) => {
 const toast = document.querySelector('#toast');
 const loginDialog = document.querySelector('#login-dialog');
 const showToast = (message) => { toast.textContent = message; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 2800); };
-document.querySelector('#new-job').addEventListener('click', () => {
-  showToast('New job workspace ready to configure.');
+document.querySelector('#new-job').addEventListener('click', async () => {
+  const customerId = window.prompt('Customer name or ID'); if (!customerId) return;
+  const service = window.prompt('Service', tenant.serviceLabel); if (!service) return;
+  const time = window.prompt('Schedule time', 'Tomorrow 9:00 AM'); if (!time) return;
+  try { await repository.createJob(customerId, service, time); showToast('Job scheduled.'); openRecords('dispatch'); } catch { showToast('Could not schedule job.'); }
 });
 document.querySelectorAll('.task-list input').forEach((input, taskIndex) => {
   input.checked = dashboard.completedTasks.includes(taskIndex);
