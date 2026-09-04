@@ -45,7 +45,12 @@ const authenticate = (req) => {
 const dashboardFor = (tenantId) => {
   const base = { 'johnson-service-co': ['$84,290', '184', '32', '$42,680', '4.9', '$52,100', 9, '$12,480', 7, '$3,940', 14], 'clearwater-plumbing': ['$61,840', '142', '21', '$28,460', '4.8', '$38,720', 6, '$9,180', 4, '$2,860', 11], 'lowcountry-wash-co': ['$47,290', '216', '18', '$16,940', '4.9', '$22,180', 5, '$4,920', 8, '$2,140', 19], 'palmetto-electric': ['$93,480', '118', '27', '$64,820', '4.9', '$71,440', 8, '$19,320', 3, '$5,280', 8], 'harbor-shine': ['$39,620', '284', '16', '$12,740', '5.0', '$18,650', 4, '$3,180', 5, '$1,420', 26] }[tenantId];
   const saved = state.get(tenantId);
-  return { tenant: tenants[tenantId], metrics: { revenue: base[0], jobs: base[1], estimates: base[2], estimateValue: base[3], satisfaction: base[4], pipeline: base[5] }, actions: { estimates: base[6], estimateValue: base[7], invoices: base[8], invoiceValue: base[9], renewals: base[10] }, completedTasks: saved.completedTasks, lastAction: saved.lastAction };
+  const amount = (value) => Number(String(value || '').replace(/[^\d.-]/g, '')) || 0;
+  const money = (value) => `$${Math.round(value).toLocaleString('en-US')}`;
+  const paid = saved.invoices.filter((item) => item.status === 'Paid').reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const estimateValue = saved.estimates.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const dueValue = saved.invoices.filter((item) => item.status !== 'Paid').reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  return { tenant: tenants[tenantId], metrics: { revenue: money(amount(base[0]) + paid), jobs: String(Number(base[1]) + saved.jobs.length), estimates: String(Number(base[2]) + saved.estimates.length), estimateValue: money(amount(base[3]) + estimateValue), satisfaction: base[4], pipeline: money(amount(base[5]) + estimateValue) }, actions: { estimates: base[6] + saved.estimates.filter((item) => item.status !== 'Accepted').length, estimateValue: money(amount(base[7]) + estimateValue), invoices: base[8] + saved.invoices.filter((item) => item.status !== 'Paid').length, invoiceValue: money(amount(base[9]) + dueValue), renewals: base[10] + saved.plans.filter((item) => item.status === 'Renewing soon').length }, completedTasks: saved.completedTasks, lastAction: saved.lastAction };
 };
 const reportsFor = (tenantId) => {
   const saved = state.get(tenantId);
