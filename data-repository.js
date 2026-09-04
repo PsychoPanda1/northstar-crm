@@ -77,4 +77,11 @@ class NorthstarDemoRepository {
     if (!response.ok) throw new Error('lead conversion failed');
     return response.json();
   }
+
+  async createCustomer(name, phone, location) {
+    if (!this.remote) throw new Error('API required for customer creation');
+    const response = await fetch('/api/customers', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ name, phone, location }) });
+    if (!response.ok) throw new Error('customer creation failed');
+    return response.json();
+  }
 }

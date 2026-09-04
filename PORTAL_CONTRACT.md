@@ -19,6 +19,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 ## Recommended API shape
 
 - `GET /api/session` → `{ owner, tenant, permissions }`
+- `GET /api/customers` and `POST /api/customers` → list or create tenant-owned customer profiles
 - `GET /api/dashboard?range=week` → `{ metrics, pipeline, tasks, schedule, activity }`
 - `POST /api/jobs` → create a job after server-side tenant and role checks
 - `POST /api/leads/:id/convert` → convert a tenant-owned lead into a scheduled job while preserving lead attribution
