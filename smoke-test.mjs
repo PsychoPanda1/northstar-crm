@@ -20,7 +20,9 @@ try {
   const token = login.body.token;
   const leadList = await request('/api/leads?search=Smoke%20Lead', { headers: { authorization: `Bearer ${token}` } });
   const leadNotifications = await request('/api/notifications?search=Smoke%20Lead', { headers: { authorization: `Bearer ${token}` } });
-  assert(leadList.body.items.length === 1 && leadNotifications.body.items.length === 1 && leadNotifications.body.items[0].title === 'New lead needs follow-up', 'owner cannot see captured lead');
+  const notificationRead = await request(`/api/notifications/${leadNotifications.body.items[0].id}/read`, jsonOptions('POST', {}, token));
+  const readNotifications = await request('/api/notifications?search=Smoke%20Lead', { headers: { authorization: `Bearer ${token}` } });
+  assert(leadList.body.items.length === 1 && leadNotifications.body.items.length === 1 && leadNotifications.body.items[0].title === 'New lead needs follow-up' && notificationRead.body.read === true && readNotifications.body.items[0].read === true, 'owner cannot see captured lead');
   const converted = await request(`/api/leads/${leadList.body.items[0].id}/convert`, jsonOptions('POST', { time: 'Tomorrow 9:00 AM' }, token));
   const convertedCustomer = await request('/api/customers?search=Smoke%20Lead', { headers: { authorization: `Bearer ${token}` } });
   const publicStatus = await request(`/api/public/job-status?token=${encodeURIComponent(converted.body.customerPortalToken)}`);

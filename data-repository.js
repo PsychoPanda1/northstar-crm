@@ -59,6 +59,13 @@ class NorthstarDemoRepository {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
+  async markNotificationRead(id) {
+    if (!this.remote) throw new Error('API required for notification state');
+    const response = await fetch(`/api/notifications/${encodeURIComponent(id)}/read`, { method: 'POST', headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('notification update failed');
+    return response.json();
+  }
+
   completeTask(taskIndex, completed) {
     const completedTasks = new Set(this.state.completedTasks || []);
     completed ? completedTasks.add(taskIndex) : completedTasks.delete(taskIndex);

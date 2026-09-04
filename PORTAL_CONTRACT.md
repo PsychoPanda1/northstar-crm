@@ -29,6 +29,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - `GET /api/catalog` → tenant-scoped service catalog for consistent estimates and landing-page vocabulary
 - `GET /api/assets` and `POST /api/assets` → tenant-scoped customer equipment records for repeat service context
 - `GET /api/notifications` → tenant-scoped action queue for new leads, unassigned jobs, unpaid invoices, and approaching renewals
+- `POST /api/notifications/:id/read` → acknowledge a currently active tenant notification without deleting its source record
 - `GET /api/reviews` → tenant-scoped completed-job ratings and comments
 - `GET /api/export?type=customers|leads|estimates|invoices|plans|activities|dispatch|assets` → tenant-scoped CSV export for owner reporting and accounting handoff
 - `POST /api/jobs` → create a job after server-side tenant and role checks
