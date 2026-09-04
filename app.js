@@ -39,7 +39,7 @@ document.querySelectorAll('nav a').forEach((link) => {
   link.addEventListener('click', (event) => {
     document.querySelector('nav a.active').classList.remove('active');
     link.classList.add('active');
-    if (link.dataset.view) { event.preventDefault(); openRecords(link.dataset.view); }
+    if (link.dataset.view) { event.preventDefault(); if (link.dataset.view === 'reports') document.querySelector('#report-view').click(); else openRecords(link.dataset.view); }
   });
 });
 document.querySelector('#workspace-switcher').addEventListener('click', () => loginDialog.showModal());
