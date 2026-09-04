@@ -70,4 +70,11 @@ class NorthstarDemoRepository {
     if (!response.ok) throw new Error('activity logging failed');
     return response.json();
   }
+
+  async convertLead(id, time) {
+    if (!this.remote) throw new Error('API required for lead conversion');
+    const response = await fetch(`/api/leads/${encodeURIComponent(id)}/convert`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ time }) });
+    if (!response.ok) throw new Error('lead conversion failed');
+    return response.json();
+  }
 }
