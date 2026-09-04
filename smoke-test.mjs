@@ -22,7 +22,8 @@ try {
   assert(leadList.body.items.length === 1, 'owner cannot see captured lead');
   const converted = await request(`/api/leads/${leadList.body.items[0].id}/convert`, jsonOptions('POST', { time: 'Tomorrow 9:00 AM' }, token));
   const convertedCustomer = await request('/api/customers?search=Smoke%20Lead', { headers: { authorization: `Bearer ${token}` } });
-  assert(converted.response.status === 201 && converted.body.job.leadId === leadList.body.items[0].id && converted.body.job.customerId === converted.body.customer.id && convertedCustomer.body.items.length === 1, 'lead conversion failed');
+  const publicStatus = await request(`/api/public/job-status?token=${encodeURIComponent(converted.body.customerPortalToken)}`);
+  assert(converted.response.status === 201 && converted.body.job.leadId === leadList.body.items[0].id && converted.body.job.customerId === converted.body.customer.id && convertedCustomer.body.items.length === 1 && publicStatus.body.status === 'Unassigned', 'lead conversion failed');
   const estimate = await request('/api/estimates', jsonOptions('POST', { customer: 'Smoke Customer', service: 'Leak repair', amount: 425 }, token));
   const approved = await request(`/api/estimates/${estimate.body.id}/approve`, jsonOptions('POST', {}, token));
   const invoice = await request('/api/invoices', jsonOptions('POST', { estimateId: estimate.body.id }, token));
