@@ -33,6 +33,15 @@ try {
   const assets = await request('/api/assets?search=TS-42', { headers: { authorization: `Bearer ${token}` } });
   const assetExport = await fetch(`${base}/api/export?type=assets`, { headers: { authorization: `Bearer ${token}` } });
   assert(asset.response.status === 201 && assets.body.items.length === 1 && assets.body.items[0].customer === 'Smoke Lead' && (await assetExport.text()).includes('TS-42'), 'customer asset workflow failed');
+  const fieldJob = await request('/api/jobs', jsonOptions('POST', { customerId: converted.body.customer.id, service: 'Follow-up inspection', time: 'Friday 2:00 PM' }, token));
+  await request(`/api/jobs/${fieldJob.body.id}/assign`, jsonOptions('POST', { technician: 'Alex Rivera' }, token));
+  const techLink = await request(`/api/jobs/${fieldJob.body.id}/technician-link`, jsonOptions('POST', {}, token));
+  const techUrl = new URL(techLink.body.url, base);
+  const techView = await request(`/api/public/technician-job${techUrl.search}`);
+  const techEnRoute = await request(`/api/public/technician-job/status${techUrl.search}`, jsonOptions('POST', { status: 'En route' }));
+  const techStarted = await request(`/api/public/technician-job/status${techUrl.search}`, jsonOptions('POST', { status: 'In progress' }));
+  const techComplete = await request(`/api/public/technician-job/complete${techUrl.search}`, jsonOptions('POST', { note: 'Inspected fittings and documented follow-up recommendations.' }));
+  assert(techLink.response.ok && techView.body.technician === 'Alex Rivera' && techEnRoute.body.status === 'En route' && techStarted.body.status === 'In progress' && techComplete.body.status === 'Completed', 'technician mobile workflow failed');
   const estimate = await request('/api/estimates', jsonOptions('POST', { customer: 'Smoke Customer', service: 'Leak repair', amount: 425 }, token));
   const publicEstimate = await request(`/api/public/estimate?token=${encodeURIComponent(estimate.body.estimateApprovalToken)}`);
   const approved = await request(`/api/public/estimate/approve?token=${encodeURIComponent(estimate.body.estimateApprovalToken)}`, jsonOptions('POST', {}));

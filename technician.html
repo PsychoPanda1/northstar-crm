@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Northstar Field Job</title>
+  <style>
+    :root{font-family:Inter,system-ui,sans-serif;color:#183044;background:#f4f8f7}body{margin:0;padding:24px}.card{max-width:520px;margin:4vh auto;background:#fff;border:1px solid #dfe8e6;border-radius:18px;padding:24px;box-shadow:0 18px 45px #18304414}h1{font-size:25px;margin:8px 0}.eyebrow{font-size:11px;letter-spacing:1.5px;font-weight:800;color:#2c9d73}.meta{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:22px 0}.meta div{background:#f3f8f6;border-radius:10px;padding:13px}.label{display:block;color:#78908b;font-size:11px;margin-bottom:5px}.value{font-weight:700}.status{display:inline-block;border-radius:999px;padding:7px 11px;background:#e8f5ef;color:#25835e;font-size:12px;font-weight:800}button{width:100%;border:0;border-radius:10px;padding:14px;margin-top:10px;font:inherit;font-weight:800;cursor:pointer;background:#2c9d73;color:#fff}button.secondary{background:#eaf2ef;color:#237b5b}button:disabled{opacity:.5;cursor:wait}textarea{width:100%;box-sizing:border-box;border:1px solid #d8e4e0;border-radius:10px;padding:12px;font:inherit;min-height:90px;margin-top:14px}#message{font-size:13px;color:#6d7c84;min-height:20px;margin-top:14px}
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="eyebrow">NORTHSTAR FIELD WORKSPACE</div>
+    <h1 id="service">Loading job…</h1>
+    <span class="status" id="status">Loading</span>
+    <section class="meta"><div><span class="label">Customer</span><span class="value" id="customer">—</span></div><div><span class="label">Appointment</span><span class="value" id="time">—</span></div><div><span class="label">Technician</span><span class="value" id="technician">—</span></div></section>
+    <button class="secondary" id="en-route">Mark en route</button>
+    <button class="secondary" id="in-progress">Start work</button>
+    <textarea id="note" placeholder="Required completion note: work performed, customer handoff, or follow-up needed."></textarea>
+    <button id="complete">Complete job</button>
+    <div id="message"></div>
+  </main>
+  <script>
+    const token = new URLSearchParams(location.search).get('token');
+    const api = (path, options = {}) => fetch(`${path}?token=${encodeURIComponent(token || '')}`, { ...options, headers: { 'content-type': 'application/json', ...(options.headers || {}) } });
+    const set = (id, value) => { document.querySelector(`#${id}`).textContent = value || '—'; };
+    const message = (value) => { document.querySelector('#message').textContent = value; };
+    async function load() { if (!token) { message('This technician link is missing.'); return; } const response = await api('/api/public/technician-job'); if (!response.ok) { message('This job link is invalid or expired.'); return; } const job = await response.json(); set('service', job.service); set('customer', job.customer); set('time', job.time); set('technician', job.technician); set('status', job.status); document.querySelector('#en-route').disabled = ['En route','In progress','Completed','Canceled'].includes(job.status); document.querySelector('#in-progress').disabled = ['In progress','Completed','Canceled'].includes(job.status); document.querySelector('#complete').disabled = ['Completed','Canceled'].includes(job.status); if (job.completionNote) document.querySelector('#note').value = job.completionNote; }
+    async function update(status) { const button = document.querySelector(status === 'En route' ? '#en-route' : '#in-progress'); button.disabled = true; const response = await api('/api/public/technician-job/status', { method:'POST', body:JSON.stringify({ status }) }); if (!response.ok) { message('Could not update job status.'); button.disabled = false; return; } message(`Job marked ${status.toLowerCase()}.`); load(); }
+    document.querySelector('#en-route').onclick = () => update('En route'); document.querySelector('#in-progress').onclick = () => update('In progress'); document.querySelector('#complete').onclick = async () => { const note = document.querySelector('#note').value.trim(); if (note.length < 3) { message('Add a completion note before finishing.'); return; } const button = document.querySelector('#complete'); button.disabled = true; const response = await api('/api/public/technician-job/complete', { method:'POST', body:JSON.stringify({ note }) }); if (!response.ok) { message('Could not complete this job.'); button.disabled = false; return; } message('Job completed and customer timeline updated.'); load(); }; load();
+  </script>
+</body>
+</html>
