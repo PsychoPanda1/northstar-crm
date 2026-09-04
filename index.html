@@ -14,7 +14,7 @@
     <div class="app-shell">
       <aside class="sidebar">
         <div class="brand"><div class="brand-mark">N</div><div><strong>northstar</strong><span>service cloud</span></div></div>
-        <div class="workspace-switcher"><span class="avatar small">JS</span><div><b>Johnson Service Co.</b><small>Operations workspace</small></div><span class="chevron">⌄</span></div>
+        <button class="workspace-switcher" id="workspace-switcher"><span class="avatar small">JS</span><div><b data-tenant-name>Johnson Service Co.</b><small><span data-service-label>Operations</span> workspace</small></div><span class="chevron">⌄</span></button>
         <nav>
           <p class="nav-label">Workspace</p>
           <a class="active" href="#overview"><span>◈</span>Overview</a>
@@ -27,13 +27,13 @@
           <a href="#reports"><span>◒</span>Reports</a>
           <a href="#settings"><span>⚙</span>Settings</a>
         </nav>
-        <div class="sidebar-bottom"><div class="help-card"><span class="help-icon">?</span><div><b>Need a hand?</b><small>Talk to your success team</small></div><span>↗</span></div><div class="user-row"><span class="avatar">JS</span><div><b>Jordan Smith</b><small>Administrator</small></div><span class="dots">•••</span></div></div>
+        <div class="sidebar-bottom"><div class="help-card"><span class="help-icon">?</span><div><b>Need a hand?</b><small>Talk to your success team</small></div><span>↗</span></div><button class="user-row" id="owner-account"><span class="avatar">JS</span><div><b>Jordan Smith</b><small>Administrator</small></div><span class="dots">•••</span></button></div>
       </aside>
 
       <main class="main-content" id="overview">
         <header class="topbar"><div class="breadcrumb">Workspace <span>/</span> <b>Overview</b></div><div class="top-actions"><button class="icon-btn" aria-label="Search">⌕</button><button class="icon-btn" aria-label="Notifications">♧<i></i></button><button class="primary-btn" id="new-job">＋ New job</button></div></header>
         <div class="page-wrap">
-          <section class="hero"><div><div class="eyebrow">MONDAY, SEPTEMBER 8, 2025 <span class="live-dot"></span> LIVE</div><h1>Good morning, Jordan.</h1><p>Here’s the pulse of your business. You’re doing great work.</p></div><button class="date-btn">This week <span>⌄</span></button></section>
+          <section class="hero"><div><div class="eyebrow"><span data-service-label>HOME SERVICES</span> · MONDAY, SEPTEMBER 8, 2025 <span class="live-dot"></span> LIVE</div><h1>Good morning, Jordan.</h1><p data-focus-line>Here’s the pulse of your business. You’re doing great work.</p></div><button class="date-btn">This week <span>⌄</span></button></section>
           <section class="metric-grid">
             <article class="metric-card"><div class="metric-top"><span>Revenue this month</span><span class="metric-icon green">↗</span></div><strong>$84,290</strong><div class="metric-foot"><span class="positive">↑ 12.8%</span> <span>vs. last month</span><div class="sparkline green-line">▁▂▃▂▅▆▇</div></div></article>
             <article class="metric-card"><div class="metric-top"><span>Jobs completed</span><span class="metric-icon blue">✓</span></div><strong>184</strong><div class="metric-foot"><span class="positive">↑ 8.4%</span> <span>vs. last month</span><div class="sparkline blue-line">▂▃▂▄▅▄▆</div></div></article>
@@ -51,7 +51,9 @@
         </div>
       </main>
     </div>
-    <div class="toast" id="toast">New job workspace ready to configure.</div>
+    <div class="toast" id="toast" role="status" aria-live="polite">New job workspace ready to configure.</div>
+    <dialog class="login-dialog" id="login-dialog" aria-labelledby="login-title"><button class="dialog-close" id="close-login" aria-label="Close">×</button><div class="dialog-kicker">OWNER PORTAL</div><h2 id="login-title">Welcome back, Jordan.</h2><p>This demo shows the handoff point for owner authentication on <strong data-tenant-name>Johnson Service Co.</strong>.</p><div class="demo-boundary">Demo boundary · no credentials are collected or sent.</div><button class="primary-btn dialog-action" id="demo-login">Continue to demo portal</button></dialog>
+    <script src="tenant-config.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

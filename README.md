@@ -10,6 +10,8 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Schedule view with job status, technician assignment, and customer context
 - Recent activity stream
 - Responsive layout for desktop and mobile
+- Configuration-driven service verticals for plumbing, power washing, electrical, and mobile car wash
+- Demo owner-portal handoff with an explicit production auth boundary
 
 ## Run locally
 
@@ -20,6 +22,10 @@ python -m http.server 4173
 ```
 
 Then visit http://localhost:4173.
+
+To preview a service-specific tenant, use `http://localhost:4173/?service=plumbing`, `powerwashing`, `electrician`, or `carwash`.
+
+See [PORTAL_CONTRACT.md](PORTAL_CONTRACT.md) before adding authentication, APIs, or landing-page integrations.
 
 ## Next product slices
 
