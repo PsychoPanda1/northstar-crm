@@ -35,6 +35,9 @@ try {
   assert(asset.response.status === 201 && assets.body.items.length === 1 && assets.body.items[0].customer === 'Smoke Lead' && (await assetExport.text()).includes('TS-42'), 'customer asset workflow failed');
   const profile = await request(`/api/customers/${encodeURIComponent(converted.body.customer.id)}`, { headers: { authorization: `Bearer ${token}` } });
   assert(profile.response.ok && profile.body.customer?.name === 'Smoke Lead' && profile.body.jobs?.length >= 1 && profile.body.assets?.length === 1 && profile.body.activities?.length >= 1, 'customer profile aggregation failed');
+  const plan = await request('/api/plans', jsonOptions('POST', { customer: 'Smoke Lead', service: 'Annual plumbing maintenance', amount: 89, renewal: 'Sep 2027' }, token));
+  const renewedPlan = await request(`/api/plans/${plan.body.id}/renew`, jsonOptions('POST', { time: 'Next month 9:00 AM' }, token));
+  assert(plan.response.status === 201 && renewedPlan.body.plan.status === 'Active' && renewedPlan.body.nextJob.service === 'Annual plumbing maintenance' && renewedPlan.body.nextJob.planId === plan.body.id, 'recurring plan workflow failed');
   const fieldJob = await request('/api/jobs', jsonOptions('POST', { customerId: converted.body.customer.id, service: 'Follow-up inspection', time: 'Friday 2:00 PM' }, token));
   await request(`/api/jobs/${fieldJob.body.id}/assign`, jsonOptions('POST', { technician: 'Alex Rivera' }, token));
   const techLink = await request(`/api/jobs/${fieldJob.body.id}/technician-link`, jsonOptions('POST', {}, token));

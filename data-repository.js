@@ -130,6 +130,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async renewPlan(id, time) {
+    if (!this.remote) throw new Error('API required for plan renewal');
+    const response = await fetch(`/api/plans/${encodeURIComponent(id)}/renew`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ time }) });
+    if (!response.ok) throw new Error('plan renewal failed');
+    return response.json();
+  }
+
   async getCustomerProfile(id) {
     if (!this.remote) throw new Error('API required for customer profiles');
     const response = await fetch(`/api/customers/${encodeURIComponent(id)}`, { headers: { authorization: `Bearer ${this.token}` } });
