@@ -21,4 +21,4 @@ Supported service keys are `plumbing`, `powerwashing`, `electrician`, and `carwa
 
 The endpoint is intentionally limited to lead intake. Owner records remain behind the authenticated session API, and the public service key is routing context—not authorization. Production deployments should place the endpoint behind an allowlisted origin, durable storage, stronger abuse controls, and an identity provider for owner access.
 
-When a lead is converted into a job, the owner response includes a short-lived `customerPortalToken`. A customer-facing page can call `GET /api/public/job-status?token=...` to show only the job service, appointment time, technician, and lifecycle status. Never expose owner tokens or tenant IDs in that link.
+When a lead is converted into a job, the owner response includes a short-lived `customerPortalToken`. Link the customer to `/status.html?token=...`; the page calls `GET /api/public/job-status?token=...` and shows only the job service, appointment time, technician, and lifecycle status. Never expose owner tokens or tenant IDs in that link.

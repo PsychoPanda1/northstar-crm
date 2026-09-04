@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Check your service appointment status." />
+    <title>Appointment status · Northstar</title>
+    <style>
+      :root{font-family:Inter,system-ui,sans-serif;color:#193044;background:#f5f8f7}*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px}.card{width:min(480px,100%);background:#fff;border:1px solid #e1e9e6;border-radius:18px;padding:32px;box-shadow:0 18px 50px #19304412}.brand{color:#23845d;font-weight:800;letter-spacing:.08em;text-transform:uppercase;font-size:11px}.kicker{color:#879994;font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin:28px 0 8px}.status{display:inline-flex;align-items:center;gap:8px;background:#e8f7ef;color:#23845d;border-radius:999px;padding:8px 12px;font-weight:700;font-size:13px}.status:before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}.detail{border-top:1px solid #edf1ef;margin-top:26px;padding-top:20px;display:grid;gap:16px}.detail div{display:flex;justify-content:space-between;gap:20px}.detail span{color:#879994;font-size:12px}.detail strong{text-align:right;font-size:13px}.message{color:#71827d;font-size:14px;line-height:1.55;margin:18px 0 0}.error{color:#ad4c4c}.loading{color:#71827d}
+    </style>
+  </head>
+  <body>
+    <main class="card" aria-live="polite"><div class="brand">Northstar service cloud</div><div id="content" class="loading"><div class="kicker">Appointment status</div><h1>Loading your appointment…</h1></div></main>
+    <script>
+      const content = document.querySelector('#content');
+      const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
+      const token = new URLSearchParams(location.search).get('token');
+      if (!token) { content.innerHTML = '<div class="kicker">Appointment status</div><h1>Link unavailable</h1><p class="message error">This status link is missing or incomplete. Please contact the service team for a new link.</p>'; }
+      else fetch(`/api/public/job-status?token=${encodeURIComponent(token)}`).then(async (response) => { const body = await response.json(); if (!response.ok) throw new Error(body.error); content.innerHTML = `<div class="kicker">${escapeHtml(body.service)}</div><h1>Your appointment</h1><div class="status">${escapeHtml(body.status)}</div><div class="detail"><div><span>Scheduled</span><strong>${escapeHtml(body.time)}</strong></div>${body.technician ? `<div><span>Technician</span><strong>${escapeHtml(body.technician)}</strong></div>` : ''}</div><p class="message">We’ll keep this page updated as your appointment moves through the service process.</p>`; }).catch(() => { content.innerHTML = '<div class="kicker">Appointment status</div><h1>Link unavailable</h1><p class="message error">This status link has expired or is no longer available. Please contact the service team.</p>'; });
+    </script>
+  </body>
+</html>
