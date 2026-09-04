@@ -33,6 +33,9 @@ try {
   const material = await request('/api/materials', jsonOptions('POST', { name: '1/2 inch copper coupling', sku: 'CU-COUP-12', unit: 'each', unitCost: 8.5, onHand: 4, reorderPoint: 1 }, token));
   const materials = await request('/api/materials?search=copper', { headers: { authorization: `Bearer ${token}` } });
   assert(material.response.status === 201 && materials.body.items[0].status === 'In stock' && materials.body.items[0].onHand === 4, 'inventory receipt failed');
+  const message = await request('/api/messages', jsonOptions('POST', { customer: 'Smoke Lead', channel: 'SMS', message: 'Your technician is scheduled for tomorrow at 9:00 AM.' }, token));
+  const messages = await request('/api/messages?search=Smoke%20Lead', { headers: { authorization: `Bearer ${token}` } });
+  assert(message.response.status === 201 && message.body.status === 'Queued (provider pending)' && messages.body.items.length === 1 && messages.body.items[0].channel === 'SMS', 'message workflow failed');
   const leadList = await request('/api/leads?search=Smoke%20Lead', { headers: { authorization: `Bearer ${token}` } });
   const leadNotifications = await request('/api/notifications?search=Smoke%20Lead', { headers: { authorization: `Bearer ${token}` } });
   const notificationRead = await request(`/api/notifications/${leadNotifications.body.items[0].id}/read`, jsonOptions('POST', {}, token));

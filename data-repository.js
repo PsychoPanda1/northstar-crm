@@ -130,6 +130,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async sendMessage(customer, channel, message) {
+    if (!this.remote) throw new Error('API required for messages');
+    const response = await fetch('/api/messages', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ customer, channel, message }) });
+    if (!response.ok) throw new Error('message queue failed');
+    return response.json();
+  }
+
   async convertLead(id, time) {
     if (!this.remote) throw new Error('API required for lead conversion');
     const response = await fetch(`/api/leads/${encodeURIComponent(id)}/convert`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ time }) });
