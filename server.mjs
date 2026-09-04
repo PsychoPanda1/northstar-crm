@@ -32,7 +32,7 @@ const persist = () => { const snapshot = Object.fromEntries(state); writeFileSyn
 const recordActivity = (saved, customer, channel, note, status = 'Logged') => { saved.activities.unshift({ id: `ACT-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, customer: String(customer).slice(0, 100), channel, note: String(note).slice(0, 500), at: 'Just now', status }); };
 
 const json = (res, status, body) => { res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' }); res.end(JSON.stringify(body)); };
-const readBody = async (req) => { let body = ''; for await (const chunk of req) body += chunk; return body ? JSON.parse(body) : {}; };
+const readBody = async (req) => { let body = ''; for await (const chunk of req) { body += chunk; if (Buffer.byteLength(body, 'utf8') > 64 * 1024) throw new Error('request_body_too_large'); } return body ? JSON.parse(body) : {}; };
 const allowPublicLead = (req) => { const key = req.socket.remoteAddress || 'unknown'; const now = Date.now(); const window = publicLeadWindows.get(key); if (!window || now - window.startedAt >= 60_000) { publicLeadWindows.set(key, { startedAt: now, count: 1 }); return true; } if (window.count >= 20) return false; window.count += 1; return true; };
 const sign = (value) => createHmac('sha256', SECRET).update(value).digest('base64url');
 const issueToken = (owner) => { const payload = Buffer.from(JSON.stringify({ sub: owner.id, tenantId: owner.tenantId, exp: Date.now() + 1000 * 60 * 60 * 8 })).toString('base64url'); return `${payload}.${sign(payload)}`; };

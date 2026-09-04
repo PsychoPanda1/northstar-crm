@@ -13,6 +13,9 @@ const request = async (path, options = {}) => { const response = await fetch(`${
 const jsonOptions = (method, body, token) => ({ method, headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify(body) });
 try {
   for (let attempt = 0; attempt < 40; attempt += 1) { try { if ((await fetch(`${base}/api/health`)).ok) break; } catch {} await new Promise((resolve) => setTimeout(resolve, 50)); if (attempt === 39) throw new Error('server did not start'); }
+  const malformed = await fetch(`${base}/api/public/leads`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{' });
+  const oversized = await fetch(`${base}/api/public/leads`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name: 'x'.repeat(70_000) }) });
+  assert(malformed.status === 400 && oversized.status === 400, 'malformed input protection failed');
   const publicLead = await request('/api/public/leads', jsonOptions('POST', { service: 'plumbing', name: 'Smoke Lead', phone: '843-555-0100', idempotencyKey: 'smoke-lead-1' }));
   const duplicateLead = await request('/api/public/leads', jsonOptions('POST', { service: 'plumbing', name: 'Smoke Lead', phone: '843-555-0100', idempotencyKey: 'smoke-lead-1' }));
   assert(publicLead.response.status === 201 && publicLead.body.tenant.slug === 'clearwater-plumbing' && duplicateLead.response.status === 200 && duplicateLead.body.duplicate === true && duplicateLead.body.id === publicLead.body.id, 'public lead intake failed');
