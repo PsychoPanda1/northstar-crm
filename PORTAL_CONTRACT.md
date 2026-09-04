@@ -40,7 +40,9 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - New jobs include a required three-step field checklist; `POST /api/public/technician-job/checklist?token=...` updates checklist items and technician completion rejects incomplete work
 - Dispatch assignment, status, and reschedule mutations append auditable customer timeline events
 - `POST /api/jobs/:id/customer-link` → issue a 72-hour customer portal link scoped to the job's customer
+- `POST /api/jobs/:id/review-link` → issue a 72-hour review link for a completed job
 - `GET /api/public/customer-portal?token=...` → customer-safe appointments, equipment, estimates, invoices, and service plans
+- `GET/POST /api/public/review?token=...` → read review state or submit one 1–5 rating and optional comment; duplicate submissions are rejected
 - `GET /api/plans` and `POST /api/plans` → list or create recurring service plans
 - `POST /api/plans/:id/renew` → renew a tenant-owned service plan and optionally schedule its next visit with `time`
 - `GET /api/activities` and `POST /api/activities` → read or log tenant-owned customer calls, messages, and notes

@@ -52,6 +52,12 @@ try {
   for (let index = 0; index < checklistBeforeComplete.body.checklist.length; index += 1) await request(`/api/public/technician-job/checklist${techUrl.search}`, jsonOptions('POST', { index, completed: true }));
   const techComplete = await request(`/api/public/technician-job/complete${techUrl.search}`, jsonOptions('POST', { note: 'Inspected fittings and documented follow-up recommendations.' }));
   assert(techLink.response.ok && techView.body.technician === 'Alex Rivera' && checklistBeforeComplete.body.checklist.length === 3 && techEnRoute.body.status === 'En route' && techStarted.body.status === 'In progress' && techIncomplete.response.status === 409 && techIncomplete.body.error === 'checklist_incomplete' && techComplete.body.status === 'Completed', 'technician mobile workflow failed');
+  const reviewLink = await request(`/api/jobs/${fieldJob.body.id}/review-link`, jsonOptions('POST', {}, token));
+  const reviewUrl = new URL(reviewLink.body.url, base);
+  const reviewView = await request(`/api/public/review${reviewUrl.search}`);
+  const review = await request(`/api/public/review${reviewUrl.search}`, jsonOptions('POST', { rating: 5, comment: 'Clear communication and careful work.' }));
+  const reviewDuplicate = await request(`/api/public/review${reviewUrl.search}`, jsonOptions('POST', { rating: 5 }));
+  assert(reviewLink.response.ok && reviewView.body.submitted === false && review.response.status === 201 && review.body.rating === 5 && reviewDuplicate.response.status === 409, 'review workflow failed');
   const customerLink = await request(`/api/jobs/${fieldJob.body.id}/customer-link`, jsonOptions('POST', {}, token));
   const customerUrl = new URL(customerLink.body.url, base);
   const customerPortal = await request(`/api/public/customer-portal${customerUrl.search}`);
