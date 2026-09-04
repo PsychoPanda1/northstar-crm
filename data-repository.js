@@ -95,6 +95,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async customerLink(id) {
+    if (!this.remote) throw new Error('API required for customer links');
+    const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/customer-link`, { method: 'POST', headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('customer link unavailable');
+    return response.json();
+  }
+
   async logActivity(customer, channel, note) {
     if (!this.remote) throw new Error('API required for activity logging');
     const response = await fetch('/api/activities', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ customer, channel, note }) });
