@@ -45,6 +45,8 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - `POST /api/jobs/:id/customer-link` → issue a 72-hour customer portal link scoped to the job's customer
 - `POST /api/jobs/:id/review-link` → issue a 72-hour review link for a completed job
 - `GET /api/public/customer-portal?token=...` → customer-safe appointments, equipment, estimates, invoices, and service plans
+- `POST /api/public/customer-portal/request?token=...` → accept a customer reschedule request or question and route it into the owner action queue
+- `POST /api/requests/:id/resolve` → resolve a tenant-owned customer request with an optional owner note
 - `GET/POST /api/public/review?token=...` → read review state or submit one 1–5 rating and optional comment; duplicate submissions are rejected
 - `GET /api/plans` and `POST /api/plans` → list or create recurring service plans
 - `POST /api/plans/:id/renew` → renew a tenant-owned service plan and optionally schedule its next visit with `time`
