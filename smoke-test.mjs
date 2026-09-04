@@ -2,12 +2,14 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawn } from 'node:child_process';
+import { createHmac } from 'node:crypto';
 
 const port = 4377;
 const base = `http://127.0.0.1:${port}`;
 const tempDir = mkdtempSync(join(tmpdir(), 'northstar-smoke-'));
 const dataFile = join(tempDir, 'state.json');
-const server = spawn(process.execPath, ['server.mjs'], { cwd: new URL('.', import.meta.url), env: { ...process.env, PORT: String(port), NORTHSTAR_DATA_FILE: dataFile, NORTHSTAR_ALLOWED_ORIGINS: 'https://plumbing.example' }, stdio: 'ignore' });
+const webhookSecret = 'smoke-webhook-secret';
+const server = spawn(process.execPath, ['server.mjs'], { cwd: new URL('.', import.meta.url), env: { ...process.env, PORT: String(port), NORTHSTAR_DATA_FILE: dataFile, NORTHSTAR_PAYMENT_WEBHOOK_SECRET: webhookSecret, NORTHSTAR_ALLOWED_ORIGINS: 'https://plumbing.example' }, stdio: 'ignore' });
 let restartedServer;
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 const request = async (path, options = {}) => { const response = await fetch(`${base}${path}`, options); const body = await response.json().catch(() => ({})); return { response, body }; };
@@ -106,12 +108,15 @@ try {
   const customerPortalWithInvoice = await request(`/api/public/customer-portal${customerUrl.search}`);
   const portalInvoiceView = customerPortalWithInvoice.body.invoices.find((item) => item.id === portalInvoice.body.id);
   const portalPaymentIntent = await request(`/api/public/customer-portal/payment-intent${customerUrl.search}`, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': 'smoke-customer-portal-payment' }, body: JSON.stringify({ invoiceId: portalInvoiceView.id, amount: 75, method: 'ACH' }) });
+  const portalWebhookBody = JSON.stringify({ tenantId: 'clearwater-plumbing', eventId: 'evt-portal-1', intentId: portalPaymentIntent.body.id, status: 'succeeded', reference: 'PROVIDER-42' });
+  const portalWebhook = await request('/api/webhooks/payments', { method: 'POST', headers: { 'content-type': 'application/json', 'x-northstar-signature': createHmac('sha256', webhookSecret).update(portalWebhookBody).digest('hex') }, body: portalWebhookBody });
+  const portalWebhookDuplicate = await request('/api/webhooks/payments', { method: 'POST', headers: { 'content-type': 'application/json', 'x-northstar-signature': createHmac('sha256', webhookSecret).update(portalWebhookBody).digest('hex') }, body: portalWebhookBody });
   const estimateJob = await request(`/api/estimates/${portalEstimate.body.id}/convert`, jsonOptions('POST', { time: 'Next Thursday 11:00 AM' }, token));
   const customerRequest = await request(`/api/public/customer-portal/request${customerUrl.search}`, jsonOptions('POST', { type: 'Question', message: 'Can you confirm the next service window?' }));
   const openRequests = await request('/api/requests?search=Smoke%20Lead', { headers: { authorization: `Bearer ${token}` } });
   const requestNotifications = await request('/api/notifications?search=Smoke%20Lead', { headers: { authorization: `Bearer ${token}` } });
   const resolvedRequest = await request(`/api/requests/${customerRequest.body.id}/resolve`, jsonOptions('POST', { note: 'Sent the customer the confirmed service window.' }, token));
-  assert(customerLink.response.ok && customerPortal.body.customer.name === 'Smoke Lead' && customerPortal.body.locations.length === 2 && customerPortal.body.locations.some((item) => item.address.includes('200 Meeting')) && customerPortal.body.jobs.length >= 2 && customerPortal.body.assets.length === 1 && !customerPortal.body.customer.tenantId && customerPortalWithEstimate.body.estimates.some((item) => item.id === portalEstimate.body.id && item.estimateApprovalToken) && portalApproval.body.status === 'Accepted' && portalInvoice.response.status === 201 && portalInvoiceView.balance === 275 && portalPaymentIntent.response.status === 201 && portalPaymentIntent.body.status === 'Pending provider' && estimateJob.response.status === 201 && estimateJob.body.job.estimateId === portalEstimate.body.id && estimateJob.body.job.checklist.length === 3 && customerRequest.response.status === 201 && openRequests.body.items.length === 1 && requestNotifications.body.items.some((item) => item.title === 'Customer request needs response') && resolvedRequest.body.status === 'Resolved', 'customer portal workflow failed');
+  assert(customerLink.response.ok && customerPortal.body.customer.name === 'Smoke Lead' && customerPortal.body.locations.length === 2 && customerPortal.body.locations.some((item) => item.address.includes('200 Meeting')) && customerPortal.body.jobs.length >= 2 && customerPortal.body.assets.length === 1 && !customerPortal.body.customer.tenantId && customerPortalWithEstimate.body.estimates.some((item) => item.id === portalEstimate.body.id && item.estimateApprovalToken) && portalApproval.body.status === 'Accepted' && portalInvoice.response.status === 201 && portalInvoiceView.balance === 275 && portalPaymentIntent.response.status === 201 && portalPaymentIntent.body.status === 'Pending provider' && portalWebhook.response.ok && portalWebhook.body.invoice.balance === 200 && portalWebhook.body.intent.status === 'Succeeded' && portalWebhookDuplicate.response.status === 200 && portalWebhookDuplicate.body.duplicate === true && estimateJob.response.status === 201 && estimateJob.body.job.estimateId === portalEstimate.body.id && estimateJob.body.job.checklist.length === 3 && customerRequest.response.status === 201 && openRequests.body.items.length === 1 && requestNotifications.body.items.some((item) => item.title === 'Customer request needs response') && resolvedRequest.body.status === 'Resolved', 'customer portal workflow failed');
   const guardJob = await request('/api/jobs', jsonOptions('POST', { customerId: converted.body.customer.id, service: 'Capacity check', time: 'Next Monday 10:00 AM' }, token));
   await request(`/api/jobs/${guardJob.body.id}/assign`, jsonOptions('POST', { technician: 'Alex Rivera' }, token));
   const conflictJob = await request('/api/jobs', jsonOptions('POST', { customerId: converted.body.customer.id, service: 'Same-time service', time: 'Next Monday 10:00 AM' }, token));
@@ -141,9 +146,9 @@ try {
   const revoked = await request('/api/session', { headers: { authorization: `Bearer ${token}` } });
   assert(logout.response.ok && revoked.response.status === 401, 'logout revocation failed');
   server.kill(); await new Promise((resolve) => setTimeout(resolve, 100));
-  restartedServer = spawn(process.execPath, ['server.mjs'], { cwd: new URL('.', import.meta.url), env: { ...process.env, PORT: String(port), NORTHSTAR_DATA_FILE: dataFile, NORTHSTAR_ALLOWED_ORIGINS: 'https://plumbing.example' }, stdio: 'ignore' });
+  restartedServer = spawn(process.execPath, ['server.mjs'], { cwd: new URL('.', import.meta.url), env: { ...process.env, PORT: String(port), NORTHSTAR_DATA_FILE: dataFile, NORTHSTAR_PAYMENT_WEBHOOK_SECRET: webhookSecret, NORTHSTAR_ALLOWED_ORIGINS: 'https://plumbing.example' }, stdio: 'ignore' });
   for (let attempt = 0; attempt < 40; attempt += 1) { try { if ((await fetch(`${base}/api/health`)).ok) break; } catch {} await new Promise((resolve) => setTimeout(resolve, 50)); if (attempt === 39) throw new Error('server did not restart'); }
   const revokedAfterRestart = await request('/api/session', { headers: { authorization: `Bearer ${token}` } });
   assert(revokedAfterRestart.response.status === 401, 'logout revocation did not survive restart');
-  console.log('Northstar smoke test passed: intake, conversion, quote-to-cash, isolation, logout, restart revocation');
+  console.log('Northstar smoke test passed: intake, conversion, quote-to-cash, signed payment webhook, isolation, logout, restart revocation');
 } finally { server.kill(); restartedServer?.kill(); rmSync(tempDir, { recursive: true, force: true }); }
