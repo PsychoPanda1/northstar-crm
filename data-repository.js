@@ -151,6 +151,20 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async createMaterial(name, sku, unit, unitCost, onHand, reorderPoint) {
+    if (!this.remote) throw new Error('API required for material creation');
+    const response = await fetch('/api/materials', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ name, sku, unit, unitCost, onHand, reorderPoint }) });
+    if (!response.ok) throw new Error('material creation failed');
+    return response.json();
+  }
+
+  async consumeMaterial(jobId, materialId, quantity) {
+    if (!this.remote) throw new Error('API required for material usage');
+    const response = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/materials`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ materialId, quantity }) });
+    if (!response.ok) throw new Error('material usage failed');
+    return response.json();
+  }
+
   async renewPlan(id, time) {
     if (!this.remote) throw new Error('API required for plan renewal');
     const response = await fetch(`/api/plans/${encodeURIComponent(id)}/renew`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ time }) });
