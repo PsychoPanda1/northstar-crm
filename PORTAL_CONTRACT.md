@@ -52,6 +52,7 @@ System events such as web-form lead capture, customer estimate approval, and rec
 - `POST /api/auth/logout` → revoke the current session
 - `POST /api/estimates` → create a draft estimate
 - `POST /api/estimates/:id/approve` → approve a tenant-owned estimate
+- `POST /api/estimates/:id/convert` → convert an accepted estimate into a scheduled, checklist-ready job
 - `POST /api/invoices` → create an invoice only from an approved estimate
 - `POST /api/invoices/:id/pay` → record a full or partial tenant-owned invoice payment with method/reference; returns updated balance and payment ledger entry
 

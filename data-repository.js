@@ -172,6 +172,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async convertEstimate(id, time) {
+    if (!this.remote) throw new Error('API required for estimate conversion');
+    const response = await fetch(`/api/estimates/${encodeURIComponent(id)}/convert`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ time }) });
+    if (!response.ok) throw new Error('estimate conversion failed');
+    return response.json();
+  }
+
   async createInvoice(estimateId) {
     if (!this.remote) throw new Error('API required for invoice creation');
     const response = await fetch('/api/invoices', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ estimateId }) });
