@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Northstar CRM — field service operations, customer relationships, and revenue in one calm workspace." />
+    <title>Northstar CRM</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand"><div class="brand-mark">N</div><div><strong>northstar</strong><span>service cloud</span></div></div>
+        <div class="workspace-switcher"><span class="avatar small">JS</span><div><b>Johnson Service Co.</b><small>Operations workspace</small></div><span class="chevron">⌄</span></div>
+        <nav>
+          <p class="nav-label">Workspace</p>
+          <a class="active" href="#overview"><span>◈</span>Overview</a>
+          <a href="#customers"><span>♧</span>Customers <em>128</em></a>
+          <a href="#schedule"><span>◷</span>Schedule <em class="alert">6</em></a>
+          <a href="#pipeline"><span>⌁</span>Pipeline</a>
+          <a href="#inbox"><span>✉</span>Inbox <em>4</em></a>
+          <p class="nav-label second">Manage</p>
+          <a href="#estimates"><span>▤</span>Estimates</a>
+          <a href="#reports"><span>◒</span>Reports</a>
+          <a href="#settings"><span>⚙</span>Settings</a>
+        </nav>
+        <div class="sidebar-bottom"><div class="help-card"><span class="help-icon">?</span><div><b>Need a hand?</b><small>Talk to your success team</small></div><span>↗</span></div><div class="user-row"><span class="avatar">JS</span><div><b>Jordan Smith</b><small>Administrator</small></div><span class="dots">•••</span></div></div>
+      </aside>
+
+      <main class="main-content" id="overview">
+        <header class="topbar"><div class="breadcrumb">Workspace <span>/</span> <b>Overview</b></div><div class="top-actions"><button class="icon-btn" aria-label="Search">⌕</button><button class="icon-btn" aria-label="Notifications">♧<i></i></button><button class="primary-btn" id="new-job">＋ New job</button></div></header>
+        <div class="page-wrap">
+          <section class="hero"><div><div class="eyebrow">MONDAY, SEPTEMBER 8, 2025 <span class="live-dot"></span> LIVE</div><h1>Good morning, Jordan.</h1><p>Here’s the pulse of your business. You’re doing great work.</p></div><button class="date-btn">This week <span>⌄</span></button></section>
+          <section class="metric-grid">
+            <article class="metric-card"><div class="metric-top"><span>Revenue this month</span><span class="metric-icon green">↗</span></div><strong>$84,290</strong><div class="metric-foot"><span class="positive">↑ 12.8%</span> <span>vs. last month</span><div class="sparkline green-line">▁▂▃▂▅▆▇</div></div></article>
+            <article class="metric-card"><div class="metric-top"><span>Jobs completed</span><span class="metric-icon blue">✓</span></div><strong>184</strong><div class="metric-foot"><span class="positive">↑ 8.4%</span> <span>vs. last month</span><div class="sparkline blue-line">▂▃▂▄▅▄▆</div></div></article>
+            <article class="metric-card"><div class="metric-top"><span>Open estimates</span><span class="metric-icon orange">◌</span></div><strong>32 <small>/$42,680</small></strong><div class="metric-foot"><span class="warning">9 need follow-up</span><div class="progress"><i style="width:68%"></i></div></div></article>
+            <article class="metric-card"><div class="metric-top"><span>Customer satisfaction</span><span class="metric-icon purple">♥</span></div><strong>4.9 <small>/ 5.0</small></strong><div class="metric-foot"><span class="positive">↑ 0.2</span> <span>this month</span><div class="stars">★★★★★</div></div></article>
+          </section>
+
+          <section class="dashboard-grid">
+            <article class="panel pipeline-panel" id="pipeline"><div class="panel-heading"><div><h2>Revenue pipeline</h2><p>Track opportunities from first contact to closed work</p></div><button class="ghost-btn">View pipeline →</button></div><div class="pipeline-bar"><i style="width:31%;background:#99d5bb"></i><i style="width:24%;background:#8ab8d9"></i><i style="width:18%;background:#b0a1e8"></i><i style="width:15%;background:#efc778"></i><i style="width:12%;background:#e6e8ed"></i></div><div class="legend"><span><i style="background:#99d5bb"></i>New lead <b>$18.4k</b></span><span><i style="background:#8ab8d9"></i>Qualified <b>$14.2k</b></span><span><i style="background:#b0a1e8"></i>Estimate sent <b>$10.8k</b></span><span><i style="background:#efc778"></i>Won <b>$8.7k</b></span></div><div class="pipeline-value"><b>$52,100</b><span>total pipeline value</span><span class="positive">↑ 18.2%</span></div></article>
+            <article class="panel tasks-panel"><div class="panel-heading"><div><h2>Today’s focus</h2><p>Small actions, meaningful momentum</p></div><span class="count-badge">5</span></div><div class="task-list"><label><input type="checkbox" /> <span><b>Follow up with Michael Torres</b><small>Estimate #EST-1048 · 10:00 AM</small></span><button>···</button></label><label><input type="checkbox" checked /> <span class="done"><b>Confirm parts for job #JOB-2194</b><small>Due today</small></span><button>···</button></label><label><input type="checkbox" /> <span><b>Send review request to A. Patel</b><small>Completed job #JOB-2188</small></span><button>···</button></label><label><input type="checkbox" /> <span><b>Call back Lakeside Property Group</b><small>New lead · 2 days ago</small></span><button>···</button></label></div><button class="add-task">＋ Add a task</button></article>
+          </section>
+
+          <section class="lower-grid"><article class="panel schedule-panel" id="schedule"><div class="panel-heading"><div><h2>Today’s schedule</h2><p>Tuesday, September 9 <span class="schedule-status">6 jobs · 2 unassigned</span></p></div><button class="ghost-btn">Open calendar →</button></div><div class="schedule-list"><div class="time-row"><time>8:00</time><div class="job-card green-card"><div class="job-main"><span class="job-type">MAINTENANCE</span><h3>Annual HVAC tune-up</h3><p><span class="mini-avatar">MT</span> Michael Torres <span class="muted">·</span> 105 King St</p></div><div class="job-meta"><span class="status confirmed">Confirmed</span><b>Alex R.</b><small>8:00 – 10:00 AM</small></div></div></div><div class="time-row"><time>10:30</time><div class="job-card blue-card"><div class="job-main"><span class="job-type">REPAIR</span><h3>Water heater not heating</h3><p><span class="mini-avatar peach">AP</span> Aisha Patel <span class="muted">·</span> 38 Coming St</p></div><div class="job-meta"><span class="status enroute">En route</span><b>Marcus T.</b><small>10:30 – 12:00 PM</small></div></div></div><div class="time-row"><time>1:00</time><div class="job-card orange-card"><div class="job-main"><span class="job-type">INSTALLATION</span><h3>Mini-split installation</h3><p><span class="mini-avatar purple-avatar">LC</span> Lakeside Property Group <span class="muted">·</span> 17 Wentworth Ave</p></div><div class="job-meta"><span class="status unassigned">Unassigned</span><b>Assign technician</b><small>1:00 – 4:00 PM</small></div></div></div></div></article>
+            <article class="panel activity-panel" id="inbox"><div class="panel-heading"><div><h2>Recent activity</h2><p>Everything happening across your team</p></div><button class="ghost-btn">See all →</button></div><div class="activity-list"><div><span class="activity-icon teal">✓</span><p><b>Job completed</b><br /><strong>Annual service · #JOB-2188</strong><small>Alex Rivera · 12 min ago</small></p><span class="activity-value">$289</span></div><div><span class="activity-icon purple">$</span><p><b>Estimate accepted</b><br /><strong>Kitchen remodel · #EST-1045</strong><small>Sarah Chen · 48 min ago</small></p><span class="activity-value">$4,820</span></div><div><span class="activity-icon orange">★</span><p><b>New 5-star review</b><br /><strong>“Fast, friendly, and fixed it right.”</strong><small>Daniel Brooks · 2 hrs ago</small></p><span class="activity-value">5.0</span></div><div><span class="activity-icon blue">＋</span><p><b>New lead captured</b><br /><strong>Lakeside Property Group</strong><small>Website form · 3 hrs ago</small></p><span class="activity-value">→</span></div></div></article></section>
+        </div>
+      </main>
+    </div>
+    <div class="toast" id="toast">New job workspace ready to configure.</div>
+    <script src="app.js"></script>
+  </body>
+</html>
