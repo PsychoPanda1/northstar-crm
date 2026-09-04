@@ -1,6 +1,6 @@
 # Northstar portal contract
 
-Northstar is the owner-facing portal attached to service-business landing pages. Landing pages may link owners to `/portal?service=plumbing` during the demo phase. Production must resolve the tenant from the authenticated session on the server.
+Northstar is the owner-facing portal attached to service-business landing pages. Landing pages may link owners to `/portal?service=plumbing` during the demo phase; the local server aliases `/portal` to the owner portal entry page. Production must resolve the tenant from the authenticated session on the server.
 
 ## Current demo seam
 

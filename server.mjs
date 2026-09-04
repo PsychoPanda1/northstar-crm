@@ -122,7 +122,7 @@ const customerPortalFor = (tenantId, customerId) => { const profile = customerPr
 const scheduleConflictFor = (tenantId, jobId, technician, time) => state.get(tenantId).jobs.find((item) => item.id !== jobId && item.technician === technician && item.time === time && !['Completed', 'Canceled'].includes(item.status));
 const sendStatic = (req, res) => {
   const requested = decodeURIComponent(new URL(req.url, `http://${req.headers.host}`).pathname);
-  const relative = requested === '/' ? 'index.html' : requested.replace(/^\/+/, '');
+  const relative = requested === '/' || requested === '/portal' || requested === '/portal/' ? 'index.html' : requested.replace(/^\/+/, '');
   const file = normalize(join(ROOT, relative));
   if (!file.startsWith(ROOT + sep) || !existsSync(file) || !statSync(file).isFile()) return json(res, 404, { error: 'not_found' });
   res.writeHead(200, { 'content-type': MIME[extname(file)] || 'application/octet-stream', 'cache-control': 'no-store' }); createReadStream(file).pipe(res);

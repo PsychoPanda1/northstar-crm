@@ -16,6 +16,8 @@ const request = async (path, options = {}) => { const response = await fetch(`${
 const jsonOptions = (method, body, token) => ({ method, headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify(body) });
 try {
   for (let attempt = 0; attempt < 40; attempt += 1) { try { if ((await fetch(`${base}/api/health`)).ok) break; } catch {} await new Promise((resolve) => setTimeout(resolve, 50)); if (attempt === 39) throw new Error('server did not start'); }
+  const portal = await fetch(`${base}/portal?service=plumbing`);
+  assert(portal.status === 200 && (await portal.text()).includes('northstar'), 'portal landing handoff failed');
   const malformed = await fetch(`${base}/api/public/leads`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{' });
   const oversized = await fetch(`${base}/api/public/leads`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name: 'x'.repeat(70_000) }) });
   const cors = await fetch(`${base}/api/public/leads`, { method: 'OPTIONS', headers: { origin: 'https://plumbing.example' } });

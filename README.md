@@ -60,7 +60,7 @@ node server.mjs
 
 Then visit http://localhost:4173.
 
-To preview a service-specific tenant, use `http://localhost:4173/?service=plumbing`, `powerwashing`, `electrician`, or `carwash`.
+To preview a service-specific tenant, use `http://localhost:4173/portal?service=plumbing`, `powerwashing`, `electrician`, or `carwash` (the root URL remains supported).
 
 Run `node smoke-test.mjs` to launch an isolated temporary server and verify public intake, lead conversion, quote-to-cash, tenant isolation, and session revocation together. `npm run test:smoke` is also available when npm is configured.
 
