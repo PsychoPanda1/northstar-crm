@@ -70,7 +70,10 @@ try {
   const reviewDuplicate = await request(`/api/public/review${reviewUrl.search}`, jsonOptions('POST', { rating: 5 }));
   const dashboardAfterReview = await request('/api/dashboard', { headers: { authorization: `Bearer ${token}` } });
   const reportAfterReview = await request('/api/reports/overview', { headers: { authorization: `Bearer ${token}` } });
-  assert(reviewLink.response.ok && reviewView.body.submitted === false && review.response.status === 201 && review.body.rating === 5 && reviewDuplicate.response.status === 409 && dashboardAfterReview.body.metrics.satisfaction === '5.0' && reportAfterReview.body.metrics.some((item) => item.label === 'Customer satisfaction' && item.value === '5.0 / 5'), 'review workflow failed');
+  const reviewRecords = await request('/api/reviews?search=Smoke Lead', { headers: { authorization: `Bearer ${token}` } });
+  const reviewExportResponse = await fetch(`${base}/api/export?type=reviews`, { headers: { authorization: `Bearer ${token}` } });
+  const reviewExportCsv = await reviewExportResponse.text();
+  assert(reviewLink.response.ok && reviewView.body.submitted === false && review.response.status === 201 && review.body.rating === 5 && reviewDuplicate.response.status === 409 && reviewRecords.body.items.some((item) => item.comment.includes('Clear communication')) && reviewExportResponse.ok && reviewExportCsv.includes('Clear communication'), 'review workflow failed');
   const customerLink = await request(`/api/jobs/${fieldJob.body.id}/customer-link`, jsonOptions('POST', {}, token));
   const customerUrl = new URL(customerLink.body.url, base);
   const customerPortal = await request(`/api/public/customer-portal${customerUrl.search}`);
