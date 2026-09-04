@@ -21,6 +21,9 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - `GET /api/session` → `{ owner, tenant, permissions }`
 - `GET /api/dashboard?range=week` → `{ metrics, pipeline, tasks, schedule, activity }`
 - `POST /api/jobs` → create a job after server-side tenant and role checks
+- `POST /api/jobs/:id/assign` and `POST /api/jobs/:id/status` → update a tenant-owned job's technician and lifecycle state
+- `GET /api/plans` and `POST /api/plans` → list or create recurring service plans
+- `POST /api/plans/:id/renew` → renew a tenant-owned service plan
 - `POST /api/auth/logout` → revoke the current session
 - `POST /api/estimates` → create a draft estimate
 - `POST /api/estimates/:id/approve` → approve a tenant-owned estimate

@@ -44,13 +44,13 @@ document.querySelector('#owner-account').addEventListener('click', () => loginDi
 document.querySelector('#close-login').addEventListener('click', () => loginDialog.close());
 document.querySelector('#demo-login').addEventListener('click', () => { loginDialog.close(); showToast(`Demo session active for ${tenant.businessName}.`); });
 document.querySelectorAll('[data-action]').forEach((button) => {
-  button.addEventListener('click', () => { repository.recordAction(button.dataset.action); showToast(`${button.dataset.action} workspace ready to configure.`); });
+  button.addEventListener('click', () => { repository.recordAction(button.dataset.action); if (button.dataset.action === 'View service plans') openRecords('plans'); else showToast(`${button.dataset.action} workspace ready to configure.`); });
 });
 const drawer = document.querySelector('#record-drawer');
 const drawerTitle = document.querySelector('#drawer-title');
 const recordList = document.querySelector('#record-list');
 const recordSearch = document.querySelector('#record-search');
-const viewTitles = { customers: 'Customers', leads: 'Lead inbox', estimates: 'Estimates', invoices: 'Invoices', dispatch: 'Dispatch board' };
+const viewTitles = { customers: 'Customers', leads: 'Lead inbox', estimates: 'Estimates', invoices: 'Invoices', plans: 'Service plans', dispatch: 'Dispatch board' };
 const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
 const renderRecords = (items, type) => { recordList.innerHTML = items.length ? items.map((item) => `<article class="record-card"><div><span class="record-id">${escapeHtml(item.id || 'RECORD')}</span><h3>${escapeHtml(item.name || item.customer || item.service)}</h3><p>${escapeHtml(item.phone || item.location || item.source || item.technician || item.time || 'No additional detail')}</p>${type === 'dispatch' && item.id?.includes('_job_') ? `<div class="record-actions"><button class="ghost-btn" data-job-action="assign" data-job-id="${escapeHtml(item.id)}" data-job-value="Alex Rivera">Assign Alex</button><button class="ghost-btn" data-job-action="status" data-job-id="${escapeHtml(item.id)}" data-job-value="In progress">Start job</button></div>` : ''}</div><span class="record-status">${escapeHtml(item.status || item.value || item.time || '')}</span></article>`).join('') : '<div class="empty-state">No records match this search.</div>'; };
 async function openRecords(type) { drawerTitle.textContent = viewTitles[type] || 'Workspace'; drawer.classList.add('open'); drawer.setAttribute('aria-hidden', 'false'); recordSearch.value = ''; try { renderRecords(await repository.list(type), type); } catch { recordList.innerHTML = '<div class="empty-state">Workspace data is unavailable. Check your session or API.</div>'; } }
