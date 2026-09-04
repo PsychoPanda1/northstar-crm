@@ -13,6 +13,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Configuration-driven service verticals for plumbing, power washing, electrical, and mobile car wash
 - Demo owner-portal handoff with an explicit production auth boundary
 - Owner action cards for estimate recovery, overdue cash, and recurring-service retention
+- Tenant-scoped demo repository with persistent task completion and action state
 
 ## Run locally
 
@@ -29,6 +30,8 @@ To preview a service-specific tenant, use `http://localhost:4173/?service=plumbi
 See [PORTAL_CONTRACT.md](PORTAL_CONTRACT.md) before adding authentication, APIs, or landing-page integrations.
 
 See [COMPETITIVE_RESEARCH.md](COMPETITIVE_RESEARCH.md) for the current ServiceTitan, Jobber, Housecall Pro, and FieldEdge benchmark and Northstar build order.
+
+The current dashboard reads through `data-repository.js`. It is deliberately a browser-only demo adapter; replace it with the authenticated `/api/session` and `/api/dashboard` contract before using real customer or financial data.
 
 ## Next product slices
 
