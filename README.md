@@ -21,6 +21,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Multi-location customer records for commercial and repeat-service accounts
 - Secure 24-hour technician job links with mobile status updates and field completion
 - Structured technician checklists required before mobile completion
+- Technician photo evidence with bounded HTTPS metadata, captions, timestamps, and owner-visible job records
 - Secure 72-hour customer portal links with appointments, equipment, estimates, invoices, and service plans
 - Signed post-job review links with one-time 1–5 rating and timeline capture
 - Owner review workspace with searchable review history and CSV export

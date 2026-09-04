@@ -75,13 +75,15 @@ try {
   const techLink = await request(`/api/jobs/${fieldJob.body.id}/technician-link`, jsonOptions('POST', {}, token));
   const techUrl = new URL(techLink.body.url, base);
   const techView = await request(`/api/public/technician-job${techUrl.search}`);
+  const techPhoto = await request(`/api/public/technician-job/photo${techUrl.search}`, jsonOptions('POST', { photoUrl: 'https://cdn.example.test/jobs/field-42.jpg', caption: 'Repaired coupling before reassembly.' }));
+  const techViewWithPhoto = await request(`/api/public/technician-job${techUrl.search}`);
   const techEnRoute = await request(`/api/public/technician-job/status${techUrl.search}`, jsonOptions('POST', { status: 'En route' }));
   const techStarted = await request(`/api/public/technician-job/status${techUrl.search}`, jsonOptions('POST', { status: 'In progress' }));
   const checklistBeforeComplete = await request(`/api/public/technician-job${techUrl.search}`);
   const techIncomplete = await request(`/api/public/technician-job/complete${techUrl.search}`, jsonOptions('POST', { note: 'Attempted early completion.' }));
   for (let index = 0; index < checklistBeforeComplete.body.checklist.length; index += 1) await request(`/api/public/technician-job/checklist${techUrl.search}`, jsonOptions('POST', { index, completed: true }));
   const techComplete = await request(`/api/public/technician-job/complete${techUrl.search}`, jsonOptions('POST', { note: 'Inspected fittings and documented follow-up recommendations.' }));
-  assert(techLink.response.ok && techView.body.technician === 'Alex Rivera' && checklistBeforeComplete.body.checklist.length === 3 && techEnRoute.body.status === 'En route' && techStarted.body.status === 'In progress' && techIncomplete.response.status === 409 && techIncomplete.body.error === 'checklist_incomplete' && techComplete.body.status === 'Completed', 'technician mobile workflow failed');
+  assert(techLink.response.ok && techView.body.technician === 'Alex Rivera' && techPhoto.response.status === 201 && techViewWithPhoto.body.photos.length === 1 && techViewWithPhoto.body.photos[0].caption.includes('coupling') && checklistBeforeComplete.body.checklist.length === 3 && techEnRoute.body.status === 'En route' && techStarted.body.status === 'In progress' && techIncomplete.response.status === 409 && techIncomplete.body.error === 'checklist_incomplete' && techComplete.body.status === 'Completed', 'technician mobile workflow failed');
   const reviewLink = await request(`/api/jobs/${fieldJob.body.id}/review-link`, jsonOptions('POST', {}, token));
   const reviewUrl = new URL(reviewLink.body.url, base);
   const reviewView = await request(`/api/public/review${reviewUrl.search}`);
