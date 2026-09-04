@@ -29,6 +29,10 @@ try {
   const completedStatus = await request(`/api/public/job-status?token=${encodeURIComponent(converted.body.customerPortalToken)}`);
   const completedTimeline = await request('/api/activities?search=Repaired%20leak', { headers: { authorization: `Bearer ${token}` } });
   assert(assigned.body.status === 'Confirmed' && completed.response.status === 200 && completed.body.status === 'Completed' && completed.body.completedAt && completedStatus.body.status === 'Completed' && completedTimeline.body.items.length === 1, 'job completion workflow failed');
+  const asset = await request('/api/assets', jsonOptions('POST', { customer: 'Smoke Lead', name: 'Tankless water heater', serial: 'TS-42', installed: '2026-09-04' }, token));
+  const assets = await request('/api/assets?search=TS-42', { headers: { authorization: `Bearer ${token}` } });
+  const assetExport = await fetch(`${base}/api/export?type=assets`, { headers: { authorization: `Bearer ${token}` } });
+  assert(asset.response.status === 201 && assets.body.items.length === 1 && assets.body.items[0].customer === 'Smoke Lead' && (await assetExport.text()).includes('TS-42'), 'customer asset workflow failed');
   const estimate = await request('/api/estimates', jsonOptions('POST', { customer: 'Smoke Customer', service: 'Leak repair', amount: 425 }, token));
   const publicEstimate = await request(`/api/public/estimate?token=${encodeURIComponent(estimate.body.estimateApprovalToken)}`);
   const approved = await request(`/api/public/estimate/approve?token=${encodeURIComponent(estimate.body.estimateApprovalToken)}`, jsonOptions('POST', {}));
