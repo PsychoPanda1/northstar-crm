@@ -41,6 +41,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Service-plan renewal can schedule the next recurring visit and records the renewal event
 - Invoice payments support partial collection, remaining balances, payment methods, and references
 - Signed customer invoice links create idempotent provider-pending payment intents without claiming settlement
+- Customer portal invoices now expose secure payment actions scoped to the customer token
 - Payment ledger records are searchable and exportable for reconciliation
 - Dispatch assignment, status changes, and rescheduling are recorded in the customer timeline
 - Team roster availability and active-job counts are derived from live tenant jobs
