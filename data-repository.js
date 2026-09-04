@@ -49,6 +49,16 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async exportRecords(type) {
+    if (!this.remote) throw new Error('API required for exports');
+    const response = await fetch(`/api/export?type=${encodeURIComponent(type)}`, { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('export unavailable');
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a'); link.href = url; link.download = `northstar-${type}.csv`; link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
   completeTask(taskIndex, completed) {
     const completedTasks = new Set(this.state.completedTasks || []);
     completed ? completedTasks.add(taskIndex) : completedTasks.delete(taskIndex);

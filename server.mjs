@@ -84,6 +84,9 @@ const recordsFor = (tenantId, type, search = '') => {
   const q = search.trim().toLowerCase();
   return q ? all.filter((item) => Object.values(item).some((value) => String(value || '').toLowerCase().includes(q))) : all;
 };
+const exportableTypes = new Set(['customers', 'leads', 'estimates', 'invoices', 'plans', 'activities', 'dispatch']);
+const csvCell = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`;
+const csvFor = (tenantId, type) => { const items = recordsFor(tenantId, type); const keys = [...new Set(items.flatMap((item) => Object.keys(item)))]; return [keys.map(csvCell).join(','), ...items.map((item) => keys.map((key) => csvCell(item[key])).join(','))].join('\n'); };
 const sendStatic = (req, res) => {
   const requested = decodeURIComponent(new URL(req.url, `http://${req.headers.host}`).pathname);
   const relative = requested === '/' ? 'index.html' : requested.replace(/^\/+/, '');
@@ -108,6 +111,7 @@ const server = createServer(async (req, res) => {
     if (pathname === '/api/session' && req.method === 'GET') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); return json(res, 200, { owner: { id: claims.sub, name: owners.jordan.name, role: owners.jordan.role }, tenant: tenants[claims.tenantId], permissions: ['dashboard:read', 'records:read', 'leads:write', 'jobs:write', 'estimates:write', 'invoices:write', 'tasks:write', 'actions:write'] }); }
     if (pathname === '/api/dashboard' && req.method === 'GET') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); return json(res, 200, dashboardFor(claims.tenantId)); }
     if (pathname === '/api/reports/overview' && req.method === 'GET') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); return json(res, 200, reportsFor(claims.tenantId)); }
+    if (pathname === '/api/export' && req.method === 'GET') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); const type = requestUrl.searchParams.get('type') || 'customers'; if (!exportableTypes.has(type)) return json(res, 422, { error: 'unsupported_export_type' }); res.writeHead(200, { 'content-type': 'text/csv; charset=utf-8', 'content-disposition': `attachment; filename="northstar-${type}.csv"`, 'cache-control': 'no-store' }); return res.end(csvFor(claims.tenantId, type)); }
     const recordsMatch = pathname.match(/^\/api\/(customers|leads|estimates|invoices|plans|activities|dispatch|team|catalog|notifications)$/);
     if (recordsMatch && req.method === 'GET') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); return json(res, 200, { items: recordsFor(claims.tenantId, recordsMatch[1], requestUrl.searchParams.get('search') || ''), tenantId: claims.tenantId }); }
     if (pathname === '/api/customers' && req.method === 'POST') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); const body = await readBody(req); if (!body.name || !body.phone) return json(res, 422, { error: 'name_and_phone_required' }); const customer = { id: `${claims.tenantId}_customer_${Date.now()}`, tenantId: claims.tenantId, name: String(body.name).slice(0, 100), phone: String(body.phone).slice(0, 40), location: String(body.location || 'Address pending').slice(0, 120), lastService: 'New customer', status: 'Active' }; state.get(claims.tenantId).customers.unshift(customer); persist(); return json(res, 201, customer); }

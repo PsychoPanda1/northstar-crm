@@ -31,6 +31,9 @@ try {
   const paid = await request(`/api/invoices/${invoice.body.id}/pay`, jsonOptions('POST', {}, token));
   const timeline = await request('/api/activities?search=Smoke%20Customer', { headers: { authorization: `Bearer ${token}` } });
   assert(estimate.response.status === 201 && publicEstimate.body.status === 'Draft' && approved.body.status === 'Accepted' && invoice.response.status === 201 && paid.body.status === 'Paid' && timeline.body.items.length >= 2, 'quote-to-cash flow failed');
+  const exportResponse = await fetch(`${base}/api/export?type=invoices`, { headers: { authorization: `Bearer ${token}` } });
+  const exportCsv = await exportResponse.text();
+  assert(exportResponse.ok && exportResponse.headers.get('content-type').startsWith('text/csv') && exportCsv.includes('Smoke Customer') && exportCsv.includes('Paid'), 'CSV export failed');
   const otherLogin = await request('/api/auth/demo-login?service=powerwashing', jsonOptions('POST', {}));
   const otherLeads = await request('/api/leads?search=Smoke%20Lead', { headers: { authorization: `Bearer ${otherLogin.body.token}` } });
   assert(otherLeads.body.items.length === 0, 'tenant isolation failed');
