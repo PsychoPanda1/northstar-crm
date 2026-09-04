@@ -1,0 +1,63 @@
+import { createHmac, timingSafeEqual } from 'node:crypto';
+import { createReadStream, existsSync, readFileSync, statSync } from 'node:fs';
+import { extname, join, normalize, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createServer } from 'node:http';
+
+const ROOT = fileURLToPath(new URL('.', import.meta.url)).replace(/[\\/]$/, '');
+const PORT = Number(process.env.PORT || 4173);
+const SECRET = process.env.NORTHSTAR_SESSION_SECRET || 'northstar-local-demo-secret-change-me';
+const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.md': 'text/markdown; charset=utf-8' };
+
+const tenants = {
+  'johnson-service-co': { slug: 'johnson-service-co', businessName: 'Johnson Service Co.', serviceLabel: 'Home services' },
+  'clearwater-plumbing': { slug: 'clearwater-plumbing', businessName: 'Clearwater Plumbing', serviceLabel: 'Plumbing' },
+  'lowcountry-wash-co': { slug: 'lowcountry-wash-co', businessName: 'Lowcountry Wash Co.', serviceLabel: 'Power washing' },
+  'palmetto-electric': { slug: 'palmetto-electric', businessName: 'Palmetto Electric', serviceLabel: 'Electrical' },
+  'harbor-shine': { slug: 'harbor-shine', businessName: 'Harbor Shine Mobile', serviceLabel: 'Mobile car wash' }
+};
+const owners = { jordan: { id: 'owner_jordan', name: 'Jordan Smith', role: 'owner', tenantId: 'johnson-service-co' } };
+const state = new Map(Object.keys(tenants).map((tenantId) => [tenantId, { completedTasks: [], lastAction: null }]));
+
+const json = (res, status, body) => { res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' }); res.end(JSON.stringify(body)); };
+const readBody = async (req) => { let body = ''; for await (const chunk of req) body += chunk; return body ? JSON.parse(body) : {}; };
+const sign = (value) => createHmac('sha256', SECRET).update(value).digest('base64url');
+const issueToken = (owner) => { const payload = Buffer.from(JSON.stringify({ sub: owner.id, tenantId: owner.tenantId, exp: Date.now() + 1000 * 60 * 60 * 8 })).toString('base64url'); return `${payload}.${sign(payload)}`; };
+const authenticate = (req) => {
+  const raw = req.headers.authorization || '';
+  const token = raw.startsWith('Bearer ') ? raw.slice(7) : '';
+  const [payload, signature] = token.split('.');
+  if (!payload || !signature) return null;
+  const expected = sign(payload);
+  if (signature.length !== expected.length || !timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null;
+  try { const claims = JSON.parse(Buffer.from(payload, 'base64url')); return claims.exp > Date.now() && owners.jordan.id === claims.sub && tenants[claims.tenantId] ? claims : null; } catch { return null; }
+};
+const dashboardFor = (tenantId) => {
+  const base = { 'johnson-service-co': ['$84,290', '184', '32', '$42,680', '4.9', '$52,100', 9, '$12,480', 7, '$3,940', 14], 'clearwater-plumbing': ['$61,840', '142', '21', '$28,460', '4.8', '$38,720', 6, '$9,180', 4, '$2,860', 11], 'lowcountry-wash-co': ['$47,290', '216', '18', '$16,940', '4.9', '$22,180', 5, '$4,920', 8, '$2,140', 19], 'palmetto-electric': ['$93,480', '118', '27', '$64,820', '4.9', '$71,440', 8, '$19,320', 3, '$5,280', 8], 'harbor-shine': ['$39,620', '284', '16', '$12,740', '5.0', '$18,650', 4, '$3,180', 5, '$1,420', 26] }[tenantId];
+  const saved = state.get(tenantId);
+  return { tenant: tenants[tenantId], metrics: { revenue: base[0], jobs: base[1], estimates: base[2], estimateValue: base[3], satisfaction: base[4], pipeline: base[5] }, actions: { estimates: base[6], estimateValue: base[7], invoices: base[8], invoiceValue: base[9], renewals: base[10] }, completedTasks: saved.completedTasks, lastAction: saved.lastAction };
+};
+const sendStatic = (req, res) => {
+  const requested = decodeURIComponent(new URL(req.url, `http://${req.headers.host}`).pathname);
+  const relative = requested === '/' ? 'index.html' : requested.replace(/^\/+/, '');
+  const file = normalize(join(ROOT, relative));
+  if (!file.startsWith(ROOT + sep) || !existsSync(file) || !statSync(file).isFile()) return json(res, 404, { error: 'not_found' });
+  res.writeHead(200, { 'content-type': MIME[extname(file)] || 'application/octet-stream' }); createReadStream(file).pipe(res);
+};
+
+const server = createServer(async (req, res) => {
+  try {
+    if (req.url === '/api/health') return json(res, 200, { ok: true, service: 'northstar-api', version: '0.2.0' });
+    if (req.url === '/api/auth/demo-login' && req.method === 'POST') {
+      const body = await readBody(req); const service = body.service || 'default'; const map = { default: 'johnson-service-co', plumbing: 'clearwater-plumbing', powerwashing: 'lowcountry-wash-co', electrician: 'palmetto-electric', carwash: 'harbor-shine' }; const tenantId = map[service] || map.default; const owner = { ...owners.jordan, tenantId }; return json(res, 200, { token: issueToken(owner), owner: { id: owner.id, name: owner.name, role: owner.role }, tenant: tenants[tenantId] });
+    }
+    if (req.url === '/api/session' && req.method === 'GET') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); return json(res, 200, { owner: { id: claims.sub, name: owners.jordan.name, role: owners.jordan.role }, tenant: tenants[claims.tenantId], permissions: ['dashboard:read', 'tasks:write', 'actions:write'] }); }
+    if (req.url === '/api/dashboard' && req.method === 'GET') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); return json(res, 200, dashboardFor(claims.tenantId)); }
+    const taskMatch = req.url.match(/^\/api\/tasks\/(\d+)$/);
+    if (taskMatch && req.method === 'POST') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); const body = await readBody(req); const index = Number(taskMatch[1]); const saved = state.get(claims.tenantId); saved.completedTasks = saved.completedTasks.filter((item) => item !== index); if (body.completed) saved.completedTasks.push(index); return json(res, 200, { completedTasks: saved.completedTasks }); }
+    if (req.url === '/api/actions' && req.method === 'POST') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); const body = await readBody(req); state.get(claims.tenantId).lastAction = { action: String(body.action || '').slice(0, 80), at: new Date().toISOString() }; return json(res, 201, { ok: true }); }
+    if (req.method === 'GET') return sendStatic(req, res);
+    return json(res, 405, { error: 'method_not_allowed' });
+  } catch (error) { console.error(error); return json(res, 400, { error: 'bad_request' }); }
+});
+server.listen(PORT, () => console.log(`Northstar CRM running at http://localhost:${PORT}`));

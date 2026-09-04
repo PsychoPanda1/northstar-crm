@@ -17,10 +17,10 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 
 ## Run locally
 
-This is intentionally dependency-free. Open `index.html` directly, or serve the folder with any static server:
+This is intentionally dependency-free. Start the included API and static server directly with Node:
 
 ```powershell
-python -m http.server 4173
+node server.mjs
 ```
 
 Then visit http://localhost:4173.
@@ -32,6 +32,8 @@ See [PORTAL_CONTRACT.md](PORTAL_CONTRACT.md) before adding authentication, APIs,
 See [COMPETITIVE_RESEARCH.md](COMPETITIVE_RESEARCH.md) for the current ServiceTitan, Jobber, Housecall Pro, and FieldEdge benchmark and Northstar build order.
 
 The current dashboard reads through `data-repository.js`. It is deliberately a browser-only demo adapter; replace it with the authenticated `/api/session` and `/api/dashboard` contract before using real customer or financial data.
+
+Available local API routes include `GET /api/health`, `POST /api/auth/demo-login`, `GET /api/session`, `GET /api/dashboard`, `POST /api/tasks/:index`, and `POST /api/actions`. The demo API uses an HMAC-signed, short-lived token and in-memory state; production must use a real identity provider and persistent tenant-scoped storage.
 
 ## Next product slices
 

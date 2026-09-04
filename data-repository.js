@@ -13,9 +13,24 @@ class NorthstarDemoRepository {
     this.tenant = tenant;
     this.key = `northstar-demo:${tenant.slug}`;
     this.state = JSON.parse(localStorage.getItem(this.key) || '{}');
+    this.tokenKey = `northstar-demo-token:${tenant.slug}`;
+    this.token = sessionStorage.getItem(this.tokenKey);
+    this.apiAvailable = window.location.protocol !== 'file:';
+    this.ready = this.connect();
+  }
+
+  async connect() {
+    if (!this.apiAvailable) return;
+    try {
+      if (!this.token) { const login = await fetch('/api/auth/demo-login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ service: new URLSearchParams(window.location.search).get('service') || 'default' }) }); if (!login.ok) throw new Error('login failed'); this.token = (await login.json()).token; sessionStorage.setItem(this.tokenKey, this.token); }
+      const response = await fetch('/api/dashboard', { headers: { authorization: `Bearer ${this.token}` } });
+      if (!response.ok) throw new Error('dashboard unavailable');
+      this.remote = await response.json();
+    } catch { this.apiAvailable = false; }
   }
 
   getDashboard() {
+    if (this.remote) return this.remote;
     const seed = NORTHSTAR_DEMO_DATA[this.tenant.slug] || NORTHSTAR_DEMO_DATA['johnson-service-co'];
     return { ...seed, completedTasks: this.state.completedTasks || [] };
   }
@@ -25,10 +40,12 @@ class NorthstarDemoRepository {
     completed ? completedTasks.add(taskIndex) : completedTasks.delete(taskIndex);
     this.state.completedTasks = [...completedTasks];
     localStorage.setItem(this.key, JSON.stringify(this.state));
+    if (this.remote) fetch(`/api/tasks/${taskIndex}`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ completed }) }).catch(() => {});
   }
 
   recordAction(action) {
     this.state.lastAction = { action, at: new Date().toISOString() };
     localStorage.setItem(this.key, JSON.stringify(this.state));
+    if (this.remote) fetch('/api/actions', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ action }) }).catch(() => {});
   }
 }
