@@ -123,6 +123,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async getCustomerProfile(id) {
+    if (!this.remote) throw new Error('API required for customer profiles');
+    const response = await fetch(`/api/customers/${encodeURIComponent(id)}`, { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('customer profile unavailable');
+    return response.json();
+  }
+
   async createJob(customerId, service, time) {
     if (!this.remote) throw new Error('API required for job creation');
     const response = await fetch('/api/jobs', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ customerId, service, time }) });

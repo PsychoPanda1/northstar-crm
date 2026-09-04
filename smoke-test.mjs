@@ -33,6 +33,8 @@ try {
   const assets = await request('/api/assets?search=TS-42', { headers: { authorization: `Bearer ${token}` } });
   const assetExport = await fetch(`${base}/api/export?type=assets`, { headers: { authorization: `Bearer ${token}` } });
   assert(asset.response.status === 201 && assets.body.items.length === 1 && assets.body.items[0].customer === 'Smoke Lead' && (await assetExport.text()).includes('TS-42'), 'customer asset workflow failed');
+  const profile = await request(`/api/customers/${encodeURIComponent(converted.body.customer.id)}`, { headers: { authorization: `Bearer ${token}` } });
+  assert(profile.response.ok && profile.body.customer?.name === 'Smoke Lead' && profile.body.jobs?.length >= 1 && profile.body.assets?.length === 1 && profile.body.activities?.length >= 1, 'customer profile aggregation failed');
   const fieldJob = await request('/api/jobs', jsonOptions('POST', { customerId: converted.body.customer.id, service: 'Follow-up inspection', time: 'Friday 2:00 PM' }, token));
   await request(`/api/jobs/${fieldJob.body.id}/assign`, jsonOptions('POST', { technician: 'Alex Rivera' }, token));
   const techLink = await request(`/api/jobs/${fieldJob.body.id}/technician-link`, jsonOptions('POST', {}, token));
