@@ -66,6 +66,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async resolveRequest(id, note) {
+    if (!this.remote) throw new Error('API required for request resolution');
+    const response = await fetch(`/api/requests/${encodeURIComponent(id)}/resolve`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ note }) });
+    if (!response.ok) throw new Error('request resolution failed');
+    return response.json();
+  }
+
   completeTask(taskIndex, completed) {
     const completedTasks = new Set(this.state.completedTasks || []);
     completed ? completedTasks.add(taskIndex) : completedTasks.delete(taskIndex);
