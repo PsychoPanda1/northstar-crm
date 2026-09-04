@@ -52,7 +52,10 @@ try {
   const customerLink = await request(`/api/jobs/${fieldJob.body.id}/customer-link`, jsonOptions('POST', {}, token));
   const customerUrl = new URL(customerLink.body.url, base);
   const customerPortal = await request(`/api/public/customer-portal${customerUrl.search}`);
-  assert(customerLink.response.ok && customerPortal.body.customer.name === 'Smoke Lead' && customerPortal.body.jobs.length >= 2 && customerPortal.body.assets.length === 1 && !customerPortal.body.customer.tenantId, 'customer portal workflow failed');
+  const portalEstimate = await request('/api/estimates', jsonOptions('POST', { customer: 'Smoke Lead', service: 'Follow-up estimate', amount: 275 }, token));
+  const customerPortalWithEstimate = await request(`/api/public/customer-portal${customerUrl.search}`);
+  const portalApproval = await request(`/api/public/estimate/approve?token=${encodeURIComponent(customerPortalWithEstimate.body.estimates.find((item) => item.id === portalEstimate.body.id).estimateApprovalToken)}`, jsonOptions('POST', {}));
+  assert(customerLink.response.ok && customerPortal.body.customer.name === 'Smoke Lead' && customerPortal.body.jobs.length >= 2 && customerPortal.body.assets.length === 1 && !customerPortal.body.customer.tenantId && customerPortalWithEstimate.body.estimates.some((item) => item.id === portalEstimate.body.id && item.estimateApprovalToken) && portalApproval.body.status === 'Accepted', 'customer portal workflow failed');
   const guardJob = await request('/api/jobs', jsonOptions('POST', { customerId: converted.body.customer.id, service: 'Capacity check', time: 'Next Monday 10:00 AM' }, token));
   await request(`/api/jobs/${guardJob.body.id}/assign`, jsonOptions('POST', { technician: 'Alex Rivera' }, token));
   const conflictJob = await request('/api/jobs', jsonOptions('POST', { customerId: converted.body.customer.id, service: 'Same-time service', time: 'Next Monday 10:00 AM' }, token));
