@@ -95,6 +95,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async recommendTechnicians(jobId) {
+    if (!this.remote) throw new Error('API required for dispatch recommendations');
+    const response = await fetch(`/api/dispatch/recommendations?jobId=${encodeURIComponent(jobId)}`, { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('dispatch recommendations unavailable');
+    return response.json();
+  }
+
   async completeJob(id, note) {
     if (!this.remote) throw new Error('API required for job completion');
     const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/complete`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ note }) });
