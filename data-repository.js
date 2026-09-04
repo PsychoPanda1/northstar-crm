@@ -256,6 +256,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async invoicePaymentLink(id) {
+    if (!this.remote) throw new Error('API required for invoice payment links');
+    const response = await fetch(`/api/invoices/${encodeURIComponent(id)}/payment-link`, { method: 'POST', headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('invoice payment link unavailable');
+    return response.json();
+  }
+
   async logout() {
     if (this.token && this.remote) await fetch('/api/auth/logout', { method: 'POST', headers: { authorization: `Bearer ${this.token}` } });
     sessionStorage.removeItem(this.tokenKey);

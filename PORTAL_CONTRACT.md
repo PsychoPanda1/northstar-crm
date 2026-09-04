@@ -69,6 +69,8 @@ System events such as web-form lead capture, customer estimate approval, and rec
 - `POST /api/estimates/:id/convert` → convert an accepted estimate into a scheduled, checklist-ready job
 - `POST /api/invoices` → create an invoice only from an approved estimate
 - `POST /api/invoices/:id/pay` → record a full or partial tenant-owned invoice payment with method/reference; returns updated balance and payment ledger entry
+- `POST /api/invoices/:id/payment-link` → issue a 72-hour invoice payment link for the owner to share
+- `GET /api/public/invoice?token=...` and `POST /api/public/invoice/payment-intent?token=...` → expose safe invoice balance and create an idempotent Card/ACH payment intent; processor confirmation remains external
 
 ## Data model starting point
 

@@ -114,11 +114,16 @@ try {
   const publicEstimate = await request(`/api/public/estimate?token=${encodeURIComponent(estimate.body.estimateApprovalToken)}`);
   const approved = await request(`/api/public/estimate/approve?token=${encodeURIComponent(estimate.body.estimateApprovalToken)}`, jsonOptions('POST', {}));
   const invoice = await request('/api/invoices', jsonOptions('POST', { estimateId: estimate.body.id }, token));
+  const invoiceLink = await request(`/api/invoices/${invoice.body.id}/payment-link`, jsonOptions('POST', {}, token));
+  const invoiceUrl = new URL(invoiceLink.body.url, base);
+  const publicInvoice = await request(`/api/public/invoice${invoiceUrl.search}`);
+  const paymentIntent = await request(`/api/public/invoice/payment-intent${invoiceUrl.search}`, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': 'smoke-payment-intent' }, body: JSON.stringify({ amount: 50, method: 'Card' }) });
+  const duplicatePaymentIntent = await request(`/api/public/invoice/payment-intent${invoiceUrl.search}`, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': 'smoke-payment-intent' }, body: JSON.stringify({ amount: 50, method: 'Card' }) });
   const partial = await request(`/api/invoices/${invoice.body.id}/pay`, jsonOptions('POST', { amount: 100, method: 'Card', reference: 'SMOKE-1' }, token));
   const paid = await request(`/api/invoices/${invoice.body.id}/pay`, jsonOptions('POST', { method: 'ACH' }, token));
   const paymentLedger = await request('/api/payments?search=Smoke%20Customer', { headers: { authorization: `Bearer ${token}` } });
   const timeline = await request('/api/activities?search=Smoke%20Customer', { headers: { authorization: `Bearer ${token}` } });
-  assert(estimate.response.status === 201 && publicEstimate.body.status === 'Draft' && approved.body.status === 'Accepted' && invoice.response.status === 201 && partial.body.invoice.status === 'Partially paid' && partial.body.payment.amount === 100 && paid.body.invoice.status === 'Paid' && paid.body.invoice.balance === 0 && paymentLedger.body.items.length === 2 && timeline.body.items.length >= 2, 'quote-to-cash flow failed');
+  assert(estimate.response.status === 201 && publicEstimate.body.status === 'Draft' && approved.body.status === 'Accepted' && invoice.response.status === 201 && invoiceLink.response.ok && publicInvoice.body.customer === 'Smoke Customer' && publicInvoice.body.balance === 425 && paymentIntent.response.status === 201 && paymentIntent.body.status === 'Pending provider' && duplicatePaymentIntent.response.status === 200 && duplicatePaymentIntent.body.duplicate === true && partial.body.invoice.status === 'Partially paid' && partial.body.payment.amount === 100 && paid.body.invoice.status === 'Paid' && paid.body.invoice.balance === 0 && paymentLedger.body.items.length === 2 && timeline.body.items.length >= 2, 'quote-to-cash flow failed');
   const exportResponse = await fetch(`${base}/api/export?type=invoices`, { headers: { authorization: `Bearer ${token}` } });
   const exportCsv = await exportResponse.text();
   assert(exportResponse.ok && exportResponse.headers.get('content-type').startsWith('text/csv') && exportCsv.includes('Smoke Customer') && exportCsv.includes('Paid'), 'CSV export failed');
