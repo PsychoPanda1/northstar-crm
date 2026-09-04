@@ -24,6 +24,12 @@ try {
   const login = await request('/api/auth/demo-login?service=plumbing', jsonOptions('POST', {}));
   assert(login.response.ok, 'demo login failed');
   const token = login.body.token;
+  const technicianLogin = await request('/api/auth/demo-login?service=plumbing&role=technician', jsonOptions('POST', {}));
+  const technicianSession = await request('/api/session', { headers: { authorization: `Bearer ${technicianLogin.body.token}` } });
+  const technicianReports = await request('/api/reports/overview', { headers: { authorization: `Bearer ${technicianLogin.body.token}` } });
+  const accountantLogin = await request('/api/auth/demo-login?service=plumbing&role=accountant', jsonOptions('POST', {}));
+  const accountantReports = await request('/api/reports/overview', { headers: { authorization: `Bearer ${accountantLogin.body.token}` } });
+  assert(technicianLogin.response.ok && technicianSession.body.owner.role === 'technician' && technicianSession.body.permissions.includes('jobs:write') && technicianReports.response.status === 403 && accountantReports.response.ok, 'role permissions failed');
   const leadList = await request('/api/leads?search=Smoke%20Lead', { headers: { authorization: `Bearer ${token}` } });
   const leadNotifications = await request('/api/notifications?search=Smoke%20Lead', { headers: { authorization: `Bearer ${token}` } });
   const notificationRead = await request(`/api/notifications/${leadNotifications.body.items[0].id}/read`, jsonOptions('POST', {}, token));

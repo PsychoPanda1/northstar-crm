@@ -22,6 +22,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - Malformed JSON and request bodies above 64 KiB return controlled `400 bad_request` responses
 - Public lead CORS is opt-in through `NORTHSTAR_ALLOWED_ORIGINS`; unlisted origins are rejected during preflight
 - `GET /api/session` → `{ owner, tenant, permissions }`
+- Demo login accepts `role=owner|dispatcher|technician|accountant`; production identity claims must map to the returned permission names and enforce them server-side
 - `GET /api/customers` and `POST /api/customers` → list or create tenant-owned customer profiles
 - `GET /api/customers/:id` → return one tenant-scoped customer profile with related jobs, assets, estimates, invoices, plans, and activities
 - `POST /api/customers/:id/locations` → add a tenant-scoped service address to a customer profile

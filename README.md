@@ -25,6 +25,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Signed post-job review links with one-time 1–5 rating and timeline capture
 - Owner review workspace with searchable review history and CSV export
 - Review ratings feed dashboard satisfaction and owner reporting
+- Demo role permissions for owner, dispatcher, technician, and accountant workflows
 - New landing-page leads appear in the owner action queue for immediate follow-up
 - Landing-page retries can use an idempotency key to prevent duplicate leads
 - Owners can acknowledge active notifications while preserving the source record
@@ -63,4 +64,4 @@ Available local API routes include `GET /api/health`, `POST /api/auth/demo-login
 
 ## Next product slices
 
-The next implementation layer should replace demo auth with a real identity provider, add full customer/location/assets profiles, drag-and-drop dispatch, technician mobile workflows, payment-provider integration, and role-aware reporting. The current implementation provides the tenant-scoped API seams and local workflows future agents can extend safely.
+The next implementation layer should replace demo auth with a real identity provider, add full customer/location/assets profiles, drag-and-drop dispatch, technician mobile workflows, payment-provider integration, and durable audit storage. The local API now includes server-enforced demo role permissions for owner, dispatcher, technician, and accountant workflows; production identity claims should map to the same permission names.
