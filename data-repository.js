@@ -63,4 +63,11 @@ class NorthstarDemoRepository {
     if (!response.ok) throw new Error('job update failed');
     return response.json();
   }
+
+  async logActivity(customer, channel, note) {
+    if (!this.remote) throw new Error('API required for activity logging');
+    const response = await fetch('/api/activities', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ customer, channel, note }) });
+    if (!response.ok) throw new Error('activity logging failed');
+    return response.json();
+  }
 }
