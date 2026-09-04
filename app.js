@@ -1,5 +1,7 @@
+async function bootstrap() {
 const tenant = resolveTenant();
 const repository = new NorthstarDemoRepository(tenant);
+await repository.ready;
 const dashboard = repository.getDashboard();
 document.documentElement.style.setProperty('--tenant-accent', tenant.accent);
 document.documentElement.style.setProperty('--tenant-accent-soft', tenant.accentSoft);
@@ -43,3 +45,5 @@ document.querySelector('#demo-login').addEventListener('click', () => { loginDia
 document.querySelectorAll('[data-action]').forEach((button) => {
   button.addEventListener('click', () => { repository.recordAction(button.dataset.action); showToast(`${button.dataset.action} workspace ready to configure.`); });
 });
+}
+bootstrap();
