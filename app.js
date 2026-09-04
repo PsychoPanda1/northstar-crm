@@ -70,6 +70,8 @@ document.querySelector('#activity-view').addEventListener('click', async () => {
 document.querySelector('#report-view').addEventListener('click', async () => { drawer.dataset.view = 'reports'; drawerTitle.textContent = 'Reports overview'; recordSearch.value = ''; try { renderReport(await repository.getReport()); } catch { recordList.innerHTML = '<div class="empty-state">Reporting data is unavailable. Check your session or API.</div>'; } });
 document.querySelector('#team-view').addEventListener('click', () => openRecords('team'));
 document.querySelector('#catalog-view').addEventListener('click', () => openRecords('catalog'));
+const addCatalogButton = document.createElement('button'); addCatalogButton.className = 'primary-btn'; addCatalogButton.id = 'add-catalog-item'; addCatalogButton.textContent = 'Add pricebook item'; document.querySelector('#catalog-view').after(addCatalogButton);
+addCatalogButton.addEventListener('click', async () => { const name = window.prompt('Service name'); if (!name) return; const description = window.prompt('Description'); if (!description) return; const priceFrom = window.prompt('Starting price', '$149'); if (!priceFrom) return; try { await repository.createCatalogItem(name, description, priceFrom); showToast('Pricebook item added.'); openRecords('catalog'); } catch { showToast('Could not add pricebook item.'); } });
 document.querySelector('#asset-view').addEventListener('click', () => openRecords('assets'));
 document.querySelector('#request-view').addEventListener('click', () => openRecords('requests'));
 document.querySelector('#payment-view').addEventListener('click', () => openRecords('payments'));

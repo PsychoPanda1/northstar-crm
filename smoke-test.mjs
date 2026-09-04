@@ -36,6 +36,10 @@ try {
   const accountantLogin = await request('/api/auth/demo-login?service=plumbing&role=accountant', jsonOptions('POST', {}));
   const accountantReports = await request('/api/reports/overview', { headers: { authorization: `Bearer ${accountantLogin.body.token}` } });
   assert(technicianLogin.response.ok && technicianSession.body.owner.role === 'technician' && technicianSession.body.permissions.includes('field:write') && !technicianSession.body.permissions.includes('jobs:write') && technicianReports.response.status === 403 && technicianJobCreate.response.status === 403 && accountantReports.response.ok, 'role permissions failed');
+  const catalogItem = await request('/api/catalog', jsonOptions('POST', { name: 'Emergency pipe repair', description: 'Priority diagnosis and repair for active leaks', priceFrom: '$389' }, token));
+  const catalog = await request('/api/catalog?search=Emergency%20pipe', { headers: { authorization: `Bearer ${token}` } });
+  const accountantCatalogItem = await request('/api/catalog', jsonOptions('POST', { name: 'Unauthorized pricebook item', description: 'Should not be created', priceFrom: '$1' }, accountantLogin.body.token));
+  assert(catalogItem.response.status === 201 && catalog.body.items.some((item) => item.id === catalogItem.body.id) && accountantCatalogItem.response.status === 403, 'pricebook workflow failed');
   const material = await request('/api/materials', jsonOptions('POST', { name: '1/2 inch copper coupling', sku: 'CU-COUP-12', unit: 'each', unitCost: 8.5, onHand: 4, reorderPoint: 1 }, token));
   const materials = await request('/api/materials?search=copper', { headers: { authorization: `Bearer ${token}` } });
   assert(material.response.status === 201 && materials.body.items[0].status === 'In stock' && materials.body.items[0].onHand === 4, 'inventory receipt failed');

@@ -158,6 +158,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async createCatalogItem(name, description, priceFrom) {
+    if (!this.remote) throw new Error('API required for catalog editing');
+    const response = await fetch('/api/catalog', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ name, description, priceFrom }) });
+    if (!response.ok) throw new Error('catalog item creation failed');
+    return response.json();
+  }
+
   async createMaterial(name, sku, unit, unitCost, onHand, reorderPoint) {
     if (!this.remote) throw new Error('API required for material creation');
     const response = await fetch('/api/materials', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ name, sku, unit, unitCost, onHand, reorderPoint }) });
