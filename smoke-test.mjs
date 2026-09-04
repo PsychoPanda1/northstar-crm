@@ -30,9 +30,10 @@ try {
   const technicianLogin = await request('/api/auth/demo-login?service=plumbing&role=technician', jsonOptions('POST', {}));
   const technicianSession = await request('/api/session', { headers: { authorization: `Bearer ${technicianLogin.body.token}` } });
   const technicianReports = await request('/api/reports/overview', { headers: { authorization: `Bearer ${technicianLogin.body.token}` } });
+  const technicianJobCreate = await request('/api/jobs', jsonOptions('POST', { customerId: 'not-allowed', time: 'tomorrow' }, technicianLogin.body.token));
   const accountantLogin = await request('/api/auth/demo-login?service=plumbing&role=accountant', jsonOptions('POST', {}));
   const accountantReports = await request('/api/reports/overview', { headers: { authorization: `Bearer ${accountantLogin.body.token}` } });
-  assert(technicianLogin.response.ok && technicianSession.body.owner.role === 'technician' && technicianSession.body.permissions.includes('jobs:write') && technicianReports.response.status === 403 && accountantReports.response.ok, 'role permissions failed');
+  assert(technicianLogin.response.ok && technicianSession.body.owner.role === 'technician' && technicianSession.body.permissions.includes('field:write') && !technicianSession.body.permissions.includes('jobs:write') && technicianReports.response.status === 403 && technicianJobCreate.response.status === 403 && accountantReports.response.ok, 'role permissions failed');
   const material = await request('/api/materials', jsonOptions('POST', { name: '1/2 inch copper coupling', sku: 'CU-COUP-12', unit: 'each', unitCost: 8.5, onHand: 4, reorderPoint: 1 }, token));
   const materials = await request('/api/materials?search=copper', { headers: { authorization: `Bearer ${token}` } });
   assert(material.response.status === 201 && materials.body.items[0].status === 'In stock' && materials.body.items[0].onHand === 4, 'inventory receipt failed');
