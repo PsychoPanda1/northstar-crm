@@ -17,7 +17,7 @@ const tenants = {
   'harbor-shine': { slug: 'harbor-shine', businessName: 'Harbor Shine Mobile', serviceLabel: 'Mobile car wash' }
 };
 const owners = { jordan: { id: 'owner_jordan', name: 'Jordan Smith', role: 'owner', tenantId: 'johnson-service-co' } };
-const state = new Map(Object.keys(tenants).map((tenantId) => [tenantId, { completedTasks: [], lastAction: null }]));
+const state = new Map(Object.keys(tenants).map((tenantId) => [tenantId, { completedTasks: [], lastAction: null, leads: [], jobs: [] }]));
 
 const json = (res, status, body) => { res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' }); res.end(JSON.stringify(body)); };
 const readBody = async (req) => { let body = ''; for await (const chunk of req) body += chunk; return body ? JSON.parse(body) : {}; };
@@ -37,6 +37,18 @@ const dashboardFor = (tenantId) => {
   const saved = state.get(tenantId);
   return { tenant: tenants[tenantId], metrics: { revenue: base[0], jobs: base[1], estimates: base[2], estimateValue: base[3], satisfaction: base[4], pipeline: base[5] }, actions: { estimates: base[6], estimateValue: base[7], invoices: base[8], invoiceValue: base[9], renewals: base[10] }, completedTasks: saved.completedTasks, lastAction: saved.lastAction };
 };
+const recordsFor = (tenantId, type, search = '') => {
+  const business = tenants[tenantId];
+  const customerNames = ['Michael Torres', 'Aisha Patel', 'Sarah Chen', 'Daniel Brooks', 'Lakeside Property Group'];
+  const customers = customerNames.map((name, index) => ({ id: `${tenantId}_customer_${index + 1}`, tenantId, name, phone: ['843-555-0148', '843-555-0192', '843-555-0130', '843-555-0177', '843-555-0104'][index], location: ['105 King St', '38 Coming St', '12 Broad St', '214 Rutledge Ave', '17 Wentworth Ave'][index], lastService: ['Yesterday', 'Today', 'Aug 28', 'Aug 22', 'Aug 18'][index], status: index === 4 ? 'Lead' : 'Active' }));
+  const leads = [{ id: `${tenantId}_lead_1`, name: 'Lakeside Property Group', service: business.serviceLabel, source: 'Website landing page', age: '3 hrs ago', value: '$4,800' }, { id: `${tenantId}_lead_2`, name: 'Maya Robinson', service: 'Emergency service', source: 'Google Business Profile', age: 'Yesterday', value: '$680' }, ...state.get(tenantId).leads];
+  const estimates = [{ id: 'EST-1048', customer: 'Michael Torres', service: 'Annual service', value: '$1,240', status: 'Follow up', sent: '2 days ago' }, { id: 'EST-1045', customer: 'Sarah Chen', service: 'Kitchen remodel', value: '$4,820', status: 'Accepted', sent: 'Yesterday' }, { id: 'EST-1042', customer: 'Daniel Brooks', service: 'Repair visit', value: '$680', status: 'Viewed', sent: 'Aug 29' }];
+  const invoices = [{ id: 'INV-3021', customer: 'Lakeside Property Group', value: '$1,840', status: 'Overdue', due: 'Sep 4' }, { id: 'INV-3018', customer: 'Aisha Patel', value: '$620', status: 'Due soon', due: 'Sep 12' }, { id: 'INV-3009', customer: 'Michael Torres', value: '$289', status: 'Paid', due: 'Aug 30' }];
+  const dispatch = [{ id: 'JOB-2194', customer: 'Michael Torres', service: 'Annual maintenance', technician: 'Alex Rivera', status: 'Confirmed', time: '8:00 – 10:00 AM' }, { id: 'JOB-2195', customer: 'Aisha Patel', service: 'Repair visit', technician: 'Marcus Thompson', status: 'En route', time: '10:30 – 12:00 PM' }, { id: 'JOB-2196', customer: 'Lakeside Property Group', service: 'Installation', technician: null, status: 'Unassigned', time: '1:00 – 4:00 PM' }, ...state.get(tenantId).jobs];
+  const all = { customers, leads, estimates, invoices, dispatch }[type] || [];
+  const q = search.trim().toLowerCase();
+  return q ? all.filter((item) => Object.values(item).some((value) => String(value || '').toLowerCase().includes(q))) : all;
+};
 const sendStatic = (req, res) => {
   const requested = decodeURIComponent(new URL(req.url, `http://${req.headers.host}`).pathname);
   const relative = requested === '/' ? 'index.html' : requested.replace(/^\/+/, '');
@@ -53,6 +65,10 @@ const server = createServer(async (req, res) => {
     }
     if (req.url === '/api/session' && req.method === 'GET') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); return json(res, 200, { owner: { id: claims.sub, name: owners.jordan.name, role: owners.jordan.role }, tenant: tenants[claims.tenantId], permissions: ['dashboard:read', 'tasks:write', 'actions:write'] }); }
     if (req.url === '/api/dashboard' && req.method === 'GET') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); return json(res, 200, dashboardFor(claims.tenantId)); }
+    const recordsMatch = req.url.match(/^\/api\/(customers|leads|estimates|invoices|dispatch)(?:\?search=([^&]*))?$/);
+    if (recordsMatch && req.method === 'GET') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); return json(res, 200, { items: recordsFor(claims.tenantId, recordsMatch[1], decodeURIComponent(recordsMatch[2] || '')), tenantId: claims.tenantId }); }
+    if (req.url === '/api/leads' && req.method === 'POST') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); const body = await readBody(req); if (!body.name || !body.source) return json(res, 422, { error: 'name_and_source_required' }); const lead = { id: `${claims.tenantId}_lead_${Date.now()}`, tenantId: claims.tenantId, name: String(body.name).slice(0, 100), service: String(body.service || tenants[claims.tenantId].serviceLabel).slice(0, 80), source: String(body.source).slice(0, 80), age: 'Just now', value: '$0' }; state.get(claims.tenantId).leads.unshift(lead); return json(res, 201, lead); }
+    if (req.url === '/api/jobs' && req.method === 'POST') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); const body = await readBody(req); if (!body.customerId || !body.time) return json(res, 422, { error: 'customer_and_time_required' }); const job = { id: `${claims.tenantId}_job_${Date.now()}`, tenantId: claims.tenantId, customerId: String(body.customerId), service: String(body.service || tenants[claims.tenantId].serviceLabel), technician: null, status: 'Unassigned', time: String(body.time) }; state.get(claims.tenantId).jobs.unshift(job); return json(res, 201, job); }
     const taskMatch = req.url.match(/^\/api\/tasks\/(\d+)$/);
     if (taskMatch && req.method === 'POST') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); const body = await readBody(req); const index = Number(taskMatch[1]); const saved = state.get(claims.tenantId); saved.completedTasks = saved.completedTasks.filter((item) => item !== index); if (body.completed) saved.completedTasks.push(index); return json(res, 200, { completedTasks: saved.completedTasks }); }
     if (req.url === '/api/actions' && req.method === 'POST') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); const body = await readBody(req); state.get(claims.tenantId).lastAction = { action: String(body.action || '').slice(0, 80), at: new Date().toISOString() }; return json(res, 201, { ok: true }); }

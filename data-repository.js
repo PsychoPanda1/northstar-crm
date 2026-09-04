@@ -35,6 +35,13 @@ class NorthstarDemoRepository {
     return { ...seed, completedTasks: this.state.completedTasks || [] };
   }
 
+  async list(type, search = '') {
+    if (!this.remote) return [];
+    const response = await fetch(`/api/${type}${search ? `?search=${encodeURIComponent(search)}` : ''}`, { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('records unavailable');
+    return (await response.json()).items;
+  }
+
   completeTask(taskIndex, completed) {
     const completedTasks = new Set(this.state.completedTasks || []);
     completed ? completedTasks.add(taskIndex) : completedTasks.delete(taskIndex);

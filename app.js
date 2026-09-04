@@ -33,9 +33,10 @@ document.querySelectorAll('.task-list input').forEach((input, taskIndex) => {
   });
 });
 document.querySelectorAll('nav a').forEach((link) => {
-  link.addEventListener('click', () => {
+  link.addEventListener('click', (event) => {
     document.querySelector('nav a.active').classList.remove('active');
     link.classList.add('active');
+    if (link.dataset.view) { event.preventDefault(); openRecords(link.dataset.view); }
   });
 });
 document.querySelector('#workspace-switcher').addEventListener('click', () => loginDialog.showModal());
@@ -45,5 +46,16 @@ document.querySelector('#demo-login').addEventListener('click', () => { loginDia
 document.querySelectorAll('[data-action]').forEach((button) => {
   button.addEventListener('click', () => { repository.recordAction(button.dataset.action); showToast(`${button.dataset.action} workspace ready to configure.`); });
 });
+const drawer = document.querySelector('#record-drawer');
+const drawerTitle = document.querySelector('#drawer-title');
+const recordList = document.querySelector('#record-list');
+const recordSearch = document.querySelector('#record-search');
+const viewTitles = { customers: 'Customers', leads: 'Lead inbox', estimates: 'Estimates', invoices: 'Invoices', dispatch: 'Dispatch board' };
+const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
+const renderRecords = (items) => { recordList.innerHTML = items.length ? items.map((item) => `<article class="record-card"><div><span class="record-id">${escapeHtml(item.id || 'RECORD')}</span><h3>${escapeHtml(item.name || item.customer || item.service)}</h3><p>${escapeHtml(item.phone || item.location || item.source || item.technician || 'No additional detail')}</p></div><span class="record-status">${escapeHtml(item.status || item.value || item.time || '')}</span></article>`).join('') : '<div class="empty-state">No records match this search.</div>'; };
+async function openRecords(type) { drawerTitle.textContent = viewTitles[type] || 'Workspace'; drawer.classList.add('open'); drawer.setAttribute('aria-hidden', 'false'); recordSearch.value = ''; try { renderRecords(await repository.list(type), type); } catch { recordList.innerHTML = '<div class="empty-state">Workspace data is unavailable. Check your session or API.</div>'; } }
+document.querySelector('#close-drawer').addEventListener('click', () => { drawer.classList.remove('open'); drawer.setAttribute('aria-hidden', 'true'); });
+document.querySelector('#drawer-refresh').addEventListener('click', () => { const active = document.querySelector('nav a.active')?.dataset.view; if (active) openRecords(active); });
+recordSearch.addEventListener('input', async () => { const active = document.querySelector('nav a.active')?.dataset.view; if (!active) return; try { renderRecords(await repository.list(active, recordSearch.value), active); } catch {} });
 }
 bootstrap();
