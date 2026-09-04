@@ -75,6 +75,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 System events such as web-form lead capture, customer estimate approval, and recorded payment are appended to the same activity timeline automatically.
 - `POST /api/auth/logout` → revoke the current session
 - `POST /api/estimates` → create a draft estimate
+- `POST /api/estimates` accepts an optional `catalogItemId` and snapshots the tenant pricebook item on the estimate so later catalog edits do not rewrite historical quotes
 - `POST /api/estimates/:id/approve` → approve a tenant-owned estimate
 - `POST /api/estimates/:id/convert` → convert an accepted estimate into a scheduled, checklist-ready job
 - `POST /api/invoices` → create an invoice only from an approved estimate

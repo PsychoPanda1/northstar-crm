@@ -235,9 +235,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async createEstimate(customer, service, amount) {
+  async createEstimate(customer, service, amount, catalogItemId = null) {
     if (!this.remote) throw new Error('API required for estimate creation');
-    const response = await fetch('/api/estimates', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ customer, service, amount }) });
+    const response = await fetch('/api/estimates', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ customer, service, amount, ...(catalogItemId ? { catalogItemId } : {}) }) });
     if (!response.ok) throw new Error('estimate creation failed');
     return response.json();
   }
