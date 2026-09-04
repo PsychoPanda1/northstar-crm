@@ -33,7 +33,7 @@ See [COMPETITIVE_RESEARCH.md](COMPETITIVE_RESEARCH.md) for the current ServiceTi
 
 The current dashboard reads through `data-repository.js`. It is deliberately a browser-only demo adapter; replace it with the authenticated `/api/session` and `/api/dashboard` contract before using real customer or financial data.
 
-Available local API routes include `GET /api/health`, `POST /api/auth/demo-login`, `GET /api/session`, `GET /api/dashboard`, `GET /api/customers`, `GET /api/leads`, `GET /api/estimates`, `GET /api/invoices`, `GET /api/dispatch`, `POST /api/leads`, `POST /api/jobs`, `POST /api/tasks/:index`, and `POST /api/actions`. The demo API uses an HMAC-signed, short-lived token and persists local development state in the ignored `.northstar-data.json`; production must use a real identity provider and durable tenant-scoped storage.
+Available local API routes include `GET /api/health`, `POST /api/auth/demo-login`, `GET /api/session`, `GET /api/dashboard`, `GET /api/customers`, `GET /api/leads`, `GET /api/estimates`, `GET /api/invoices`, `GET /api/dispatch`, `POST /api/leads`, `POST /api/jobs`, `POST /api/estimates`, `POST /api/estimates/:id/approve`, `POST /api/invoices`, `POST /api/invoices/:id/pay`, `POST /api/tasks/:index`, and `POST /api/actions`. The demo API uses an HMAC-signed, short-lived token and persists local development state in the ignored `.northstar-data.json`; production must use a real identity provider and durable tenant-scoped storage.
 
 ## Next product slices
 

@@ -22,6 +22,10 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - `GET /api/dashboard?range=week` → `{ metrics, pipeline, tasks, schedule, activity }`
 - `POST /api/jobs` → create a job after server-side tenant and role checks
 - `POST /api/auth/logout` → revoke the current session
+- `POST /api/estimates` → create a draft estimate
+- `POST /api/estimates/:id/approve` → approve a tenant-owned estimate
+- `POST /api/invoices` → create an invoice only from an approved estimate
+- `POST /api/invoices/:id/pay` → record payment against a tenant-owned invoice
 
 ## Data model starting point
 
