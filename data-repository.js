@@ -165,6 +165,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async logLabor(jobId, technician, hours, hourlyRate) {
+    if (!this.remote) throw new Error('API required for labor logging');
+    const response = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/labor`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ technician, hours, hourlyRate }) });
+    if (!response.ok) throw new Error('labor logging failed');
+    return response.json();
+  }
+
   async createPurchaseOrder(materialId, vendor, quantity, unitCost) {
     if (!this.remote) throw new Error('API required for purchase orders');
     const response = await fetch('/api/purchase-orders', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ materialId, vendor, quantity, unitCost }) });
