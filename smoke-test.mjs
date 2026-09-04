@@ -25,10 +25,11 @@ try {
   const publicStatus = await request(`/api/public/job-status?token=${encodeURIComponent(converted.body.customerPortalToken)}`);
   assert(converted.response.status === 201 && converted.body.job.leadId === leadList.body.items[0].id && converted.body.job.customerId === converted.body.customer.id && convertedCustomer.body.items.length === 1 && publicStatus.body.status === 'Unassigned', 'lead conversion failed');
   const estimate = await request('/api/estimates', jsonOptions('POST', { customer: 'Smoke Customer', service: 'Leak repair', amount: 425 }, token));
-  const approved = await request(`/api/estimates/${estimate.body.id}/approve`, jsonOptions('POST', {}, token));
+  const publicEstimate = await request(`/api/public/estimate?token=${encodeURIComponent(estimate.body.estimateApprovalToken)}`);
+  const approved = await request(`/api/public/estimate/approve?token=${encodeURIComponent(estimate.body.estimateApprovalToken)}`, jsonOptions('POST', {}));
   const invoice = await request('/api/invoices', jsonOptions('POST', { estimateId: estimate.body.id }, token));
   const paid = await request(`/api/invoices/${invoice.body.id}/pay`, jsonOptions('POST', {}, token));
-  assert(estimate.response.status === 201 && approved.body.status === 'Accepted' && invoice.response.status === 201 && paid.body.status === 'Paid', 'quote-to-cash flow failed');
+  assert(estimate.response.status === 201 && publicEstimate.body.status === 'Draft' && approved.body.status === 'Accepted' && invoice.response.status === 201 && paid.body.status === 'Paid', 'quote-to-cash flow failed');
   const otherLogin = await request('/api/auth/demo-login?service=powerwashing', jsonOptions('POST', {}));
   const otherLeads = await request('/api/leads?search=Smoke%20Lead', { headers: { authorization: `Bearer ${otherLogin.body.token}` } });
   assert(otherLeads.body.items.length === 0, 'tenant isolation failed');
