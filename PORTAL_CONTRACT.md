@@ -37,6 +37,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - `GET /api/export?type=reviews` → tenant-scoped review history CSV for owner reporting
 - `GET /api/materials` and `POST /api/materials` → tenant-scoped inventory records with stock and reorder thresholds
 - `POST /api/jobs/:id/materials` → consume stocked material against a tenant-owned job and append an inventory transaction
+- `GET /api/purchase-orders`, `POST /api/purchase-orders`, and `POST /api/purchase-orders/:id/receive` → create and receive replenishment orders with automatic stock reconciliation
 - `GET /api/payments` → tenant-scoped payment ledger for reconciliation and accounting handoff
 - `GET /api/export?type=customers|leads|estimates|invoices|payments|plans|activities|dispatch|assets` → tenant-scoped CSV export for owner reporting and accounting handoff
 - `POST /api/jobs` → create a job after server-side tenant and role checks

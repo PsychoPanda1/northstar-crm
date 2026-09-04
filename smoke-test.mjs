@@ -41,9 +41,12 @@ try {
   const converted = await request(`/api/leads/${leadList.body.items[0].id}/convert`, jsonOptions('POST', { time: 'Tomorrow 9:00 AM' }, token));
   const materialUse = await request(`/api/jobs/${converted.body.job.id}/materials`, jsonOptions('POST', { materialId: material.body.id, quantity: 3 }, token));
   const lowStockMaterials = await request('/api/materials?search=copper', { headers: { authorization: `Bearer ${token}` } });
+  const purchaseOrder = await request('/api/purchase-orders', jsonOptions('POST', { materialId: material.body.id, vendor: 'Charleston Supply', quantity: 6, unitCost: 7.75 }, token));
+  const openPurchaseOrders = await request('/api/purchase-orders', { headers: { authorization: `Bearer ${token}` } });
+  const receivedPurchaseOrder = await request(`/api/purchase-orders/${purchaseOrder.body.id}/receive`, jsonOptions('POST', {}, token));
   const convertedCustomer = await request('/api/customers?search=Smoke%20Lead', { headers: { authorization: `Bearer ${token}` } });
   const publicStatus = await request(`/api/public/job-status?token=${encodeURIComponent(converted.body.customerPortalToken)}`);
-  assert(converted.response.status === 201 && materialUse.response.ok && materialUse.body.job.materials[0].quantity === 3 && lowStockMaterials.body.items[0].onHand === 1 && lowStockMaterials.body.items[0].status === 'Low stock' && converted.body.job.leadId === leadList.body.items[0].id && converted.body.job.customerId === converted.body.customer.id && convertedCustomer.body.items.length === 1 && publicStatus.body.status === 'Unassigned', 'lead conversion or inventory usage failed');
+  assert(converted.response.status === 201 && materialUse.response.ok && materialUse.body.job.materials[0].quantity === 3 && lowStockMaterials.body.items[0].onHand === 1 && lowStockMaterials.body.items[0].status === 'Low stock' && purchaseOrder.response.status === 201 && openPurchaseOrders.body.items[0].status === 'Open' && receivedPurchaseOrder.response.ok && receivedPurchaseOrder.body.material.onHand === 7 && converted.body.job.leadId === leadList.body.items[0].id && converted.body.job.customerId === converted.body.customer.id && convertedCustomer.body.items.length === 1 && publicStatus.body.status === 'Unassigned', 'lead conversion or inventory usage failed');
   const assigned = await request(`/api/jobs/${converted.body.job.id}/assign`, jsonOptions('POST', { technician: 'Alex Rivera' }, token));
   const assignmentTimeline = await request('/api/activities?search=Assigned%20Plumbing', { headers: { authorization: `Bearer ${token}` } });
   const teamBusy = await request('/api/team', { headers: { authorization: `Bearer ${token}` } });

@@ -165,6 +165,20 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async createPurchaseOrder(materialId, vendor, quantity, unitCost) {
+    if (!this.remote) throw new Error('API required for purchase orders');
+    const response = await fetch('/api/purchase-orders', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ materialId, vendor, quantity, unitCost }) });
+    if (!response.ok) throw new Error('purchase order creation failed');
+    return response.json();
+  }
+
+  async receivePurchaseOrder(id) {
+    if (!this.remote) throw new Error('API required for purchase order receiving');
+    const response = await fetch(`/api/purchase-orders/${encodeURIComponent(id)}/receive`, { method: 'POST', headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('purchase order receiving failed');
+    return response.json();
+  }
+
   async renewPlan(id, time) {
     if (!this.remote) throw new Error('API required for plan renewal');
     const response = await fetch(`/api/plans/${encodeURIComponent(id)}/renew`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ time }) });
