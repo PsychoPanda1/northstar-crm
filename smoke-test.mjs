@@ -44,9 +44,10 @@ try {
   assert(message.response.status === 201 && message.body.status === 'Queued (provider pending)' && messages.body.items.length === 1 && messages.body.items[0].channel === 'SMS', 'message workflow failed');
   const leadList = await request('/api/leads?search=Smoke%20Lead', { headers: { authorization: `Bearer ${token}` } });
   const leadNotifications = await request('/api/notifications?search=Smoke%20Lead', { headers: { authorization: `Bearer ${token}` } });
+  const audit = await request('/api/audit?search=Smoke%20Lead', { headers: { authorization: `Bearer ${token}` } });
   const notificationRead = await request(`/api/notifications/${leadNotifications.body.items[0].id}/read`, jsonOptions('POST', {}, token));
   const readNotifications = await request('/api/notifications?search=Smoke%20Lead', { headers: { authorization: `Bearer ${token}` } });
-  assert(leadList.body.items.length === 1 && leadNotifications.body.items.length === 1 && leadNotifications.body.items[0].title === 'New lead needs follow-up' && notificationRead.body.read === true && readNotifications.body.items[0].read === true, 'owner cannot see captured lead');
+  assert(leadList.body.items.length === 1 && leadNotifications.body.items.length === 1 && audit.body.items.length >= 1 && audit.body.items[0].entityType === 'customer' && leadNotifications.body.items[0].title === 'New lead needs follow-up' && notificationRead.body.read === true && readNotifications.body.items[0].read === true, 'owner cannot see captured lead or audit trail');
   const converted = await request(`/api/leads/${leadList.body.items[0].id}/convert`, jsonOptions('POST', { time: 'Tomorrow 9:00 AM' }, token));
   const materialUse = await request(`/api/jobs/${converted.body.job.id}/materials`, jsonOptions('POST', { materialId: material.body.id, quantity: 3 }, token));
   const labor = await request(`/api/jobs/${converted.body.job.id}/labor`, jsonOptions('POST', { technician: 'Alex Rivera', hours: 2, hourlyRate: 75 }, token));

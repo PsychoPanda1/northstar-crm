@@ -64,6 +64,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - `GET /api/plans` and `POST /api/plans` → list or create recurring service plans
 - `POST /api/plans/:id/renew` → renew a tenant-owned service plan and optionally schedule its next visit with `time`
 - `GET /api/activities` and `POST /api/activities` → read or log tenant-owned customer calls, messages, and notes
+- `GET /api/audit` and `GET /api/export?type=audit` → read or export a tenant-scoped event ledger for workflow traceability; prototype activity events use a system actor and production should attach verified identity/provider actors
 - `GET /api/messages` and `POST /api/messages` → list or queue tenant-owned SMS/email messages; delivery remains provider-dependent until an external messaging service is connected
 
 System events such as web-form lead capture, customer estimate approval, and recorded payment are appended to the same activity timeline automatically.
