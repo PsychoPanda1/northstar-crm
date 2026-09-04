@@ -18,6 +18,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 
 ## Recommended API shape
 
+- `POST /api/public/leads` → accept a constrained landing-page inquiry using a service key; production must add validation, rate limiting, spam protection, and durable storage
 - `GET /api/session` → `{ owner, tenant, permissions }`
 - `GET /api/customers` and `POST /api/customers` → list or create tenant-owned customer profiles
 - `GET /api/dashboard?range=week` → `{ metrics, pipeline, tasks, schedule, activity }`

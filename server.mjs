@@ -18,6 +18,7 @@ const tenants = {
   'harbor-shine': { slug: 'harbor-shine', businessName: 'Harbor Shine Mobile', serviceLabel: 'Mobile car wash' }
 };
 const owners = { jordan: { id: 'owner_jordan', name: 'Jordan Smith', role: 'owner', tenantId: 'johnson-service-co' } };
+const serviceTenant = { default: 'johnson-service-co', plumbing: 'clearwater-plumbing', powerwashing: 'lowcountry-wash-co', electrician: 'palmetto-electric', carwash: 'harbor-shine' };
 const blankState = () => ({ completedTasks: [], lastAction: null, leads: [], jobs: [], estimates: [], invoices: [], plans: [], activities: [], customers: [] });
 const persisted = existsSync(DATA_FILE) ? JSON.parse(readFileSync(DATA_FILE, 'utf8')) : {};
 const state = new Map(Object.keys(tenants).map((tenantId) => [tenantId, { ...blankState(), ...(persisted[tenantId] || {}) }]));
@@ -77,8 +78,9 @@ const server = createServer(async (req, res) => {
     const pathname = requestUrl.pathname;
     if (pathname === '/api/health' && req.method === 'GET') return json(res, 200, { ok: true, service: 'northstar-api', version: '0.2.0' });
     if (pathname === '/api/auth/demo-login' && req.method === 'POST') {
-      const body = await readBody(req); const service = body.service || requestUrl.searchParams.get('service') || 'default'; const map = { default: 'johnson-service-co', plumbing: 'clearwater-plumbing', powerwashing: 'lowcountry-wash-co', electrician: 'palmetto-electric', carwash: 'harbor-shine' }; const tenantId = map[service] || map.default; const owner = { ...owners.jordan, tenantId }; return json(res, 200, { token: issueToken(owner), owner: { id: owner.id, name: owner.name, role: owner.role }, tenant: tenants[tenantId] });
+      const body = await readBody(req); const service = body.service || requestUrl.searchParams.get('service') || 'default'; const tenantId = serviceTenant[service] || serviceTenant.default; const owner = { ...owners.jordan, tenantId }; return json(res, 200, { token: issueToken(owner), owner: { id: owner.id, name: owner.name, role: owner.role }, tenant: tenants[tenantId] });
     }
+    if (pathname === '/api/public/leads' && req.method === 'POST') { const body = await readBody(req); const tenantId = serviceTenant[body.service] || serviceTenant.default; if (!body.name || (!body.email && !body.phone)) return json(res, 422, { error: 'name_and_contact_required' }); const lead = { id: `${tenantId}_lead_${Date.now()}`, tenantId, name: String(body.name).slice(0, 100), service: String(body.requestedService || tenants[tenantId].serviceLabel).slice(0, 80), source: String(body.source || 'Landing page').slice(0, 80), contact: String(body.email || body.phone).slice(0, 120), age: 'Just now', value: '$0', status: 'New' }; state.get(tenantId).leads.unshift(lead); persist(); return json(res, 201, { id: lead.id, received: true, tenant: tenants[tenantId] }); }
     if (pathname === '/api/session' && req.method === 'GET') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); return json(res, 200, { owner: { id: claims.sub, name: owners.jordan.name, role: owners.jordan.role }, tenant: tenants[claims.tenantId], permissions: ['dashboard:read', 'records:read', 'leads:write', 'jobs:write', 'estimates:write', 'invoices:write', 'tasks:write', 'actions:write'] }); }
     if (pathname === '/api/dashboard' && req.method === 'GET') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); return json(res, 200, dashboardFor(claims.tenantId)); }
     if (pathname === '/api/reports/overview' && req.method === 'GET') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); return json(res, 200, reportsFor(claims.tenantId)); }
