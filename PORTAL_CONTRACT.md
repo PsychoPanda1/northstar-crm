@@ -53,6 +53,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - `GET/POST /api/public/technician-job...` → technician-safe job detail and status/completion updates through the signed link
 - New jobs include a required three-step field checklist; `POST /api/public/technician-job/checklist?token=...` updates checklist items and technician completion rejects incomplete work
 - `POST /api/public/technician-job/photo?token=...` → attach up to 20 bounded HTTPS photo references with captions to the assigned job; production should replace URLs with signed object-storage uploads
+- The technician page queues field `POST` actions locally during transient offline periods and replays them in order on reconnect; the prototype queue is device-local and production needs encrypted storage, retry limits, and conflict handling
 - Dispatch assignment, status, and reschedule mutations append auditable customer timeline events
 - `POST /api/jobs/:id/customer-link` → issue a 72-hour customer portal link scoped to the job's customer
 - `POST /api/jobs/:id/review-link` → issue a 72-hour review link for a completed job

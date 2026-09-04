@@ -22,6 +22,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Secure 24-hour technician job links with mobile status updates and field completion
 - Structured technician checklists required before mobile completion
 - Technician photo evidence with bounded HTTPS metadata, captions, timestamps, and owner-visible job records
+- Offline-capable technician field actions that queue locally and replay when connectivity returns
 - Secure 72-hour customer portal links with appointments, equipment, estimates, invoices, and service plans
 - Signed post-job review links with one-time 1–5 rating and timeline capture
 - Owner review workspace with searchable review history and CSV export
@@ -75,4 +76,4 @@ Available local API routes include `GET /api/health`, `POST /api/auth/demo-login
 
 ## Next product slices
 
-The next implementation layer should replace demo auth with a real identity provider, add full customer/location/assets profiles, drag-and-drop dispatch, payment-provider webhooks, and durable audit storage. The local API includes server-enforced demo role permissions and restart-safe session revocation; production identity claims and revocation events should map to the same boundaries.
+The next implementation layer should replace demo auth with a real identity provider, add full customer/location/assets profiles, drag-and-drop dispatch, and durable audit storage. The local API includes server-enforced demo role permissions, restart-safe session revocation, and signed payment webhooks; production identity claims, revocation events, webhook secrets, and durable tenant storage should map to the same boundaries. The technician offline queue is intentionally device-local for this prototype; production should use encrypted managed offline storage plus an explicit conflict policy.

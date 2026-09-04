@@ -24,15 +24,39 @@
   </main>
   <script>
     const token = new URLSearchParams(location.search).get('token');
-    const api = (path, options = {}) => fetch(`${path}?token=${encodeURIComponent(token || '')}`, { ...options, headers: { 'content-type': 'application/json', ...(options.headers || {}) } });
+    const queueKey = `northstar-field-queue:${(token || 'missing').slice(-24)}`;
+    const readQueue = () => { try { return JSON.parse(localStorage.getItem(queueKey) || '[]'); } catch { return []; } };
+    const writeQueue = (items) => localStorage.setItem(queueKey, JSON.stringify(items.slice(-50)));
+    const message = (value) => { document.querySelector('#message').textContent = value; };
+    const rawApi = (path, options = {}) => fetch(`${path}?token=${encodeURIComponent(token || '')}`, { ...options, headers: { 'content-type': 'application/json', ...(options.headers || {}) } });
+    const flushQueue = async () => {
+      const pending = readQueue();
+      if (!pending.length || !navigator.onLine) return;
+      const remaining = [];
+      for (const item of pending) {
+        try { const response = await rawApi(item.path, item.options); if (!response.ok) remaining.push(item); }
+        catch { remaining.push(item); }
+      }
+      writeQueue(remaining);
+      if (!remaining.length) message('Offline field updates synchronized.');
+    };
+    const api = async (path, options = {}) => {
+      try { return await rawApi(path, options); }
+      catch (error) {
+        if (options.method !== 'POST') throw error;
+        writeQueue([...readQueue(), { path, options }]);
+        message('Connection unavailable. Field update saved on this device.');
+        return new Response(JSON.stringify({ offline: true }), { status: 202, headers: { 'content-type': 'application/json' } });
+      }
+    };
+    window.addEventListener('online', flushQueue);
     const set = (id, value) => { document.querySelector(`#${id}`).textContent = value || '—'; };
     const renderChecklist = (items) => { document.querySelector('#checklist').innerHTML = items.length ? `<div style="margin:18px 0 4px;font-weight:800;font-size:13px">Required work steps</div>${items.map((item,index)=>`<label style="display:block;padding:9px 0;font-size:13px"><input type="checkbox" data-check-index="${index}" ${item.completed?'checked':''} /> ${item.label}</label>`).join('')}` : ''; document.querySelectorAll('[data-check-index]').forEach((box)=>box.onchange=async()=>{box.disabled=true;const r=await api('/api/public/technician-job/checklist',{method:'POST',body:JSON.stringify({index:Number(box.dataset.checkIndex),completed:box.checked})});if(!r.ok){box.checked=!box.checked;message('Could not update checklist.')}box.disabled=false;}); };
     const renderPhotos = (items) => { document.querySelector('#photos').innerHTML = (items || []).map((photo) => `<div style="margin-top:10px;padding:10px;background:#f3f8f6;border-radius:10px"><a href="${photo.url}" target="_blank" rel="noopener">${photo.caption}</a><small style="display:block;color:#78908b">${new Date(photo.capturedAt).toLocaleString()}</small></div>`).join(''); };
-    const message = (value) => { document.querySelector('#message').textContent = value; };
     async function load() { if (!token) { message('This technician link is missing.'); return; } const response = await api('/api/public/technician-job'); if (!response.ok) { message('This job link is invalid or expired.'); return; } const job = await response.json(); set('service', job.service); set('customer', job.customer); set('time', job.time); set('technician', job.technician); set('status', job.status); renderChecklist(job.checklist || []); renderPhotos(job.photos || []); document.querySelector('#en-route').disabled = ['En route','In progress','Completed','Canceled'].includes(job.status); document.querySelector('#in-progress').disabled = ['In progress','Completed','Canceled'].includes(job.status); document.querySelector('#complete').disabled = ['Completed','Canceled'].includes(job.status); if (job.completionNote) document.querySelector('#note').value = job.completionNote; }
-    async function update(status) { const button = document.querySelector(status === 'En route' ? '#en-route' : '#in-progress'); button.disabled = true; const response = await api('/api/public/technician-job/status', { method:'POST', body:JSON.stringify({ status }) }); if (!response.ok) { message('Could not update job status.'); button.disabled = false; return; } message(`Job marked ${status.toLowerCase()}.`); load(); }
-    document.querySelector('#add-photo').onclick = async () => { const button = document.querySelector('#add-photo'); const photoUrl = document.querySelector('#photo-url').value.trim(); const caption = document.querySelector('#photo-caption').value.trim(); if (!photoUrl.startsWith('https://')) { message('Use an HTTPS photo URL.'); return; } button.disabled = true; const response = await api('/api/public/technician-job/photo', { method:'POST', body:JSON.stringify({ photoUrl, caption }) }); button.disabled = false; if (!response.ok) { message('Could not attach photo evidence.'); return; } document.querySelector('#photo-url').value = ''; document.querySelector('#photo-caption').value = ''; message('Photo evidence attached.'); load(); };
-    document.querySelector('#en-route').onclick = () => update('En route'); document.querySelector('#in-progress').onclick = () => update('In progress'); document.querySelector('#complete').onclick = async () => { const note = document.querySelector('#note').value.trim(); if (note.length < 3) { message('Add a completion note before finishing.'); return; } const button = document.querySelector('#complete'); button.disabled = true; const response = await api('/api/public/technician-job/complete', { method:'POST', body:JSON.stringify({ note }) }); if (!response.ok) { message('Could not complete this job.'); button.disabled = false; return; } message('Job completed and customer timeline updated.'); load(); }; load();
+    async function update(status) { const button = document.querySelector(status === 'En route' ? '#en-route' : '#in-progress'); button.disabled = true; const response = await api('/api/public/technician-job/status', { method:'POST', body:JSON.stringify({ status }) }); if (!response.ok) { message('Could not update job status.'); button.disabled = false; return; } if (response.status === 202) return; message(`Job marked ${status.toLowerCase()}.`); load(); }
+    document.querySelector('#add-photo').onclick = async () => { const button = document.querySelector('#add-photo'); const photoUrl = document.querySelector('#photo-url').value.trim(); const caption = document.querySelector('#photo-caption').value.trim(); if (!photoUrl.startsWith('https://')) { message('Use an HTTPS photo URL.'); return; } button.disabled = true; const response = await api('/api/public/technician-job/photo', { method:'POST', body:JSON.stringify({ photoUrl, caption }) }); button.disabled = false; if (!response.ok) { message('Could not attach photo evidence.'); return; } if (response.status === 202) return; document.querySelector('#photo-url').value = ''; document.querySelector('#photo-caption').value = ''; message('Photo evidence attached.'); load(); };
+    document.querySelector('#en-route').onclick = () => update('En route'); document.querySelector('#in-progress').onclick = () => update('In progress'); document.querySelector('#complete').onclick = async () => { const note = document.querySelector('#note').value.trim(); if (note.length < 3) { message('Add a completion note before finishing.'); return; } const button = document.querySelector('#complete'); button.disabled = true; const response = await api('/api/public/technician-job/complete', { method:'POST', body:JSON.stringify({ note }) }); if (!response.ok) { message('Could not complete this job.'); button.disabled = false; return; } if (response.status === 202) return; message('Job completed and customer timeline updated.'); load(); }; load(); flushQueue();
   </script>
 </body>
 </html>
