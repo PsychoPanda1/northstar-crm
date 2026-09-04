@@ -31,6 +31,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - `POST /api/leads/:id/convert` → convert a tenant-owned lead into a customer and scheduled job while preserving lead attribution
 - `POST /api/jobs/:id/assign` and `POST /api/jobs/:id/status` → update a tenant-owned job's technician and lifecycle state
 - `POST /api/jobs/:id/reschedule` → change the appointment time without recreating the job
+- `POST /api/jobs/:id/complete` → complete assigned work with a required note, timestamp, and automatic customer timeline event
 - `GET /api/plans` and `POST /api/plans` → list or create recurring service plans
 - `POST /api/plans/:id/renew` → renew a tenant-owned service plan
 - `GET /api/activities` and `POST /api/activities` → read or log tenant-owned customer calls, messages, and notes
