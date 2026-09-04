@@ -126,4 +126,11 @@ class NorthstarDemoRepository {
     if (!response.ok) throw new Error('payment failed');
     return response.json();
   }
+
+  async logout() {
+    if (this.token && this.remote) await fetch('/api/auth/logout', { method: 'POST', headers: { authorization: `Bearer ${this.token}` } });
+    sessionStorage.removeItem(this.tokenKey);
+    this.token = null;
+    this.remote = null;
+  }
 }

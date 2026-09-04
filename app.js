@@ -46,6 +46,7 @@ document.querySelector('#workspace-switcher').addEventListener('click', () => lo
 document.querySelector('#owner-account').addEventListener('click', () => loginDialog.showModal());
 document.querySelector('#close-login').addEventListener('click', () => loginDialog.close());
 document.querySelector('#demo-login').addEventListener('click', () => { loginDialog.close(); showToast(`Demo session active for ${tenant.businessName}.`); });
+document.querySelector('#sign-out').addEventListener('click', async () => { await repository.logout(); loginDialog.close(); showToast('Demo session signed out.'); });
 document.querySelectorAll('[data-action]').forEach((button) => {
   button.addEventListener('click', () => { repository.recordAction(button.dataset.action); if (button.dataset.action === 'View service plans') openRecords('plans'); else showToast(`${button.dataset.action} workspace ready to configure.`); });
 });
