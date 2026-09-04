@@ -64,7 +64,8 @@ const dashboardFor = (tenantId) => {
   const paid = saved.invoices.reduce((sum, item) => sum + Number(item.paidAmount || (item.status === 'Paid' ? item.amount : 0) || 0), 0);
   const estimateValue = saved.estimates.reduce((sum, item) => sum + Number(item.amount || 0), 0);
   const dueValue = saved.invoices.filter((item) => item.status !== 'Paid').reduce((sum, item) => sum + Number(item.balance ?? item.amount ?? 0), 0);
-  return { tenant: tenants[tenantId], metrics: { revenue: money(amount(base[0]) + paid), jobs: String(Number(base[1]) + saved.jobs.length), estimates: String(Number(base[2]) + saved.estimates.length), estimateValue: money(amount(base[3]) + estimateValue), satisfaction: base[4], pipeline: money(amount(base[5]) + estimateValue) }, actions: { estimates: base[6] + saved.estimates.filter((item) => item.status !== 'Accepted').length, estimateValue: money(amount(base[7]) + estimateValue), invoices: base[8] + saved.invoices.filter((item) => item.status !== 'Paid').length, invoiceValue: money(amount(base[9]) + dueValue), renewals: base[10] + saved.plans.filter((item) => item.status === 'Renewing soon').length }, completedTasks: saved.completedTasks, lastAction: saved.lastAction };
+  const satisfaction = saved.reviews.length ? (saved.reviews.reduce((sum, item) => sum + item.rating, 0) / saved.reviews.length).toFixed(1) : base[4];
+  return { tenant: tenants[tenantId], metrics: { revenue: money(amount(base[0]) + paid), jobs: String(Number(base[1]) + saved.jobs.length), estimates: String(Number(base[2]) + saved.estimates.length), estimateValue: money(amount(base[3]) + estimateValue), satisfaction, pipeline: money(amount(base[5]) + estimateValue) }, actions: { estimates: base[6] + saved.estimates.filter((item) => item.status !== 'Accepted').length, estimateValue: money(amount(base[7]) + estimateValue), invoices: base[8] + saved.invoices.filter((item) => item.status !== 'Paid').length, invoiceValue: money(amount(base[9]) + dueValue), renewals: base[10] + saved.plans.filter((item) => item.status === 'Renewing soon').length }, completedTasks: saved.completedTasks, lastAction: saved.lastAction };
 };
 const reportsFor = (tenantId) => {
   const saved = state.get(tenantId);
@@ -72,7 +73,8 @@ const reportsFor = (tenantId) => {
   const converted = saved.leads.filter((item) => item.status === 'Converted').length;
   const paid = saved.invoices.filter((item) => item.status === 'Paid').reduce((sum, item) => sum + Number(item.amount || 0), 0);
   const recurring = saved.plans.filter((item) => item.status === 'Active').reduce((sum, item) => sum + Number(item.amount || 0), 0);
-  return { tenant: tenants[tenantId], period: 'All development activity', metrics: [{ label: 'New leads', value: String(saved.leads.length), detail: `${converted} converted to jobs` }, { label: 'Lead conversion', value: saved.leads.length ? `${Math.round((converted / saved.leads.length) * 100)}%` : '0%', detail: 'Captured leads becoming scheduled work' }, { label: 'Scheduled jobs', value: String(saved.jobs.filter((item) => item.status !== 'Canceled').length), detail: 'Tenant-owned dispatch records' }, { label: 'Cash collected', value: money(paid), detail: 'Paid invoices from quote-to-cash' }, { label: 'Monthly recurring', value: money(recurring), detail: 'Active service plans' }, { label: 'Customer touchpoints', value: String(saved.activities.length), detail: 'Logged calls, messages, and notes' }] };
+  const satisfaction = saved.reviews.length ? `${(saved.reviews.reduce((sum, item) => sum + item.rating, 0) / saved.reviews.length).toFixed(1)} / 5` : 'No reviews';
+  return { tenant: tenants[tenantId], period: 'All development activity', metrics: [{ label: 'New leads', value: String(saved.leads.length), detail: `${converted} converted to jobs` }, { label: 'Lead conversion', value: saved.leads.length ? `${Math.round((converted / saved.leads.length) * 100)}%` : '0%', detail: 'Captured leads becoming scheduled work' }, { label: 'Scheduled jobs', value: String(saved.jobs.filter((item) => item.status !== 'Canceled').length), detail: 'Tenant-owned dispatch records' }, { label: 'Cash collected', value: money(paid), detail: 'Paid invoices from quote-to-cash' }, { label: 'Monthly recurring', value: money(recurring), detail: 'Active service plans' }, { label: 'Customer touchpoints', value: String(saved.activities.length), detail: 'Logged calls, messages, and notes' }, { label: 'Customer satisfaction', value: satisfaction, detail: `${saved.reviews.length} completed-job reviews` }] };
 };
 const recordsFor = (tenantId, type, search = '') => {
   const business = tenants[tenantId];
@@ -87,8 +89,9 @@ const recordsFor = (tenantId, type, search = '') => {
   const catalog = catalogFor(tenantId);
   const notifications = notificationsFor(tenantId);
   const assets = state.get(tenantId).assets;
+  const reviews = state.get(tenantId).reviews;
   const dispatch = [{ id: 'JOB-2194', customer: 'Michael Torres', service: 'Annual maintenance', technician: 'Alex Rivera', status: 'Confirmed', time: '8:00 – 10:00 AM' }, { id: 'JOB-2195', customer: 'Aisha Patel', service: 'Repair visit', technician: 'Marcus Thompson', status: 'En route', time: '10:30 – 12:00 PM' }, { id: 'JOB-2196', customer: 'Lakeside Property Group', service: 'Installation', technician: null, status: 'Unassigned', time: '1:00 – 4:00 PM' }, ...state.get(tenantId).jobs];
-  const all = { customers, leads, estimates, invoices, plans, activities, dispatch, team, catalog, notifications, assets }[type] || [];
+  const all = { customers, leads, estimates, invoices, plans, activities, dispatch, team, catalog, notifications, assets, reviews }[type] || [];
   const q = search.trim().toLowerCase();
   return q ? all.filter((item) => Object.values(item).some((value) => String(value || '').toLowerCase().includes(q))) : all;
 };
@@ -130,7 +133,7 @@ const server = createServer(async (req, res) => {
     if (pathname === '/api/dashboard' && req.method === 'GET') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); return json(res, 200, dashboardFor(claims.tenantId)); }
     if (pathname === '/api/reports/overview' && req.method === 'GET') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); return json(res, 200, reportsFor(claims.tenantId)); }
     if (pathname === '/api/export' && req.method === 'GET') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); const type = requestUrl.searchParams.get('type') || 'customers'; if (!exportableTypes.has(type)) return json(res, 422, { error: 'unsupported_export_type' }); res.writeHead(200, { 'content-type': 'text/csv; charset=utf-8', 'content-disposition': `attachment; filename="northstar-${type}.csv"`, 'cache-control': 'no-store' }); return res.end(csvFor(claims.tenantId, type)); }
-    const recordsMatch = pathname.match(/^\/api\/(customers|leads|estimates|invoices|plans|activities|dispatch|team|catalog|notifications|assets)$/);
+    const recordsMatch = pathname.match(/^\/api\/(customers|leads|estimates|invoices|plans|activities|dispatch|team|catalog|notifications|assets|reviews)$/);
     if (recordsMatch && req.method === 'GET') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); return json(res, 200, { items: recordsFor(claims.tenantId, recordsMatch[1], requestUrl.searchParams.get('search') || ''), tenantId: claims.tenantId }); }
     const customerProfileMatch = pathname.match(/^\/api\/customers\/([^/]+)$/);
     if (customerProfileMatch && req.method === 'GET') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); const profile = customerProfileFor(claims.tenantId, customerProfileMatch[1]); if (!profile) return json(res, 404, { error: 'customer_not_found' }); return json(res, 200, profile); }
