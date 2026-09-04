@@ -26,10 +26,11 @@ try {
   assert(converted.response.status === 201 && converted.body.job.leadId === leadList.body.items[0].id && converted.body.job.customerId === converted.body.customer.id && convertedCustomer.body.items.length === 1 && publicStatus.body.status === 'Unassigned', 'lead conversion failed');
   const assigned = await request(`/api/jobs/${converted.body.job.id}/assign`, jsonOptions('POST', { technician: 'Alex Rivera' }, token));
   const assignmentTimeline = await request('/api/activities?search=Assigned%20Plumbing', { headers: { authorization: `Bearer ${token}` } });
+  const teamBusy = await request('/api/team', { headers: { authorization: `Bearer ${token}` } });
   const completed = await request(`/api/jobs/${converted.body.job.id}/complete`, jsonOptions('POST', { note: 'Repaired leak and reviewed shutoff procedure.' }, token));
   const completedStatus = await request(`/api/public/job-status?token=${encodeURIComponent(converted.body.customerPortalToken)}`);
   const completedTimeline = await request('/api/activities?search=Repaired%20leak', { headers: { authorization: `Bearer ${token}` } });
-  assert(assigned.body.status === 'Confirmed' && assignmentTimeline.body.items.length === 1 && completed.response.status === 200 && completed.body.status === 'Completed' && completed.body.completedAt && completedStatus.body.status === 'Completed' && completedTimeline.body.items.length === 1, 'job completion workflow failed');
+  assert(assigned.body.status === 'Confirmed' && assignmentTimeline.body.items.length === 1 && teamBusy.body.items.find((item) => item.name === 'Alex Rivera')?.status === 'On job' && teamBusy.body.items.find((item) => item.name === 'Alex Rivera')?.activeJobs === 1 && completed.response.status === 200 && completed.body.status === 'Completed' && completed.body.completedAt && completedStatus.body.status === 'Completed' && completedTimeline.body.items.length === 1, 'job completion workflow failed');
   const asset = await request('/api/assets', jsonOptions('POST', { customer: 'Smoke Lead', name: 'Tankless water heater', serial: 'TS-42', installed: '2026-09-04' }, token));
   const assets = await request('/api/assets?search=TS-42', { headers: { authorization: `Bearer ${token}` } });
   const assetExport = await fetch(`${base}/api/export?type=assets`, { headers: { authorization: `Bearer ${token}` } });
