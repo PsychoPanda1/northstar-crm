@@ -5,7 +5,7 @@ Use the public lead endpoint from a service landing page. The service key can be
 ```js
 await fetch('https://crm.example.com/api/public/leads?service=plumbing', {
   method: 'POST',
-  headers: { 'content-type': 'application/json' },
+  headers: { 'content-type': 'application/json', 'Idempotency-Key': crypto.randomUUID() },
   body: JSON.stringify({
     name: form.name,
     phone: form.phone,
@@ -17,7 +17,7 @@ await fetch('https://crm.example.com/api/public/leads?service=plumbing', {
 });
 ```
 
-Supported service keys are `plumbing`, `powerwashing`, `electrician`, and `carwash`. A valid request returns `201` with `{ received: true, id, tenant }`. Missing contact information returns `422`; the honeypot and rate limit return `422` and `429` respectively.
+Supported service keys are `plumbing`, `powerwashing`, `electrician`, and `carwash`. A valid request returns `201` with `{ received: true, id, tenant }`. Repeating the same `Idempotency-Key` returns the original lead with `200` and `duplicate: true`, preventing retry-created duplicates. Missing contact information returns `422`; the honeypot and rate limit return `422` and `429` respectively.
 
 The endpoint is intentionally limited to lead intake. Owner records remain behind the authenticated session API, and the public service key is routing context—not authorization. Production deployments should place the endpoint behind an allowlisted origin, durable storage, stronger abuse controls, and an identity provider for owner access.
 
