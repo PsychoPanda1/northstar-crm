@@ -55,4 +55,12 @@ class NorthstarDemoRepository {
     localStorage.setItem(this.key, JSON.stringify(this.state));
     if (this.remote) fetch('/api/actions', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ action }) }).catch(() => {});
   }
+
+  async updateJob(id, action, value) {
+    if (!this.remote) throw new Error('API required for dispatch updates');
+    const body = action === 'assign' ? { technician: value } : { status: value };
+    const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/${action}`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify(body) });
+    if (!response.ok) throw new Error('job update failed');
+    return response.json();
+  }
 }
