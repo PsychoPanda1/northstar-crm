@@ -31,6 +31,8 @@ Run `node smoke-test.mjs` to launch an isolated temporary server and verify publ
 
 See [PORTAL_CONTRACT.md](PORTAL_CONTRACT.md) before adding authentication, APIs, or landing-page integrations.
 
+See [LANDING_PAGE_INTEGRATION.md](LANDING_PAGE_INTEGRATION.md) for the copyable form submission contract used by future service landing pages.
+
 See [COMPETITIVE_RESEARCH.md](COMPETITIVE_RESEARCH.md) for the current ServiceTitan, Jobber, Housecall Pro, and FieldEdge benchmark and Northstar build order.
 
 The current dashboard reads through `data-repository.js`. It is deliberately a browser-only demo adapter; replace it with the authenticated `/api/session` and `/api/dashboard` contract before using real customer or financial data.
