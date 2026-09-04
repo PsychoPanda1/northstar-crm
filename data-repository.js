@@ -42,6 +42,13 @@ class NorthstarDemoRepository {
     return (await response.json()).items;
   }
 
+  async getReport() {
+    if (!this.remote) throw new Error('API required for reporting');
+    const response = await fetch('/api/reports/overview', { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('report unavailable');
+    return response.json();
+  }
+
   completeTask(taskIndex, completed) {
     const completedTasks = new Set(this.state.completedTasks || []);
     completed ? completedTasks.add(taskIndex) : completedTasks.delete(taskIndex);

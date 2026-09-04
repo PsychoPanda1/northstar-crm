@@ -41,6 +41,14 @@ const dashboardFor = (tenantId) => {
   const saved = state.get(tenantId);
   return { tenant: tenants[tenantId], metrics: { revenue: base[0], jobs: base[1], estimates: base[2], estimateValue: base[3], satisfaction: base[4], pipeline: base[5] }, actions: { estimates: base[6], estimateValue: base[7], invoices: base[8], invoiceValue: base[9], renewals: base[10] }, completedTasks: saved.completedTasks, lastAction: saved.lastAction };
 };
+const reportsFor = (tenantId) => {
+  const saved = state.get(tenantId);
+  const money = (value) => `$${Number(value || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  const converted = saved.leads.filter((item) => item.status === 'Converted').length;
+  const paid = saved.invoices.filter((item) => item.status === 'Paid').reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  const recurring = saved.plans.filter((item) => item.status === 'Active').reduce((sum, item) => sum + Number(item.amount || 0), 0);
+  return { tenant: tenants[tenantId], period: 'All development activity', metrics: [{ label: 'New leads', value: String(saved.leads.length), detail: `${converted} converted to jobs` }, { label: 'Lead conversion', value: saved.leads.length ? `${Math.round((converted / saved.leads.length) * 100)}%` : '0%', detail: 'Captured leads becoming scheduled work' }, { label: 'Scheduled jobs', value: String(saved.jobs.filter((item) => item.status !== 'Canceled').length), detail: 'Tenant-owned dispatch records' }, { label: 'Cash collected', value: money(paid), detail: 'Paid invoices from quote-to-cash' }, { label: 'Monthly recurring', value: money(recurring), detail: 'Active service plans' }, { label: 'Customer touchpoints', value: String(saved.activities.length), detail: 'Logged calls, messages, and notes' }] };
+};
 const recordsFor = (tenantId, type, search = '') => {
   const business = tenants[tenantId];
   const customerNames = ['Michael Torres', 'Aisha Patel', 'Sarah Chen', 'Daniel Brooks', 'Lakeside Property Group'];
@@ -73,6 +81,7 @@ const server = createServer(async (req, res) => {
     }
     if (pathname === '/api/session' && req.method === 'GET') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); return json(res, 200, { owner: { id: claims.sub, name: owners.jordan.name, role: owners.jordan.role }, tenant: tenants[claims.tenantId], permissions: ['dashboard:read', 'records:read', 'leads:write', 'jobs:write', 'estimates:write', 'invoices:write', 'tasks:write', 'actions:write'] }); }
     if (pathname === '/api/dashboard' && req.method === 'GET') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); return json(res, 200, dashboardFor(claims.tenantId)); }
+    if (pathname === '/api/reports/overview' && req.method === 'GET') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); return json(res, 200, reportsFor(claims.tenantId)); }
     const recordsMatch = pathname.match(/^\/api\/(customers|leads|estimates|invoices|plans|activities|dispatch)$/);
     if (recordsMatch && req.method === 'GET') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); return json(res, 200, { items: recordsFor(claims.tenantId, recordsMatch[1], requestUrl.searchParams.get('search') || ''), tenantId: claims.tenantId }); }
     if (pathname === '/api/customers' && req.method === 'POST') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); const body = await readBody(req); if (!body.name || !body.phone) return json(res, 422, { error: 'name_and_phone_required' }); const customer = { id: `${claims.tenantId}_customer_${Date.now()}`, tenantId: claims.tenantId, name: String(body.name).slice(0, 100), phone: String(body.phone).slice(0, 40), location: String(body.location || 'Address pending').slice(0, 120), lastService: 'New customer', status: 'Active' }; state.get(claims.tenantId).customers.unshift(customer); persist(); return json(res, 201, customer); }
