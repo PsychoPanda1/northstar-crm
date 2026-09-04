@@ -29,7 +29,8 @@ try {
   const approved = await request(`/api/public/estimate/approve?token=${encodeURIComponent(estimate.body.estimateApprovalToken)}`, jsonOptions('POST', {}));
   const invoice = await request('/api/invoices', jsonOptions('POST', { estimateId: estimate.body.id }, token));
   const paid = await request(`/api/invoices/${invoice.body.id}/pay`, jsonOptions('POST', {}, token));
-  assert(estimate.response.status === 201 && publicEstimate.body.status === 'Draft' && approved.body.status === 'Accepted' && invoice.response.status === 201 && paid.body.status === 'Paid', 'quote-to-cash flow failed');
+  const timeline = await request('/api/activities?search=Smoke%20Customer', { headers: { authorization: `Bearer ${token}` } });
+  assert(estimate.response.status === 201 && publicEstimate.body.status === 'Draft' && approved.body.status === 'Accepted' && invoice.response.status === 201 && paid.body.status === 'Paid' && timeline.body.items.length >= 2, 'quote-to-cash flow failed');
   const otherLogin = await request('/api/auth/demo-login?service=powerwashing', jsonOptions('POST', {}));
   const otherLeads = await request('/api/leads?search=Smoke%20Lead', { headers: { authorization: `Bearer ${otherLogin.body.token}` } });
   assert(otherLeads.body.items.length === 0, 'tenant isolation failed');
