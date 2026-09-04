@@ -98,4 +98,32 @@ class NorthstarDemoRepository {
     if (!response.ok) throw new Error('job creation failed');
     return response.json();
   }
+
+  async createEstimate(customer, service, amount) {
+    if (!this.remote) throw new Error('API required for estimate creation');
+    const response = await fetch('/api/estimates', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ customer, service, amount }) });
+    if (!response.ok) throw new Error('estimate creation failed');
+    return response.json();
+  }
+
+  async updateEstimate(id, action) {
+    if (!this.remote) throw new Error('API required for estimate updates');
+    const response = await fetch(`/api/estimates/${encodeURIComponent(id)}/${action}`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: '{}' });
+    if (!response.ok) throw new Error('estimate update failed');
+    return response.json();
+  }
+
+  async createInvoice(estimateId) {
+    if (!this.remote) throw new Error('API required for invoice creation');
+    const response = await fetch('/api/invoices', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ estimateId }) });
+    if (!response.ok) throw new Error('invoice creation failed');
+    return response.json();
+  }
+
+  async payInvoice(id) {
+    if (!this.remote) throw new Error('API required for payment');
+    const response = await fetch(`/api/invoices/${encodeURIComponent(id)}/pay`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: '{}' });
+    if (!response.ok) throw new Error('payment failed');
+    return response.json();
+  }
 }
