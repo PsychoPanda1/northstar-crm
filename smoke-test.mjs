@@ -7,7 +7,7 @@ const port = 4377;
 const base = `http://127.0.0.1:${port}`;
 const tempDir = mkdtempSync(join(tmpdir(), 'northstar-smoke-'));
 const dataFile = join(tempDir, 'state.json');
-const server = spawn(process.execPath, ['server.mjs'], { cwd: new URL('.', import.meta.url), env: { ...process.env, PORT: String(port), NORTHSTAR_DATA_FILE: dataFile }, stdio: 'ignore' });
+const server = spawn(process.execPath, ['server.mjs'], { cwd: new URL('.', import.meta.url), env: { ...process.env, PORT: String(port), NORTHSTAR_DATA_FILE: dataFile, NORTHSTAR_ALLOWED_ORIGINS: 'https://plumbing.example' }, stdio: 'ignore' });
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 const request = async (path, options = {}) => { const response = await fetch(`${base}${path}`, options); const body = await response.json().catch(() => ({})); return { response, body }; };
 const jsonOptions = (method, body, token) => ({ method, headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify(body) });
@@ -15,7 +15,9 @@ try {
   for (let attempt = 0; attempt < 40; attempt += 1) { try { if ((await fetch(`${base}/api/health`)).ok) break; } catch {} await new Promise((resolve) => setTimeout(resolve, 50)); if (attempt === 39) throw new Error('server did not start'); }
   const malformed = await fetch(`${base}/api/public/leads`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{' });
   const oversized = await fetch(`${base}/api/public/leads`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name: 'x'.repeat(70_000) }) });
-  assert(malformed.status === 400 && oversized.status === 400, 'malformed input protection failed');
+  const cors = await fetch(`${base}/api/public/leads`, { method: 'OPTIONS', headers: { origin: 'https://plumbing.example' } });
+  const blockedCors = await fetch(`${base}/api/public/leads`, { method: 'OPTIONS', headers: { origin: 'https://untrusted.example' } });
+  assert(malformed.status === 400 && oversized.status === 400 && cors.status === 204 && cors.headers.get('access-control-allow-origin') === 'https://plumbing.example' && blockedCors.status === 403, 'malformed input protection failed');
   const publicLead = await request('/api/public/leads', jsonOptions('POST', { service: 'plumbing', name: 'Smoke Lead', phone: '843-555-0100', idempotencyKey: 'smoke-lead-1' }));
   const duplicateLead = await request('/api/public/leads', jsonOptions('POST', { service: 'plumbing', name: 'Smoke Lead', phone: '843-555-0100', idempotencyKey: 'smoke-lead-1' }));
   assert(publicLead.response.status === 201 && publicLead.body.tenant.slug === 'clearwater-plumbing' && duplicateLead.response.status === 200 && duplicateLead.body.duplicate === true && duplicateLead.body.id === publicLead.body.id, 'public lead intake failed');

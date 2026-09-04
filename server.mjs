@@ -8,6 +8,7 @@ const ROOT = fileURLToPath(new URL('.', import.meta.url)).replace(/[\\/]$/, '');
 const PORT = Number(process.env.PORT || 4173);
 const SECRET = process.env.NORTHSTAR_SESSION_SECRET || 'northstar-local-demo-secret-change-me';
 const DATA_FILE = process.env.NORTHSTAR_DATA_FILE || join(ROOT, '.northstar-data.json');
+const ALLOWED_ORIGINS = new Set(String(process.env.NORTHSTAR_ALLOWED_ORIGINS || '').split(',').map((origin) => origin.trim()).filter(Boolean));
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.md': 'text/markdown; charset=utf-8' };
 
 const tenants = {
@@ -114,6 +115,9 @@ const server = createServer(async (req, res) => {
   try {
     const requestUrl = new URL(req.url, `http://${req.headers.host}`);
     const pathname = requestUrl.pathname;
+    const origin = req.headers.origin;
+    if (origin && ALLOWED_ORIGINS.has(origin)) { res.setHeader('access-control-allow-origin', origin); res.setHeader('vary', 'Origin'); }
+    if (pathname === '/api/public/leads' && req.method === 'OPTIONS') { if (!origin || !ALLOWED_ORIGINS.has(origin)) return json(res, 403, { error: 'origin_not_allowed' }); res.writeHead(204, { 'access-control-allow-origin': origin, 'access-control-allow-methods': 'POST, OPTIONS', 'access-control-allow-headers': 'content-type, idempotency-key', 'vary': 'Origin' }); return res.end(); }
     if (pathname === '/api/health' && req.method === 'GET') return json(res, 200, { ok: true, service: 'northstar-api', version: '0.2.0' });
     if (pathname === '/api/auth/demo-login' && req.method === 'POST') {
       const body = await readBody(req); const service = body.service || requestUrl.searchParams.get('service') || 'default'; const tenantId = serviceTenant[service] || serviceTenant.default; const owner = { ...owners.jordan, tenantId }; return json(res, 200, { token: issueToken(owner), owner: { id: owner.id, name: owner.name, role: owner.role }, tenant: tenants[tenantId] });
