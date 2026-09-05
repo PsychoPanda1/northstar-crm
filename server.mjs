@@ -227,7 +227,7 @@ const dispatchMessages = async (saved, claims, limit = 20) => {
   try { provider = new URL(MESSAGE_PROVIDER_URL); } catch { return { error: 'message_provider_not_configured' }; }
   if (!['http:', 'https:'].includes(provider.protocol)) return { error: 'message_provider_not_configured' };
   const pending = (saved.messages || []).filter((item) => item.status === 'Queued (provider pending)').slice(0, Math.min(50, Math.max(1, Number(limit) || 20)));
-  const result = { attempted: pending.length, sent: 0, failed: 0, skipped: 0, messages: [] };
+  const result = { attempted: pending.length, sent: 0, queued: 0, failed: 0, skipped: 0, messages: [] };
   for (const message of pending) {
     const customer = message.customerId ? saved.customers.find((item) => item.id === message.customerId) : null;
     const recipient = message.channel === 'Email' ? customer?.email : customer?.phone;
@@ -239,9 +239,12 @@ const dispatchMessages = async (saved, claims, limit = 20) => {
       clearTimeout(timeout);
       const body = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(String(body.error || body.message || `provider_http_${response.status}`).slice(0, 240));
-      message.status = 'Sent'; message.deliveredAt = new Date().toISOString(); message.providerReference = String(body.providerReference || body.id || '').slice(0, 120) || undefined; result.sent += 1; result.messages.push({ id: message.id, status: message.status, providerReference: message.providerReference || null });
+      message.providerReference = String(body.providerReference || body.id || '').slice(0, 120) || undefined;
+      const providerStatus = String(body.status || '').toLowerCase();
+      if (response.status === 202 || ['accepted', 'queued', 'pending'].includes(providerStatus)) { result.queued += 1; result.messages.push({ id: message.id, status: message.status, providerReference: message.providerReference || null }); }
+      else { message.status = 'Sent'; message.deliveredAt = new Date().toISOString(); result.sent += 1; result.messages.push({ id: message.id, status: message.status, providerReference: message.providerReference || null }); }
     } catch (error) { message.status = 'Failed'; message.failedAt = new Date().toISOString(); message.providerError = String(error?.name === 'AbortError' ? 'provider_timeout' : error?.message || 'provider_request_failed').slice(0, 240); result.failed += 1; result.messages.push({ id: message.id, status: message.status, error: message.providerError }); }
-    recordActivity(saved, message.customer, message.channel, `Message provider dispatch marked ${message.status.toLowerCase()} for ${message.id}.`, message.status); recordAudit(saved, claims, `message.provider.${message.status === 'Sent' ? 'sent' : 'failed'}`, 'message', message.id, message.providerError || message.providerReference || 'Provider dispatch');
+    recordActivity(saved, message.customer, message.channel, `Message provider dispatch marked ${message.status.toLowerCase()} for ${message.id}.`, message.status); recordAudit(saved, claims, `message.provider.${message.status === 'Sent' ? 'sent' : message.status === 'Queued (provider pending)' ? 'queued' : 'failed'}`, 'message', message.id, message.providerError || message.providerReference || 'Provider dispatch');
   }
   if (pending.length) persist();
   return result;
