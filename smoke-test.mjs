@@ -1008,6 +1008,9 @@ const appointmentQuestionOptions = { method: 'POST', headers: { 'content-type': 
   const tenantRecordTypes = ['customers', 'leads', 'estimates', 'invoices', 'payments', 'plans', 'activities', 'dispatch', 'team', 'catalog', 'assets', 'reviews', 'requests', 'materials', 'purchase-orders', 'inventory-transactions', 'messages', 'audit'];
   const tenantRecordResponses = await Promise.all(tenantRecordTypes.map((type) => request(`/api/${type}`, { headers: { authorization: `Bearer ${token}` } })));
   assert(exportResponse.ok && exportResponse.headers.get('content-type').startsWith('text/csv') && exportCsv.includes('Smoke Customer') && exportCsv.includes('Paid') && tenantRecordResponses.every((result) => result.response.ok && result.body.items.every((item) => item.tenantId === 'clearwater-plumbing')), 'CSV export or tenant record schema failed');
+  const mismatchedBooking = await request('/api/public/bookings?service=plumbing', jsonOptions('POST', { service: 'electrician', name: 'Mismatch Customer', phone: '843-555-0108' }));
+  const mismatchedLead = await request('/api/public/leads?service=plumbing', jsonOptions('POST', { service: 'electrician', name: 'Mismatch Lead', phone: '843-555-0109' }));
+  assert(mismatchedBooking.response.status === 409 && mismatchedBooking.body.error === 'service_mismatch' && mismatchedLead.response.status === 409 && mismatchedLead.body.error === 'service_mismatch', 'public intake service mismatch was not rejected');
   const otherLogin = await request('/api/auth/demo-login?service=powerwashing', jsonOptions('POST', {}));
   const otherLeads = await request('/api/leads?search=Smoke%20Lead', { headers: { authorization: `Bearer ${otherLogin.body.token}` } });
   assert(otherLeads.body.items.length === 0, 'tenant isolation failed');
