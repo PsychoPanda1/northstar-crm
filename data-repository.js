@@ -263,6 +263,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async runAutomations(options = {}, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for customer automations');
+    const response = await fetch('/api/automations/run', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify(options) });
+    if (!response.ok) throw new Error('customer automation run failed');
+    return response.json();
+  }
+
   async downloadJobCalendar(id) {
     if (!this.remote) throw new Error('API required for calendar export');
     const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/calendar`, { headers: { authorization: `Bearer ${this.token}` } });

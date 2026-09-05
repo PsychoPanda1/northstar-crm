@@ -53,6 +53,9 @@ try {
   const readiness = await request('/api/ready');
   const secureLogin = await request('/api/auth/login?service=plumbing', jsonOptions('POST', { email: ownerEmail, password: ownerPassword }));
   const integrationHealth = await request('/api/integrations/health', { headers: { authorization: `Bearer ${secureLogin.body.token}` } });
+  const automationRunOptions = { method: 'POST', headers: { authorization: `Bearer ${secureLogin.body.token}`, 'content-type': 'application/json', 'idempotency-key': 'smoke-automation-run' }, body: JSON.stringify({ channel: 'Email', lookaheadHours: 168, estimateAgeDays: 1, invoiceAgeDays: 1, renewalDays: 30 }) };
+  const automationRun = await request('/api/automations/run', automationRunOptions);
+  const automationRunDuplicate = await request('/api/automations/run', automationRunOptions);
   const crossTenantOwnerLogin = await request('/api/auth/login?service=powerwashing', jsonOptions('POST', { email: ownerEmail, password: ownerPassword }));
   const unknownOwnerLogin = await request('/api/auth/login?service=not-a-service', jsonOptions('POST', { email: ownerEmail, password: ownerPassword }));
   const configuredOwnerLogin = await request('/api/auth/login?service=hvac', jsonOptions('POST', { email: 'hvac-owner@example.test', password: hvacOwnerPassword }));
@@ -68,6 +71,7 @@ try {
   const refreshedSession = await request('/api/session', { headers: { authorization: `Bearer ${refreshedLogin.body.token}` } });
   assert(unknownDemoLogin.response.status === 404 && unknownOwnerLogin.response.status === 404, `unknown service auth failed (${unknownDemoLogin.response.status}/${unknownOwnerLogin.response.status})`);
   assert(secureLogin.response.status === 200 && crossTenantOwnerLogin.response.status === 401 && configuredOwnerCrossTenantLogin.response.status === 401 && staffLogin.response.status === 200 && crossTenantStaffLogin.response.status === 401, `auth statuses failed (${secureLogin.response.status}/${crossTenantOwnerLogin.response.status}/${configuredOwnerCrossTenantLogin.response.status}/${staffLogin.response.status}/${crossTenantStaffLogin.response.status})`);
+  assert(automationRun.response.status === 200 && automationRun.body.runId && automationRun.body.appointments && automationRun.body.estimates && automationRun.body.invoices && automationRun.body.plans && automationRunDuplicate.response.status === 200 && automationRunDuplicate.body.duplicate === true && automationRunDuplicate.body.runId === automationRun.body.runId, 'coordinated customer automation workflow failed');
   const invalidLogin = await request('/api/auth/login?service=plumbing', jsonOptions('POST', { email: ownerEmail, password: 'wrong-password' }));
   const loginBurst = await Promise.all(Array.from({ length: 8 }, () => request('/api/auth/login?service=plumbing', jsonOptions('POST', { email: ownerEmail, password: 'wrong-password' }))));
   const booking = await request('/api/public/bookings?service=plumbing', { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': 'smoke-booking-1' }, body: JSON.stringify({ name: 'Booked Customer', phone: '843-555-0111', email: 'initial.booked@example.test', requestedService: 'Emergency leak repair', time: 'Tomorrow 10:30 AM', location: '200 Meeting St, Charleston', source: 'Clearwater Plumbing landing page', utm_source: 'google', utm_medium: 'cpc', utm_campaign: 'summer-leak-repair', checklist: ['Confirm source shutoff', 'Inspect fittings', 'Customer handoff'], website: '' }) });

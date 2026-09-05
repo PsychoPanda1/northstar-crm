@@ -37,4 +37,5 @@ assert(customer.includes('/api/public/customer-portal/calendar') && customer.inc
 assert(technician.includes('create-estimate') && technician.includes('estimate-catalog') && technician.includes('/api/public/technician-job/estimate'), 'technician field estimate workflow is not wired');
 assert(app.includes("['Messages', profile.messages || []]") && app.includes("['Calls', profile.calls || []]"), 'owner customer profile does not expose communication history');
 assert(app.includes("result.results.messages || []") && app.includes("result.results.calls || []"), 'global search does not expose communication history');
+assert(app.includes('data-run-automations') && app.includes('runAutomations'), 'dispatch workspace does not expose coordinated customer automations');
 console.log('Northstar client contract checks passed');
