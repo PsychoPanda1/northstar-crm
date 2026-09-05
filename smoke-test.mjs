@@ -217,12 +217,13 @@ try {
   const technicianLogin = await request('/api/auth/demo-login?service=plumbing&role=technician', jsonOptions('POST', {}));
   const technicianSession = await request('/api/session', { headers: { authorization: `Bearer ${technicianLogin.body.token}` } });
   const technicianReports = await request('/api/reports/overview', { headers: { authorization: `Bearer ${technicianLogin.body.token}` } });
+  const technicianIntegrationHealth = await request('/api/integrations/health', { headers: { authorization: `Bearer ${technicianLogin.body.token}` } });
   const technicianJobCreate = await request('/api/jobs', jsonOptions('POST', { customerId: 'not-allowed', time: 'tomorrow' }, technicianLogin.body.token));
   const technicianRecommendations = await request(`/api/dispatch/recommendations?jobId=${encodeURIComponent(directJob.body.id)}`, { headers: { authorization: `Bearer ${technicianLogin.body.token}` } });
   const technicianOtherJobLabor = await request(`/api/jobs/${directJob.body.id}/labor`, jsonOptions('POST', { hours: 1, hourlyRate: 50 }, technicianLogin.body.token));
   const accountantLogin = await request('/api/auth/demo-login?service=plumbing&role=accountant', jsonOptions('POST', {}));
   const accountantReports = await request('/api/reports/overview', { headers: { authorization: `Bearer ${accountantLogin.body.token}` } });
-  assert(technicianLogin.response.ok && technicianSession.body.owner.role === 'technician' && technicianSession.body.permissions.includes('field:write') && !technicianSession.body.permissions.includes('jobs:write') && !technicianSession.body.permissions.includes('inventory:write') && technicianReports.response.status === 403 && technicianJobCreate.response.status === 403 && technicianRecommendations.response.status === 403 && technicianOtherJobLabor.response.status === 403 && accountantReports.response.ok, 'role permissions failed');
+  assert(technicianLogin.response.ok && technicianSession.body.owner.role === 'technician' && technicianSession.body.permissions.includes('field:write') && !technicianSession.body.permissions.includes('jobs:write') && !technicianSession.body.permissions.includes('inventory:write') && technicianReports.response.status === 403 && technicianIntegrationHealth.response.status === 403 && technicianJobCreate.response.status === 403 && technicianRecommendations.response.status === 403 && technicianOtherJobLabor.response.status === 403 && accountantReports.response.ok, 'role permissions failed');
   const catalogItemOptions = { ...jsonOptions('POST', { name: 'Emergency pipe repair', description: 'Priority diagnosis and repair for active leaks', priceFrom: '$389' }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-catalog-item' } };
   const catalogItem = await request('/api/catalog', catalogItemOptions);
   const duplicateCatalogItem = await request('/api/catalog', catalogItemOptions);
