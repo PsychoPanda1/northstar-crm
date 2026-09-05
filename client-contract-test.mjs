@@ -97,6 +97,7 @@ assert(status.includes('__northstarStatusPromise') && status.includes('response.
 assert(server.includes('TRACKING_MAX_AGE_MS = 15 * 60 * 1000') && server.includes('trackingViewFor(item)') && server.includes('trackingViewFor(job)'), 'tracking projections do not enforce active-job freshness');
 assert(!server.includes('jobRebookReplayMatch'), 'server retains a shadowed rebooking replay handler');
 assert(app.includes("Date.now() - Date.parse(job.locationPing.recordedAt) <= 900000"), 'dispatch tracking display does not expire stale heartbeats');
+assert(server.includes('locationIdempotencyKey') && server.includes('locationIdempotencyFingerprint') && technician.includes('idempotency-key'), 'technician location heartbeats are not retry-safe');
 assert(customer.includes('portalRefreshTimer') && customer.includes("/api/public/customer-portal' + query") && customer.includes('document.hidden'), 'customer portal does not refresh active tracking while visible');
 assert(status.includes('tracking-freshness') && status.includes('Technician location') && status.includes('setInterval(refreshTracking, 30000)'), 'customer status link does not expose refreshed tracking freshness');
 assert(app.includes('decorateMessageReplyButtons') && app.includes('repository.replyToMessage') && !app.includes('repository.replyMessage'), 'owner message replies include an obsolete duplicate handler');

@@ -692,10 +692,13 @@ const techViewWithAsset = await request(`/api/public/technician-job${techUrl.sea
   const techEnRoute = await request(`/api/public/technician-job/status${techUrl.search}`, jsonOptions('POST', { status: 'En route' }));
   const duplicateTechEnRoute = await request(`/api/public/technician-job/status${techUrl.search}`, jsonOptions('POST', { status: 'En route' }));
   const techStarted = await request(`/api/public/technician-job/status${techUrl.search}`, jsonOptions('POST', { status: 'In progress' }));
-  const techLocation = await request(`/api/public/technician-job/location${techUrl.search}`, jsonOptions('POST', { latitude: 32.7765, longitude: -79.9311, accuracy: 12.4 }));
+  const techLocationOptions = { ...jsonOptions('POST', { latitude: 32.7765, longitude: -79.9311, accuracy: 12.4 }), headers: { 'content-type': 'application/json', 'idempotency-key': 'smoke-tech-location' } };
+  const techLocation = await request(`/api/public/technician-job/location${techUrl.search}`, techLocationOptions);
+  const duplicateTechLocation = await request(`/api/public/technician-job/location${techUrl.search}`, techLocationOptions);
+  const conflictingTechLocation = await request(`/api/public/technician-job/location${techUrl.search}`, { ...techLocationOptions, body: JSON.stringify({ latitude: 32.7766, longitude: -79.9311, accuracy: 12.4 }) });
   const statusTracking = await request(`/api/public/customer-portal?token=${encodeURIComponent(converted.body.customerPortalAccessToken)}`);
   const trackedJob = statusTracking.body.jobs?.find((item) => item.id === fieldJob.body.id);
-  assert(techLocation.response.status === 200 && techLocation.body.tracking.status === 'live' && statusTracking.response.status === 200 && trackedJob?.tracking?.status === 'live' && !Object.prototype.hasOwnProperty.call(trackedJob.tracking, 'latitude') && !Object.prototype.hasOwnProperty.call(trackedJob.tracking, 'longitude'), 'technician tracking workflow failed');
+  assert(techLocation.response.status === 200 && techLocation.body.tracking.status === 'live' && duplicateTechLocation.response.status === 200 && duplicateTechLocation.body.duplicate === true && conflictingTechLocation.response.status === 409 && conflictingTechLocation.body.error === 'idempotency_key_reused' && statusTracking.response.status === 200 && trackedJob?.tracking?.status === 'live' && !Object.prototype.hasOwnProperty.call(trackedJob.tracking, 'latitude') && !Object.prototype.hasOwnProperty.call(trackedJob.tracking, 'longitude'), 'technician tracking workflow failed');
   const technicianStatusAudit = await request('/api/audit?search=job.status.updated', { headers: { authorization: `Bearer ${token}` } });
   const techClockInOptions = { ...jsonOptions('POST', { action: 'in' }), headers: { 'content-type': 'application/json', 'idempotency-key': 'smoke-clock-in' } };
   const techClockIn = await request(`/api/public/technician-job/clock${techUrl.search}`, techClockInOptions);
