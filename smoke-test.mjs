@@ -325,6 +325,10 @@ try {
   const customerLink = await request(`/api/jobs/${fieldJob.body.id}/customer-link`, jsonOptions('POST', {}, token));
   const customerUrl = new URL(customerLink.body.url, base);
   const customerPortal = await request(`/api/public/customer-portal${customerUrl.search}`);
+  const portalLocationUpdate = await request(`/api/public/customer-portal/location${customerUrl.search}`, { ...jsonOptions('POST', { mode: 'primary', label: 'Primary service address', address: '88 Broad St, Charleston' }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-portal-location' } });
+  const portalLocationDuplicate = await request(`/api/public/customer-portal/location${customerUrl.search}`, { ...jsonOptions('POST', { mode: 'primary', label: 'Primary service address', address: '88 Broad St, Charleston' }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-portal-location' } });
+  const customerPortalAfterLocation = await request(`/api/public/customer-portal${customerUrl.search}`);
+  assert(portalLocationUpdate.response.status === 200 && portalLocationUpdate.body.customer.location === '88 Broad St, Charleston' && portalLocationDuplicate.response.status === 200 && portalLocationDuplicate.body.duplicate === true && customerPortalAfterLocation.body.customer.location === '88 Broad St, Charleston', 'customer portal location update workflow failed');
   assert(customerPortal.body.plans.some((item) => item.service === 'Annual plumbing maintenance' && item.nextVisit?.slotId === recurringSlot.id && item.nextVisit?.timeZone === 'America/New_York'), 'customer portal recurring visit visibility failed');
   assert(customerPortal.body.jobs.some((item) => item.id === fieldJob.body.id && item.photos?.[0]?.caption.includes('coupling')), 'customer portal field evidence visibility failed');
   assert(customerPortal.body.jobs.some((item) => item.id === fieldJob.body.id && item.customerAcknowledgedBy === 'Smoke Lead'), 'customer portal customer acknowledgment visibility failed');
