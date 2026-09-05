@@ -464,6 +464,27 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async listInventoryLocations() {
+    if (!this.remote) throw new Error('API required for inventory locations');
+    const response = await fetch('/api/inventory-locations', { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('inventory locations unavailable');
+    return response.json();
+  }
+
+  async createInventoryLocation(name, type = 'Warehouse', idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for inventory locations');
+    const response = await fetch('/api/inventory-locations', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ name, type }) });
+    if (!response.ok) throw new Error('inventory location creation failed');
+    return response.json();
+  }
+
+  async transferInventory(destinationLocationId, materialId, fromLocationId, quantity, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for inventory transfers');
+    const response = await fetch(`/api/inventory-locations/${encodeURIComponent(destinationLocationId)}/transfer`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ materialId, fromLocationId, quantity }) });
+    if (!response.ok) throw new Error('inventory transfer failed');
+    return response.json();
+  }
+
   async consumeMaterial(jobId, materialId, quantity) {
     if (!this.remote) throw new Error('API required for material usage');
     const response = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/materials`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ materialId, quantity }) });
