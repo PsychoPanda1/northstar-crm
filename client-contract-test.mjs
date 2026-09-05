@@ -7,6 +7,7 @@ const repository = readFileSync(`${root}data-repository.js`, 'utf8');
 const customer = readFileSync(`${root}customer.html`, 'utf8');
 const status = readFileSync(`${root}status.html`, 'utf8');
 const invoice = readFileSync(`${root}invoice.html`, 'utf8');
+const booking = readFileSync(`${root}booking.html`, 'utf8');
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 
 assert(repository.includes("this.previewOnly = window.location.protocol === 'file:'") && repository.includes("if (!this.previewOnly) throw new Error('authenticated dashboard required')"), 'repository preview fallback is not restricted to file previews');
@@ -19,6 +20,7 @@ assert(app.includes("/^INV-\\d{13,}$/.test(item.id || '') && item.status !== 'Pa
 assert(customer.includes("job.status === 'No-show' ? 'Book a new visit'"), 'customer portal does not expose no-show recovery');
 assert(status.includes('body.visits') && status.includes('Visit progress') && status.includes('/api/public/job-status/cancel'), 'customer status page does not expose multi-visit progress and cancellation');
 assert(status.includes('sessionStorage') && status.includes("retryKey('cancel'") && status.includes("retryKey('reschedule'"), 'customer status actions do not preserve mobile retry identity');
+assert(booking.includes('sessionStorage') && booking.includes('northstar-booking-retry-') && booking.includes("'idempotency-key':bookingKey"), 'landing booking form does not preserve mobile retry identity');
 assert(invoice.includes('id="breakdown"') && invoice.includes('Remaining $'), 'invoice payment page does not expose total, paid, and remaining balance');
 assert(invoice.includes('sessionStorage') && invoice.includes('idempotency-key') && invoice.includes('paymentKey'), 'invoice payment page does not preserve mobile retry identity');
 assert(customer.includes('sessionStorage') && customer.includes('retryKey') && customer.includes('idempotency-key'), 'customer portal actions do not preserve mobile retry identity');
