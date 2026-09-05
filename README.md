@@ -91,7 +91,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Owners and dispatchers can reply to inbound customer messages from the message ledger with idempotent provider-pending delivery
 - Inbound customer messages create owner action notifications with tenant-scoped read state
 - Durable session revocation survives API restarts in the local adapter
-- Startup recovery loads the first valid primary or interrupted temporary snapshot, preventing a malformed primary JSON file from discarding recoverable tenant state
+- Startup recovery loads the newest valid primary or interrupted temporary snapshot, preventing a malformed or stale primary JSON file from discarding recoverable tenant state
 - New landing-page leads appear in the owner action queue for immediate follow-up
 - Lead pipeline statuses can be advanced or marked lost with an auditable note before conversion
 - Owners and dispatchers can queue deduplicated SMS/email follow-ups for open estimates
