@@ -582,6 +582,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async setJobFormRequirements(jobId, formNames) {
+    if (!this.remote) throw new Error('API required for form requirements');
+    const response = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/form-requirements`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ formNames }) });
+    if (!response.ok) throw new Error('job form requirements update failed');
+    return response.json();
+  }
+
   async createTeamMember(name, role, skills = [], idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for team management');
     const response = await fetch('/api/team', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ name, role, skills }) });
