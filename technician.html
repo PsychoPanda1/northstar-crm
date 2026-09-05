@@ -45,22 +45,26 @@
     const writeQueue = (items) => localStorage.setItem(queueKey, JSON.stringify(items.slice(-50)));
     const message = (value) => { document.querySelector('#message').textContent = value; };
     const rawApi = (path, options = {}) => fetch(`${path}?token=${encodeURIComponent(token || '')}`, { ...options, headers: { 'content-type': 'application/json', ...(options.headers || {}) } });
+    const queueSafeOptions = (options = {}) => { if (options.method !== 'POST') return options; const headers = { ...(options.headers || {}) }; if (!headers['idempotency-key']) headers['idempotency-key'] = crypto.randomUUID(); return { ...options, headers }; };
     const flushQueue = async () => {
       const pending = readQueue();
       if (!pending.length || !navigator.onLine) return;
       const remaining = [];
+      const conflicts = [];
       for (const item of pending) {
-        try { const response = await rawApi(item.path, item.options); if (!response.ok) remaining.push(item); }
+        try { const response = await rawApi(item.path, item.options); if (!response.ok) { if ([400, 401, 403, 409, 422].includes(response.status)) conflicts.push(item); else remaining.push(item); } }
         catch { remaining.push(item); }
       }
       writeQueue(remaining);
-      if (!remaining.length) message('Offline field updates synchronized.');
+      if (conflicts.length) message(`${conflicts.length} offline update${conflicts.length === 1 ? '' : 's'} need review after a conflict or expired link.`);
+      else if (!remaining.length) message('Offline field updates synchronized.');
     };
     const api = async (path, options = {}) => {
-      try { return await rawApi(path, options); }
+      const safeOptions = queueSafeOptions(options);
+      try { return await rawApi(path, safeOptions); }
       catch (error) {
-        if (options.method !== 'POST') throw error;
-        writeQueue([...readQueue(), { path, options }]);
+        if (safeOptions.method !== 'POST') throw error;
+        writeQueue([...readQueue(), { path, options: safeOptions, queuedAt: new Date().toISOString() }]);
         message('Connection unavailable. Field update saved on this device.');
         return new Response(JSON.stringify({ offline: true }), { status: 202, headers: { 'content-type': 'application/json' } });
       }
