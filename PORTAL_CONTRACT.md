@@ -121,6 +121,7 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 - `POST /api/dispatch/reminders` → owner/dispatcher-only bulk queue of deduplicated SMS/email reminders for normalized appointments within a 1–168 hour horizon; skips terminal jobs and returns eligible, queued, and duplicate counts for safe operator reruns
 - Jobs may declare a required skill; recommendations and assignment reject technicians without that skill
 - `GET|POST /api/jobs/:id/visits` → list or add scheduled visits for multi-day/multi-visit work orders; creation accepts an optional `Idempotency-Key` and returns `duplicate: true` for a safe retry
+- Job records expose a derived `visitSummary` (`total`, `completed`, `canceled`, `active`, and next visit sequence) so parent work orders remain truthful without prematurely closing the overall job
 - `POST /api/jobs/:id/visits/:visitId/status` → advance a visit through Scheduled, En route, In progress, Completed, or Canceled states; same-state retries return `duplicate: true` without another timeline or audit event
 - `POST /api/jobs/:id/customer-link` → issue a 72-hour customer portal link scoped to the job's customer
 - `POST /api/jobs/:id/review-link` → issue a 72-hour review link for a completed job
