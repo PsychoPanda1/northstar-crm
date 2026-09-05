@@ -538,6 +538,12 @@ try {
   const reactivationSegmentTags = await request(`/api/customers/${reactivationSegmentCustomer.body.id}/tags`, { ...jsonOptions('POST', { tags: ['Legacy'] }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-reactivation-segment-tags' } });
   const contactPreferences = await request(`/api/customers/${reactivationSegmentCustomer.body.id}/preferences`, jsonOptions('POST', { smsOptOut: true, emailOptOut: false }, token));
   const optedOutMessage = await request('/api/messages', jsonOptions('POST', { customerId: reactivationSegmentCustomer.body.id, channel: 'SMS', message: 'This should be blocked.' }, token));
+  const optedOutEstimate = await request('/api/estimates', jsonOptions('POST', { customerId: reactivationSegmentCustomer.body.id, service: 'Opt-out reminder test', amount: 225 }, token));
+  const optedOutEstimateReminder = await request(`/api/estimates/${optedOutEstimate.body.id}/remind`, jsonOptions('POST', { channel: 'SMS' }, token));
+  const optedOutEstimateApproval = await request(`/api/estimates/${optedOutEstimate.body.id}/approve`, jsonOptions('POST', {}, token));
+  const optedOutInvoice = await request('/api/invoices', { ...jsonOptions('POST', { estimateId: optedOutEstimate.body.id }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-opted-out-invoice' } });
+  const optedOutInvoiceReminder = await request(`/api/invoices/${optedOutInvoice.body.id}/remind`, jsonOptions('POST', { channel: 'SMS' }, token));
+  assert(optedOutEstimate.response.status === 201 && optedOutEstimateApproval.response.status === 200 && optedOutInvoice.response.status === 201 && optedOutEstimateReminder.response.status === 422 && optedOutEstimateReminder.body.error === 'customer_channel_opted_out' && optedOutInvoiceReminder.response.status === 422 && optedOutInvoiceReminder.body.error === 'customer_channel_opted_out', 'reminder opt-out protection failed');
   const taggedReactivation = await request('/api/customers/reactivation', jsonOptions('POST', { inactiveDays: 180, channel: 'Email', tag: 'legacy' }, token));
   const taggedReactivationRetry = await request('/api/customers/reactivation', jsonOptions('POST', { inactiveDays: 180, channel: 'Email', tag: 'legacy' }, token));
   const reactivationCampaign = await request('/api/customers/reactivation', jsonOptions('POST', { inactiveDays: 180, channel: 'SMS' }, token));
