@@ -512,8 +512,11 @@ try {
   assert(marketingReport.response.status === 200 && marketingReport.body.totalLeads >= 1 && marketingReport.body.campaigns?.some((item) => item.campaign === 'summer-leak-repair' && item.source === 'google' && item.leads >= 1 && Number.isFinite(item.bookedRevenue) && Number.isFinite(item.collectedRevenue) && item.collectedRevenue <= item.bookedRevenue) && marketingReport.body.channels.some((item) => item.source === 'Landing page' && item.leads >= 1 && item.bookedRevenue >= 425 && Number.isFinite(item.collectedRevenue)) && marketingReport.body.channels.every((item) => item.conversionRate >= 0 && item.conversionRate <= 100 && item.collectedRevenue <= item.bookedRevenue), 'marketing attribution report missing');
   const technicianReport = await request('/api/reports/technicians', { headers: { authorization: `Bearer ${token}` } });
   const receivablesReport = await request('/api/reports/receivables', { headers: { authorization: `Bearer ${token}` } });
+  const receivablesExportResponse = await fetch(`${base}/api/export?type=receivables`, { headers: { authorization: `Bearer ${token}` } });
+  const receivablesExportCsv = await receivablesExportResponse.text();
   assert(technicianReport.response.status === 200 && technicianReport.body.technicians.some((item) => item.technician === 'Alex Rivera' && item.revenue >= 425 && Number.isFinite(item.grossMargin) && Number.isFinite(item.completionRate)), 'technician performance report missing');
   assert(receivablesReport.response.status === 200 && Number.isFinite(receivablesReport.body.totals?.balance) && Number.isFinite(receivablesReport.body.totals?.overdueBalance) && receivablesReport.body.buckets?.length === 5 && receivablesReport.body.totals.overdueBalance <= receivablesReport.body.totals.balance, 'receivables aging report missing');
+  assert(receivablesExportResponse.status === 200 && receivablesExportCsv.includes('bucket') && receivablesExportCsv.includes('daysPastDue'), 'receivables export missing');
   const reportExportResponse = await fetch(`${base}/api/export?type=reports`, { headers: { authorization: `Bearer ${token}` } });
   const reportExportCsv = await reportExportResponse.text();
   assert(reportExportResponse.status === 200 && reportExportCsv.includes('Gross margin'), 'report export missing');
