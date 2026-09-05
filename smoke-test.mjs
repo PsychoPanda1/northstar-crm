@@ -59,6 +59,9 @@ try {
   assert(tenantConfig.body.integration?.statusEndpoints?.view === '/api/public/job-status' && tenantConfig.body.integration?.statusEndpoints?.cancel === '/api/public/job-status/cancel' && tenantConfig.body.integration?.bookingResponseFields?.statusToken === 'customerPortalToken' && tenantConfig.body.integration?.bookingResponseFields?.customerPortalAccessToken === 'customerPortalAccessToken', 'landing customer action manifest failed');
   const readiness = await request('/api/ready');
   const secureLogin = await request('/api/auth/login?service=plumbing', jsonOptions('POST', { email: ownerEmail, password: ownerPassword }));
+  const sessionCookie = (secureLogin.response.headers.get('set-cookie') || '').split(';')[0];
+  const cookieSession = await request('/api/session', { headers: { cookie: sessionCookie } });
+  assert(secureLogin.response.status === 200 && secureLogin.response.headers.get('set-cookie')?.includes('HttpOnly') && cookieSession.response.ok && cookieSession.body.owner?.id === 'owner_configured', 'secure cookie session authentication failed');
   const integrationHealth = await request('/api/integrations/health', { headers: { authorization: `Bearer ${secureLogin.body.token}` } });
   const automationRunOptions = { method: 'POST', headers: { authorization: `Bearer ${secureLogin.body.token}`, 'content-type': 'application/json', 'idempotency-key': 'smoke-automation-run' }, body: JSON.stringify({ channel: 'Email', lookaheadHours: 168, estimateAgeDays: 1, invoiceAgeDays: 1, renewalDays: 30 }) };
   const automationRun = await request('/api/automations/run', automationRunOptions);
@@ -957,7 +960,7 @@ const appointmentQuestionOptions = { method: 'POST', headers: { 'content-type': 
   assert(otherLeads.body.items.length === 0, 'tenant isolation failed');
   const logout = await request('/api/auth/logout', jsonOptions('POST', {}, token));
   const revoked = await request('/api/session', { headers: { authorization: `Bearer ${token}` } });
-  assert(logout.response.ok && revoked.response.status === 401, 'logout revocation failed');
+  assert(logout.response.ok && logout.response.headers.get('set-cookie')?.includes('Max-Age=0') && revoked.response.status === 401, 'logout revocation failed');
   server.kill(); await new Promise((resolve) => setTimeout(resolve, 100));
   restartedServer = spawn(process.execPath, ['server.mjs'], { cwd: new URL('.', import.meta.url), env: serverEnv, stdio: 'ignore' });
   for (let attempt = 0; attempt < 40; attempt += 1) { try { if ((await fetch(`${base}/api/health`)).ok) break; } catch {} await new Promise((resolve) => setTimeout(resolve, 50)); if (attempt === 39) throw new Error('server did not restart'); }
