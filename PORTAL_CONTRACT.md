@@ -53,6 +53,7 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 - The owner portal customer picker passes durable IDs for new notes, assets, and estimates; exact-name ambiguity is rejected in the browser instead of silently selecting the first account
 - `PATCH|PUT /api/customers/:id` → update an owner/dispatcher-managed customer's name, phone, email, or primary location with email-shape and duplicate-contact protection plus an actor-attributed `customer.updated` audit event; accepts an optional `Idempotency-Key` and returns `duplicate: true` for a safe retry
 - `POST /api/customers/:id/locations` → add a tenant-scoped service address to a customer profile; accepts an optional `Idempotency-Key`, returns `duplicate: true` for safe retries, and appends an actor-attributed `location.created` audit event
+- `POST /api/customers/:id/tags` → owner/dispatcher-only replace the customer’s bounded, normalized internal tag set; accepts an `Idempotency-Key`, records an audit event, and never exposes tags through customer tokens
 - `GET /api/dashboard?range=week` → `{ metrics, pipeline, tasks, schedule, activity }`
 - `GET /api/reports/overview` → tenant-scoped funnel, scheduling, cash, recurring-revenue, and touchpoint metrics
 - `GET /api/reports/marketing` → owner/dispatcher/accountant-only source attribution report with lead counts, converted counts, conversion rates, scheduled jobs, attributed lead value, booked revenue, and collected revenue by landing-page source
