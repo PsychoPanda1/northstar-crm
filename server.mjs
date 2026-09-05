@@ -236,7 +236,7 @@ const dispatchMessages = async (saved, claims, limit = 20) => {
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 10_000);
-      const response = await fetch(provider, { method: 'POST', headers: { 'content-type': 'application/json', ...(MESSAGE_PROVIDER_API_KEY ? { authorization: `Bearer ${MESSAGE_PROVIDER_API_KEY}` } : {}) }, body: JSON.stringify({ messageId: message.id, tenantId: claims.tenantId, channel: message.channel, to: recipient, message: message.message, metadata: { customerId: message.customerId || null, jobId: message.jobId || null, estimateId: message.estimateId || null, invoiceId: message.invoiceId || null } }), signal: controller.signal });
+      const response = await fetch(provider, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': message.id, ...(MESSAGE_PROVIDER_API_KEY ? { authorization: `Bearer ${MESSAGE_PROVIDER_API_KEY}` } : {}) }, body: JSON.stringify({ messageId: message.id, tenantId: claims.tenantId, channel: message.channel, to: recipient, message: message.message, metadata: { customerId: message.customerId || null, jobId: message.jobId || null, estimateId: message.estimateId || null, invoiceId: message.invoiceId || null } }), signal: controller.signal });
       clearTimeout(timeout);
       const body = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(String(body.error || body.message || `provider_http_${response.status}`).slice(0, 240));
