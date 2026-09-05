@@ -198,6 +198,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async retryMessage(id, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for message retry');
+    const response = await fetch(`/api/messages/${encodeURIComponent(id)}/retry`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'idempotency-key': idempotencyKey } });
+    if (!response.ok) throw new Error('message retry failed');
+    return response.json();
+  }
+
   async getJobDetail(id) {
     if (!this.remote) throw new Error('API required for job detail');
     const response = await fetch(`/api/jobs/${encodeURIComponent(id)}`, { headers: { authorization: `Bearer ${this.token}` } });
