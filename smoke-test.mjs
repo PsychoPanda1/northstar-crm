@@ -167,6 +167,14 @@ try {
   const login = await request('/api/auth/demo-login?service=plumbing', jsonOptions('POST', {}));
   assert(login.response.ok, 'demo login failed');
   const token = login.body.token;
+  const catalogCreateOptions = { ...jsonOptions('POST', { name: 'Smoke service', description: 'Configured smoke pricebook item', priceFrom: '$399', category: 'Repair', durationMinutes: 90, taxable: true }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-catalog-create' } };
+  const catalogCreated = await request('/api/catalog', catalogCreateOptions);
+  const catalogUpdated = await request(`/api/catalog/${catalogCreated.body.id}`, { ...jsonOptions('PATCH', { name: 'Smoke service plus', description: 'Updated smoke pricebook item', priceFrom: '$449', category: 'Repair', durationMinutes: 120, taxable: false, active: true }, token), headers: { ...jsonOptions('PATCH', {}, token).headers, 'idempotency-key': 'smoke-catalog-update' } });
+  const catalogUpdateDuplicate = await request(`/api/catalog/${catalogCreated.body.id}`, { ...jsonOptions('PATCH', { name: 'Smoke service plus', description: 'Updated smoke pricebook item', priceFrom: '$449', category: 'Repair', durationMinutes: 120, taxable: false, active: true }, token), headers: { ...jsonOptions('PATCH', {}, token).headers, 'idempotency-key': 'smoke-catalog-update' } });
+  const catalogUpdateConflict = await request(`/api/catalog/${catalogCreated.body.id}`, { ...jsonOptions('PATCH', { name: 'Different service', description: 'Conflicting smoke pricebook item', priceFrom: '$499', active: true }, token), headers: { ...jsonOptions('PATCH', {}, token).headers, 'idempotency-key': 'smoke-catalog-update' } });
+  const catalogArchived = await request(`/api/catalog/${catalogCreated.body.id}`, { ...jsonOptions('PATCH', { active: false }, token), headers: { ...jsonOptions('PATCH', {}, token).headers, 'idempotency-key': 'smoke-catalog-archive' } });
+  const publicCatalogAfterArchive = await request('/api/public/catalog?service=plumbing');
+  assert(catalogCreated.response.status === 201 && catalogUpdated.response.status === 200 && catalogUpdated.body.priceFrom === '$449' && catalogUpdateDuplicate.response.status === 200 && catalogUpdateDuplicate.body.duplicate === true && catalogUpdateConflict.response.status === 409 && catalogUpdateConflict.body.error === 'idempotency_key_reused' && catalogArchived.response.status === 200 && catalogArchived.body.active === false && !publicCatalogAfterArchive.body.items.some((item) => item.id === catalogCreated.body.id), 'catalog update and archive workflow failed');
   const teamMemberOptions = { ...jsonOptions('POST', { name: 'Jordan Lee', role: 'Apprentice' }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-team-member' } };
   const newTeamMember = await request('/api/team', teamMemberOptions);
   const duplicateNewTeamMember = await request('/api/team', teamMemberOptions);

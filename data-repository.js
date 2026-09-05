@@ -533,6 +533,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async updateCatalogItem(id, fields, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for catalog editing');
+    const response = await fetch(`/api/catalog/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify(fields) });
+    if (!response.ok) throw new Error('catalog item update failed');
+    return response.json();
+  }
+
   async createMaterial(name, sku, unit, unitCost, onHand, reorderPoint, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for material creation');
     const response = await fetch('/api/materials', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ name, sku, unit, unitCost, onHand, reorderPoint }) });
