@@ -130,7 +130,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Per-visit lifecycle transitions for multi-visit work orders
 - Server-enforced job lifecycle transitions prevent invalid field states and bypassing completion requirements
 - Service-plan renewal can schedule the next recurring visit using the same timezone-aware capacity slots as public booking, and normalized renewal dates can drive deduplicated SMS/email reminder campaigns
-- Service plans support auditable pause, resume, cancellation, and idempotent monthly/quarterly/annual visit-series scheduling
+- Service plans support auditable pause, resume, cancellation, idempotent monthly/quarterly/annual visit-series scheduling, and due membership-invoice generation by billing period
 - Invoice payments support partial collection, remaining balances, payment methods, and references
 - Invoice installment schedules support deposits and milestone payments while deriving paid progress from the payment ledger
 - Signed customer invoice links create idempotent provider-pending payment intents without claiming settlement
@@ -199,7 +199,7 @@ Additional current routes include `POST /api/auth/login`, `POST /api/auth/refres
 
 ## Next product slices
 
-Recurring plans can be scheduled as idempotent 1–12 visit series through `POST /api/plans/:id/schedule`; see [PORTAL_CONTRACT.md](PORTAL_CONTRACT.md) for the normalized request shape and lifecycle rules.
+Recurring plans can be scheduled as idempotent 1–12 visit series through `POST /api/plans/:id/schedule` and billed once per `YYYY-MM` period through `POST /api/plans/:id/invoice`; see [PORTAL_CONTRACT.md](PORTAL_CONTRACT.md) for normalized request shapes and lifecycle rules.
 
 Landing pages can discover the version 2 integration manifest, including owner authentication, customer portal reschedule, cancellation, request, payment-intent, and financing-intent endpoints, without hard-coding service-specific routes. Financing requests remain provider-pending until a real financing partner is connected; Northstar never claims a credit decision locally. Provider status callbacks use `POST /api/webhooks/financing` with `NORTHSTAR_FINANCING_WEBHOOK_SECRET` and remain separate from invoice settlement.
 
