@@ -178,7 +178,7 @@ The image runs as the unprivileged `node` user in production mode, stores local 
 
 Use `.env.example` as the handoff checklist for a deployment or a service landing-page integration. Copy it to `.env` for local work (`Copy-Item .env.example .env` in PowerShell), replace every placeholder, and keep the resulting file out of Git and container images. The tenant slug and service mapping must match the `service` key used by each landing page; the example intentionally contains no working credentials.
 
-To generate `NORTHSTAR_OWNER_PASSWORD_DIGEST` without putting the password in shell history, set `NORTHSTAR_SESSION_SECRET` in the environment and run `node scripts/generate-owner-digest.mjs`; store the printed digest only in the deployment secret configuration.
+To generate a salted scrypt `NORTHSTAR_OWNER_PASSWORD_DIGEST` without putting the password in shell history, run `node scripts/generate-owner-digest.mjs`; store the printed digest only in the deployment secret configuration.
 
 This is intentionally dependency-free. Start the included API and static server directly with Node:
 

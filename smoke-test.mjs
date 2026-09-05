@@ -2,7 +2,7 @@ import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawn } from 'node:child_process';
-import { createHmac } from 'node:crypto';
+import { createHmac, randomBytes, scryptSync } from 'node:crypto';
 import { createServer as createHttpServer } from 'node:http';
 import { fileURLToPath } from 'node:url';
 
@@ -26,7 +26,8 @@ const ownerDigest = createHmac('sha256', 'smoke-session-secret-32-character-key'
 const staffPassword = 'smoke-dispatcher-password';
 const staffDigest = createHmac('sha256', 'smoke-session-secret-32-character-key').update(staffPassword).digest('hex');
 const hvacOwnerPassword = 'smoke-hvac-owner-password';
-const hvacOwnerDigest = createHmac('sha256', 'smoke-session-secret-32-character-key').update(hvacOwnerPassword).digest('hex');
+const hvacOwnerSalt = randomBytes(16).toString('hex');
+const hvacOwnerDigest = `scrypt$${hvacOwnerSalt}$${scryptSync(hvacOwnerPassword, hvacOwnerSalt, 64).toString('hex')}`;
 const serverEnv = { ...process.env, NORTHSTAR_PAYMENT_PROVIDER_URL: 'http://127.0.0.1:4378/payment', NODE_ENV: 'production', NORTHSTAR_ALLOW_DEMO_LOGIN: 'true', NORTHSTAR_SESSION_SECRET: 'smoke-session-secret-32-character-key', PORT: String(port), NORTHSTAR_DATA_FILE: dataFile, NORTHSTAR_PAYMENT_WEBHOOK_SECRET: webhookSecret, NORTHSTAR_MESSAGE_WEBHOOK_SECRET: messageWebhookSecret, NORTHSTAR_CALL_WEBHOOK_SECRET: callWebhookSecret, NORTHSTAR_FINANCING_WEBHOOK_SECRET: financingWebhookSecret, NORTHSTAR_ALLOWED_ORIGINS: 'https://plumbing.example', NORTHSTAR_OWNER_EMAIL: ownerEmail, NORTHSTAR_OWNER_PASSWORD_DIGEST: ownerDigest, NORTHSTAR_OWNER_TENANT_ID: 'clearwater-plumbing', NORTHSTAR_OWNERS_JSON: JSON.stringify([{ id: 'owner_configured_hvac', name: 'HVAC Workspace Owner', email: 'hvac-owner@example.test', passwordDigest: hvacOwnerDigest, tenantId: 'test-hvac' }]), NORTHSTAR_TENANTS_JSON: JSON.stringify([{ slug: 'test-hvac', businessName: 'Test HVAC', serviceLabel: 'HVAC', timeZone: 'America/New_York', accent: '#123456', accentSoft: '#abcdef', focus: 'Configured HVAC focus.', bookingStartHour: 7, bookingEndHour: 17, bookingIntervalMinutes: 60, workingDays: [1, 2, 3, 4, 5], blackoutDates: ['2099-12-25'] }]), NORTHSTAR_SERVICE_TENANTS_JSON: JSON.stringify({ hvac: 'test-hvac' }), NORTHSTAR_STAFF_JSON: JSON.stringify([{ id: 'staff_configured_dispatcher', name: 'Configured Dispatcher', email: 'dispatcher@example.test', passwordDigest: staffDigest, role: 'dispatcher', tenantId: 'clearwater-plumbing' }]) };
 const server = spawn(process.execPath, [fileURLToPath(new URL('./server.mjs', import.meta.url))], { cwd: fileURLToPath(new URL('.', import.meta.url)), env: serverEnv, stdio: 'ignore' });
 let restartedServer;
