@@ -381,7 +381,7 @@ try {
   const duplicateTechVisitEnRoute = await request(`/api/public/technician-job/visit-status${techUrl.search}`, jsonOptions('POST', { visitId: technicianVisit.body.id, status: 'En route' }));
   const techVisitInProgress = await request(`/api/public/technician-job/visit-status${techUrl.search}`, jsonOptions('POST', { visitId: technicianVisit.body.id, status: 'In progress' }));
   const techVisitCompleted = await request(`/api/public/technician-job/visit-status${techUrl.search}`, jsonOptions('POST', { visitId: technicianVisit.body.id, status: 'Completed' }));
-  const openSecondVisit = await request(`/api/jobs/${fieldJob.body.id}/visits`, jsonOptions('POST', { time: 'Friday 5:00 PM', technician: 'Alex Rivera' }, token));
+  const openSecondVisit = await request(`/api/jobs/${fieldJob.body.id}/visits`, jsonOptions('POST', { slotId: extendedAvailability.body.slotOptions.at(-1).id, technician: 'Alex Rivera' }, token));
   const parentReschedule = await request(`/api/jobs/${fieldJob.body.id}/reschedule`, jsonOptions('POST', { slotId: extendedAvailability.body.slotOptions.at(-1).id }, token));
   const visitConflictJob = await request('/api/jobs', jsonOptions('POST', { customerId: converted.body.customer.id, service: 'Visit conflict check', time: 'Saturday 10:00 AM' }, token));
   await request(`/api/jobs/${visitConflictJob.body.id}/assign`, jsonOptions('POST', { technician: 'Alex Rivera' }, token));
