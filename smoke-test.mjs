@@ -396,6 +396,9 @@ try {
   const bulkReceivables = await request('/api/receivables/reminders', jsonOptions('POST', { minBalance: 200, channel: 'Email' }, token));
   const bulkReceivablesRetry = await request('/api/receivables/reminders', jsonOptions('POST', { minBalance: 200, channel: 'Email' }, token));
   assert(portalInvoice.response.status === 201 && bulkReceivables.response.status === 200 && bulkReceivables.body.eligibleInvoices >= 1 && bulkReceivables.body.queued >= 1 && bulkReceivablesRetry.response.status === 200 && bulkReceivablesRetry.body.duplicates >= 1, 'bulk receivables reminder workflow failed');
+  const reactivationCampaign = await request('/api/customers/reactivation', jsonOptions('POST', { inactiveDays: 180, channel: 'SMS' }, token));
+  const reactivationRetry = await request('/api/customers/reactivation', jsonOptions('POST', { inactiveDays: 180, channel: 'SMS' }, token));
+  assert(reactivationCampaign.response.status === 200 && reactivationCampaign.body.eligibleCustomers >= 1 && reactivationCampaign.body.queued >= 1 && reactivationCampaign.body.messages.every((item) => item.template === 'reactivation' && !Object.prototype.hasOwnProperty.call(item, 'tenantId')) && reactivationRetry.response.status === 200 && reactivationRetry.body.duplicates >= 1, 'customer reactivation workflow failed');
   const portalScheduleOptions = { ...jsonOptions('POST', { installments: [{ amount: 100, due: 'At booking' }, { amount: 175, due: 'On completion' }] }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-payment-schedule' } };
   const portalSchedule = await request(`/api/invoices/${portalInvoice.body.id}/schedule`, portalScheduleOptions);
   const duplicatePortalSchedule = await request(`/api/invoices/${portalInvoice.body.id}/schedule`, portalScheduleOptions);
