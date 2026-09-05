@@ -329,9 +329,9 @@ class NorthstarDemoRepository {
     return { blob: await response.blob(), filename: response.headers.get('content-disposition')?.match(/filename="([^"]+)/)?.[1] || 'northstar-route.ics' };
   }
 
-  async getAvailability(service = '', days = 7) {
+  async getAvailability(service = '', days = 7, catalogItemId = '') {
     if (!this.remote) throw new Error('API required for availability');
-    const params = new URLSearchParams({ days: String(days) });
+    const params = new URLSearchParams({ days: String(days), ...(catalogItemId ? { catalogItemId } : {}) });
     if (service) params.set('service', service);
     const response = await fetch(`/api/public/availability?${params}`);
     if (!response.ok) throw new Error('availability unavailable');
