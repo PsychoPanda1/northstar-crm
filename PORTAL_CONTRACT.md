@@ -25,7 +25,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - `GET /api/public/tenant?service=...` → return safe tenant branding and the canonical booking path for a service landing page; it never exposes owner or customer data
 - `booking.html?service=...` → reusable browser form for the public availability/booking contract, returning a customer status link after booking
 - `GET /api/public/job-status?token=...` → minimal customer-safe status response for the landing-page handoff, including optional stable slot and normalized appointment fields
-- `POST /api/public/customer-portal/request?token=...` accepts an optional `Idempotency-Key` and returns `duplicate: true` for safe retries of the same customer request
+- `POST /api/public/customer-portal/request?token=...` accepts an optional `Idempotency-Key`, returns `duplicate: true` for safe retries of the same customer request, and records an actor-attributed `customer.request.received` audit event
 - Public status and customer-portal appointment records include optional `enRouteAt` without exposing owner or tenant identifiers
 - Malformed JSON and request bodies above 64 KiB return controlled `400 bad_request` responses
 - Public lead CORS is opt-in through `NORTHSTAR_ALLOWED_ORIGINS`; unlisted origins are rejected during preflight
