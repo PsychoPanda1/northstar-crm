@@ -267,6 +267,9 @@ try {
   const conflictAssign = await request(`/api/jobs/${conflictJob.body.id}/assign`, jsonOptions('POST', { technician: 'Alex Rivera' }, token));
   const conflictReschedule = await request(`/api/jobs/${conflictJob.body.id}/reschedule`, jsonOptions('POST', { time: 'Next Monday 10:00 AM' }, token));
   assert(conflictAssign.response.status === 200 && conflictReschedule.response.status === 409 && conflictReschedule.body.error === 'technician_schedule_conflict', 'technician conflict protection failed');
+  const noShow = await request(`/api/jobs/${conflictJob.body.id}/no-show`, jsonOptions('POST', { reason: 'Customer unavailable at arrival.' }, token));
+  const noShowAudit = await request('/api/audit?search=job.no_show', { headers: { authorization: `Bearer ${token}` } });
+  assert(noShow.response.status === 200 && noShow.body.status === 'No-show' && noShow.body.noShowReason === 'Customer unavailable at arrival.' && noShowAudit.body.items.some((item) => item.action === 'job.no_show'), 'no-show workflow failed');
   const reschedule = await request(`/api/jobs/${directJob.body.id}/reschedule`, jsonOptions('POST', { time: 'Tomorrow 9:30 AM' }, token));
   const nextBusinessSlot = availabilityAfterBooking.body.slotOptions.find((slot) => slot.id.startsWith('next-business-day-0900-'));
   const structuredReschedule = await request(`/api/jobs/${structuredJob.body.id}/reschedule`, jsonOptions('POST', { slotId: nextBusinessSlot.id }, token));
