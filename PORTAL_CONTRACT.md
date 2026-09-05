@@ -145,6 +145,7 @@ System events such as web-form lead capture, customer estimate approval, and rec
 - `POST /api/invoices/:id/remind` → queue an owner/accountant SMS or email balance reminder with the invoice's durable `customerId`, deduplicated for 24 hours; provider delivery is reconciled through the message webhook
 - `POST /api/receivables/reminders` → owner/accountant-only bulk queue of deduplicated balance reminders above a caller-selected minimum balance, returning eligible, queued, and duplicate counts for safe aging-queue reruns
 - `POST /api/invoices/:id/payment-link` → issue a 72-hour invoice payment link for the owner to share
+- `GET /api/invoices/:id/receipt` → owner/accountant-only normalized receipt summary with invoice totals, settled payments, references, and remaining balance
 - The invoice workspace exposes this payment-link action only for tenant-created invoices; seeded demo invoice cards remain read-only
 - `GET|POST /api/invoices/:id/schedule` → read or create a tenant-scoped 2–12 installment schedule whose amounts must exactly match the invoice total; creation accepts an optional `Idempotency-Key` for safe retries, and public payment links and customer portals expose derived paid amounts as payments settle
 - `GET /api/public/invoice?token=...` and `POST /api/public/invoice/payment-intent?token=...` → expose safe invoice balance plus settled payment history and create an idempotent Card/ACH payment intent carrying the invoice's durable `customerId`; processor confirmation remains external

@@ -201,6 +201,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async getInvoiceReceipt(id) {
+    if (!this.remote) throw new Error('API required for invoice receipt');
+    const response = await fetch(`/api/invoices/${encodeURIComponent(id)}/receipt`, { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('invoice receipt unavailable');
+    return response.json();
+  }
+
   async recommendTechnicians(jobId) {
     if (!this.remote) throw new Error('API required for dispatch recommendations');
     const response = await fetch(`/api/dispatch/recommendations?jobId=${encodeURIComponent(jobId)}`, { headers: { authorization: `Bearer ${this.token}` } });

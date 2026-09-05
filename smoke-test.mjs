@@ -473,6 +473,8 @@ try {
   const duplicateInvoiceReminder = await request(`/api/invoices/${invoice.body.id}/remind`, jsonOptions('POST', { channel: 'SMS' }, token));
   const paid = await request(`/api/invoices/${invoice.body.id}/pay`, jsonOptions('POST', { method: 'ACH' }, token));
   const publicInvoiceAfterPaid = await request(`/api/public/invoice${invoiceUrl.search}`);
+  const invoiceReceiptCheck = await request(`/api/invoices/${invoice.body.id}/receipt`, { headers: { authorization: `Bearer ${token}` } });
+  assert(invoiceReceiptCheck.response.status === 200 && invoiceReceiptCheck.body.receiptNumber === `RCPT-${invoice.body.id}` && invoiceReceiptCheck.body.payments.length === 2, 'invoice receipt workflow failed');
   const paymentLedger = await request('/api/payments?search=Smoke%20Customer', { headers: { authorization: `Bearer ${token}` } });
   const accountingExport = await fetch(`${base}/api/export?type=accounting`, { headers: { authorization: `Bearer ${token}` } });
   const accountingCsv = await accountingExport.text();
