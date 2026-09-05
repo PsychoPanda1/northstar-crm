@@ -169,6 +169,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async updateLeadStatus(id, status, note = '') {
+    if (!this.remote) throw new Error('API required for lead status updates');
+    const response = await fetch(`/api/leads/${encodeURIComponent(id)}/status`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ status, ...(note ? { note } : {}) }) });
+    if (!response.ok) throw new Error('lead status update failed');
+    return response.json();
+  }
+
   async createCustomer(name, phone, location) {
     if (!this.remote) throw new Error('API required for customer creation');
     const response = await fetch('/api/customers', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ name, phone, location }) });

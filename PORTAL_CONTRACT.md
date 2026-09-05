@@ -53,6 +53,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - `GET /api/export?type=customers|leads|estimates|invoices|payments|plans|activities|dispatch|assets` → tenant-scoped CSV export for owner reporting and accounting handoff
 - `POST /api/jobs` → create a job after server-side tenant and role checks; validates that the customer exists and rejects an active appointment already using the requested time
 - `POST /api/leads/:id/convert` → convert a tenant-owned lead into a customer and scheduled job while preserving lead attribution; rejects an active appointment already using the requested time
+- `POST /api/leads/:id/status` → move an unconverted tenant lead through `New`, `Contacted`, `Qualified`, `Estimate sent`, `Won`, or `Lost`; converted leads are locked
 - `POST /api/jobs/:id/assign` and `POST /api/jobs/:id/status` → update a tenant-owned job's technician and lifecycle state
 - Job status changes follow a server-enforced lifecycle; terminal jobs cannot be reassigned, `Completed` requires the dedicated completion endpoint, and field states require an assigned technician
 - `POST /api/jobs/:id/reschedule` → change the appointment time without recreating the job
