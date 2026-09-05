@@ -183,6 +183,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async rebookJob(id, slotId) {
+    if (!this.remote) throw new Error('API required for dispatch rebooking');
+    const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/rebook`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({ slotId }) });
+    if (!response.ok) throw new Error('job rebook failed');
+    return response.json();
+  }
+
   async markJobNoShow(id, reason) {
     if (!this.remote) throw new Error('API required for no-show updates');
     const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/no-show`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ reason }) });

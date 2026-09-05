@@ -93,7 +93,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Customer-initiated appointment cancellations create durable, deduplicated owner action notifications
 - Customer-initiated appointment reschedules also surface as auditable owner action notifications
 - Customer self-service requests accept idempotency keys so mobile retries do not create duplicate requests
-- Accepted estimates can convert directly into scheduled, checklist-ready jobs
+- Accepted estimates can convert directly into scheduled, checklist-ready jobs, and canceled appointments can be rebooked into conflict-checked slots
 - Server-side technician conflict detection for assignment and rescheduling
 - Multi-visit work orders with per-visit scheduling, technician assignment, and conflict checks
 - Per-visit lifecycle transitions for multi-visit work orders
