@@ -610,6 +610,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async assignJobCrew(jobId, technicians) {
+    if (!this.remote) throw new Error('API required for crew management');
+    const response = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/crew`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ technicians }) });
+    if (!response.ok) throw new Error('job crew assignment failed');
+    return response.json();
+  }
+
   async updateVehicleStatus(vehicleId, status) {
     if (!this.remote) throw new Error('API required for fleet');
     const response = await fetch(`/api/vehicles/${encodeURIComponent(vehicleId)}/status`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ status }) });
