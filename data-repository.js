@@ -106,6 +106,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async markJobNoShow(id, reason) {
+    if (!this.remote) throw new Error('API required for no-show updates');
+    const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/no-show`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ reason }) });
+    if (!response.ok) throw new Error('no-show update failed');
+    return response.json();
+  }
+
   async addJobVisit(id, time, technician = '') {
     if (!this.remote) throw new Error('API required for multi-visit scheduling');
     const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/visits`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ time, ...(technician ? { technician } : {}) }) });
