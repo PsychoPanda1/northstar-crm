@@ -42,6 +42,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - CI runs a Node 20/22 verification matrix with a ten-minute timeout, stale-run cancellation, manual reruns, and a production-configured container readiness smoke check
 - Technician photo evidence with bounded HTTPS metadata, captions, timestamps, and owner-visible job records
 - Technicians can capture structured field findings with severity and recommended follow-up, preserving onsite upsell and safety context for owner review
+- Field findings generate tenant-scoped owner action notifications, with safety findings marked urgent for dispatch follow-up
 - Technicians can add equipment records from the field, carrying model/serial, install, warranty, and source-job history into the customer profile
 - Offline-capable technician field actions that queue locally and replay when connectivity returns
 - Tenant-scoped audit log with searchable CSV export for workflow and integration traceability
