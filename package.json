@@ -3,5 +3,5 @@
   "version": "0.1.0",
   "private": true,
   "description": "A calm, powerful field-service CRM dashboard MVP",
-  "scripts": { "start": "node server.mjs", "check": "node --check server.mjs && node --check app.js && node --check data-repository.js && node --check tenant-config.js", "test:smoke": "node smoke-test.mjs" }
+  "scripts": { "start": "node server.mjs", "check": "node --check server.mjs && node --check app.js && node --check data-repository.js && node --check tenant-config.js && node client-contract-test.mjs", "test:smoke": "node smoke-test.mjs" }
 }
