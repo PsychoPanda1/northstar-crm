@@ -295,6 +295,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async updateCustomer(id, fields) {
+    if (!this.remote) throw new Error('API required for customer profile updates');
+    const response = await fetch(`/api/customers/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify(fields) });
+    if (!response.ok) throw new Error('customer profile update failed');
+    return response.json();
+  }
+
   async createLocation(customerId, label, address) {
     if (!this.remote) throw new Error('API required for locations');
     const response = await fetch(`/api/customers/${encodeURIComponent(customerId)}/locations`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ label, address }) });
