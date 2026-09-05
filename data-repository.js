@@ -659,6 +659,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async createJobInvoice(jobId, amount, due = '30 days', idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for job invoice creation');
+    const response = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/invoice`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ amount, due }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'job invoice creation failed');
+    return response.json();
+  }
+
   async createPaymentSchedule(invoiceId, installments, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for payment schedules');
     const response = await fetch(`/api/invoices/${encodeURIComponent(invoiceId)}/schedule`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ installments }) });
