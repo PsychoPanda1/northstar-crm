@@ -3,6 +3,7 @@ const tenant = await resolveTenant();
 const repository = new NorthstarDemoRepository(tenant);
 window.northstarRepository = repository;
 await repository.ready;
+if (repository.authRequired) { document.body.innerHTML = `<main style="min-height:100vh;display:grid;place-items:center;padding:24px;background:#f4f7f6;color:#203238;font-family:system-ui,sans-serif"><section style="max-width:460px;padding:32px;border:1px solid #dbe6e2;border-radius:20px;background:#fff;box-shadow:0 18px 60px rgba(32,50,56,.12)"><p style="letter-spacing:.12em;font-size:12px;font-weight:800;color:#2d8068">NORTHSTAR CRM</p><h1 style="margin:8px 0">Owner sign-in required</h1><p style="line-height:1.6;color:#607078">This workspace could not establish a secure session. Sign in from the owner portal or contact your administrator.</p><p style="margin:0;color:#607078;font-size:13px">No customer or business records were loaded.</p></section></main>`; return; }
 const dashboard = repository.getDashboard();
 const ownerName = repository.session?.owner?.name || 'Jordan Smith';
 const ownerFirstName = ownerName.split(/\s+/)[0] || ownerName;

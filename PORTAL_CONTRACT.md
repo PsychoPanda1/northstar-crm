@@ -9,6 +9,7 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 - `tenant-config.js` contains presentation-only configurations for plumbing, power washing, electrical, mobile car wash, and a home-services default.
 - `app.js` applies the selected tenant name, service label, accent, and dashboard focus line.
 - The owner sign-in dialog is intentionally a demo boundary. It does not collect, transmit, or validate credentials.
+- HTTP deployments fail closed when the authenticated API session cannot be established; static preview data is available only when the portal is opened explicitly from `file:`
 - API and static responses set CSP, clickjacking, MIME-sniffing, referrer, and permissions policies; `NODE_ENV=production` also enables HSTS
 - `server.mjs` provides a dependency-free local API with signed demo sessions, tenant-scoped record routes, and restart-safe development persistence.
 

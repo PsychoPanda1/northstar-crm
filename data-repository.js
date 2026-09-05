@@ -16,6 +16,8 @@ class NorthstarDemoRepository {
     this.tokenKey = `northstar-demo-token:${tenant.slug}`;
     this.token = sessionStorage.getItem(this.tokenKey);
     this.apiAvailable = window.location.protocol !== 'file:';
+    this.previewOnly = window.location.protocol === 'file:';
+    this.authRequired = false;
     this.ready = this.connect();
   }
 
@@ -30,7 +32,7 @@ class NorthstarDemoRepository {
       if (!session.ok) throw new Error('session unavailable');
       this.session = await session.json();
       if (this.session.expiresAt && this.session.expiresAt - Date.now() < 30 * 60 * 1000) await this.refreshSession();
-    } catch { this.remote = null; this.session = null; }
+    } catch { this.remote = null; this.session = null; this.authRequired = !this.previewOnly; }
   }
 
   async login(email, password) {
@@ -54,6 +56,7 @@ class NorthstarDemoRepository {
 
   getDashboard() {
     if (this.remote) return this.remote;
+    if (!this.previewOnly) throw new Error('authenticated dashboard required');
     const seed = NORTHSTAR_DEMO_DATA[this.tenant.slug] || NORTHSTAR_DEMO_DATA['johnson-service-co'];
     return { ...seed, completedTasks: this.state.completedTasks || [] };
   }
