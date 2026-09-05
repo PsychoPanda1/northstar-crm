@@ -71,6 +71,7 @@ const persisted = readPersistedJson(DATA_FILE, {});
 const state = new Map(Object.keys(tenants).map((tenantId) => [tenantId, { ...blankState(), ...(persisted[tenantId] || {}) }]));
 for (const saved of state.values()) { saved.routeOrderRequests = Array.isArray(saved.routeOrderRequests) ? saved.routeOrderRequests : []; saved.capacityTargets = Array.isArray(saved.capacityTargets) ? saved.capacityTargets : []; }
 const publicLeadWindows = new Map();
+const publicMutationWindows = new Map();
 const ownerLoginWindows = new Map();
 const revokedTokens = new Set();
 const revokedSessionIds = new Set(readPersistedJson(SESSION_FILE, []));
@@ -153,6 +154,7 @@ const readBody = async (req) => { let body = ''; for await (const chunk of req) 
 const readRawBody = async (req) => { let body = ''; for await (const chunk of req) { body += chunk; if (Buffer.byteLength(body, 'utf8') > 64 * 1024) throw new Error('request_body_too_large'); } return body; };
 const pruneRateLimitWindows = (windows, now, maxEntries = 5000) => { for (const [key, window] of windows) if (now - window.startedAt >= 15 * 60_000) windows.delete(key); if (windows.size <= maxEntries) return; const oldest = [...windows.entries()].sort((left, right) => left[1].startedAt - right[1].startedAt); for (let index = 0; index < oldest.length - maxEntries; index += 1) windows.delete(oldest[index][0]); };
 const allowPublicLead = (req) => { const key = req.socket.remoteAddress || 'unknown'; const now = Date.now(); pruneRateLimitWindows(publicLeadWindows, now); const window = publicLeadWindows.get(key); if (!window || now - window.startedAt >= 60_000) { publicLeadWindows.set(key, { startedAt: now, count: 1 }); return true; } if (window.count >= 20) return false; window.count += 1; return true; };
+const allowPublicMutation = (req, scope) => { const key = String(req.socket.remoteAddress || 'unknown') + '|' + scope; const now = Date.now(); pruneRateLimitWindows(publicMutationWindows, now); const window = publicMutationWindows.get(key); if (!window || now - window.startedAt >= 60_000) { publicMutationWindows.set(key, { startedAt: now, count: 1 }); return true; } if (window.count >= 60) return false; window.count += 1; return true; };
 const validEmail = (value) => !value || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value).trim());
 const validPhone = (value) => !value || String(value).replace(/\D/g, '').length >= 7;
 const isStrongSecret = (value) => String(value || '').length >= 32;
@@ -375,6 +377,8 @@ const server = createServer(async (req, res) => {
     }
     const origin = req.headers.origin;
     if (origin && ALLOWED_ORIGINS.has(origin)) { res.setHeader('access-control-allow-origin', origin); res.setHeader('vary', 'Origin'); }
+    const publicMutationScope = pathname.startsWith('/api/public/customer-portal') || pathname.startsWith('/api/public/job-status') || pathname.startsWith('/api/public/estimate/') || pathname === '/api/public/invoice/payment-intent' ? 'public-portal' : '';
+    if (req.method === 'POST' && publicMutationScope && !allowPublicMutation(req, publicMutationScope)) return json(res, 429, { error: 'rate_limited' });
     const publicServicePaths = new Set(['/api/public/tenant', '/api/public/catalog', '/api/public/availability', '/api/public/bookings', '/api/public/leads']);
     const requestedPublicService = requestUrl.searchParams.get('service');
     if (publicServicePaths.has(pathname) && requestedPublicService && !Object.prototype.hasOwnProperty.call(serviceTenant, requestedPublicService)) return json(res, 404, { error: 'unknown_service' });
