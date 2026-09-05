@@ -701,6 +701,8 @@ try {
   assert(paymentIntentConflict.response.status === 409 && paymentIntentConflict.body.error === 'idempotency_key_reused', 'invoice payment intent idempotency conflict protection failed');
   const partial = await request(`/api/invoices/${invoice.body.id}/pay`, { ...jsonOptions('POST', { amount: 100, method: 'Card', reference: 'SMOKE-1' }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-manual-payment' } });
   const duplicatePartial = await request(`/api/invoices/${invoice.body.id}/pay`, { ...jsonOptions('POST', { amount: 100, method: 'Card', reference: 'SMOKE-1' }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-manual-payment' } });
+  const partialConflict = await request(`/api/invoices/${invoice.body.id}/pay`, { ...jsonOptions('POST', { amount: 90, method: 'Card', reference: 'SMOKE-1' }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-manual-payment' } });
+  assert(partialConflict.response.status === 409 && partialConflict.body.error === 'idempotency_key_reused', 'manual payment idempotency conflict protection failed');
   const invoiceReminder = await request(`/api/invoices/${invoice.body.id}/remind`, jsonOptions('POST', { channel: 'SMS' }, token));
   const duplicateInvoiceReminder = await request(`/api/invoices/${invoice.body.id}/remind`, jsonOptions('POST', { channel: 'SMS' }, token));
   const paid = await request(`/api/invoices/${invoice.body.id}/pay`, jsonOptions('POST', { method: 'ACH' }, token));
