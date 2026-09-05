@@ -575,7 +575,9 @@ assert(estimateJob.response.status === 201 && estimateJob.body.job.slotId === es
   const requestReplyDuplicate = await request(`/api/requests/${customerRequest.body.id}/reply`, requestReplyOptions);
   const resolvedRequest = await request(`/api/requests/${customerRequest.body.id}/resolve`, jsonOptions('POST', { note: 'Sent the customer the confirmed service window.' }, token));
   const technicianRequestResolve = await request(`/api/requests/${customerRequest.body.id}/resolve`, jsonOptions('POST', { note: 'Technicians cannot resolve owner requests.' }, technicianLogin.body.token));
+  const technicianRequests = await request('/api/requests', { headers: { authorization: `Bearer ${technicianLogin.body.token}` } });
   assert(technicianRequestResolve.response.status === 403, 'technician request resolution permission failed');
+  assert(technicianRequests.response.status === 403, 'technician customer request visibility failed');
   const customerPortalAfterRequest = await request(`/api/public/customer-portal${customerUrl.search}`);
   const resolutionAudit = await request(`/api/audit?search=${encodeURIComponent('customer.request.resolved')}`, { headers: { authorization: `Bearer ${token}` } });
   assert(requestReply.response.status === 201 && requestReply.body.message.requestId === customerRequest.body.id && requestReply.body.message.status === 'Queued (provider pending)' && requestReplyDuplicate.response.status === 200 && requestReplyDuplicate.body.duplicate === true && customerPortalAfterRequest.body.messages.some((item) => item.message === 'Yes, your next service window is confirmed.' && item.tenantId === undefined), 'customer request reply workflow failed');
