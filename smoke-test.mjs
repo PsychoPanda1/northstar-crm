@@ -307,6 +307,10 @@ try {
   const bulkAssignmentOptions = { ...jsonOptions('POST', { jobIds: [rebookedDirectJob.body.id, bulkJob.body.id], technician: 'Alex Rivera' }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-bulk-assignment' } };
   const bulkAssignment = await request('/api/dispatch/bulk-assign', bulkAssignmentOptions);
   const duplicateBulkAssignment = await request('/api/dispatch/bulk-assign', bulkAssignmentOptions);
+  const bulkStatusOptions = { ...jsonOptions('POST', { jobIds: [rebookedDirectJob.body.id, bulkJob.body.id], status: 'En route', note: 'Crew dispatched.' }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-bulk-status' } };
+  const bulkStatus = await request('/api/dispatch/bulk-status', bulkStatusOptions);
+  const duplicateBulkStatus = await request('/api/dispatch/bulk-status', bulkStatusOptions);
+  assert(bulkStatus.response.status === 200 && bulkStatus.body.status === 'En route' && bulkStatus.body.jobs.length === 2 && bulkStatus.body.jobs.every((item) => item.status === 'En route') && duplicateBulkStatus.response.status === 200 && duplicateBulkStatus.body.duplicate === true, 'bulk status workflow failed');
   const bulkVisitJob = await request('/api/jobs', jsonOptions('POST', { customerId: createdCustomer.body.id, service: 'Child visit conflict source', time: 'Tomorrow 6:00 AM' }, token));
   const bulkVisit = await request(`/api/jobs/${bulkVisitJob.body.id}/visits`, jsonOptions('POST', { time: 'Tomorrow 4:30 PM', technician: 'Alex Rivera' }, token));
   const bulkVisitConflictJob = await request('/api/jobs', jsonOptions('POST', { customerId: createdCustomer.body.id, service: 'Child visit conflict target', time: 'Tomorrow 4:30 PM' }, token));

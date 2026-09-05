@@ -221,6 +221,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async bulkUpdateJobStatus(jobIds, status, note = '', idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for bulk dispatch status');
+    const response = await fetch('/api/dispatch/bulk-status', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ jobIds, status, ...(note ? { note } : {}) }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'bulk status update failed');
+    return response.json();
+  }
+
   async updateJobPriority(id, priority) {
     if (!this.remote) throw new Error('API required for job priority updates');
     const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/priority`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ priority }) });
