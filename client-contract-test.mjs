@@ -83,6 +83,7 @@ assert(app.includes("['Messages', profile.messages || []]") && app.includes("['C
 assert(app.includes("result.results.messages || []") && app.includes("result.results.calls || []"), 'global search does not expose communication history');
 assert(app.includes('data-run-automations') && app.includes('runAutomations'), 'dispatch workspace does not expose coordinated customer automations');
 assert(app.includes('data-request-action="reply"') && app.includes('replyToRequest') && app.includes('Reply queued by') && !app.includes('data-request-reply'), 'owner request queue does not expose one canonical customer reply workflow');
+assert(app.includes('const renderJobDetail =') && app.includes('const detail = await repository.getJobDetail(button.dataset.jobDetail)') && !app.includes('decorateJobDetails'), 'owner job detail view has duplicate or unreachable render paths');
 assert(app.includes('message-dispatch') && app.includes('dispatchMessages') && repository.includes('/api/integrations/messages/dispatch') && server.includes('MESSAGE_PROVIDER_URL') && server.includes('provider_timeout') && server.includes("'idempotency-key': message.id") && server.includes('messageProvider: messageProviderConfigured()'), 'server-side message provider dispatch is not wired');
 assert(app.includes('data-plan-schedule') && app.includes('Schedule visits') && repository.includes('schedulePlanVisits') && repository.includes('/schedule'), 'service plan recurring-visit scheduling is not wired through the owner portal');
 assert(app.includes('data-plan-bill') && app.includes('Bill period') && repository.includes('createPlanInvoice') && repository.includes('/invoice'), 'service plan billing is not wired through the owner portal');
@@ -93,7 +94,7 @@ assert(app.includes('jobLocationSelect') && app.includes('syncJobLocations') && 
 assert(app.includes('Link equipment') && app.includes('linkJobAsset') && repository.includes('linkJobAsset'), 'job equipment association is not wired through the owner portal');
 assert(app.includes('Good / better / best options') && app.includes('option1Label') && app.includes('hasOptions') && app.includes('optionsValid') && app.includes('hasOptions ? options[0].amount : amount') && repository.includes('options = []') && repository.includes('{ options }') && server.includes('body.options ? options[0]?.amount'), 'owner estimate option builder is not wired through the client repository');
 assert(app.includes("Array.isArray(job.crew) && job.crew.includes(lane)"), 'dispatch board does not render crew jobs in each assigned technician lane');
-assert(app.includes("Crew: ${detail.job.crew.join(', ')}"), 'job detail summary does not expose assigned crew');
+assert(app.includes("Crew: ${escapeHtml(job.crew.join(', '))}"), 'job detail summary does not expose assigned crew');
 assert(app.includes('Service history: ${item.serviceHistory.map'), 'customer profile does not expose equipment service history');
 assert(technician.includes('inventoryLocations') && technician.includes('locationId'), 'technician materials workflow does not expose stock location provenance');
 assert(app.includes('Edit asset') && repository.includes('updateAsset') && repository.includes('/api/assets/'), 'owner portal does not expose equipment record updates');
