@@ -540,6 +540,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async assignLead(id, assignedTo, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for lead assignment');
+    const response = await fetch(`/api/leads/${encodeURIComponent(id)}/assign`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ assignedTo }) });
+    if (!response.ok) throw new Error('lead assignment failed');
+    return response.json();
+  }
+
   async createMaterial(name, sku, unit, unitCost, onHand, reorderPoint, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for material creation');
     const response = await fetch('/api/materials', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ name, sku, unit, unitCost, onHand, reorderPoint }) });
