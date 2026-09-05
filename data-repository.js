@@ -295,6 +295,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async getCustomerTimeline(id, limit = 100) {
+    if (!this.remote) throw new Error('API required for customer timelines');
+    const response = await fetch(`/api/customers/${encodeURIComponent(id)}/timeline?limit=${encodeURIComponent(limit)}`, { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('customer timeline unavailable');
+    return response.json();
+  }
+
   async updateCustomer(id, fields, idempotencyKey = '') {
     if (!this.remote) throw new Error('API required for customer profile updates');
     const response = await fetch(`/api/customers/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', ...(idempotencyKey ? { 'idempotency-key': idempotencyKey } : {}) }, body: JSON.stringify(fields) });
