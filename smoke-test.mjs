@@ -475,12 +475,16 @@ try {
   const warrantySoon = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   const assetOptions = { ...jsonOptions('POST', { customerId: converted.body.customer.id, name: 'Tankless water heater', serial: 'TS-42', installed: '2026-09-04', warrantyThrough: warrantySoon }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-asset' } };
   const asset = await request('/api/assets', assetOptions);
+  const linkedAsset = await request(`/api/jobs/${converted.body.job.id}/asset`, { ...jsonOptions('POST', { assetId: asset.body.id }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-job-asset-link' } });
+  const duplicateLinkedAsset = await request(`/api/jobs/${converted.body.job.id}/asset`, { ...jsonOptions('POST', { assetId: asset.body.id }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-job-asset-link' } });
+  const linkedJobDetail = await request(`/api/jobs/${converted.body.job.id}`, { headers: { authorization: `Bearer ${token}` } });
   const duplicateAsset = await request('/api/assets', assetOptions);
   const assets = await request('/api/assets?search=TS-42', { headers: { authorization: `Bearer ${token}` } });
   const assetExport = await fetch(`${base}/api/export?type=assets`, { headers: { authorization: `Bearer ${token}` } });
   const assetAudit = await request('/api/audit?search=asset.created', { headers: { authorization: `Bearer ${token}` } });
   const warrantyNotifications = await request('/api/notifications?search=Warranty', { headers: { authorization: `Bearer ${token}` } });
   assert(asset.response.status === 201 && asset.body.duplicate === false && duplicateAsset.response.status === 200 && duplicateAsset.body.duplicate === true && duplicateAsset.body.id === asset.body.id && asset.body.customerId === converted.body.customer.id && asset.body.warrantyThrough === warrantySoon && assets.body.items.length === 1 && assets.body.items[0].customer === 'Smoke Lead' && (await assetExport.text()).includes('TS-42') && assetAudit.body.items.some((item) => item.action === 'asset.created') && warrantyNotifications.body.items.some((item) => item.title === 'Warranty expiring soon'), 'customer asset workflow failed');
+  assert(linkedAsset.response.status === 200 && linkedAsset.body.duplicate === false && linkedAsset.body.asset.id === asset.body.id && duplicateLinkedAsset.response.status === 200 && duplicateLinkedAsset.body.duplicate === true && linkedJobDetail.body.job.assets.length === 1 && linkedJobDetail.body.job.assets[0].id === asset.body.id, 'job equipment association failed');
   const profile = await request(`/api/customers/${encodeURIComponent(converted.body.customer.id)}`, { headers: { authorization: `Bearer ${token}` } });
   const sameNameCustomer = await request('/api/customers', jsonOptions('POST', { name: 'Smoke Lead', phone: '843-555-0198', location: '9 King St, Charleston' }, token));
   const sameNameJob = await request('/api/jobs', { ...jsonOptions('POST', { customerId: sameNameCustomer.body.id, service: 'Same-name customer test', time: 'Next business day 2:00 PM' }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-same-name-job' } });
