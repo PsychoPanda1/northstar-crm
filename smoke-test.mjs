@@ -172,10 +172,12 @@ try {
   const assignedVehicle = await request(`/api/jobs/${directJob.body.id}/vehicle`, jsonOptions('POST', { vehicleId: vehicle.body.id }, token));
   const duplicateAssignedVehicle = await request(`/api/jobs/${directJob.body.id}/vehicle`, jsonOptions('POST', { vehicleId: vehicle.body.id }, token));
   const assignedCrew = await request(`/api/jobs/${directJob.body.id}/crew`, jsonOptions('POST', { technicians: ['Marcus Thompson', 'Jordan Lee'] }, token));
+  const crewRoster = await request('/api/team', { headers: { authorization: `Bearer ${token}` } });
   const duplicateAssignedCrew = await request(`/api/jobs/${directJob.body.id}/crew`, jsonOptions('POST', { technicians: ['Marcus Thompson', 'Jordan Lee'] }, token));
   const secondaryCrewLink = await request(`/api/jobs/${directJob.body.id}/technician-link`, jsonOptions('POST', { technician: 'Jordan Lee' }, token));
   const secondaryCrewToken = secondaryCrewLink.body.url ? new URL(secondaryCrewLink.body.url, 'http://localhost').searchParams.get('token') : '';
   const secondaryCrewView = await request(`/api/public/technician-job?token=${encodeURIComponent(secondaryCrewToken || '')}`);
+  assert(crewRoster.response.status === 200 && crewRoster.body.items.find((item) => item.name === 'Marcus Thompson')?.activeJobs >= 1 && crewRoster.body.items.find((item) => item.name === 'Jordan Lee')?.activeJobs >= 1, 'crew roster workload tracking failed');
   assert(secondaryCrewLink.response.status === 200 && secondaryCrewLink.body.technician === 'Jordan Lee' && secondaryCrewView.response.status === 200 && secondaryCrewView.body.technician === 'Jordan Lee', 'secondary crew technician link failed');
   const vehicleMaintenance = await request(`/api/vehicles/${vehicle.body.id}/status`, jsonOptions('POST', { status: 'Maintenance' }, token));
   const vehicleActive = await request(`/api/vehicles/${vehicle.body.id}/status`, jsonOptions('POST', { status: 'Active' }, token));
