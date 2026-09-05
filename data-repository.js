@@ -542,7 +542,7 @@ class NorthstarDemoRepository {
 
   async createJob(customerId, service, time, appointment = {}) {
     if (!this.remote) throw new Error('API required for job creation');
-    const response = await fetch('/api/jobs', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({ customerId, service, time, ...(appointment.slotId ? { slotId: appointment.slotId } : {}), ...(appointment.requiredSkill ? { requiredSkill: appointment.requiredSkill } : {}), ...(appointment.startsAt ? { startsAt: appointment.startsAt } : {}), ...(appointment.endsAt ? { endsAt: appointment.endsAt } : {}), ...(appointment.timeZone ? { timeZone: appointment.timeZone } : {}) }) });
+    const response = await fetch('/api/jobs', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({ customerId, service, time, ...(appointment.locationId ? { locationId: appointment.locationId } : {}), ...(appointment.slotId ? { slotId: appointment.slotId } : {}), ...(appointment.requiredSkill ? { requiredSkill: appointment.requiredSkill } : {}), ...(appointment.startsAt ? { startsAt: appointment.startsAt } : {}), ...(appointment.endsAt ? { endsAt: appointment.endsAt } : {}), ...(appointment.timeZone ? { timeZone: appointment.timeZone } : {}) }) });
     if (!response.ok) throw new Error('job creation failed');
     return response.json();
   }
