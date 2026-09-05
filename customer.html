@@ -25,8 +25,9 @@
   const $ = (selector, root = document) => root.querySelector(selector);
   const esc = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[character]));
   const message = (value) => { $('#message').textContent = value; };
-  const post = async (path, body, key = crypto.randomUUID()) => fetch(path + query, { method:'POST', headers:{ 'content-type':'application/json', 'idempotency-key':key }, body:JSON.stringify(body) });
-  const postToken = async (path, value, body, key = crypto.randomUUID()) => fetch(`${path}?token=${encodeURIComponent(value)}`, { method:'POST', headers:{ 'content-type':'application/json', 'idempotency-key':key }, body:JSON.stringify(body) });
+  const retryKey = (scope, body) => { const storageKey = `northstar-portal-retry-${token}-${scope}-${JSON.stringify(body)}`; const stored = sessionStorage.getItem(storageKey); if (stored) return stored; const next = crypto.randomUUID(); sessionStorage.setItem(storageKey, next); return next; };
+  const post = async (path, body, key = retryKey(path, body)) => fetch(path + query, { method:'POST', headers:{ 'content-type':'application/json', 'idempotency-key':key }, body:JSON.stringify(body) });
+  const postToken = async (path, value, body, key = retryKey(path, body)) => fetch(`${path}?token=${encodeURIComponent(value)}`, { method:'POST', headers:{ 'content-type':'application/json', 'idempotency-key':key }, body:JSON.stringify(body) });
   const section = (title, items, render) => items?.length ? `<section class="section"><h2>${esc(title)}</h2>${items.map(render).join('')}</section>` : '';
   const row = (main, sub, status, extra = '') => `<div class="row"><div>${main}<small>${sub}</small>${extra}</div><span class="pill">${status}</span></div>`;
   const details = (title, items, render) => items?.length ? `<div class="detail"><strong>${esc(title)}</strong>${items.map(render).join('')}</div>` : '';
