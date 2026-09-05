@@ -6,6 +6,7 @@ COPY *.mjs *.js *.html *.css *.md ./
 
 RUN mkdir -p /app/data && chown -R node:node /app
 ENV PORT=4173
+ENV NODE_ENV=production
 ENV NORTHSTAR_DATA_FILE=/app/data/state.json
 ENV NORTHSTAR_SESSION_FILE=/app/data/state.json.sessions
 

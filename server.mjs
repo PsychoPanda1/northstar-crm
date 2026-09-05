@@ -9,6 +9,7 @@ const PORT = Number(process.env.PORT || 4173);
 const SECRET = process.env.NORTHSTAR_SESSION_SECRET || 'northstar-local-demo-secret-change-me';
 const PAYMENT_WEBHOOK_SECRET = process.env.NORTHSTAR_PAYMENT_WEBHOOK_SECRET || `${SECRET}-payment-webhook`;
 const MESSAGE_WEBHOOK_SECRET = process.env.NORTHSTAR_MESSAGE_WEBHOOK_SECRET || `${SECRET}-message-webhook`;
+const ALLOW_DEMO_LOGIN = process.env.NODE_ENV !== 'production' || String(process.env.NORTHSTAR_ALLOW_DEMO_LOGIN || '').toLowerCase() === 'true';
 const OWNER_LOGIN_EMAIL = String(process.env.NORTHSTAR_OWNER_EMAIL || '').trim().toLowerCase();
 const OWNER_PASSWORD_DIGEST = String(process.env.NORTHSTAR_OWNER_PASSWORD_DIGEST || '').trim().toLowerCase();
 const DATA_FILE = process.env.NORTHSTAR_DATA_FILE || join(ROOT, '.northstar-data.json');
@@ -191,6 +192,7 @@ const server = createServer(async (req, res) => {
     if (pathname === '/api/public/leads' && req.method === 'OPTIONS') { if (!origin || !ALLOWED_ORIGINS.has(origin)) return json(res, 403, { error: 'origin_not_allowed' }); res.writeHead(204, { 'access-control-allow-origin': origin, 'access-control-allow-methods': 'POST, OPTIONS', 'access-control-allow-headers': 'content-type, idempotency-key', 'vary': 'Origin' }); return res.end(); }
     if (pathname === '/api/health' && req.method === 'GET') return json(res, 200, { ok: true, service: 'northstar-api', version: '0.2.0' });
     if (pathname === '/api/auth/demo-login' && req.method === 'POST') {
+      if (!ALLOW_DEMO_LOGIN) return json(res, 404, { error: 'demo_login_disabled' });
       const body = await readBody(req); const service = body.service || requestUrl.searchParams.get('service') || 'default'; const role = String(body.role || requestUrl.searchParams.get('role') || 'owner').toLowerCase(); if (!demoStaff[role]) return json(res, 422, { error: 'invalid_demo_role' }); const tenantId = serviceTenant[service] || serviceTenant.default; const owner = { ...demoStaff[role], tenantId }; return json(res, 200, { token: issueToken(owner), owner: { id: owner.id, name: owner.name, role: owner.role }, tenant: tenants[tenantId], permissions: rolePermissions[role] });
     }
     if (pathname === '/api/auth/login' && req.method === 'POST') {
