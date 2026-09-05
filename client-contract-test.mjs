@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('.', import.meta.url));
 const app = readFileSync(`${root}app.js`, 'utf8');
+const index = readFileSync(`${root}index.html`, 'utf8');
 const repository = readFileSync(`${root}data-repository.js`, 'utf8');
 const customer = readFileSync(`${root}customer.html`, 'utf8');
 const estimate = readFileSync(`${root}estimate.html`, 'utf8');
@@ -29,6 +30,7 @@ assert(server.includes('authVersion') && server.includes('user.password.reset'),
 assert(server.includes('scryptSync') && server.includes('hashRuntimePassword') && server.includes('verifyRuntimePassword'), 'runtime passwords must use salted scrypt verification');
 assert(server.includes("!String(runtimeAccount.passwordDigest).startsWith('scrypt$')") && server.includes('runtimeAccount.passwordDigest = hashRuntimePassword(body.password)'), 'legacy runtime password records must migrate after successful login');
 assert(technician.includes('idempotency-key') && technician.includes('conflicts') && technician.includes('response.status'), 'technician offline replay must use idempotency and surface permanent conflicts');
+assert(!/Michael Torres|Aisha Patel|Lakeside Property Group|Sarah Chen|Daniel Brooks|Jordan Smith|King St|Coming St|Wentworth Ave|JOB-2188|EST-1048/.test(index), 'unauthenticated owner markup must not contain concrete private-looking demo records');
 assert(app.includes('userAccessButton') && app.includes('repository.createUser(') && app.includes('repository.updateUserStatus(') && app.includes('repository.resetUserPassword(') && app.includes("User access"), 'runtime user access management is not exposed in the owner workspace');
 assert(app.includes('parseCustomerCsv') && app.includes("repository.importCustomers(rows, { dryRun: true") && app.includes("input.accept = '.csv,text/csv'") && app.includes("#import-customers") && readFileSync(`${root}index.html`, 'utf8').includes('id="import-customers"'), 'customer CSV import is not exposed in the owner workspace');
 assert(app.includes("repository.importAssets(rows, { dryRun: true") && app.includes("#import-assets") && readFileSync(`${root}index.html`, 'utf8').includes('id="import-assets"'), 'asset CSV import is not exposed in the owner workspace');
