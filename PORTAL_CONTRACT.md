@@ -165,7 +165,7 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 
 System events such as web-form lead capture, customer estimate approval, and recorded payment are appended to the same activity timeline automatically.
 - `POST /api/auth/logout` → revoke the current session
-- `POST /api/estimates` → create a draft estimate for an existing tenant customer by canonical name or `customerId`; the estimate stores the durable customer link, accepts an optional normalized ISO `expiresAt` date, and accepts an optional `Idempotency-Key` for safe browser retries
+- `POST /api/estimates` → create a draft estimate for an existing tenant customer by canonical name or `customerId`; the estimate stores the durable customer link and server-generated `createdAt` timestamp, accepts an optional normalized ISO `expiresAt` date, and accepts an optional `Idempotency-Key` for safe browser retries
 - `POST /api/estimates` accepts an optional `catalogItemId` and snapshots the tenant pricebook item on the estimate so later catalog edits do not rewrite historical quotes
 - `POST /api/estimates` also accepts up to three labeled `options`, or server-calculated `subtotal`, `discount`, and `taxRate` pricing components; public approval may include `optionId`, which snapshots the selected amount before quote-to-cash conversion
 - `GET /api/public/estimate?token=...` returns the customer-safe subtotal, discount, tax, and total breakdown when pricing components were used
