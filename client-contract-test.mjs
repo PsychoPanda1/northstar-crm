@@ -83,7 +83,8 @@ assert(readFileSync(`${root}LANDING_PAGE_INTEGRATION.md`, 'utf8').includes('serv
 assert(status.includes('sessionStorage') && status.includes("retryKey('cancel'") && status.includes("retryKey('reschedule'"), 'customer status actions do not preserve mobile retry identity');
 assert(booking.includes('NorthstarLandingClient') && landingClient.includes("'idempotency-key': key"), 'landing booking form does not preserve mobile retry identity');
 assert(productionBoundary.includes("NODE_ENV: 'production'") && productionBoundary.includes("NORTHSTAR_ALLOW_DEMO_LOGIN: 'false'") && productionBoundary.includes("error !== 'demo_login_disabled'") && productionBoundary.includes("unknown_service"), 'production boundary suite is not checking fail-closed tenant isolation');
-assert(server.includes('allowPublicMutation') && server.includes('publicMutationScope') && server.includes("error: 'rate_limited'"), 'public portal mutations do not have bounded abuse protection');
+assert(server.includes('allowPublicMutation') && server.includes('publicMutationScope') && server.includes("rateLimited(res, 'rate_limited')"), 'public portal mutations do not have bounded abuse protection');
+assert(server.includes("const rateLimited =") && server.includes("res.setHeader('retry-after'"), 'rate-limited responses do not expose retry timing');
 assert(tenantConfig.includes('const unavailable =') && tenantConfig.includes('if (requested && !fallback) return unavailable') && app.includes('tenant.unavailable') && app.includes('Service configuration unavailable'), 'owner portal must fail closed when a service tenant is unknown or unavailable');
 assert(invoice.includes('id="breakdown"') && invoice.includes('Remaining $'), 'invoice payment page does not expose total, paid, and remaining balance');
 assert(invoice.includes('sessionStorage') && invoice.includes('idempotency-key') && invoice.includes('paymentKey'), 'invoice payment page does not preserve mobile retry identity');
