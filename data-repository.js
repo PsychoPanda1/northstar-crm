@@ -483,6 +483,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async importCustomers(customers, { dryRun = false, idempotencyKey = crypto.randomUUID() } = {}) {
+    if (!this.remote) throw new Error('API required for customer import');
+    const response = await fetch('/api/customers/import', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ customers, dryRun }) });
+    if (!response.ok) throw new Error('customer import failed');
+    return response.json();
+  }
+
   async createAsset(customer, name, serial, installed, warrantyThrough, customerId = '') {
     if (!this.remote) throw new Error('API required for asset creation');
     const response = await fetch('/api/assets', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({ ...(customerId ? { customerId } : { customer }), name, serial, installed, warrantyThrough }) });
