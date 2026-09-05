@@ -208,6 +208,16 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async downloadRouteCalendar(date = '', technician = '') {
+    if (!this.remote) throw new Error('API required for route calendar');
+    const params = new URLSearchParams();
+    if (date) params.set('date', date);
+    if (technician) params.set('technician', technician);
+    const response = await fetch(`/api/dispatch/route-calendar?${params}`, { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('route calendar unavailable');
+    return { blob: await response.blob(), filename: response.headers.get('content-disposition')?.match(/filename="([^"]+)/)?.[1] || 'northstar-route.ics' };
+  }
+
   async getAvailability(service = '', days = 7) {
     if (!this.remote) throw new Error('API required for availability');
     const params = new URLSearchParams({ days: String(days) });

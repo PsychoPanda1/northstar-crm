@@ -63,6 +63,7 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 - `POST /api/team` → owner/dispatcher-only creation of a tenant-scoped technician or staff roster member; duplicate names are rejected and an optional `Idempotency-Key` makes browser retries safe
 - `GET /api/dispatch/recommendations?jobId=...` → rank available technicians by current workload and schedule conflicts; assignment still requires the normal server-side conflict check
 - `GET /api/dispatch/route-manifest?date=YYYY-MM-DD&technician=...` → return a tenant-scoped, normalized-time route ordered by start time with customer, service, address, status, and timezone; technicians are restricted to their own route, while owners and dispatchers may filter by technician
+- `GET /api/dispatch/route-calendar?date=YYYY-MM-DD&technician=...` → download the same normalized route as an iCalendar feed for calendar applications; it is tenant-scoped, technician-restricted, and excludes canceled/no-show work
 - `GET /api/dispatch/route-summary?date=YYYY-MM-DD&technician=...` → return tenant-scoped stop counts, assigned/unassigned workload, planned field minutes, and per-technician workload for dispatch planning; technicians are restricted to their own summary
 - `GET /api/catalog` → tenant-scoped service catalog for consistent estimates and landing-page vocabulary
 - `POST /api/catalog` → add a tenant-specific pricebook item; owner and dispatcher roles may write, while other roles remain read-only; an optional `Idempotency-Key` makes retries safe
