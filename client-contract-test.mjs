@@ -14,6 +14,7 @@ const server = readFileSync(`${root}server.mjs`, 'utf8');
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 assert(customer.includes('estimate.estimateUrl') && customer.includes('Open detailed estimate'), 'customer portal does not expose detailed estimate links');
 assert(customer.includes('approverName') && estimate.includes('approverName') && estimate.includes('Your name for approval') && estimate.includes('retryKey') && estimate.includes("'idempotency-key':retryKey"), 'customer estimate approval does not capture attribution or retry identity');
+assert(estimate.includes("retryKey('decline'"), 'detailed estimate decline does not preserve retry identity');
 
 assert(repository.includes("this.previewOnly = window.location.protocol === 'file:'") && repository.includes("if (!this.previewOnly) throw new Error('authenticated dashboard required')"), 'repository preview fallback is not restricted to file previews');
 assert(app.includes('repository.authRequired') && app.includes('Owner sign-in required'), 'HTTP authentication failure does not fail closed');
