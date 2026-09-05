@@ -507,8 +507,9 @@ try {
   const reportExportCsv = await reportExportResponse.text();
   assert(reportExportResponse.status === 200 && reportExportCsv.includes('Gross margin'), 'report export missing');
   const marketingExportResponse = await fetch(`${base}/api/export?type=marketing`, { headers: { authorization: `Bearer ${token}` } });
+  const campaignExportResponse = await fetch(`${base}/api/export?type=marketing-campaigns`, { headers: { authorization: `Bearer ${token}` } });
   const technicianExportResponse = await fetch(`${base}/api/export?type=technicians`, { headers: { authorization: `Bearer ${token}` } });
-  assert(marketingExportResponse.status === 200 && (await marketingExportResponse.text()).includes('source') && technicianExportResponse.status === 200 && (await technicianExportResponse.text()).includes('technician'), 'specialized report exports missing');
+  assert(marketingExportResponse.status === 200 && (await marketingExportResponse.text()).includes('source') && campaignExportResponse.status === 200 && (await campaignExportResponse.text()).includes('campaign') && technicianExportResponse.status === 200 && (await technicianExportResponse.text()).includes('technician'), 'specialized report exports missing');
   const reviewRecords = await request('/api/reviews?search=Smoke Lead', { headers: { authorization: `Bearer ${token}` } });
   const reviewExportResponse = await fetch(`${base}/api/export?type=reviews`, { headers: { authorization: `Bearer ${token}` } });
   const reviewExportCsv = await reviewExportResponse.text();
