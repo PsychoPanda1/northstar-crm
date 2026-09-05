@@ -118,7 +118,7 @@ System events such as web-form lead capture, customer estimate approval, and rec
 - `POST /api/estimates/:id/remind` → queue an owner/dispatcher SMS or email follow-up for an open estimate, deduplicated for 24 hours
 - `POST /api/estimates/:id/convert` → convert an accepted estimate into a scheduled, checklist-ready job; rejects an active appointment already using the requested time and records an actor-attributed `estimate.converted` audit event
 - `POST /api/invoices` → create an invoice only from an approved estimate, reject duplicate invoices for the same estimate, and record an `invoice.created` audit event
-- `POST /api/invoices/:id/pay` → record a full or partial tenant-owned invoice payment with method/reference, append `invoice.payment.recorded` to the audit ledger, and return the updated balance and payment ledger entry
+- `POST /api/invoices/:id/pay` → record a full or partial tenant-owned invoice payment with method/reference; an `Idempotency-Key` makes retries return the original payment without double-counting, and successful writes append `invoice.payment.recorded` to the audit ledger
 - `POST /api/invoices/:id/remind` → queue an owner/accountant SMS or email balance reminder, deduplicated for 24 hours; provider delivery is reconciled through the message webhook
 - `POST /api/invoices/:id/payment-link` → issue a 72-hour invoice payment link for the owner to share
 - The invoice workspace exposes this payment-link action only for tenant-created invoices; seeded demo invoice cards remain read-only
