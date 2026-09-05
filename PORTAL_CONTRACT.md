@@ -86,6 +86,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - `GET /api/audit` and `GET /api/export?type=audit` → read or export a tenant-scoped event ledger for workflow traceability; prototype activity events use a system actor and production should attach verified identity/provider actors
 - `GET /api/messages` and `POST /api/messages` → list or queue tenant-owned SMS/email messages; delivery remains provider-dependent until an external messaging service is connected
 - `POST /api/webhooks/messages` → accept an HMAC-signed, idempotent provider delivery event and reconcile queued messages to `Sent` or `Failed`; set `NORTHSTAR_MESSAGE_WEBHOOK_SECRET` in production
+- `POST /api/webhooks/messages/inbound` → accept an HMAC-signed, idempotent inbound SMS/email reply, match it to a customer and optional job, and append it to the timeline
 - `POST /api/jobs/:id/notify` → queue a tenant-owned confirmation, en-route, or completed message from job context; delivery remains provider-dependent and the message is linked to the job
 - Assigning a job automatically queues a confirmation message; technician or dispatcher transitions to `En route` and `Completed` automatically queue the matching customer notification once per job/template/channel. Delivery remains provider-dependent until the signed message webhook reconciles it.
 
