@@ -484,6 +484,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async matchPurchaseOrder(id, invoiceNumber, quantity, unitCost, vendor = '') {
+    if (!this.remote) throw new Error('API required for purchasing');
+    const response = await fetch(`/api/purchase-orders/${encodeURIComponent(id)}/match`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ invoiceNumber, quantity, unitCost, ...(vendor ? { vendor } : {}) }) });
+    if (!response.ok) throw new Error('purchase order matching failed');
+    return response.json();
+  }
+
   async approvePurchaseOrder(id, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for purchase order approval');
     const response = await fetch(`/api/purchase-orders/${encodeURIComponent(id)}/approve`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: '{}' });
