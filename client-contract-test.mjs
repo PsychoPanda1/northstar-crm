@@ -21,6 +21,7 @@ const envExample = readFileSync(`${root}.env.example`, 'utf8');
 const packageJson = JSON.parse(readFileSync(`${root}package.json`, 'utf8'));
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 assert(packageJson.scripts?.test === 'npm run check && npm run test:smoke && npm run test:production-boundary', 'npm test must run the complete release verification suite');
+assert(readFileSync(`${root}.github/workflows/ci.yml`, 'utf8').includes('run: npm test'), 'CI must invoke the complete release verification command');
 assert(readFileSync(`${root}.gitignore`, 'utf8').split(/\r?\n/).includes('.northstar-data.json'), 'private local state must remain ignored');
 assert(envExample.includes('NORTHSTAR_SESSION_SECRET=replace-with-32-plus-random-characters'), 'environment template must use an explicit session-secret placeholder');
 assert(envExample.includes('NORTHSTAR_SERVICE_TENANTS_JSON='), 'environment template must document service-to-tenant mapping');
