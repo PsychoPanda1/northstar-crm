@@ -771,6 +771,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async resetUserPassword(id, password) {
+    if (!this.remote) throw new Error('API required for user management');
+    const response = await fetch(`/api/users/${encodeURIComponent(id)}/password`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ password }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'user password reset failed');
+    return response.json();
+  }
+
   async listTeamTimeOff(teamMemberId) {
     if (!this.remote) throw new Error('API required for time-off management');
     const response = await fetch(`/api/team/${encodeURIComponent(teamMemberId)}/time-off`, { headers: { authorization: `Bearer ${this.token}` } });

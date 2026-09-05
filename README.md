@@ -152,7 +152,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Manual technician route ordering persists the real driving sequence and is shared by route manifests, CSV exports, and iCalendar feeds
 - Team roster availability and active-job counts are derived from live tenant jobs
 - Owners and dispatchers can add tenant-specific technicians or staff members to the roster
-- Owners can create, suspend, and reactivate tenant-scoped runtime login accounts for dispatchers, technicians, and accountants without editing deployment secrets
+- Owners can create, suspend, reactivate, and reset passwords for tenant-scoped runtime login accounts for dispatchers, technicians, and accountants without editing deployment secrets
 - Customer assets support an optional validated warranty-through date, customer-portal visibility, and an auditable creation event
 - Warranty dates within 30 days automatically surface as owner follow-up notifications
 - Completed jobs can expose technician completion notes and bounded HTTPS photo evidence in the customer portal
