@@ -92,6 +92,7 @@ System events such as web-form lead capture, customer estimate approval, and rec
 - `POST /api/estimates` accepts an optional `catalogItemId` and snapshots the tenant pricebook item on the estimate so later catalog edits do not rewrite historical quotes
 - `POST /api/estimates` also accepts up to three labeled `options`; public approval may include `optionId`, which snapshots the selected amount before quote-to-cash conversion
 - `POST /api/estimates/:id/approve` → approve a tenant-owned estimate
+- `POST /api/estimates/:id/remind` → queue an owner/dispatcher SMS or email follow-up for an open estimate, deduplicated for 24 hours
 - `POST /api/estimates/:id/convert` → convert an accepted estimate into a scheduled, checklist-ready job; rejects an active appointment already using the requested time
 - `POST /api/invoices` → create an invoice only from an approved estimate
 - `POST /api/invoices/:id/pay` → record a full or partial tenant-owned invoice payment with method/reference; returns updated balance and payment ledger entry

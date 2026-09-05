@@ -52,6 +52,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Durable session revocation survives API restarts in the local adapter
 - New landing-page leads appear in the owner action queue for immediate follow-up
 - Lead pipeline statuses can be advanced or marked lost with an auditable note before conversion
+- Owners and dispatchers can queue deduplicated SMS/email follow-ups for open estimates
 - Landing-page retries can use an idempotency key to prevent duplicate leads
 - Owners can acknowledge active notifications while preserving the source record
 - Customers can submit reschedule requests or questions from the self-service portal
