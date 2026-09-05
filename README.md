@@ -105,6 +105,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Payment ledger records are searchable and exportable for reconciliation
 - Accounting reconciliation CSV combines persisted invoice balances with settled payments for owner/accountant handoff
 - Dispatch assignment, status changes, and rescheduling are recorded in the customer timeline
+- Owner rescheduling uses the same capacity-aware, date-specific availability slots exposed to landing pages and customer portals
 - Team roster availability and active-job counts are derived from live tenant jobs
 - Owners and dispatchers can add tenant-specific technicians or staff members to the roster
 - Customer assets support an optional validated warranty-through date, customer-portal visibility, and an auditable creation event
