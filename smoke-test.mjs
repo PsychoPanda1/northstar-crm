@@ -1014,6 +1014,11 @@ const appointmentQuestionOptions = { method: 'POST', headers: { 'content-type': 
   const otherLogin = await request('/api/auth/demo-login?service=powerwashing', jsonOptions('POST', {}));
   const otherLeads = await request('/api/leads?search=Smoke%20Lead', { headers: { authorization: `Bearer ${otherLogin.body.token}` } });
   assert(otherLeads.body.items.length === 0, 'tenant isolation failed');
+  const assetSearch = await request('/api/search?q=Rheem', { headers: { authorization: `Bearer ${token}` } });
+  const planSearch = await request('/api/search?q=Annual%20plumbing', { headers: { authorization: `Bearer ${token}` } });
+  const materialSearch = await request('/api/search?q=copper%20coupling', { headers: { authorization: `Bearer ${token}` } });
+  const purchaseOrderSearch = await request('/api/search?q=Charleston%20Supply', { headers: { authorization: `Bearer ${token}` } });
+  assert(assetSearch.response.ok && assetSearch.body.results.assets.some((item) => item.name === 'Rheem water heater') && planSearch.response.ok && planSearch.body.results.plans.some((item) => item.service === 'Annual plumbing maintenance') && materialSearch.response.ok && materialSearch.body.results.materials.some((item) => item.name.includes('copper coupling')) && purchaseOrderSearch.response.ok && purchaseOrderSearch.body.results.purchaseOrders.some((item) => item.vendor === 'Charleston Supply'), 'operational global search categories failed');
   const logout = await request('/api/auth/logout', jsonOptions('POST', {}, token));
   const revoked = await request('/api/session', { headers: { authorization: `Bearer ${token}` } });
   assert(logout.response.ok && logout.response.headers.get('set-cookie')?.includes('Max-Age=0') && revoked.response.status === 401, 'logout revocation failed');
