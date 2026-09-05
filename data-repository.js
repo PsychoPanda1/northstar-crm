@@ -465,6 +465,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async updateCustomerPreferences(customerId, preferences) {
+    if (!this.remote) throw new Error('API required for customer contact preferences');
+    const response = await fetch(`/api/customers/${encodeURIComponent(customerId)}/preferences`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify(preferences) });
+    if (!response.ok) throw new Error('customer contact preferences update failed');
+    return response.json();
+  }
+
   async createJob(customerId, service, time, appointment = {}) {
     if (!this.remote) throw new Error('API required for job creation');
     const response = await fetch('/api/jobs', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({ customerId, service, time, ...(appointment.slotId ? { slotId: appointment.slotId } : {}), ...(appointment.requiredSkill ? { requiredSkill: appointment.requiredSkill } : {}), ...(appointment.startsAt ? { startsAt: appointment.startsAt } : {}), ...(appointment.endsAt ? { endsAt: appointment.endsAt } : {}), ...(appointment.timeZone ? { timeZone: appointment.timeZone } : {}) }) });
