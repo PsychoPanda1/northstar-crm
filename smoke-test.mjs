@@ -684,7 +684,7 @@ const techViewWithAsset = await request(`/api/public/technician-job${techUrl.sea
   assert(customerPortal.body.jobs.some((item) => item.id === fieldJob.body.id && item.photos?.[0]?.caption.includes('coupling')), 'customer portal field evidence visibility failed');
   assert(customerPortal.body.jobs.some((item) => item.id === converted.body.job.id && item.status === 'Completed' && item.reviewUrl?.startsWith('/review.html?token=') && item.reviewLinkExpiresInHours === 72), 'customer portal completed-job review handoff failed');
   assert(customerPortal.body.jobs.some((item) => item.id === fieldJob.body.id && item.customerAcknowledgedBy === 'Smoke Lead'), 'customer portal customer acknowledgment visibility failed');
-  assert(customerPortal.body.assets?.some((item) => item.warrantyThrough === warrantySoon), 'customer portal warranty visibility failed');
+  assert(customerPortal.body.assets?.some((item) => item.warrantyThrough === warrantySoon && item.serviceHistory?.some((job) => job.id === converted.body.job.id)), 'customer portal warranty or equipment history visibility failed');
   const portalConfirm = await request(`/api/public/customer-portal/confirm${customerUrl.search}`, jsonOptions('POST', { jobId: customerPortal.body.jobs[0].id }));
   const portalConfirmDuplicate = await request(`/api/public/customer-portal/confirm${customerUrl.search}`, jsonOptions('POST', { jobId: customerPortal.body.jobs[0].id }));
   const confirmationAudit = await request(`/api/audit?search=${encodeURIComponent('appointment.confirmed')}`, { headers: { authorization: `Bearer ${token}` } });
