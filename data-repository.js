@@ -311,9 +311,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async queueReactivation(inactiveDays = 180, channel = 'SMS') {
+  async queueReactivation(inactiveDays = 180, channel = 'SMS', tag = '') {
     if (!this.remote) throw new Error('API required for reactivation campaigns');
-    const response = await fetch('/api/customers/reactivation', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ inactiveDays, channel }) });
+    const response = await fetch('/api/customers/reactivation', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ inactiveDays, channel, ...(tag ? { tag } : {}) }) });
     if (!response.ok) throw new Error('reactivation campaign failed');
     return response.json();
   }
