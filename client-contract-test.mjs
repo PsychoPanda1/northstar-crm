@@ -81,6 +81,7 @@ assert(status.includes('body.visits') && status.includes('Visit progress') && st
 assert(customer.includes('Tracking live') && customer.includes('toLocaleTimeString') && app.includes('Live location'), 'live technician location freshness is not visible to customers and dispatch');
 assert(technician.includes('Start live location') && technician.includes('Stop live location') && technician.includes('setInterval') && technician.includes('document.hidden'), 'technician live location must be explicit, periodic, and visibility-aware');
 assert(!technician.includes('const shareLocation = () =>'), 'technician page retains a shadowed one-shot location handler');
+assert(status.slice(status.indexOf('</html>') + 7).trim() === '' && status.lastIndexOf('<script>') < status.indexOf('</html>'), 'status page scripts must remain inside the document');
 assert(customer.includes('portalRefreshTimer') && customer.includes("/api/public/customer-portal' + query") && customer.includes('document.hidden'), 'customer portal does not refresh active tracking while visible');
 assert(status.includes('tracking-freshness') && status.includes('Technician location') && status.includes('setInterval(refreshTracking, 30000)'), 'customer status link does not expose refreshed tracking freshness');
 assert(app.includes('decorateMessageReplyButtons') && app.includes('repository.replyToMessage') && !app.includes('repository.replyMessage'), 'owner message replies include an obsolete duplicate handler');
