@@ -17,6 +17,7 @@ assert(app.includes("!['Canceled', 'No-show'].includes(status)"), 'dispatch rebo
 assert(app.includes('data-job-invoice') && repository.includes('createJobInvoice'), 'completed-job invoicing action is not wired through the client repository');
 assert(app.includes('Optional line items') && repository.includes('lineItems'), 'completed-job invoicing UI does not support itemized billing');
 assert(app.includes('Visit progress:') && app.includes('data-job-visit-summary'), 'owner job detail does not expose multi-visit progress');
+assert(app.includes('campaign-report-view') && app.includes('Campaign performance') && repository.includes('getMarketingReport'), 'owner portal does not expose campaign performance reporting');
 assert(app.includes("/^INV-\\d{13,}$/.test(item.id || '') && item.status !== 'Paid'"), 'owner invoice cards do not expose collection for open balances');
 assert(customer.includes("job.status === 'No-show' ? 'Book a new visit'"), 'customer portal does not expose no-show recovery');
 assert(status.includes('body.visits') && status.includes('Visit progress') && status.includes('/api/public/job-status/cancel'), 'customer status page does not expose multi-visit progress and cancellation');
