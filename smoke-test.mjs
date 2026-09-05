@@ -223,7 +223,10 @@ try {
   const portalConfirm = await request(`/api/public/customer-portal/confirm${customerUrl.search}`, jsonOptions('POST', { jobId: customerPortal.body.jobs[0].id }));
   const portalConfirmDuplicate = await request(`/api/public/customer-portal/confirm${customerUrl.search}`, jsonOptions('POST', { jobId: customerPortal.body.jobs[0].id }));
   const portalEstimate = await request('/api/estimates', jsonOptions('POST', { customer: 'Smoke Lead', service: 'Follow-up estimate', amount: 275 }, token));
+  const pricedEstimate = await request('/api/estimates', jsonOptions('POST', { customer: 'Smoke Lead', service: 'Panel upgrade', subtotal: 1000, discount: 100, taxRate: 10 }, token));
+  const publicPricedEstimate = await request(`/api/public/estimate?token=${encodeURIComponent(pricedEstimate.body.estimateApprovalToken)}`);
   const customerPortalWithEstimate = await request(`/api/public/customer-portal${customerUrl.search}`);
+  assert(customerPortalWithEstimate.body.estimates.some((item) => item.service === 'Panel upgrade' && item.subtotal === pricedEstimate.body.subtotal && item.discount === pricedEstimate.body.discount && item.tax === pricedEstimate.body.tax), 'customer portal estimate pricing visibility failed');
   const portalApproval = await request(`/api/public/estimate/approve?token=${encodeURIComponent(customerPortalWithEstimate.body.estimates.find((item) => item.id === portalEstimate.body.id).estimateApprovalToken)}`, jsonOptions('POST', { approverName: 'Smoke Lead' }));
   const portalInvoice = await request('/api/invoices', jsonOptions('POST', { estimateId: portalEstimate.body.id }, token));
   const portalSchedule = await request(`/api/invoices/${portalInvoice.body.id}/schedule`, jsonOptions('POST', { installments: [{ amount: 100, due: 'At booking' }, { amount: 175, due: 'On completion' }] }, token));
@@ -264,8 +267,6 @@ try {
   const structuredReschedule = await request(`/api/jobs/${structuredJob.body.id}/reschedule`, jsonOptions('POST', { slotId: nextBusinessSlot.id }, token));
   assert(reschedule.response.status === 200 && reschedule.body.notification?.template === 'rescheduled' && structuredReschedule.response.status === 200 && structuredReschedule.body.job.slotId === nextBusinessSlot.id && structuredReschedule.body.job.startsAt.endsWith('Z') && structuredReschedule.body.job.timeZone === 'America/New_York', 'reschedule notification workflow failed');
   const estimate = await request('/api/estimates', jsonOptions('POST', { customer: 'Smoke Customer', service: 'Leak repair', amount: 425 }, token));
-  const pricedEstimate = await request('/api/estimates', jsonOptions('POST', { customer: 'Pricing Customer', service: 'Panel upgrade', subtotal: 1000, discount: 100, taxRate: 10 }, token));
-  const publicPricedEstimate = await request(`/api/public/estimate?token=${encodeURIComponent(pricedEstimate.body.estimateApprovalToken)}`);
   const estimateReminder = await request(`/api/estimates/${estimate.body.id}/remind`, jsonOptions('POST', { channel: 'SMS' }, token));
   const duplicateEstimateReminder = await request(`/api/estimates/${estimate.body.id}/remind`, jsonOptions('POST', { channel: 'SMS' }, token));
   const publicEstimate = await request(`/api/public/estimate?token=${encodeURIComponent(estimate.body.estimateApprovalToken)}`);
