@@ -51,6 +51,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Failed or follow-up job forms create urgent or actionable owner notifications linked to the source job
 - Offline-capable technician field actions that queue locally and replay when connectivity returns
 - Tenant-scoped audit log with searchable CSV export for workflow and integration traceability
+- Tenant-scoped fleet vehicles with license-plate uniqueness, idempotent creation, and dispatch assignment controls
 - Configurable tenant pricebook items for consistent service quoting across landing pages and the owner portal
 - Explainable technician recommendations based on active workload and appointment conflicts
 - Skill-aware technician recommendations and server-side assignment enforcement

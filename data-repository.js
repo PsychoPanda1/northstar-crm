@@ -589,6 +589,27 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async listVehicles() {
+    if (!this.remote) throw new Error('API required for fleet');
+    const response = await fetch('/api/vehicles', { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('vehicle list failed');
+    return response.json();
+  }
+
+  async createVehicle(name, makeModel, licensePlate, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for fleet');
+    const response = await fetch('/api/vehicles', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ name, makeModel, licensePlate }) });
+    if (!response.ok) throw new Error('vehicle creation failed');
+    return response.json();
+  }
+
+  async assignJobVehicle(jobId, vehicleId) {
+    if (!this.remote) throw new Error('API required for fleet');
+    const response = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/vehicle`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ vehicleId }) });
+    if (!response.ok) throw new Error('vehicle assignment failed');
+    return response.json();
+  }
+
   async createTeamMember(name, role, skills = [], idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for team management');
     const response = await fetch('/api/team', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ name, role, skills }) });
