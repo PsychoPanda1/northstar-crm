@@ -50,7 +50,7 @@ try {
     try { ready = await getJson('/api/ready'); } catch {}
     if (!ready?.response?.ok) await new Promise((resolve) => setTimeout(resolve, 100));
   }
-  if (!ready?.response?.ok) throw new Error('production server did not become ready');
+  if (!ready?.response?.ok || ready.body.checks?.configuration !== true) throw new Error('production server did not become ready with valid configuration');
 
   const login = await getJson('/api/auth/login', {
     method: 'POST',
