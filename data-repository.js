@@ -330,6 +330,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async remindInvoice(id, channel = 'SMS') {
+    if (!this.remote) throw new Error('API required for invoice reminders');
+    const response = await fetch(`/api/invoices/${encodeURIComponent(id)}/remind`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ channel }) });
+    if (!response.ok) throw new Error('invoice reminder failed');
+    return response.json();
+  }
+
   async logout() {
     if (this.token && this.remote) await fetch('/api/auth/logout', { method: 'POST', headers: { authorization: `Bearer ${this.token}` } });
     sessionStorage.removeItem(this.tokenKey);
