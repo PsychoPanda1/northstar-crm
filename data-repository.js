@@ -29,7 +29,7 @@ class NorthstarDemoRepository {
       const session = await fetch('/api/session', { headers: { authorization: `Bearer ${this.token}` } });
       if (!session.ok) throw new Error('session unavailable');
       this.session = await session.json();
-    } catch { this.apiAvailable = false; }
+    } catch { this.remote = null; this.session = null; }
   }
 
   async login(email, password) {
