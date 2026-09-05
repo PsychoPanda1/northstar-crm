@@ -14,5 +14,5 @@ assert(app.includes('decorateDispatchNoShows(); decorateDispatchRebooks();'), 'd
 assert(app.includes("!['Canceled', 'No-show'].includes(status)"), 'dispatch rebooking does not include no-show jobs');
 assert(app.includes('Visit progress:') && app.includes('data-job-visit-summary'), 'owner job detail does not expose multi-visit progress');
 assert(customer.includes("job.status === 'No-show' ? 'Book a new visit'"), 'customer portal does not expose no-show recovery');
-assert(status.includes('body.visits') && status.includes('Visit progress'), 'customer status page does not expose multi-visit progress');
+assert(status.includes('body.visits') && status.includes('Visit progress') && status.includes('/api/public/job-status/cancel'), 'customer status page does not expose multi-visit progress and cancellation');
 console.log('Northstar client contract checks passed');

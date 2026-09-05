@@ -75,9 +75,12 @@ try {
   const bookedPortal = await request(`/api/public/job-status?token=${encodeURIComponent(booking.body.customerPortalToken)}`);
   const bookedCustomerPortal = await request(`/api/public/customer-portal?token=${encodeURIComponent(booking.body.customerPortalAccessToken)}`);
   const duplicateBookedCustomerPortal = await request(`/api/public/customer-portal?token=${encodeURIComponent(duplicateBooking.body.customerPortalAccessToken)}`);
+  const statusCancellation = await request(`/api/public/job-status/cancel?token=${encodeURIComponent(booking.body.customerPortalToken)}`, { ...jsonOptions('POST', { reason: 'Customer schedule changed.' }), headers: { 'content-type': 'application/json', 'idempotency-key': 'smoke-status-cancel' } });
+  const statusCancellationDuplicate = await request(`/api/public/job-status/cancel?token=${encodeURIComponent(booking.body.customerPortalToken)}`, { ...jsonOptions('POST', { reason: 'Customer schedule changed.' }), headers: { 'content-type': 'application/json', 'idempotency-key': 'smoke-status-cancel' } });
   assert(bookedPortal.response.ok && bookedPortal.body.location === '200 Meeting St, Charleston', 'customer appointment location contract failed');
   assert(bookedCustomerPortal.response.ok && bookedCustomerPortal.body.customer.name === 'Booked Customer' && bookedCustomerPortal.body.jobs.some((item) => item.id === booking.body.id), 'landing customer portal access contract failed');
   assert(duplicateBookedCustomerPortal.response.ok && duplicateBookedCustomerPortal.body.customer.name === 'Booked Customer', 'landing customer portal retry token failed');
+  assert(statusCancellation.response.status === 200 && statusCancellation.body.job.status === 'Canceled' && statusCancellationDuplicate.response.status === 200 && statusCancellationDuplicate.body.duplicate === true, 'status-link cancellation workflow failed');
   assert(conflictingBooking.response.status === 409 && conflictingBooking.body.error === 'idempotency_key_reused', 'booking idempotency conflict protection failed');
   const publicLead = await request('/api/public/leads', jsonOptions('POST', { service: 'plumbing', name: 'Smoke Lead', phone: '843-555-0100', email: 'smoke.lead@example.test', idempotencyKey: 'smoke-lead-1' }));
   const duplicateLead = await request('/api/public/leads', jsonOptions('POST', { service: 'plumbing', name: 'Smoke Lead', phone: '843-555-0100', idempotencyKey: 'smoke-lead-1' }));
@@ -519,12 +522,13 @@ try {
   const customerPortalAfterPayment = await request(`/api/public/customer-portal${customerUrl.search}`);
   const portalPaymentHistory = customerPortalAfterPayment.body.invoices.find((item) => item.id === portalInvoice.body.id)?.payments || [];
   assert(portalPaymentHistory.some((payment) => payment.reference === 'PROVIDER-42' && payment.amount === 75 && payment.method === 'ACH') && portalPaymentHistory.every((payment) => !Object.prototype.hasOwnProperty.call(payment, 'tenantId') && !Object.prototype.hasOwnProperty.call(payment, 'invoiceId')), 'customer portal payment history privacy failed');
-  const estimateSlot = extendedAvailability.body.slotOptions.find((slot) => slot.id.startsWith('date-') && slot.id !== manualSlot.id);
+  const currentEstimateAvailability = await request('/api/public/availability?service=plumbing&days=7');
+  const estimateSlot = currentEstimateAvailability.body.slotOptions.find((slot) => slot.id.startsWith('date-') && slot.id !== manualSlot.id);
   const estimateConversionOptions = { ...jsonOptions('POST', { time: estimateSlot.label, slotId: estimateSlot.id }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-estimate-conversion' } };
   const estimateJob = await request(`/api/estimates/${portalEstimate.body.id}/convert`, estimateConversionOptions);
   const duplicateEstimateJob = await request(`/api/estimates/${portalEstimate.body.id}/convert`, estimateConversionOptions);
   const estimateConversionAudit = await request('/api/audit?search=estimate.converted', { headers: { authorization: `Bearer ${token}` } });
-  assert(estimateJob.response.status === 201 && estimateJob.body.job.slotId === estimateSlot.id && estimateJob.body.job.startsAt.endsWith('Z') && estimateJob.body.job.timeZone === 'America/New_York', 'estimate slot conversion workflow failed');
+assert(estimateJob.response.status === 201 && estimateJob.body.job.slotId === estimateSlot.id && estimateJob.body.job.startsAt.endsWith('Z') && estimateJob.body.job.timeZone === 'America/New_York', 'estimate slot conversion workflow failed');
   const estimateJobAssigned = await request(`/api/jobs/${estimateJob.body.job.id}/assign`, jsonOptions('POST', { technician: 'Alex Rivera' }, token));
   const estimateTechLink = await request(`/api/jobs/${estimateJob.body.job.id}/technician-link`, jsonOptions('POST', {}, token));
   const estimateTechUrl = new URL(estimateTechLink.body.url, base);

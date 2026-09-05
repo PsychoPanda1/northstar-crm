@@ -220,6 +220,30 @@ const server = createServer(async (req, res) => {
     applySecurityHeaders(res);
     const requestUrl = new URL(req.url, `http://${req.headers.host}`);
     const pathname = requestUrl.pathname;
+    if (pathname === '/api/public/job-status/cancel' && req.method === 'POST') {
+      const claims = readJobStatusToken(requestUrl.searchParams.get('token'));
+      if (!claims) return json(res, 401, { error: 'invalid_status_token' });
+      const saved = state.get(claims.tenantId);
+      const job = saved.jobs.find((item) => item.id === claims.jobId);
+      if (!job) return json(res, 404, { error: 'job_not_found' });
+      if (job.status === 'Completed') return json(res, 409, { error: 'job_not_eligible_for_cancellation' });
+      const body = await readBody(req);
+      const reason = String(body.reason || '').trim();
+      if (reason.length < 3 || reason.length > 300) return json(res, 422, { error: 'cancellation_reason_required' });
+      const idempotencyKey = String(req.headers['idempotency-key'] || body.idempotencyKey || '').trim().slice(0, 100);
+      const fingerprint = payloadFingerprint({ jobId: job.id, reason });
+      if (idempotencyKey && job.statusCancellationIdempotencyKey === idempotencyKey) {
+        if (job.statusCancellationIdempotencyFingerprint !== fingerprint) return json(res, 409, { error: 'idempotency_key_reused' });
+        return json(res, 200, { job: { id: job.id, status: job.status, canceledAt: job.canceledAt, cancellationReason: job.cancellationReason }, duplicate: true });
+      }
+      if (job.status === 'Canceled') return json(res, 409, { error: 'job_not_eligible_for_cancellation' });
+      job.status = 'Canceled'; job.canceledAt = new Date().toISOString(); job.canceledBy = 'customer'; job.cancellationReason = reason; delete job.routeOrder;
+      if (idempotencyKey) { job.statusCancellationIdempotencyKey = idempotencyKey; job.statusCancellationIdempotencyFingerprint = fingerprint; }
+      recordActivity(saved, job.customer || job.customerId, 'Customer cancellation', `${job.service} appointment canceled from the status link.`, 'Canceled');
+      recordAudit(saved, { name: job.customer || job.customerId, role: 'customer' }, 'appointment.canceled', 'job', job.id, `${job.service} · ${reason}`);
+      persist();
+      return json(res, 200, { job: { id: job.id, status: job.status, canceledAt: job.canceledAt, cancellationReason: job.cancellationReason }, duplicate: false });
+    }
     const ownerCompletionPath = /^\/api\/jobs\/[^/]+\/complete$/.test(pathname);
     const technicianCompletionPath = pathname === '/api/public/technician-job/complete';
     if (req.method === 'POST' && (ownerCompletionPath || technicianCompletionPath)) {
