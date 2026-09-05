@@ -168,6 +168,7 @@ try {
   assert(reviewLink.response.ok && reviewView.body.submitted === false && review.response.status === 201 && review.body.rating === 5 && reviewDuplicate.response.status === 409 && reviewRecords.body.items.some((item) => item.comment.includes('Clear communication')) && reviewExportResponse.ok && reviewExportCsv.includes('Clear communication'), 'review workflow failed');
   const customerLink = await request(`/api/jobs/${fieldJob.body.id}/customer-link`, jsonOptions('POST', {}, token));
   const customerUrl = new URL(customerLink.body.url, base);
+  const fieldVisit = await request(`/api/jobs/${fieldJob.body.id}/visits`, jsonOptions('POST', { time: 'Friday 4:00 PM', technician: 'Alex Rivera' }, token));
   const customerPortal = await request(`/api/public/customer-portal${customerUrl.search}`);
   const portalConfirm = await request(`/api/public/customer-portal/confirm${customerUrl.search}`, jsonOptions('POST', { jobId: customerPortal.body.jobs[0].id }));
   const portalConfirmDuplicate = await request(`/api/public/customer-portal/confirm${customerUrl.search}`, jsonOptions('POST', { jobId: customerPortal.body.jobs[0].id }));
@@ -195,6 +196,7 @@ try {
   const requestNotifications = await request('/api/notifications?search=Smoke%20Lead', { headers: { authorization: `Bearer ${token}` } });
   const resolvedRequest = await request(`/api/requests/${customerRequest.body.id}/resolve`, jsonOptions('POST', { note: 'Sent the customer the confirmed service window.' }, token));
   const customerPortalToken = new URL(customerLink.body.url, base).searchParams.get('token');
+  assert(fieldVisit.response.status === 201 && customerPortal.body.jobs.some((item) => item.id === fieldJob.body.id && item.visits?.length === 1 && item.visits[0].technician === 'Alex Rivera'), 'customer portal visit visibility failed');
   const cancellationRequest = await request('/api/public/customer-portal/request?token=' + encodeURIComponent(customerPortalToken), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ type: 'Cancellation request', message: 'Please cancel the next visit.' }) });
   assert(cancellationRequest.response.status === 201 && cancellationRequest.body.status === 'Open', 'customer cancellation request workflow failed');
   const jobCancellationRequest = await request('/api/public/customer-portal/request?token=' + encodeURIComponent(customerPortalToken), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ type: 'Cancellation request', jobId: customerPortal.body.jobs[0].id, message: 'Please cancel this appointment.' }) });
