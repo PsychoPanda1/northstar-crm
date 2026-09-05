@@ -108,7 +108,7 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 - `POST /api/jobs/:id/visits/:visitId/status` → advance a visit through Scheduled, En route, In progress, Completed, or Canceled states; same-state retries return `duplicate: true` without another timeline or audit event
 - `POST /api/jobs/:id/customer-link` → issue a 72-hour customer portal link scoped to the job's customer
 - `POST /api/jobs/:id/review-link` → issue a 72-hour review link for a completed job
-- `GET /api/public/customer-portal?token=...` → customer-safe appointments, completion notes, bounded photo evidence, optional customer acknowledgment, equipment, estimates, invoices, service plans, sanitized message history, and sanitized request statuses including pricing breakdowns and a recorded next recurring visit when scheduled
+- `GET /api/public/customer-portal?token=...` → customer-safe appointments, completion notes, bounded photo evidence, optional customer acknowledgment, equipment, estimates, invoices, service plans, sanitized message history, and sanitized request statuses including pricing breakdowns, a recorded next recurring visit when scheduled, and up to 12 currently available reschedule slots per appointment
 - `POST /api/public/customer-portal/confirm?token=...` → confirm a customer-owned appointment idempotently, append a customer timeline event, and record an `appointment.confirmed` audit event
 - `POST /api/public/customer-portal/request?token=...` → accept a customer reschedule, cancellation, or question request and route it into the owner action queue
 - `POST /api/public/customer-portal/confirm?token=...` → confirm a customer-owned appointment idempotently and append a customer timeline event
