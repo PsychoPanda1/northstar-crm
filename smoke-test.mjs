@@ -84,7 +84,7 @@ try {
   const pricebookEstimate = await request('/api/estimates', jsonOptions('POST', { customer: 'Pricebook Customer', service: 'Ignored service label', amount: 389, catalogItemId: catalogItem.body.id }, token));
   const optionEstimate = await request('/api/estimates', jsonOptions('POST', { customer: 'Options Customer', service: 'Panel upgrade', options: [{ label: 'Good', description: 'Repair existing panel', amount: 450 }, { label: 'Better', description: 'Repair and add surge protection', amount: 650 }, { label: 'Best', description: 'Replace panel and add surge protection', amount: 950 }] }, token));
   const optionEstimateView = await request(`/api/public/estimate?token=${encodeURIComponent(optionEstimate.body.estimateApprovalToken)}`);
-  const selectedOptionApproval = await request(`/api/public/estimate/approve?token=${encodeURIComponent(optionEstimate.body.estimateApprovalToken)}`, jsonOptions('POST', { optionId: 'OPTION-2' }));
+  const selectedOptionApproval = await request(`/api/public/estimate/approve?token=${encodeURIComponent(optionEstimate.body.estimateApprovalToken)}`, jsonOptions('POST', { optionId: 'OPTION-2', approverName: 'Options Customer' }));
   const invalidPricebookEstimate = await request('/api/estimates', jsonOptions('POST', { customer: 'Pricebook Customer', amount: 389, catalogItemId: 'other-tenant-catalog-item' }, token));
   assert(catalogItem.response.status === 201 && catalog.body.items.some((item) => item.id === catalogItem.body.id) && accountantCatalogItem.response.status === 403 && pricebookEstimate.response.status === 201 && pricebookEstimate.body.service === 'Emergency pipe repair' && pricebookEstimate.body.pricebookItem === 'Emergency pipe repair' && optionEstimate.response.status === 201 && optionEstimateView.body.options.length === 3 && selectedOptionApproval.body.selectedOptionId === 'OPTION-2' && selectedOptionApproval.body.value === '$650.00' && invalidPricebookEstimate.response.status === 404, 'pricebook or estimate options workflow failed');
   const material = await request('/api/materials', jsonOptions('POST', { name: '1/2 inch copper coupling', sku: 'CU-COUP-12', unit: 'each', unitCost: 8.5, onHand: 4, reorderPoint: 1 }, token));
@@ -184,7 +184,7 @@ try {
   const portalConfirmDuplicate = await request(`/api/public/customer-portal/confirm${customerUrl.search}`, jsonOptions('POST', { jobId: customerPortal.body.jobs[0].id }));
   const portalEstimate = await request('/api/estimates', jsonOptions('POST', { customer: 'Smoke Lead', service: 'Follow-up estimate', amount: 275 }, token));
   const customerPortalWithEstimate = await request(`/api/public/customer-portal${customerUrl.search}`);
-  const portalApproval = await request(`/api/public/estimate/approve?token=${encodeURIComponent(customerPortalWithEstimate.body.estimates.find((item) => item.id === portalEstimate.body.id).estimateApprovalToken)}`, jsonOptions('POST', {}));
+  const portalApproval = await request(`/api/public/estimate/approve?token=${encodeURIComponent(customerPortalWithEstimate.body.estimates.find((item) => item.id === portalEstimate.body.id).estimateApprovalToken)}`, jsonOptions('POST', { approverName: 'Smoke Lead' }));
   const portalInvoice = await request('/api/invoices', jsonOptions('POST', { estimateId: portalEstimate.body.id }, token));
   const portalSchedule = await request(`/api/invoices/${portalInvoice.body.id}/schedule`, jsonOptions('POST', { installments: [{ amount: 100, due: 'At booking' }, { amount: 175, due: 'On completion' }] }, token));
   const portalScheduleView = await request(`/api/invoices/${portalInvoice.body.id}/schedule`, { headers: { authorization: `Bearer ${token}` } });
@@ -224,7 +224,7 @@ try {
   const estimateReminder = await request(`/api/estimates/${estimate.body.id}/remind`, jsonOptions('POST', { channel: 'SMS' }, token));
   const duplicateEstimateReminder = await request(`/api/estimates/${estimate.body.id}/remind`, jsonOptions('POST', { channel: 'SMS' }, token));
   const publicEstimate = await request(`/api/public/estimate?token=${encodeURIComponent(estimate.body.estimateApprovalToken)}`);
-  const approved = await request(`/api/public/estimate/approve?token=${encodeURIComponent(estimate.body.estimateApprovalToken)}`, jsonOptions('POST', {}));
+  const approved = await request(`/api/public/estimate/approve?token=${encodeURIComponent(estimate.body.estimateApprovalToken)}`, jsonOptions('POST', { approverName: 'Smoke Customer' }));
   const invoice = await request('/api/invoices', jsonOptions('POST', { estimateId: estimate.body.id }, token));
   const invoiceLink = await request(`/api/invoices/${invoice.body.id}/payment-link`, jsonOptions('POST', {}, token));
   const invoiceUrl = new URL(invoiceLink.body.url, base);

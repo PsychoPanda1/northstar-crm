@@ -41,6 +41,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Reusable `booking.html` customer form for service-specific landing pages
 - Pricebook-linked estimates preserve the quoted service snapshot for reliable quote-to-cash records
 - Multi-option estimates let customers select a clearly labeled service tier before approval
+- Customer estimate approvals capture the typed approver name in the estimate and audit ledger
 - Secure 72-hour customer portal links with appointments, equipment, estimates, invoices, and service plans
 - Signed post-job review links with one-time 1–5 rating and timeline capture
 - Owner review workspace with searchable review history and CSV export
