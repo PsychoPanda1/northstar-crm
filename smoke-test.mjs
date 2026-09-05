@@ -453,7 +453,7 @@ try {
   const portalScheduleView = await request(`/api/invoices/${portalInvoice.body.id}/schedule`, { headers: { authorization: `Bearer ${token}` } });
   const customerPortalWithInvoice = await request(`/api/public/customer-portal${customerUrl.search}`);
   const portalInvoiceView = customerPortalWithInvoice.body.invoices.find((item) => item.id === portalInvoice.body.id);
-  assert(customerPortalWithInvoice.body.invoices.some((item) => item.id === pricedInvoice.body.id && item.subtotal === 1000 && item.discount === 100 && item.tax === 90), 'customer portal invoice pricing visibility failed');
+  assert(customerPortalWithInvoice.body.invoices.some((item) => item.id === pricedInvoice.body.id && item.subtotal === 1000 && item.discount === 100 && item.tax === 90 && item.paymentUrl?.startsWith('/invoice.html?token=') && item.paymentLinkExpiresInHours === 72), 'customer portal invoice payment link visibility failed');
   const portalPaymentIntent = await request(`/api/public/customer-portal/payment-intent${customerUrl.search}`, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': 'smoke-customer-portal-payment' }, body: JSON.stringify({ invoiceId: portalInvoiceView.id, amount: 75, method: 'ACH' }) });
   const portalWebhookBody = JSON.stringify({ tenantId: 'clearwater-plumbing', eventId: 'evt-portal-1', intentId: portalPaymentIntent.body.id, status: 'succeeded', reference: 'PROVIDER-42' });
   const portalWebhook = await request('/api/webhooks/payments', { method: 'POST', headers: { 'content-type': 'application/json', 'x-northstar-signature': createHmac('sha256', webhookSecret).update(portalWebhookBody).digest('hex') }, body: portalWebhookBody });
