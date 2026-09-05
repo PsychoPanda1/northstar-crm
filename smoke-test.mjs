@@ -557,6 +557,7 @@ try {
   const invoiceLink = await request(`/api/invoices/${invoice.body.id}/payment-link`, jsonOptions('POST', {}, token));
   const invoiceUrl = new URL(invoiceLink.body.url, base);
   const publicInvoice = await request(`/api/public/invoice${invoiceUrl.search}`);
+  assert(invoice.body.lineItems?.length === 2 && publicInvoice.response.status === 200 && publicInvoice.body.lineItems?.length === 2 && publicInvoice.body.lineItems[0].description === 'Leak diagnosis', 'invoice line item projection failed');
   const paymentIntent = await request(`/api/public/invoice/payment-intent${invoiceUrl.search}`, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': 'smoke-payment-intent' }, body: JSON.stringify({ amount: 50, method: 'Card' }) });
   const duplicatePaymentIntent = await request(`/api/public/invoice/payment-intent${invoiceUrl.search}`, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': 'smoke-payment-intent' }, body: JSON.stringify({ amount: 50, method: 'Card' }) });
   const partial = await request(`/api/invoices/${invoice.body.id}/pay`, { ...jsonOptions('POST', { amount: 100, method: 'Card', reference: 'SMOKE-1' }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-manual-payment' } });
