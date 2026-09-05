@@ -41,6 +41,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Rescheduling an appointment queues a customer-facing reschedule notification and timeline event
 - Owners and dispatchers can queue deduplicated appointment reminders before a visit
 - Automatic customer notifications when jobs are assigned, en route, or completed, with deduplication before provider delivery
+- Customer status links and portals expose the recorded technician en-route timestamp when available
 - Landing-page availability and idempotent online booking into the dispatch queue
 - Office-created jobs can carry normalized appointment ranges, with overlap-aware capacity conflict checks
 - Dispatch rescheduling can target a stable availability slot while preserving normalized appointment timestamps
