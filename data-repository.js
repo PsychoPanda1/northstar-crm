@@ -512,6 +512,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async schedulePlanVisits(id, firstStartsAt, time, visits = 3, frequency = 'Monthly', firstEndsAt = '', locationId = '', idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for recurring plan scheduling');
+    const response = await fetch(`/api/plans/${encodeURIComponent(id)}/schedule`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ firstStartsAt, ...(firstEndsAt ? { firstEndsAt } : {}), time, visits, frequency, ...(locationId ? { locationId } : {}) }) });
+    if (!response.ok) throw new Error('recurring plan scheduling failed');
+    return response.json();
+  }
+
   async remindPlans(days = 30, channel = 'SMS') {
     if (!this.remote) throw new Error('API required for plan reminders');
     const response = await fetch('/api/plans/reminders', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ days, channel }) });
