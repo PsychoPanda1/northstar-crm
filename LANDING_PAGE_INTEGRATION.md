@@ -10,6 +10,8 @@ await fetch('https://crm.example.com/api/public/leads?service=plumbing', {
     name: form.name,
     phone: form.phone,
     email: form.email,
+    location: form.location,
+    message: form.message,
     requestedService: 'Emergency leak repair',
     source: 'Clearwater Plumbing landing page',
     website: '' // honeypot; keep empty for real visitors
@@ -17,7 +19,7 @@ await fetch('https://crm.example.com/api/public/leads?service=plumbing', {
 });
 ```
 
-Supported service keys are `plumbing`, `powerwashing`, `electrician`, and `carwash`. A valid request returns `201` with `{ received: true, id, tenant }`. Repeating the same `Idempotency-Key` with the same payload returns the original lead with `200` and `duplicate: true`, while reusing a key for a different payload returns `409 idempotency_key_reused`; this prevents retry-created duplicates and accidental key reuse. Missing or malformed email/phone contact information returns `422`; malformed or oversized JSON returns a controlled `400`; the honeypot and rate limit return `422` and `429` respectively.
+Supported service keys are `plumbing`, `powerwashing`, `electrician`, and `carwash`. Optional bounded `location` and `message` fields are preserved in the owner inbox so operators can see the customer's service context before calling back. A valid request returns `201` with `{ received: true, id, tenant }`. Repeating the same `Idempotency-Key` with the same payload returns the original lead with `200` and `duplicate: true`, while reusing a key for a different payload returns `409 idempotency_key_reused`; this prevents retry-created duplicates and accidental key reuse. Missing or malformed email/phone contact information returns `422`; malformed or oversized JSON returns a controlled `400`; the honeypot and rate limit return `422` and `429` respectively.
 
 The tenant discovery response includes `integration.version: 2`, copyable `bookingPath`, `ownerPortalPath`, `ownerAuthEndpoint`, `leadEndpoint`, `bookingEndpoint`, and `availabilityEndpoint` values, the `technicianFieldEstimateEndpoint`, customer-portal action endpoints, capability flags, and `bookingRequirements`. The current requirements declare a service address as required, an `Idempotency-Key` as required for retry safety, slot selection as preferred, and a maximum of 12 checklist items. The manifest also advertises customer portal preferences through `customerPortalEndpoints.preferences` and `capabilities.technicianFieldEstimates`. Future landing-page agents should consume this manifest rather than duplicating service-route assumptions.
 
