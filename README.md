@@ -80,6 +80,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Team roster availability and active-job counts are derived from live tenant jobs
 - Owners and dispatchers can add tenant-specific technicians or staff members to the roster
 - Customer assets support an optional validated warranty-through date, customer-portal visibility, and an auditable creation event
+- Warranty dates within 30 days automatically surface as owner follow-up notifications
 - Completed jobs can expose technician completion notes and bounded HTTPS photo evidence in the customer portal
 - Technicians can optionally record the customer acknowledgment name at completion, with the acknowledgment preserved in the portal and timeline
 
