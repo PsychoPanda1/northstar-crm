@@ -99,6 +99,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Server-side technician conflict detection for assignment and rescheduling
 - Atomic bulk technician assignment with conflict preflight, confirmation notifications, and idempotent retries
 - Owner workspace controls for recording technician time off that blocks conflicting dispatch assignments
+- Time-off blocks can be canceled with preserved audit history when availability changes
 - Multi-visit work orders with per-visit scheduling, technician assignment, and conflict checks
 - Parent work orders expose derived visit progress so multi-visit execution stays visible without closing the job early
 - Per-visit lifecycle transitions for multi-visit work orders

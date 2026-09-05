@@ -66,6 +66,7 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 - `GET /api/export?type=reports` → tenant-scoped CSV of the report metrics for owner and accounting handoff
 - `GET /api/team` → tenant-scoped technician roster with derived availability and active-job counts used for assignment validation
 - `GET|POST /api/team/:id/time-off` → owner/dispatcher-only tenant-scoped technician unavailability blocks; blocks require a bounded normalized ISO window, reject overlaps and idempotency-key reuse, are returned in chronological order, and participate in assignment/rescheduling conflict checks
+- `POST /api/team/:id/time-off/:blockId/cancel` → owner/dispatcher-only recoverable cancellation of a time-off block; preserves the original record and audit note while removing it from future scheduling conflicts, with idempotent replay
 - `POST /api/jobs` accepts optional ISO `startsAt`, `endsAt`, and IANA `timeZone` fields; valid timestamp ranges participate in overlap-aware appointment conflict checks
 - `POST /api/jobs/:id/reschedule` accepts an available `slotId` or a legacy `time`; slot-based reschedules preserve normalized appointment metadata
 - Authenticated technician labor/material writes are limited to the technician's assigned work order; technician roles cannot create inventory or purchase orders

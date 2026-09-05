@@ -568,6 +568,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async cancelTeamTimeOff(teamMemberId, timeOffId, note = '') {
+    if (!this.remote) throw new Error('API required for time-off management');
+    const response = await fetch(`/api/team/${encodeURIComponent(teamMemberId)}/time-off/${encodeURIComponent(timeOffId)}/cancel`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ note }) });
+    if (!response.ok) throw new Error('time-off cancellation failed');
+    return response.json();
+  }
+
   async createEstimate(customer, service, amount, catalogItemId = null, customerId = '', idempotencyKey = crypto.randomUUID(), pricing = {}) {
     if (!this.remote) throw new Error('API required for estimate creation');
     const response = await fetch('/api/estimates', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ ...(customerId ? { customerId } : { customer }), service, amount, ...(catalogItemId ? { catalogItemId } : {}), ...pricing }) });
