@@ -175,7 +175,9 @@ try {
   const techClockView = await request(`/api/public/technician-job/clock${techUrl.search}`);
   const techClockOut = await request(`/api/public/technician-job/clock${techUrl.search}`, jsonOptions('POST', { action: 'out' }));
   const techClockDuplicate = await request(`/api/public/technician-job/clock${techUrl.search}`, jsonOptions('POST', { action: 'out' }));
-  assert(techClockIn.response.status === 200 && techClockView.body.active === true && techClockOut.body.action === 'out' && techClockOut.body.clockInAt && techClockOut.body.clockOutAt && Number.isInteger(techClockOut.body.fieldMinutes) && techClockDuplicate.response.status === 409, 'technician clock workflow failed');
+  const techClockInAgain = await request(`/api/public/technician-job/clock${techUrl.search}`, jsonOptions('POST', { action: 'in' }));
+  const techClockOutAgain = await request(`/api/public/technician-job/clock${techUrl.search}`, jsonOptions('POST', { action: 'out' }));
+  assert(techClockIn.response.status === 200 && techClockView.body.active === true && techClockOut.body.action === 'out' && techClockOut.body.clockInAt && techClockOut.body.clockOutAt && Number.isInteger(techClockOut.body.fieldMinutes) && techClockDuplicate.response.status === 409 && techClockInAgain.response.status === 200 && techClockOutAgain.body.sessions.length === 2, 'technician clock workflow failed');
   const techCostView = await request('/api/job-costs', { headers: { authorization: `Bearer ${token}` } });
   assert(techCostView.response.status === 200 && techCostView.body.items.some((item) => item.jobId === fieldJob.body.id && Number.isInteger(item.fieldMinutes) && Number.isFinite(item.fieldHours)), 'tracked field time missing from job costs');
   const checklistBeforeComplete = await request(`/api/public/technician-job${techUrl.search}`);
