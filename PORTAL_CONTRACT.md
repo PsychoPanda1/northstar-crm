@@ -154,8 +154,8 @@ System events such as web-form lead capture, customer estimate approval, and rec
 - `POST /api/estimates` accepts an optional `catalogItemId` and snapshots the tenant pricebook item on the estimate so later catalog edits do not rewrite historical quotes
 - `POST /api/estimates` also accepts up to three labeled `options`, or server-calculated `subtotal`, `discount`, and `taxRate` pricing components; public approval may include `optionId`, which snapshots the selected amount before quote-to-cash conversion
 - `GET /api/public/estimate?token=...` returns the customer-safe subtotal, discount, tax, and total breakdown when pricing components were used
-- `POST /api/public/estimate/approve?token=...` requires `approverName` and stores the typed approver in the estimate audit record
-- `POST /api/public/estimate/decline?token=...` records a customer-provided decline reason, updates the estimate lifecycle to `Declined`, and is safely idempotent on repeat submission
+- `POST /api/public/estimate/approve?token=...` requires `approverName` and stores the typed approver in the estimate audit record; customer links for both `Draft` and delivered `Sent` estimates are actionable
+- `POST /api/public/estimate/decline?token=...` records a customer-provided decline reason, updates an open `Draft` or `Sent` estimate to `Declined`, and is safely idempotent on repeat submission
 - `POST /api/estimates/:id/approve` → approve a tenant-owned estimate
 - `POST /api/estimates/:id/line-items` → owner/dispatcher-only replacement of up to 20 bounded draft-estimate line items; the server calculates subtotal, discount, tax, and total, supports idempotent retries, and preserves the itemized scope for the public estimate and resulting invoice
 - `POST /api/estimates/:id/send` → owner/dispatcher-only delivery intent for an open estimate by SMS or email; marks it `Sent`, queues a provider-pending message with a secure estimate link, honors channel opt-outs, records `estimate.sent`, and supports idempotent retries
