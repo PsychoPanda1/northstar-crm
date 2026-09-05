@@ -16,6 +16,7 @@ const technician = readFileSync(`${root}technician.html`, 'utf8');
 const ownerManifest = readFileSync(`${root}northstar.webmanifest`, 'utf8');
 const northstarServiceWorker = readFileSync(`${root}northstar-sw.js`, 'utf8');
 const server = readFileSync(`${root}server.mjs`, 'utf8');
+const tenantConfig = readFileSync(`${root}tenant-config.js`, 'utf8');
 const envExample = readFileSync(`${root}.env.example`, 'utf8');
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 assert(envExample.includes('NORTHSTAR_SESSION_SECRET=replace-with-32-plus-random-characters'), 'environment template must use an explicit session-secret placeholder');
@@ -70,6 +71,7 @@ assert(landingClient.includes('class NorthstarLandingClient') && landingClient.i
 assert(status.includes('sessionStorage') && status.includes("retryKey('cancel'") && status.includes("retryKey('reschedule'"), 'customer status actions do not preserve mobile retry identity');
 assert(booking.includes('NorthstarLandingClient') && landingClient.includes("'idempotency-key': key"), 'landing booking form does not preserve mobile retry identity');
 assert(productionBoundary.includes("NODE_ENV: 'production'") && productionBoundary.includes("NORTHSTAR_ALLOW_DEMO_LOGIN: 'false'") && productionBoundary.includes("error !== 'demo_login_disabled'") && productionBoundary.includes("unknown_service"), 'production boundary suite is not checking fail-closed tenant isolation');
+assert(tenantConfig.includes('const unavailable =') && tenantConfig.includes('if (requested && !fallback) return unavailable') && app.includes('tenant.unavailable') && app.includes('Service configuration unavailable'), 'owner portal must fail closed when a service tenant is unknown or unavailable');
 assert(invoice.includes('id="breakdown"') && invoice.includes('Remaining $'), 'invoice payment page does not expose total, paid, and remaining balance');
 assert(invoice.includes('sessionStorage') && invoice.includes('idempotency-key') && invoice.includes('paymentKey'), 'invoice payment page does not preserve mobile retry identity');
 assert(customer.includes('sessionStorage') && customer.includes('retryKey') && customer.includes('idempotency-key'), 'customer portal actions do not preserve mobile retry identity');

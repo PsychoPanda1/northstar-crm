@@ -10,11 +10,14 @@ const NORTHSTAR_TENANTS = {
 
 async function resolveTenant() {
   const requested = new URLSearchParams(window.location.search).get('service');
-  const fallback = NORTHSTAR_TENANTS[requested] || NORTHSTAR_TENANTS.default;
+  const fallback = requested ? NORTHSTAR_TENANTS[requested] : NORTHSTAR_TENANTS.default;
+  const unavailable = { ...NORTHSTAR_TENANTS.default, unavailable: true, businessName: 'Service configuration unavailable', serviceLabel: 'Service unavailable', focus: 'This service page is not connected to a configured Northstar tenant.' };
+  if (requested && !fallback) return unavailable;
   try {
     const response = await fetch(`/api/public/tenant?service=${encodeURIComponent(requested || 'default')}`);
     const body = await response.json();
     if (response.ok && body.tenant) return { ...fallback, ...body.tenant };
+    if (response.status === 404) return unavailable;
   } catch {}
   return fallback;
 }
