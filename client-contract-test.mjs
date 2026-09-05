@@ -8,6 +8,7 @@ const customer = readFileSync(`${root}customer.html`, 'utf8');
 const status = readFileSync(`${root}status.html`, 'utf8');
 const invoice = readFileSync(`${root}invoice.html`, 'utf8');
 const booking = readFileSync(`${root}booking.html`, 'utf8');
+const technician = readFileSync(`${root}technician.html`, 'utf8');
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 
 assert(repository.includes("this.previewOnly = window.location.protocol === 'file:'") && repository.includes("if (!this.previewOnly) throw new Error('authenticated dashboard required')"), 'repository preview fallback is not restricted to file previews');
@@ -28,4 +29,5 @@ assert(booking.includes('sessionStorage') && booking.includes('northstar-booking
 assert(invoice.includes('id="breakdown"') && invoice.includes('Remaining $'), 'invoice payment page does not expose total, paid, and remaining balance');
 assert(invoice.includes('sessionStorage') && invoice.includes('idempotency-key') && invoice.includes('paymentKey'), 'invoice payment page does not preserve mobile retry identity');
 assert(customer.includes('sessionStorage') && customer.includes('retryKey') && customer.includes('idempotency-key'), 'customer portal actions do not preserve mobile retry identity');
+assert(technician.includes('create-estimate') && technician.includes('/api/public/technician-job/estimate'), 'technician field estimate workflow is not wired');
 console.log('Northstar client contract checks passed');
