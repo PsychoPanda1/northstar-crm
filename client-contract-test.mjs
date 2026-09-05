@@ -33,4 +33,5 @@ assert(invoice.includes('sessionStorage') && invoice.includes('idempotency-key')
 assert(customer.includes('sessionStorage') && customer.includes('retryKey') && customer.includes('idempotency-key'), 'customer portal actions do not preserve mobile retry identity');
 assert(technician.includes('create-estimate') && technician.includes('/api/public/technician-job/estimate'), 'technician field estimate workflow is not wired');
 assert(app.includes("['Messages', profile.messages || []]") && app.includes("['Calls', profile.calls || []]"), 'owner customer profile does not expose communication history');
+assert(app.includes("result.results.messages || []") && app.includes("result.results.calls || []"), 'global search does not expose communication history');
 console.log('Northstar client contract checks passed');
