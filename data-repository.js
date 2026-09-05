@@ -218,9 +218,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async createCustomer(name, phone, location) {
+  async createCustomer(name, phone, location, email = '') {
     if (!this.remote) throw new Error('API required for customer creation');
-    const response = await fetch('/api/customers', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ name, phone, location }) });
+    const response = await fetch('/api/customers', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ name, phone, location, ...(email ? { email } : {}) }) });
     if (!response.ok) throw new Error('customer creation failed');
     return response.json();
   }
