@@ -61,7 +61,8 @@ try {
   const secureLogin = await request('/api/auth/login?service=plumbing', jsonOptions('POST', { email: ownerEmail, password: ownerPassword }));
   const sessionCookie = (secureLogin.response.headers.get('set-cookie') || '').split(';')[0];
   const cookieSession = await request('/api/session', { headers: { cookie: sessionCookie } });
-  assert(secureLogin.response.status === 200 && secureLogin.response.headers.get('set-cookie')?.includes('HttpOnly') && cookieSession.response.ok && cookieSession.body.owner?.id === 'owner_configured', 'secure cookie session authentication failed');
+  const malformedCookieSession = await request('/api/session', { headers: { cookie: 'northstar_session=%ZZ' } });
+  assert(secureLogin.response.status === 200 && secureLogin.response.headers.get('set-cookie')?.includes('HttpOnly') && cookieSession.response.ok && cookieSession.body.owner?.id === 'owner_configured' && malformedCookieSession.response.status === 401, 'secure cookie session authentication failed');
   const integrationHealth = await request('/api/integrations/health', { headers: { authorization: `Bearer ${secureLogin.body.token}` } });
   const automationRunOptions = { method: 'POST', headers: { authorization: `Bearer ${secureLogin.body.token}`, 'content-type': 'application/json', 'idempotency-key': 'smoke-automation-run' }, body: JSON.stringify({ channel: 'Email', lookaheadHours: 168, estimateAgeDays: 1, invoiceAgeDays: 1, renewalDays: 30 }) };
   const automationRun = await request('/api/automations/run', automationRunOptions);

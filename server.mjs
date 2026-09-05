@@ -169,9 +169,10 @@ const readReviewToken = (token) => { const [payload, signature] = String(token |
 const issueInvoiceToken = (invoice) => { const payload = Buffer.from(JSON.stringify({ scope: 'invoice', invoiceId: invoice.id, tenantId: invoice.tenantId, exp: Date.now() + 1000 * 60 * 60 * 72 })).toString('base64url'); return `${payload}.${sign(payload)}`; };
 const readInvoiceToken = (token) => { const [payload, signature] = String(token || '').split('.'); if (!payload || !signature) return null; const expected = sign(payload); if (signature.length !== expected.length || !timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null; try { const claims = JSON.parse(Buffer.from(payload, 'base64url')); return claims.scope === 'invoice' && claims.exp > Date.now() && tenants[claims.tenantId] ? claims : null; } catch { return null; } };
 const cookieValue = (req, name) => String(req.headers.cookie || '').split(';').map((part) => part.trim().split('=')) .find(([key]) => key === name)?.[1] || '';
+const sessionTokenFromCookie = (req) => { try { return decodeURIComponent(cookieValue(req, 'northstar_session')); } catch { return ''; } };
 const authenticate = (req) => {
   const raw = req.headers.authorization || '';
-  const token = raw.startsWith('Bearer ') ? raw.slice(7) : decodeURIComponent(cookieValue(req, 'northstar_session'));
+  const token = raw.startsWith('Bearer ') ? raw.slice(7) : sessionTokenFromCookie(req);
   if (revokedTokens.has(token)) return null;
   const [payload, signature] = token.split('.');
   if (!payload || !signature) return null;
