@@ -299,7 +299,7 @@ const server = createServer(async (req, res) => {
       if ((!OWNER_LOGIN_EMAIL || !OWNER_PASSWORD_DIGEST) && !configuredStaff.length) return json(res, 503, { error: 'auth_not_configured' });
       if (!allowOwnerLogin(req)) return json(res, 429, { error: 'login_rate_limited' });
       const body = await readBody(req); const service = body.service || requestUrl.searchParams.get('service') || 'default'; const tenantId = serviceTenant[service] || serviceTenant.default; const email = String(body.email || '').trim().toLowerCase(); const digest = createHmac('sha256', SECRET).update(String(body.password || '')).digest('hex');
-      const staff = configuredStaff.find((item) => secureTextEqual(email, item.email));
+      const staff = configuredStaff.find((item) => item.tenantId === tenantId && secureTextEqual(email, item.email));
       if (staff && secureTextEqual(digest, staff.passwordDigest)) { const account = { id: staff.id, name: staff.name, role: staff.role, tenantId: staff.tenantId }; return json(res, 200, { token: issueToken(account), owner: { id: account.id, name: account.name, role: account.role }, tenant: tenants[account.tenantId], permissions: rolePermissions[account.role] }); }
       if (!secureTextEqual(email, OWNER_LOGIN_EMAIL) || !secureTextEqual(digest, OWNER_PASSWORD_DIGEST) || tenantId !== OWNER_TENANT_ID) return json(res, 401, { error: 'invalid_login' });
       const owner = { id: 'owner_configured', name: String(process.env.NORTHSTAR_OWNER_NAME || 'Workspace owner').slice(0, 100), role: 'owner', tenantId }; return json(res, 200, { token: issueToken(owner), owner: { id: owner.id, name: owner.name, role: owner.role }, tenant: tenants[tenantId], permissions: rolePermissions.owner });
