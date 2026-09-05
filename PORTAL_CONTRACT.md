@@ -58,7 +58,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - `POST /api/jobs/:id/materials` → consume stocked material against a tenant-owned job and append an inventory transaction
 - `GET /api/purchase-orders`, `POST /api/purchase-orders`, and `POST /api/purchase-orders/:id/receive` → create and receive replenishment orders with automatic stock reconciliation; creation records `purchase-order.created`, while receipt accepts an optional positive whole-number `quantity`, tracks `receivedQuantity`, supports split shipments, and records an owner-auditable receipt event
 - `GET /api/job-costs` and `POST /api/jobs/:id/labor` → view tenant-scoped job profitability and log labor cost against a job
-- `GET /api/payments` → tenant-scoped payment ledger for reconciliation and accounting handoff
+- `GET /api/payments` → tenant-scoped payment ledger for reconciliation and accounting handoff; signed provider webhooks also record `invoice.payment.succeeded` or `invoice.payment.failed` audit events
 - `GET /api/export?type=customers|leads|estimates|invoices|payments|plans|activities|dispatch|assets` → tenant-scoped CSV export for owner reporting and accounting handoff
 - `POST /api/jobs` → create a job after server-side tenant and role checks; validates that the customer exists, rejects an active appointment already using the requested time, and records a `job.created` audit event
 - `POST /api/leads/:id/convert` → convert a tenant-owned lead into a customer and scheduled job while preserving lead attribution, timeline activity, and an actor-attributed audit event; rejects an active appointment already using the requested time
