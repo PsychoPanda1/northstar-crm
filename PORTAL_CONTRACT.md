@@ -133,7 +133,7 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 - `POST /api/messages/:id/reply` → owner/dispatcher-only reply to a tenant-scoped message, linked to the original thread and queued for provider delivery idempotently
 - `POST /api/messages/:id/retry` → owner/dispatcher-only retry of a failed tenant-scoped outbound message, preserving customer/job/invoice context and linking the new queued message through `retryOf`; accepts an `Idempotency-Key`
 - `POST /api/webhooks/messages` → accept an HMAC-signed, idempotent provider delivery event and reconcile queued messages to `Sent` or `Failed`; set `NORTHSTAR_MESSAGE_WEBHOOK_SECRET` in production
-- `POST /api/webhooks/messages/inbound` → accept an HMAC-signed, idempotent inbound SMS/email reply, match it to a customer and optional job, and append it to the timeline
+- `POST /api/webhooks/messages/inbound` → accept an HMAC-signed, idempotent inbound SMS/email reply, match it to a customer and optional job, and append it to the timeline; exact SMS `STOP`, `UNSUBSCRIBE`, `CANCEL`, `END`, and `QUIT` replies also set the matched customer's SMS opt-out flag and append an auditable preference event
 - `POST /api/jobs/:id/notify` → queue a tenant-owned confirmation, en-route, or completed message from job context; repeated requests for the same job/template/channel return the original queued message, while delivery remains provider-dependent
 - Assigning a job automatically queues a confirmation message; technician or dispatcher transitions to `En route` and `Completed` automatically queue the matching customer notification once per job/template/channel, preserving `customerId` when available. Delivery remains provider-dependent until the signed message webhook reconciles it.
 
