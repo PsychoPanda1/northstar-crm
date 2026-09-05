@@ -244,7 +244,8 @@ try {
   const conflictReschedule = await request(`/api/jobs/${conflictJob.body.id}/reschedule`, jsonOptions('POST', { time: 'Next Monday 10:00 AM' }, token));
   assert(conflictAssign.response.status === 200 && conflictReschedule.response.status === 409 && conflictReschedule.body.error === 'technician_schedule_conflict', 'technician conflict protection failed');
   const reschedule = await request(`/api/jobs/${directJob.body.id}/reschedule`, jsonOptions('POST', { time: 'Tomorrow 9:30 AM' }, token));
-  assert(reschedule.response.status === 200 && reschedule.body.notification?.template === 'rescheduled', 'reschedule notification workflow failed');
+  const structuredReschedule = await request(`/api/jobs/${structuredJob.body.id}/reschedule`, jsonOptions('POST', { slotId: 'next-business-day-0900' }, token));
+  assert(reschedule.response.status === 200 && reschedule.body.notification?.template === 'rescheduled' && structuredReschedule.response.status === 200 && structuredReschedule.body.job.slotId === 'next-business-day-0900' && structuredReschedule.body.job.startsAt.endsWith('Z') && structuredReschedule.body.job.timeZone === 'America/New_York', 'reschedule notification workflow failed');
   const estimate = await request('/api/estimates', jsonOptions('POST', { customer: 'Smoke Customer', service: 'Leak repair', amount: 425 }, token));
   const estimateReminder = await request(`/api/estimates/${estimate.body.id}/remind`, jsonOptions('POST', { channel: 'SMS' }, token));
   const duplicateEstimateReminder = await request(`/api/estimates/${estimate.body.id}/remind`, jsonOptions('POST', { channel: 'SMS' }, token));
