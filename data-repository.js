@@ -26,6 +26,9 @@ class NorthstarDemoRepository {
       const response = await fetch('/api/dashboard', { headers: { authorization: `Bearer ${this.token}` } });
       if (!response.ok) throw new Error('dashboard unavailable');
       this.remote = await response.json();
+      const session = await fetch('/api/session', { headers: { authorization: `Bearer ${this.token}` } });
+      if (!session.ok) throw new Error('session unavailable');
+      this.session = await session.json();
     } catch { this.apiAvailable = false; }
   }
 
