@@ -544,6 +544,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async updateEstimateLineItems(estimateId, items, discount = 0, taxRate = 0, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for estimate line items');
+    const response = await fetch(`/api/estimates/${encodeURIComponent(estimateId)}/line-items`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ items, discount, taxRate }) });
+    if (!response.ok) throw new Error('estimate line items update failed');
+    return response.json();
+  }
+
   async updateEstimate(id, action) {
     if (!this.remote) throw new Error('API required for estimate updates');
     const response = await fetch(`/api/estimates/${encodeURIComponent(id)}/${action}`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: '{}' });
