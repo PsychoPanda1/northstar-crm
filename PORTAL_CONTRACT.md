@@ -190,6 +190,7 @@ System events such as web-form lead capture, customer estimate approval, and rec
 - `GET /api/public/estimate?token=...` returns the customer-safe subtotal, discount, tax, and total breakdown when pricing components were used
 - `POST /api/public/estimate/approve?token=...` requires `approverName` and stores the typed approver in the estimate audit record; customer links for both `Draft` and delivered `Sent` estimates are actionable
 - `POST /api/public/estimate/decline?token=...` records a customer-provided decline reason, updates an open `Draft` or `Sent` estimate to `Declined`, and is safely idempotent on repeat submission
+- `POST /api/public/estimate/request-change?token=...` records a customer change request on an open `Draft` or `Sent` estimate, changes its status to `Change requested`, creates an owner action notification, and is idempotent on repeat submission
 - `POST /api/estimates/:id/approve` → approve a tenant-owned estimate
 - `POST /api/estimates/:id/line-items` → owner/dispatcher-only replacement of up to 20 bounded draft-estimate line items; the server calculates subtotal, discount, tax, and total, supports idempotent retries, and preserves the itemized scope for the public estimate and resulting invoice
 - `GET /api/estimates/:id/revisions` → owner/dispatcher/accountant-only bounded immutable snapshots of prior estimate scope and pricing, including version, timestamp, and actor

@@ -804,6 +804,12 @@ const appointmentQuestionOptions = { method: 'POST', headers: { 'content-type': 
   const sentAudit = await request('/api/audit?search=estimate.sent', { headers: { authorization: `Bearer ${token}` } });
   const sentPublic = await request(`/api/public/estimate?token=${encodeURIComponent(sendEstimate.body.estimateApprovalToken)}`);
   const sentApproved = await request(`/api/public/estimate/approve?token=${encodeURIComponent(sendEstimate.body.estimateApprovalToken)}`, jsonOptions('POST', { approverName: 'Send Estimate Customer' }));
+  const changeRequestEstimate = await request('/api/estimates', jsonOptions('POST', { customerId: smokeCustomer.body.id, service: 'Drain replacement', amount: 640 }, token));
+  const changeRequest = await request(`/api/public/estimate/request-change?token=${encodeURIComponent(changeRequestEstimate.body.estimateApprovalToken)}`, jsonOptions('POST', { reason: 'Please include the warranty and expected completion time.' }));
+  const changeRequestDuplicate = await request(`/api/public/estimate/request-change?token=${encodeURIComponent(changeRequestEstimate.body.estimateApprovalToken)}`, jsonOptions('POST', { reason: 'Please include the warranty and expected completion time.' }));
+  const changeRequestNotifications = await request('/api/notifications?search=Estimate%20change', { headers: { authorization: `Bearer ${token}` } });
+  const changeRequestAudit = await request('/api/audit?search=estimate.change_requested', { headers: { authorization: `Bearer ${token}` } });
+  assert(changeRequest.response.status === 200 && changeRequest.body.status === 'Change requested' && changeRequest.body.changeRequest.includes('warranty') && changeRequestDuplicate.response.status === 200 && changeRequestDuplicate.body.duplicate === true && changeRequestNotifications.body.items.some((item) => item.title === 'Estimate change requested') && changeRequestAudit.body.items.some((item) => item.entityId === changeRequestEstimate.body.id && item.action === 'estimate.change_requested'), 'estimate change request workflow failed');
   const estimateReminder = await request(`/api/estimates/${estimate.body.id}/remind`, jsonOptions('POST', { channel: 'SMS' }, token));
   const duplicateEstimateReminder = await request(`/api/estimates/${estimate.body.id}/remind`, jsonOptions('POST', { channel: 'SMS' }, token));
   const bulkEstimateReminder = await request('/api/estimates/reminders', jsonOptions('POST', { maxAgeDays: 1, channel: 'Email' }, token));
