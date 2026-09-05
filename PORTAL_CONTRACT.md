@@ -19,7 +19,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 
 ## Recommended API shape
 
-- `POST /api/public/leads` → accept a constrained landing-page inquiry using a service key; preserves submitted phone/email fields, records a system-attributed `lead.received` audit event, and supports an `Idempotency-Key` header to make retries safe; production must add validation, rate limiting, spam protection, and durable storage
+- `POST /api/public/leads` → accept a constrained landing-page inquiry using a service key; validates email/phone shape, preserves submitted contact fields, records a system-attributed `lead.received` audit event, and supports an `Idempotency-Key` header to make retries safe; production must add stronger abuse controls and durable storage
 - `GET /api/public/availability?service=...` and `POST /api/public/bookings?service=...` → expose date-specific slot IDs plus UTC appointment timestamps in the tenant IANA timezone and create an idempotent tenant-routed customer/job booking; successful bookings also create a system-attributed `booking.received` audit event; legacy relative labels remain supported while production capacity is connected
 - Repeat bookings from the same tenant customer contact reuse the existing customer record while creating a new job, preserving service history across landing-page visits
 - `GET /api/public/tenant?service=...` → return safe tenant branding and the canonical booking path for a service landing page; it never exposes owner or customer data
