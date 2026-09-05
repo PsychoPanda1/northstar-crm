@@ -60,11 +60,11 @@ try {
   const teamRoster = await request('/api/team', { headers: { authorization: `Bearer ${token}` } });
   const duplicateTeamMember = await request('/api/team', jsonOptions('POST', { name: 'Jordan Lee', role: 'Field technician' }, token));
   assert(newTeamMember.response.status === 201 && newTeamMember.body.name === 'Jordan Lee' && teamRoster.body.items.some((item) => item.name === 'Jordan Lee' && item.status === 'Available') && duplicateTeamMember.response.status === 409, 'team roster management failed');
-  const createdCustomer = await request('/api/customers', jsonOptions('POST', { name: 'Direct Job Customer', phone: '843-555-0122' }, token));
+  const createdCustomer = await request('/api/customers', jsonOptions('POST', { name: 'Direct Job Customer', phone: '843-555-0122', email: 'direct.customer@example.test' }, token));
   const specialist = await request('/api/team', jsonOptions('POST', { name: 'Electrical Specialist', role: 'Field technician', skills: ['Electrical'] }, token));
   const skillsJob = await request('/api/jobs', jsonOptions('POST', { customerId: createdCustomer.body.id, service: 'Panel inspection', requiredSkill: 'Plumbing', time: 'Next Tuesday 3:00 PM' }, token));
   const unqualifiedAssignment = await request(`/api/jobs/${skillsJob.body.id}/assign`, jsonOptions('POST', { technician: specialist.body.name }, token));
-  assert(specialist.response.status === 201 && specialist.body.skills.includes('Electrical') && unqualifiedAssignment.response.status === 422 && unqualifiedAssignment.body.error === 'technician_missing_required_skill', 'technician skill enforcement failed');
+  assert(createdCustomer.response.status === 201 && createdCustomer.body.email === 'direct.customer@example.test' && specialist.response.status === 201 && specialist.body.skills.includes('Electrical') && unqualifiedAssignment.response.status === 422 && unqualifiedAssignment.body.error === 'technician_missing_required_skill', 'technician skill enforcement failed');
   const directJob = await request('/api/jobs', jsonOptions('POST', { customerId: createdCustomer.body.id, service: 'Scheduled repair', time: 'Tomorrow 8:00 AM' }, token));
   const structuredJob = await request('/api/jobs', jsonOptions('POST', { customerId: createdCustomer.body.id, service: 'Structured appointment', time: 'Saturday 9:00 AM', startsAt: '2026-09-12T13:00:00.000Z', endsAt: '2026-09-12T14:00:00.000Z', timeZone: 'America/New_York' }, token));
   const overlappingStructuredJob = await request('/api/jobs', jsonOptions('POST', { customerId: createdCustomer.body.id, service: 'Overlapping appointment', time: 'Saturday 9:30 AM', startsAt: '2026-09-12T13:30:00.000Z', endsAt: '2026-09-12T14:30:00.000Z', timeZone: 'America/New_York' }, token));
