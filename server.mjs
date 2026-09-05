@@ -420,7 +420,7 @@ const server = createServer(async (req, res) => {
     }
     const origin = req.headers.origin;
     if (origin && ALLOWED_ORIGINS.has(origin)) { res.setHeader('access-control-allow-origin', origin); res.setHeader('vary', 'Origin'); }
-    const publicMutationScope = pathname.startsWith('/api/public/customer-portal') || pathname.startsWith('/api/public/job-status') || pathname.startsWith('/api/public/estimate/') || pathname === '/api/public/invoice/payment-intent' ? 'public-portal' : '';
+    const publicMutationScope = pathname.startsWith('/api/public/technician-job') ? 'technician-field' : pathname.startsWith('/api/public/customer-portal') || pathname.startsWith('/api/public/job-status') || pathname.startsWith('/api/public/estimate/') || pathname === '/api/public/invoice/payment-intent' ? 'public-portal' : '';
     if (req.method === 'POST' && publicMutationScope && !allowPublicMutation(req, publicMutationScope)) return rateLimited(res, 'rate_limited');
     const publicServicePaths = new Set(['/api/public/tenant', '/api/public/catalog', '/api/public/availability', '/api/public/bookings', '/api/public/leads']);
     const requestedPublicService = requestUrl.searchParams.get('service');
