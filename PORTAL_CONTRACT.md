@@ -69,7 +69,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - `POST /api/jobs/:id/reschedule` → change the appointment time without recreating the job and queue a customer reschedule notification
 - `POST /api/jobs/:id/checklist` → owner/dispatcher-only replacement of required checklist steps before a job starts; started or terminal jobs are locked
 - Assignment and rescheduling reject active same-technician/time conflicts with `409 technician_schedule_conflict`
-- `POST /api/jobs/:id/complete` → complete assigned work with a required note, timestamp, and automatic customer timeline event
+- `POST /api/jobs/:id/complete` → complete assigned work with a required note, timestamp, automatic customer timeline event, and actor-attributed `job.completed` audit event; repeated completion returns an idempotent duplicate response
 - `POST /api/jobs/:id/technician-link` → issue a 24-hour, job-scoped technician mobile link for an assigned job
 - `GET/POST /api/public/technician-job...` → technician-safe job detail and status/completion updates through the signed link
 - `POST /api/public/technician-job/labor?token=...` → log field hours for the assigned job
