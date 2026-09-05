@@ -81,6 +81,7 @@ assert(status.includes('body.visits') && status.includes('Visit progress') && st
 assert(customer.includes('Tracking live') && customer.includes('toLocaleTimeString') && app.includes('Live location'), 'live technician location freshness is not visible to customers and dispatch');
 assert(technician.includes('Start live location') && technician.includes('Stop live location') && technician.includes('setInterval') && technician.includes('document.hidden'), 'technician live location must be explicit, periodic, and visibility-aware');
 assert(!technician.includes('const shareLocation = () =>'), 'technician page retains a shadowed one-shot location handler');
+assert(technician.includes('Location saved offline and will sync when online.'), 'technician tracking hides offline queue state');
 assert(status.slice(status.indexOf('</html>') + 7).trim() === '' && status.lastIndexOf('<script>') < status.indexOf('</html>'), 'status page scripts must remain inside the document');
 assert(status.includes('currentStatus') && status.includes('currentStatus !== body.status') && status.includes('location.reload()'), 'status link does not refresh lifecycle transitions');
 assert(customer.includes('portalRefreshTimer') && customer.includes("/api/public/customer-portal' + query") && customer.includes('document.hidden'), 'customer portal does not refresh active tracking while visible');
