@@ -27,6 +27,25 @@ Landing pages should resolve their service identity from `GET /api/public/tenant
 
 New landing pages can include the reusable landing-page-client.js browser helper. Construct NorthstarLandingClient with a service key, then call manifest(), catalog(), availability(), submitLead(), or book(). It resolves routes through the versioned tenant manifest and creates session-stable idempotency keys for lead and booking retries. Pass apiBase when the CRM is hosted on another origin, and add that origin to NORTHSTAR_ALLOWED_ORIGINS.
 
+## Attach a new service page
+
+Use this handoff sequence for plumbing, power washing, electrical, car wash, or a configured vertical:
+
+1. Add the tenant and service mapping to `NORTHSTAR_TENANTS_JSON` and `NORTHSTAR_SERVICE_TENANTS_JSON`; use a unique tenant slug and a real owner credential for production.
+2. Set `NORTHSTAR_ALLOWED_ORIGINS` to the exact landing-page origin, including scheme and host, then restart the CRM and verify `GET /api/public/tenant?service=<key>` returns the expected business.
+3. Copy `landing-page-client.js` into the landing page, construct `NorthstarLandingClient({ service: '<key>', apiBase: '<crm-origin>' })`, and use `manifest()`, `catalog()`, `availability()`, `submitLead()`, and `book()` rather than duplicating endpoint paths.
+4. Test one lead and one booking with a unique `Idempotency-Key`, confirm the owner portal shows the tenant-scoped records, and remove any preview/demo credentials before launch.
+
+Example production mapping (replace every placeholder):
+
+```env
+NORTHSTAR_TENANTS_JSON='[{"slug":"acme-electric","businessName":"Acme Electric","serviceLabel":"Electrical","timeZone":"America/New_York"}]'
+NORTHSTAR_SERVICE_TENANTS_JSON='{"electrician":"acme-electric"}'
+NORTHSTAR_ALLOWED_ORIGINS=https://www.acmeelectric.example
+```
+
+The public `service` key is routing context, not authorization. Owner pages must use the authenticated login flow, and each attached business should have its own tenant mapping, owner account, allowed origin, and production data store.
+
 For a ready-to-attach form, link to `/booking.html?service=plumbing`. The page loads the tenant label and slots, submits the same booking contract, and offers the customer a status link after success. It also carries bounded `utm_source`, `utm_medium`, `utm_campaign`, `utm_content`, `gclid`, and `fbclid` query parameters into the booking so attribution survives the handoff. The manifest's `statusEndpoints` and `bookingResponseFields` identify the status and customer-portal actions without hard-coded assumptions. Copy the page into a landing site only when the API origin and CORS allowlist are configured for that site.
 
 The endpoint is intentionally limited to lead intake. Owner records remain behind the authenticated session API, and the public service key is routing context—not authorization. Configure `NORTHSTAR_ALLOWED_ORIGINS` as a comma-separated allowlist in deployments where landing pages use browser cross-origin requests; the API handles `OPTIONS` preflight and rejects unlisted origins. Production deployments should also use durable storage, stronger abuse controls, and an identity provider for owner access.
