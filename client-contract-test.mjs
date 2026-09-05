@@ -46,6 +46,7 @@ assert(app.includes('payroll-report-view') && app.includes('Payroll report') && 
 assert(app.includes("repository.getAvailability(serviceKey, 7") && app.includes("name=\"slotId\"") && app.includes('name="catalogItemId"'), 'new-job workflow does not expose tenant availability and pricebook slots');
 assert(app.includes('jobLocationSelect') && app.includes('syncJobLocations') && app.includes('locationId: form.elements.locationId'), 'new-job workflow does not expose multi-location scheduling');
 assert(app.includes('Link equipment') && app.includes('linkJobAsset') && repository.includes('linkJobAsset'), 'job equipment association is not wired through the owner portal');
+assert(app.includes('Good / better / best options') && app.includes('option1Label') && app.includes('hasOptions') && app.includes('optionsValid') && repository.includes('options = []') && repository.includes('{ options }'), 'owner estimate option builder is not wired through the client repository');
 assert(app.includes("Array.isArray(job.crew) && job.crew.includes(lane)"), 'dispatch board does not render crew jobs in each assigned technician lane');
 assert(app.includes("Crew: ${detail.job.crew.join(', ')}"), 'job detail summary does not expose assigned crew');
 assert(app.includes('Service history: ${item.serviceHistory.map'), 'customer profile does not expose equipment service history');
