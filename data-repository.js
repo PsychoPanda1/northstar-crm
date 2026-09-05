@@ -79,6 +79,22 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async getDispatchCapacity(date, technician = '') {
+    if (!this.remote) throw new Error('API required for dispatch capacity');
+    const params = new URLSearchParams({ date });
+    if (technician) params.set('technician', technician);
+    const response = await fetch(`/api/dispatch/capacity?${params}`, { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('dispatch capacity unavailable');
+    return response.json();
+  }
+
+  async setDispatchCapacity(date, technician, targetMinutes, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for dispatch capacity');
+    const response = await fetch('/api/dispatch/capacity', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ date, technician, targetMinutes }) });
+    if (!response.ok) throw new Error('dispatch capacity update failed');
+    return response.json();
+  }
+
   async getReport() {
     if (!this.remote) throw new Error('API required for reporting');
     const response = await fetch('/api/reports/overview', { headers: { authorization: `Bearer ${this.token}` } });
