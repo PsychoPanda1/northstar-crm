@@ -486,6 +486,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async remindOpenEstimates(maxAgeDays = 30, channel = 'SMS') {
+    if (!this.remote) throw new Error('API required for estimate reminders');
+    const response = await fetch('/api/estimates/reminders', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ maxAgeDays, channel }) });
+    if (!response.ok) throw new Error('bulk estimate reminders failed');
+    return response.json();
+  }
+
   async convertEstimate(id, time, idempotencyKey = crypto.randomUUID(), slotId = '') {
     if (!this.remote) throw new Error('API required for estimate conversion');
     const response = await fetch(`/api/estimates/${encodeURIComponent(id)}/convert`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ time, ...(slotId ? { slotId } : {}) }) });

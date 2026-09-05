@@ -149,6 +149,7 @@ System events such as web-form lead capture, customer estimate approval, and rec
 - `POST /api/invoices/:id/pay` → record a full or partial tenant-owned invoice payment with method/reference and the invoice's durable `customerId`; an `Idempotency-Key` makes retries return the original payment without double-counting, and successful writes append `invoice.payment.recorded` to the audit ledger
 - `POST /api/invoices/:id/remind` → queue an owner/accountant SMS or email balance reminder with the invoice's durable `customerId`, deduplicated for 24 hours; provider delivery is reconciled through the message webhook
 - `POST /api/receivables/reminders` → owner/accountant-only bulk queue of deduplicated balance reminders above a caller-selected minimum balance, returning eligible, queued, and duplicate counts for safe aging-queue reruns
+- `POST /api/estimates/reminders` → owner/dispatcher-only bulk queue of deduplicated SMS/email follow-ups for open estimates at or beyond a caller-selected age from 1–365 days
 - `POST /api/invoices/:id/payment-link` → issue a 72-hour invoice payment link for the owner to share
 - `GET /api/invoices/:id/receipt` → owner/accountant-only normalized receipt summary with invoice totals, settled payments, references, and remaining balance
 - The invoice workspace exposes this payment-link action only for tenant-created invoices; seeded demo invoice cards remain read-only

@@ -480,8 +480,11 @@ try {
   const estimate = await request('/api/estimates', jsonOptions('POST', { customerId: smokeCustomer.body.id, customer: 'Smoke Customer', service: 'Leak repair', amount: 425 }, token));
   const estimateReminder = await request(`/api/estimates/${estimate.body.id}/remind`, jsonOptions('POST', { channel: 'SMS' }, token));
   const duplicateEstimateReminder = await request(`/api/estimates/${estimate.body.id}/remind`, jsonOptions('POST', { channel: 'SMS' }, token));
+  const bulkEstimateReminder = await request('/api/estimates/reminders', jsonOptions('POST', { maxAgeDays: 30, channel: 'Email' }, token));
+  const bulkEstimateReminderRetry = await request('/api/estimates/reminders', jsonOptions('POST', { maxAgeDays: 30, channel: 'Email' }, token));
   const publicEstimate = await request(`/api/public/estimate?token=${encodeURIComponent(estimate.body.estimateApprovalToken)}`);
   const approved = await request(`/api/public/estimate/approve?token=${encodeURIComponent(estimate.body.estimateApprovalToken)}`, jsonOptions('POST', { approverName: 'Smoke Customer' }));
+  assert(estimateReminder.response.status === 201 && duplicateEstimateReminder.response.status === 200 && duplicateEstimateReminder.body.duplicate === true && bulkEstimateReminder.response.status === 200 && bulkEstimateReminder.body.queued >= 1 && bulkEstimateReminderRetry.body.duplicates >= 1, 'bulk estimate reminder workflow failed');
   const invoice = await request('/api/invoices', jsonOptions('POST', { estimateId: estimate.body.id }, token));
   const duplicateInvoice = await request('/api/invoices', jsonOptions('POST', { estimateId: estimate.body.id }, token));
   const invoiceAudit = await request('/api/audit?search=invoice.created', { headers: { authorization: `Bearer ${token}` } });
