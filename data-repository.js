@@ -484,9 +484,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async updateLeadStatus(id, status, note = '') {
+  async updateLeadStatus(id, status, note = '', idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for lead status updates');
-    const response = await fetch(`/api/leads/${encodeURIComponent(id)}/status`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ status, ...(note ? { note } : {}) }) });
+    const response = await fetch(`/api/leads/${encodeURIComponent(id)}/status`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ status, ...(note ? { note } : {}) }) });
     if (!response.ok) throw new Error('lead status update failed');
     return response.json();
   }
