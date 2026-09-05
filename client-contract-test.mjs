@@ -23,6 +23,7 @@ assert(app.includes('campaign-report-view') && app.includes('Campaign performanc
 assert(app.includes('receivables-report-view') && app.includes('Accounts receivable') && repository.includes('getReceivablesReport'), 'owner portal does not expose receivables aging reporting');
 assert(app.includes("/^INV-\\d{13,}$/.test(item.id || '') && item.status !== 'Paid'"), 'owner invoice cards do not expose collection for open balances');
 assert(status.includes('body.reviewUrl') && status.includes('Leave a review'), 'customer status page does not expose completed-job review handoff');
+assert(status.includes('/api/public/job-status/calendar') && status.includes('Add to calendar'), 'customer status page does not expose calendar handoff');
 assert(app.includes("(type === 'estimates' && item.note)"), 'owner estimate cards hide field findings');
 assert(customer.includes("job.status === 'No-show' ? 'Book a new visit'"), 'customer portal does not expose no-show recovery');
 assert(status.includes('body.visits') && status.includes('Visit progress') && status.includes('/api/public/job-status/cancel'), 'customer status page does not expose multi-visit progress and cancellation');
