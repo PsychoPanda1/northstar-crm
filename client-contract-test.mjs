@@ -9,6 +9,7 @@ const status = readFileSync(`${root}status.html`, 'utf8');
 const invoice = readFileSync(`${root}invoice.html`, 'utf8');
 const booking = readFileSync(`${root}booking.html`, 'utf8');
 const technician = readFileSync(`${root}technician.html`, 'utf8');
+const server = readFileSync(`${root}server.mjs`, 'utf8');
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 assert(customer.includes('estimate.estimateUrl') && customer.includes('Open detailed estimate'), 'customer portal does not expose detailed estimate links');
 
@@ -52,4 +53,5 @@ assert(technician.includes('inventoryLocations') && technician.includes('locatio
 assert(app.includes('Edit asset') && repository.includes('updateAsset') && repository.includes('/api/assets/'), 'owner portal does not expose equipment record updates');
 assert(customer.includes('item.serviceHistory') && customer.includes('Equipment'), 'customer portal does not expose equipment service history');
 assert(app.includes('name="assetId"') && app.includes('syncPlanAssets') && repository.includes('assetId =') && repository.includes('assetId ? { assetId }'), 'service plan equipment selector is not wired through the owner portal');
+assert(server.includes('webhookReplayFor') && server.includes("error: 'webhook_event_reused'") && server.includes('payloadFingerprint: payloadFingerprint(body)'), 'provider webhook replay protection is not enforced');
 console.log('Northstar client contract checks passed');
