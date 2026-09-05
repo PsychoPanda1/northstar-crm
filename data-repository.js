@@ -126,6 +126,14 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async getPayrollReport(startDate = '', endDate = '') {
+    if (!this.remote) throw new Error('API required for payroll reporting');
+    const query = new URLSearchParams(); if (startDate) query.set('startDate', startDate); if (endDate) query.set('endDate', endDate);
+    const response = await fetch(`/api/reports/payroll${query.toString() ? `?${query}` : ''}`, { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('payroll report unavailable');
+    return response.json();
+  }
+
   async getIntegrationHealth() {
     if (!this.remote) throw new Error('API required for integration health');
     const response = await fetch('/api/integrations/health', { headers: { authorization: `Bearer ${this.token}` } });

@@ -99,7 +99,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Tenant-scoped inventory transaction ledger with searchable owner view and CSV export
 - Job profitability workspace combining material cost, logged labor, revenue, and gross margin
 - Technician performance reporting compares completion, no-shows, field hours, revenue, cost, and gross margin by technician
-- Payroll-ready technician commission reporting with owner-controlled commission rates
+- Payroll-ready technician commission reporting with owner-controlled commission rates, date-bounded reports, and CSV handoff
 - Marketing and technician performance reports are exportable as owner-scoped CSVs
 - Reports summarize estimate close rate, memberships sold, no-shows, tracked field hours, material spend, logged labor cost, and gross margin, with CSV export for owner handoff
 - Labor entries feed customer timelines and job-cost reporting
@@ -203,6 +203,6 @@ Recurring plans can be scheduled as idempotent 1–12 visit series through `POST
 
 Landing pages can discover the version 2 integration manifest, including owner authentication, customer portal reschedule, cancellation, request, payment-intent, and financing-intent endpoints, without hard-coding service-specific routes. Financing requests remain provider-pending until a real financing partner is connected; Northstar never claims a credit decision locally. Provider status callbacks use `POST /api/webhooks/financing` with `NORTHSTAR_FINANCING_WEBHOOK_SECRET` and remain separate from invoice settlement.
 
-Completed customer-linked jobs can now move directly into invoicing from the dispatch workspace, including an idempotent `POST /api/jobs/:id/invoice` path with itemized subtotal, discount, and tax support for work that did not originate from an estimate.
+Completed customer-linked jobs can now move directly into invoicing from the dispatch workspace, including an idempotent `POST /api/jobs/:id/invoice` path with itemized subtotal, discount, and tax support for work that did not originate from an estimate. Owners and accountants can use `GET /api/reports/payroll` or `GET /api/export?type=payroll` for date-bounded timesheet and commission handoff.
 
 The next implementation layer is production hardening: replace the local credential seam with a real identity provider, move JSON state and session revocation to durable managed storage, and connect real SMS/email/payment providers. The current local API already provides server-enforced role permissions, tenant isolation, restart-safe revocation, signed payment webhooks, customer/technician portals, timezone-aware capacity slots, scheduling conflict checks, and container deployment boundaries. `GET /api/public/tenant?service=...` also returns a versionable `integration` manifest so each service landing page can discover its booking, owner portal, lead, and availability endpoints without duplicating routing assumptions. The technician offline queue remains device-local for this prototype; production should use encrypted managed offline storage plus an explicit conflict policy.
