@@ -10,6 +10,7 @@ const estimate = readFileSync(`${root}estimate.html`, 'utf8');
 const status = readFileSync(`${root}status.html`, 'utf8');
 const invoice = readFileSync(`${root}invoice.html`, 'utf8');
 const booking = readFileSync(`${root}booking.html`, 'utf8');
+const landingClient = readFileSync(`${root}landing-page-client.js`, 'utf8');
 const technician = readFileSync(`${root}technician.html`, 'utf8');
 const ownerManifest = readFileSync(`${root}northstar.webmanifest`, 'utf8');
 const northstarServiceWorker = readFileSync(`${root}northstar-sw.js`, 'utf8');
@@ -64,6 +65,7 @@ assert(status.includes('/api/public/job-status/calendar') && status.includes('Ad
 assert(app.includes("(type === 'estimates' && item.note)"), 'owner estimate cards hide field findings');
 assert(customer.includes("job.status === 'No-show' ? 'Book a new visit'"), 'customer portal does not expose no-show recovery');
 assert(status.includes('body.visits') && status.includes('Visit progress') && status.includes('/api/public/job-status/cancel'), 'customer status page does not expose multi-visit progress and cancellation');
+assert(landingClient.includes('class NorthstarLandingClient') && landingClient.includes('manifest()') && landingClient.includes('submitLead') && landingClient.includes('book(payload') && landingClient.includes('idempotency-key'), 'landing-page client helper is not manifest-driven or retry-safe');
 assert(status.includes('sessionStorage') && status.includes("retryKey('cancel'") && status.includes("retryKey('reschedule'"), 'customer status actions do not preserve mobile retry identity');
 assert(booking.includes('sessionStorage') && booking.includes('northstar-booking-retry-') && booking.includes("'idempotency-key':bookingKey"), 'landing booking form does not preserve mobile retry identity');
 assert(invoice.includes('id="breakdown"') && invoice.includes('Remaining $'), 'invoice payment page does not expose total, paid, and remaining balance');
