@@ -71,7 +71,7 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 - `POST /api/jobs/:id/reschedule` accepts an available `slotId` or a legacy `time`; slot-based reschedules preserve normalized appointment metadata
 - Authenticated technician labor/material writes are limited to the technician's assigned work order; technician roles cannot create inventory or purchase orders
 - `POST /api/team` → owner/dispatcher-only creation of a tenant-scoped technician or staff roster member; duplicate names are rejected and an optional `Idempotency-Key` makes browser retries safe
-- `GET /api/dispatch/recommendations?jobId=...` → rank available technicians by current workload and schedule conflicts; assignment still requires the normal server-side conflict check
+- `GET /api/dispatch/recommendations?jobId=...` → owner/dispatcher-only ranking of available technicians by current workload and schedule conflicts; assignment still requires the normal server-side conflict check
 - Dispatch recommendations also include bounded completion/no-show history and use completion performance as a tie-breaker, while skill and schedule conflicts remain hard eligibility rules.
 - `GET /api/dispatch/route-manifest?date=YYYY-MM-DD&technician=...` → return a tenant-scoped, normalized-time route ordered by start time with customer, service, address, status, priority, and timezone; technicians are restricted to their own route, while owners and dispatchers may filter by technician
 - `GET /api/dispatch/route-calendar?date=YYYY-MM-DD&technician=...` → download the same normalized route as an iCalendar feed for calendar applications; it is tenant-scoped, technician-restricted, excludes canceled/no-show work, and respects saved manual route order.
