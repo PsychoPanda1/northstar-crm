@@ -44,4 +44,5 @@ assert(app.includes('data-plan-cycle') && app.includes('Bill active plans for a 
 assert(app.includes('payroll-report-view') && app.includes('Payroll report') && repository.includes('getPayrollReport') && repository.includes('/api/reports/payroll'), 'payroll report is not wired through the owner portal');
 assert(app.includes("repository.getAvailability(serviceKey, 7") && app.includes("name=\"slotId\"") && app.includes('name="catalogItemId"'), 'new-job workflow does not expose tenant availability and pricebook slots');
 assert(app.includes('jobLocationSelect') && app.includes('syncJobLocations') && app.includes('locationId: form.elements.locationId'), 'new-job workflow does not expose multi-location scheduling');
+assert(app.includes('Link equipment') && app.includes('linkJobAsset') && repository.includes('linkJobAsset'), 'job equipment association is not wired through the owner portal');
 console.log('Northstar client contract checks passed');
