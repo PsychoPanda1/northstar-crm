@@ -86,6 +86,7 @@ System events such as web-form lead capture, customer estimate approval, and rec
 - `POST /api/invoices` → create an invoice only from an approved estimate
 - `POST /api/invoices/:id/pay` → record a full or partial tenant-owned invoice payment with method/reference; returns updated balance and payment ledger entry
 - `POST /api/invoices/:id/payment-link` → issue a 72-hour invoice payment link for the owner to share
+- `GET|POST /api/invoices/:id/schedule` → read or create a tenant-scoped 2–12 installment schedule whose amounts must exactly match the invoice total; public payment links and customer portals expose derived paid amounts as payments settle
 - `GET /api/public/invoice?token=...` and `POST /api/public/invoice/payment-intent?token=...` → expose safe invoice balance and create an idempotent Card/ACH payment intent; processor confirmation remains external
 - `POST /api/public/customer-portal/payment-intent?token=...` → create the same provider-pending intent only when the invoice belongs to the customer represented by the portal token
 - `POST /api/webhooks/payments` → accept an HMAC-signed, idempotent provider event and reconcile a succeeded intent into the invoice and payment ledger; set `NORTHSTAR_PAYMENT_WEBHOOK_SECRET` in production
