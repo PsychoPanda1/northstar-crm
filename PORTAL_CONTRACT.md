@@ -150,6 +150,8 @@ Use `tenantId` on every business record: `customers`, `locations`, `leads`, `job
 
 ## Future-agent checklist
 
+- `GET /api/jobs/:id` returns a tenant-scoped work-order detail bundle for authenticated staff: job data, customer summary, estimate/invoice summaries, visits, field materials, labor, provider-pending messages, cost totals, and job audit events. Owners and dispatchers may read any tenant job; technicians may read only jobs assigned to their authenticated name.
+
 - Preserve the tenant and auth boundary when adding routes.
 - Keep service-specific copy in configuration, not duplicated markup.
 - Add an authorization test for every tenant-scoped read and write.
