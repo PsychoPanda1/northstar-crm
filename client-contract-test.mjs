@@ -47,4 +47,5 @@ assert(app.includes('jobLocationSelect') && app.includes('syncJobLocations') && 
 assert(app.includes('Link equipment') && app.includes('linkJobAsset') && repository.includes('linkJobAsset'), 'job equipment association is not wired through the owner portal');
 assert(app.includes("Array.isArray(job.crew) && job.crew.includes(lane)"), 'dispatch board does not render crew jobs in each assigned technician lane');
 assert(app.includes("Crew: ${detail.job.crew.join(', ')}"), 'job detail summary does not expose assigned crew');
+assert(app.includes('Service history: ${item.serviceHistory.map'), 'customer profile does not expose equipment service history');
 console.log('Northstar client contract checks passed');
