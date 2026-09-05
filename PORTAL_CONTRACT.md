@@ -39,6 +39,7 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 - `POST /api/public/customer-portal/location?token=...` → customer-token-only update of the primary service address or addition of a secondary address, with bounded validation, idempotent replay, tenant-scoped persistence, and customer-attributed audit history
 - Public status and customer-portal appointment records include optional `enRouteAt` without exposing owner or tenant identifiers
 - Malformed JSON and request bodies above 64 KiB return controlled `400 bad_request` responses
+- Every response includes an `x-request-id` correlation header; a valid caller-supplied ID (`8–80` ASCII letters, numbers, `:`, `_`, or `-`) is preserved, otherwise Northstar generates one. Error JSON includes the same ID so landing-page agents can report a safe support reference without exposing credentials or payloads.
 - Public lead CORS is opt-in through `NORTHSTAR_ALLOWED_ORIGINS`; unlisted origins are rejected during preflight
 - API CORS preflight (`OPTIONS /api/...`) returns the allow-list methods and headers only for an origin in `NORTHSTAR_ALLOWED_ORIGINS`; unlisted origins receive `403 origin_not_allowed`, and the allow-list is never inferred from the request
 - `GET /api/session` → `{ owner, tenant, permissions }`

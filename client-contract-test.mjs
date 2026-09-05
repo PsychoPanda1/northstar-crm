@@ -19,6 +19,7 @@ assert(envExample.includes('NORTHSTAR_SESSION_SECRET=replace-with-32-plus-random
 assert(envExample.includes('NORTHSTAR_SERVICE_TENANTS_JSON='), 'environment template must document service-to-tenant mapping');
 assert(envExample.includes('NORTHSTAR_MESSAGE_PROVIDER_URL='), 'environment template must document optional message provider configuration');
 assert(server.includes("req.method === 'OPTIONS' && pathname.startsWith('/api/')") && server.includes("origin_not_allowed") && server.includes('access-control-allow-headers'), 'API CORS preflight must enforce the configured origin allow-list');
+assert(server.includes("res.setHeader('x-request-id', requestId)") && server.includes('responseBody') && server.includes('requestId: res.getHeader'), 'responses must expose safe request correlation IDs');
 assert(customer.includes('estimate.estimateUrl') && customer.includes('Open detailed estimate'), 'customer portal does not expose detailed estimate links');
 assert(customer.includes('approverName') && estimate.includes('approverName') && estimate.includes('Your name for approval') && estimate.includes('retryKey') && estimate.includes("'idempotency-key':retryKey"), 'customer estimate approval does not capture attribution or retry identity');
 assert(estimate.includes("retryKey('decline'"), 'detailed estimate decline does not preserve retry identity');
