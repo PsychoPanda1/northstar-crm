@@ -81,7 +81,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - Inbound message webhooks create owner-facing `Customer message needs response` notifications that use the existing tenant-scoped notification read route
 - `POST /api/public/technician-job/payment-intent?token=...` → create an idempotent provider-pending Card/ACH intent only for the assigned job's open invoice; provider confirmation remains external
 - New jobs include a required three-step field checklist; `POST /api/public/technician-job/checklist?token=...` updates checklist items and technician completion rejects incomplete work
-- `POST /api/public/technician-job/photo?token=...` → attach up to 20 bounded HTTPS photo references with captions to the assigned job; production should replace URLs with signed object-storage uploads
+- `POST /api/public/technician-job/photo?token=...` → attach up to 20 bounded HTTPS photo references with captions to the assigned job; accepts an optional `Idempotency-Key` for offline replay safety, and production should replace URLs with signed object-storage uploads
 - The technician page queues field `POST` actions locally during transient offline periods and replays them in order on reconnect; the prototype queue is device-local and production needs encrypted storage, retry limits, and conflict handling
 - Dispatch assignment, status, and reschedule mutations append auditable customer timeline events
 - `POST /api/jobs/:id/remind` → queue a deduplicated SMS/email appointment reminder for an open job
