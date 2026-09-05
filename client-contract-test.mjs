@@ -19,6 +19,7 @@ const server = readFileSync(`${root}server.mjs`, 'utf8');
 const tenantConfig = readFileSync(`${root}tenant-config.js`, 'utf8');
 const envExample = readFileSync(`${root}.env.example`, 'utf8');
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
+assert(readFileSync(`${root}.gitignore`, 'utf8').split(/\r?\n/).includes('.northstar-data.json'), 'private local state must remain ignored');
 assert(envExample.includes('NORTHSTAR_SESSION_SECRET=replace-with-32-plus-random-characters'), 'environment template must use an explicit session-secret placeholder');
 assert(envExample.includes('NORTHSTAR_SERVICE_TENANTS_JSON='), 'environment template must document service-to-tenant mapping');
 assert(envExample.includes('NORTHSTAR_MESSAGE_PROVIDER_URL='), 'environment template must document optional message provider configuration');
