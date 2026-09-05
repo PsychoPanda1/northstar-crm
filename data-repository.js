@@ -8,6 +8,24 @@ const NORTHSTAR_DEMO_DATA = {
   'harbor-shine': { metrics: { revenue: '$39,620', jobs: '284', estimates: '16', estimateValue: '$12,740', satisfaction: '5.0', pipeline: '$18,650' }, actions: { estimates: 4, estimateValue: '$3,180', invoices: 5, invoiceValue: '$1,420', renewals: 26 } }
 };
 
+const browserFetch = window.fetch.bind(window);
+let activeRepository = null;
+const fetch = async (input, init = {}) => {
+  const response = await browserFetch(input, init);
+  if (response.status !== 401 || !activeRepository || init.__northstarRetry || init.__northstarRefresh) return response;
+  const refreshPromise = activeRepository.refreshPromise || (activeRepository.refreshPromise = activeRepository.refreshSession());
+  try {
+    await refreshPromise;
+  } catch {
+    return response;
+  } finally {
+    if (activeRepository.refreshPromise === refreshPromise) activeRepository.refreshPromise = null;
+  }
+  const headers = new Headers(init.headers || {});
+  headers.set('authorization', `Bearer ${activeRepository.token}`);
+  return browserFetch(input, { ...init, headers, __northstarRetry: true });
+};
+
 class NorthstarDemoRepository {
   constructor(tenant) {
     this.tenant = tenant;
@@ -18,6 +36,7 @@ class NorthstarDemoRepository {
     this.apiAvailable = window.location.protocol !== 'file:';
     this.previewOnly = window.location.protocol === 'file:';
     this.authRequired = false;
+    activeRepository = this;
     this.ready = this.connect();
   }
 
@@ -45,7 +64,7 @@ class NorthstarDemoRepository {
 
   async refreshSession() {
     if (!this.apiAvailable || !this.token) throw new Error('session unavailable');
-    const response = await fetch('/api/auth/refresh', { method: 'POST', headers: { authorization: `Bearer ${this.token}` } });
+    const response = await fetch('/api/auth/refresh', { method: 'POST', headers: { authorization: `Bearer ${this.token}` }, __northstarRefresh: true });
     if (!response.ok) throw new Error('session refresh failed');
     const result = await response.json();
     this.token = result.token;

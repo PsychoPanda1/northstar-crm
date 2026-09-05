@@ -54,4 +54,5 @@ assert(app.includes('Edit asset') && repository.includes('updateAsset') && repos
 assert(customer.includes('item.serviceHistory') && customer.includes('Equipment'), 'customer portal does not expose equipment service history');
 assert(app.includes('name="assetId"') && app.includes('syncPlanAssets') && repository.includes('assetId =') && repository.includes('assetId ? { assetId }'), 'service plan equipment selector is not wired through the owner portal');
 assert(server.includes('webhookReplayFor') && server.includes("error: 'webhook_event_reused'") && server.includes('payloadFingerprint: payloadFingerprint(body)'), 'provider webhook replay protection is not enforced');
+assert(repository.includes('activeRepository.refreshPromise') && repository.includes('__northstarRetry') && repository.includes('await refreshPromise') && repository.includes('__northstarRefresh'), 'authenticated requests do not recover from an expired session');
 console.log('Northstar client contract checks passed');
