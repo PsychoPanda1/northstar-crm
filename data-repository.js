@@ -610,6 +610,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async updateVehicleStatus(vehicleId, status) {
+    if (!this.remote) throw new Error('API required for fleet');
+    const response = await fetch(`/api/vehicles/${encodeURIComponent(vehicleId)}/status`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ status }) });
+    if (!response.ok) throw new Error('vehicle status update failed');
+    return response.json();
+  }
+
   async createTeamMember(name, role, skills = [], idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for team management');
     const response = await fetch('/api/team', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ name, role, skills }) });
