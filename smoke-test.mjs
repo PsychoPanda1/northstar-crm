@@ -409,10 +409,12 @@ try {
   const portalWebhookDuplicate = await request('/api/webhooks/payments', { method: 'POST', headers: { 'content-type': 'application/json', 'x-northstar-signature': createHmac('sha256', webhookSecret).update(portalWebhookBody).digest('hex') }, body: portalWebhookBody });
   const paymentAudit = await request('/api/audit?search=invoice.payment.succeeded', { headers: { authorization: `Bearer ${token}` } });
   const customerPortalAfterPayment = await request(`/api/public/customer-portal${customerUrl.search}`);
-  const estimateConversionOptions = { ...jsonOptions('POST', { time: 'Next Thursday 11:00 AM' }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-estimate-conversion' } };
+  const estimateSlot = extendedAvailability.body.slotOptions.find((slot) => slot.id.startsWith('date-'));
+  const estimateConversionOptions = { ...jsonOptions('POST', { time: estimateSlot.label, slotId: estimateSlot.id }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-estimate-conversion' } };
   const estimateJob = await request(`/api/estimates/${portalEstimate.body.id}/convert`, estimateConversionOptions);
   const duplicateEstimateJob = await request(`/api/estimates/${portalEstimate.body.id}/convert`, estimateConversionOptions);
   const estimateConversionAudit = await request('/api/audit?search=estimate.converted', { headers: { authorization: `Bearer ${token}` } });
+  assert(estimateJob.response.status === 201 && estimateJob.body.job.slotId === estimateSlot.id && estimateJob.body.job.startsAt.endsWith('Z') && estimateJob.body.job.timeZone === 'America/New_York', 'estimate slot conversion workflow failed');
   const estimateJobAssigned = await request(`/api/jobs/${estimateJob.body.job.id}/assign`, jsonOptions('POST', { technician: 'Alex Rivera' }, token));
   const estimateTechLink = await request(`/api/jobs/${estimateJob.body.job.id}/technician-link`, jsonOptions('POST', {}, token));
   const estimateTechUrl = new URL(estimateTechLink.body.url, base);
