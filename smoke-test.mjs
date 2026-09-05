@@ -205,7 +205,7 @@ try {
   const reviewDuplicate = await request(`/api/public/review${reviewUrl.search}`, jsonOptions('POST', { rating: 5 }));
   const dashboardAfterReview = await request('/api/dashboard', { headers: { authorization: `Bearer ${token}` } });
   const reportAfterReview = await request('/api/reports/overview', { headers: { authorization: `Bearer ${token}` } });
-  assert(reportAfterReview.body.metrics.some((item) => item.label === 'Material spend') && reportAfterReview.body.metrics.some((item) => item.label === 'Tracked field time') && reportAfterReview.body.metrics.some((item) => item.label === 'Estimate close rate') && reportAfterReview.body.metrics.some((item) => item.label === 'Memberships sold'), 'operational report metrics missing');
+  assert(reportAfterReview.body.metrics.some((item) => item.label === 'Material spend') && reportAfterReview.body.metrics.some((item) => item.label === 'Tracked field time') && reportAfterReview.body.metrics.some((item) => item.label === 'Estimate close rate') && reportAfterReview.body.metrics.some((item) => item.label === 'Memberships sold') && reportAfterReview.body.metrics.some((item) => item.label === 'No-shows'), 'operational report metrics missing');
   const reportExportResponse = await fetch(`${base}/api/export?type=reports`, { headers: { authorization: `Bearer ${token}` } });
   const reportExportCsv = await reportExportResponse.text();
   assert(reportExportResponse.status === 200 && reportExportCsv.includes('Gross margin'), 'report export missing');
