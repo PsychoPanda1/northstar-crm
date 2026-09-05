@@ -409,6 +409,8 @@ try {
   const portalWebhookDuplicate = await request('/api/webhooks/payments', { method: 'POST', headers: { 'content-type': 'application/json', 'x-northstar-signature': createHmac('sha256', webhookSecret).update(portalWebhookBody).digest('hex') }, body: portalWebhookBody });
   const paymentAudit = await request('/api/audit?search=invoice.payment.succeeded', { headers: { authorization: `Bearer ${token}` } });
   const customerPortalAfterPayment = await request(`/api/public/customer-portal${customerUrl.search}`);
+  const portalPaymentHistory = customerPortalAfterPayment.body.invoices.find((item) => item.id === portalInvoice.body.id)?.payments || [];
+  assert(portalPaymentHistory.some((payment) => payment.reference === 'PROVIDER-42' && payment.amount === 75 && payment.method === 'ACH') && portalPaymentHistory.every((payment) => !Object.prototype.hasOwnProperty.call(payment, 'tenantId') && !Object.prototype.hasOwnProperty.call(payment, 'invoiceId')), 'customer portal payment history privacy failed');
   const estimateSlot = extendedAvailability.body.slotOptions.find((slot) => slot.id.startsWith('date-'));
   const estimateConversionOptions = { ...jsonOptions('POST', { time: estimateSlot.label, slotId: estimateSlot.id }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-estimate-conversion' } };
   const estimateJob = await request(`/api/estimates/${portalEstimate.body.id}/convert`, estimateConversionOptions);
