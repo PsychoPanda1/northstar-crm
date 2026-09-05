@@ -26,3 +26,5 @@ jobs:
         run: npm run check
       - name: Run isolated smoke suite
         run: npm run test:smoke
+      - name: Build container image
+        run: docker build --tag northstar-crm:ci .

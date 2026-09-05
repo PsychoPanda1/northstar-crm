@@ -1,0 +1,6 @@
+.git
+.github
+.northstar-data.json
+.northstar-data.json.sessions
+node_modules
+*.log

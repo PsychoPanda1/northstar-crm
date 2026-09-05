@@ -66,6 +66,19 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 
 ## Run locally
 
+### Run as a container
+
+Build and run the server with a persistent data volume:
+
+```sh
+docker build -t northstar-crm .
+docker run --rm -p 4173:4173 -v northstar-data:/app/data \
+  -e NORTHSTAR_SESSION_SECRET="replace-with-a-long-random-secret" \
+  northstar-crm
+```
+
+The image runs as the unprivileged `node` user, stores local state under `/app/data`, and exposes `/api/health` as its container health check. Configure owner authentication and payment webhook secrets through deployment environment variables; do not bake credentials into the image.
+
 This is intentionally dependency-free. Start the included API and static server directly with Node:
 
 ```powershell
