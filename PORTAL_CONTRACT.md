@@ -85,7 +85,7 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 - `POST /api/jobs/:id/technician-link` → issue a 24-hour, job-scoped technician mobile link for an assigned job
 - `GET/POST /api/public/technician-job...` → technician-safe job detail and status/completion updates through the signed link; same-state job and visit-status retries return idempotent duplicates, status writes record `job.status.updated`, completion records `job.completed`, and repeated closeout requests return an idempotent duplicate response
 - `POST /api/public/technician-job/labor?token=...` → log field hours for the assigned job
-- `GET/POST /api/public/technician-job/clock?token=...` → read or update the assigned technician's clock-in/out state; append-only completed sessions preserve aggregate elapsed field minutes and audit events
+- `GET/POST /api/public/technician-job/clock?token=...` → read or update the assigned technician's clock-in/out state; `Idempotency-Key` makes mobile retries replay the original transition, while append-only completed sessions preserve aggregate elapsed field minutes and audit events
 - Technician completion requires an inactive field clock; job-cost reporting exposes the resulting field minutes/hours separately from billable labor entries
 - `POST /api/public/technician-job/materials?token=...` → consume available stock against the assigned job and append a source-tagged inventory transaction
 - `GET /api/inventory-transactions` → authenticated tenant-scoped ledger of stock receipts, job consumption, and purchase receipts; exportable through `/api/export?type=inventory-transactions`
