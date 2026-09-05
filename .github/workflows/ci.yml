@@ -34,6 +34,8 @@ jobs:
         run: node --check scripts/generate-owner-digest.mjs
       - name: Run isolated smoke suite
         run: npm run test:smoke
+      - name: Run production boundary suite
+        run: npm run test:production-boundary
       - name: Build container image
         run: docker build --tag northstar-crm:ci .
       - name: Verify container readiness
