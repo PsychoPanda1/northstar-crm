@@ -365,9 +365,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async technicianLink(id) {
+  async technicianLink(id, technician = '') {
     if (!this.remote) throw new Error('API required for technician links');
-    const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/technician-link`, { method: 'POST', headers: { authorization: `Bearer ${this.token}` } });
+    const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/technician-link`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify(technician ? { technician } : {}) });
     if (!response.ok) throw new Error('technician link unavailable');
     return response.json();
   }
