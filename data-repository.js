@@ -33,6 +33,7 @@ class NorthstarDemoRepository {
     this.previewOnly = window.location.protocol === 'file:';
     this.key = `northstar-demo:${tenant.slug}`;
     this.state = this.previewOnly ? JSON.parse(localStorage.getItem(this.key) || '{}') : {};
+    if (!this.previewOnly) localStorage.removeItem(this.key);
     this.tokenKey = `northstar-demo-token:${tenant.slug}`;
     this.token = sessionStorage.getItem(this.tokenKey);
     this.authRequired = false;

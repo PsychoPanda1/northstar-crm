@@ -53,6 +53,7 @@ assert(estimate.includes('id="estimate-total"') && estimate.includes("input[name
 
 assert(repository.includes("this.previewOnly = window.location.protocol === 'file:'") && repository.includes("if (!this.previewOnly) throw new Error('authenticated dashboard required')"), 'repository preview fallback is not restricted to file previews');
 assert(repository.includes("this.state = this.previewOnly ? JSON.parse(localStorage.getItem(this.key) || '{}') : {}") && repository.includes('if (this.previewOnly) localStorage.setItem(this.key'), 'authenticated repository state must not read or write the preview local-storage cache');
+assert(repository.includes('if (!this.previewOnly) localStorage.removeItem(this.key);'), 'hosted repository must purge legacy preview cache data');
 assert(repository.includes('this.session = null;') && repository.includes('this.state = {};') && repository.includes('sessionStorage.removeItem(this.tokenKey)'), 'repository logout must clear authenticated session state');
 assert(app.includes("if (window.location.protocol !== 'file:') demoLogin.hidden = true") && app.includes("showToast('Session signed out.')"), 'hosted owner dialog must hide preview-only demo access');
 assert(app.includes('repository.authRequired') && app.includes('Owner sign-in required'), 'HTTP authentication failure does not fail closed');
