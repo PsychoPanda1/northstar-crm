@@ -155,7 +155,7 @@ const validEmail = (value) => !value || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String
 const validPhone = (value) => !value || String(value).replace(/\D/g, '').length >= 7;
 const isStrongSecret = (value) => String(value || '').length >= 32;
 const isPasswordDigest = (value) => /^[0-9a-f]{64}$/i.test(String(value || '').trim());
-const allowOwnerLogin = (req) => { const key = req.socket.remoteAddress || 'unknown'; const now = Date.now(); const window = ownerLoginWindows.get(key); if (!window || now - window.startedAt >= 15 * 60_000) { ownerLoginWindows.set(key, { startedAt: now, count: 1 }); return true; } if (window.count >= 12) return false; window.count += 1; return true; };
+const allowOwnerLogin = (req, identity = '') => { const key = `${req.socket.remoteAddress || 'unknown'}|${String(identity || '').trim().toLowerCase().slice(0, 120)}`; const now = Date.now(); const window = ownerLoginWindows.get(key); if (!window || now - window.startedAt >= 15 * 60_000) { ownerLoginWindows.set(key, { startedAt: now, count: 1 }); return true; } if (window.count >= 12) return false; window.count += 1; return true; };
 const secureTextEqual = (left, right) => { const a = Buffer.from(String(left)); const b = Buffer.from(String(right)); return a.length === b.length && timingSafeEqual(a, b); };
 const sign = (value) => createHmac('sha256', SECRET).update(value).digest('base64url');
 const issueToken = (owner) => { const payload = Buffer.from(JSON.stringify({ sid: randomUUID(), sub: owner.id, name: String(owner.name || '').slice(0, 100), tenantId: owner.tenantId, role: owner.role, exp: Date.now() + 1000 * 60 * 60 * 8 })).toString('base64url'); return `${payload}.${sign(payload)}`; };
@@ -410,8 +410,9 @@ const server = createServer(async (req, res) => {
     }
     if (pathname === '/api/auth/login' && req.method === 'POST') {
       if ((!OWNER_LOGIN_EMAIL || !OWNER_PASSWORD_DIGEST) && !configuredOwners.length && !configuredStaff.length && !Object.keys(tenants).some((tenantId) => runtimeAccountsFor(tenantId).length)) return json(res, 503, { error: 'auth_not_configured' });
-      if (!allowOwnerLogin(req)) return json(res, 429, { error: 'login_rate_limited' });
-      const body = await readBody(req); const service = body.service || requestUrl.searchParams.get('service') || 'default'; if (!Object.prototype.hasOwnProperty.call(serviceTenant, service)) return json(res, 404, { error: 'unknown_service' }); const tenantId = serviceTenant[service]; const email = String(body.email || '').trim().toLowerCase(); const digest = createHmac('sha256', SECRET).update(String(body.password || '')).digest('hex');
+      const body = await readBody(req);
+      if (!allowOwnerLogin(req, body.email)) return json(res, 429, { error: 'login_rate_limited' });
+      const service = body.service || requestUrl.searchParams.get('service') || 'default'; if (!Object.prototype.hasOwnProperty.call(serviceTenant, service)) return json(res, 404, { error: 'unknown_service' }); const tenantId = serviceTenant[service]; const email = String(body.email || '').trim().toLowerCase(); const digest = createHmac('sha256', SECRET).update(String(body.password || '')).digest('hex');
       const configuredOwner = configuredOwners.find((item) => item.tenantId === tenantId && secureTextEqual(email, item.email));
       if (configuredOwner && secureTextEqual(digest, configuredOwner.passwordDigest)) { const account = { id: configuredOwner.id, name: configuredOwner.name, role: 'owner', tenantId: configuredOwner.tenantId }; return json(res, 200, { token: issueToken(account), owner: { id: account.id, name: account.name, role: account.role }, tenant: tenants[account.tenantId], permissions: rolePermissions.owner }); }
       const staff = configuredStaff.find((item) => item.tenantId === tenantId && secureTextEqual(email, item.email));
