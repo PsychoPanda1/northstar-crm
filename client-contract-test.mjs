@@ -25,7 +25,7 @@ assert(packageJson.scripts?.test === 'npm run check && npm run test:landing-clie
 assert(readFileSync(`${root}.github/workflows/ci.yml`, 'utf8').includes('run: npm test'), 'CI must invoke the complete release verification command');
 assert(readFileSync(`${root}.gitignore`, 'utf8').split(/\r?\n/).includes('.northstar-data.json'), 'private local state must remain ignored');
 assert(envExample.includes('NORTHSTAR_SESSION_SECRET=replace-with-32-plus-random-characters'), 'environment template must use an explicit session-secret placeholder');
-assert(containerRelease.includes('docker/build-push-action@v6') && containerRelease.includes('packages: write') && containerRelease.includes("'v*.*.*'"), 'container release workflow must publish only through an explicit tagged release path');
+assert(containerRelease.includes('docker/build-push-action@v6') && containerRelease.includes('packages: write') && containerRelease.includes('actions/attest-build-provenance@v2') && containerRelease.includes('attestations: write') && containerRelease.includes("'v*.*.*'"), 'container release workflow must publish only through an explicit tagged release path');
 assert(envExample.includes('NORTHSTAR_SERVICE_TENANTS_JSON='), 'environment template must document service-to-tenant mapping');
 assert(envExample.includes('NORTHSTAR_MESSAGE_PROVIDER_URL=') && envExample.includes('NORTHSTAR_PAYMENT_PROVIDER_URL='), 'environment template must document optional provider configuration');
 assert(server.includes("req.method === 'OPTIONS' && pathname.startsWith('/api/')") && server.includes("origin_not_allowed") && server.includes('access-control-allow-headers'), 'API CORS preflight must enforce the configured origin allow-list');

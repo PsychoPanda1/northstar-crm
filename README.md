@@ -180,7 +180,7 @@ The image runs as the unprivileged `node` user in production mode, stores local 
 
 ### Publish a release image
 
-Create a semantic-version tag such as `v0.2.0` and push it to GitHub. The `Publish Northstar container` workflow publishes both the versioned image and `latest` to `ghcr.io/psychopanda1/northstar-crm`; configure the required production environment variables in the service that runs the image, not in GitHub or the image itself. The workflow can also be started manually from Actions for an explicitly requested image publication.
+Create a semantic-version tag such as `v0.2.0` and push it to GitHub. The `Publish Northstar container` workflow publishes both the versioned image and `latest` to `ghcr.io/psychopanda1/northstar-crm`, and attaches GitHub build provenance to the published digest; configure the required production environment variables in the service that runs the image, not in GitHub or the image itself. The workflow can also be started manually from Actions for an explicitly requested image publication.
 
 Use `.env.example` as the handoff checklist for a deployment or a service landing-page integration. Copy it to `.env` for local work (`Copy-Item .env.example .env` in PowerShell), replace every placeholder, and keep the resulting file out of Git and container images. The tenant slug and service mapping must match the `service` key used by each landing page; the example intentionally contains no working credentials.
 
