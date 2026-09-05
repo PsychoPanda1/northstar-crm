@@ -178,6 +178,8 @@ docker run --rm -p 4173:4173 -v northstar-data:/app/data \
 
 The image runs as the unprivileged `node` user in production mode, stores local state under `/app/data`, and exposes `/api/ready` as its container readiness check. Readiness requires a non-default session secret, configured owner/staff authentication, and all four webhook secrets (`NORTHSTAR_PAYMENT_WEBHOOK_SECRET`, `NORTHSTAR_MESSAGE_WEBHOOK_SECRET`, `NORTHSTAR_CALL_WEBHOOK_SECRET`, and `NORTHSTAR_FINANCING_WEBHOOK_SECRET`); configure these through deployment environment variables and do not bake credentials into the image. Demo login is disabled in production unless `NORTHSTAR_ALLOW_DEMO_LOGIN=true` is explicitly set for an isolated preview or smoke environment.
 
+For an additional local recovery layer, set `NORTHSTAR_BACKUP_FILE` to a separate path on the same persistent volume. Northstar copies the previous valid snapshot there before each write and uses it if the primary snapshot cannot be parsed at startup. Managed multi-writer storage is still required for horizontally scaled production deployments.
+
 ### Publish a release image
 
 Create a semantic-version tag such as `v0.2.0` and push it to GitHub. The `Publish Northstar container` workflow publishes both the versioned image and `latest` to `ghcr.io/psychopanda1/northstar-crm`, and attaches GitHub build provenance to the published digest; configure the required production environment variables in the service that runs the image, not in GitHub or the image itself. The workflow can also be started manually from Actions for an explicitly requested image publication.
