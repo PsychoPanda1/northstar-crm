@@ -33,6 +33,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Dispatch-triggered confirmation, en-route, and completion message templates linked to jobs
 - Automatic customer notifications when jobs are assigned, en route, or completed, with deduplication before provider delivery
 - Landing-page availability and idempotent online booking into the dispatch queue
+- Repeat online bookings match the tenant customer by email or normalized phone so history is not fragmented across appointments
 - Reusable `booking.html` customer form for service-specific landing pages
 - Pricebook-linked estimates preserve the quoted service snapshot for reliable quote-to-cash records
 - Multi-option estimates let customers select a clearly labeled service tier before approval
