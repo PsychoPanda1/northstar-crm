@@ -1,10 +1,11 @@
 import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
-import { accessSync, constants as fsConstants, createReadStream, existsSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs';
+import { accessSync, constants as fsConstants, createReadStream, existsSync, readFileSync, realpathSync, renameSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, extname, join, normalize, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createServer } from 'node:http';
 
 const ROOT = fileURLToPath(new URL('.', import.meta.url)).replace(/[\\/]$/, '');
+const REAL_ROOT = realpathSync(ROOT);
 const PORT = Number(process.env.PORT || 4173);
 const DEFAULT_SESSION_SECRET = 'northstar-local-demo-secret-change-me';
 const SECRET = process.env.NORTHSTAR_SESSION_SECRET || DEFAULT_SESSION_SECRET;
@@ -271,12 +272,17 @@ const appointmentConflictFor = (tenantId, time, startsAt = null, endsAt = null) 
 const dispatchRecommendationsFor = (tenantId, jobId) => { const saved = state.get(tenantId); const job = saved.jobs.find((item) => item.id === jobId); if (!job) return null; const requiredSkill = job.requiredSkill || tenants[tenantId].serviceLabel; return teamFor(tenantId).map((member) => { const conflict = scheduleConflictFor(tenantId, job.id, member.name, job.time, Date.parse(job.startsAt || ''), Date.parse(job.endsAt || '')); const qualified = !member.skills.length || member.skills.some((skill) => skill.toLowerCase() === String(requiredSkill).toLowerCase()); const history = saved.jobs.filter((item) => jobHasTechnician(item, member.name)); const completedJobs = history.filter((item) => item.status === 'Completed').length; const noShows = history.filter((item) => item.status === 'No-show').length; const performanceRate = history.length ? Number(((completedJobs / history.length) * 100).toFixed(1)) : null; const performanceBonus = performanceRate === null ? 0 : Math.min(10, Math.round(performanceRate / 10)); const score = Math.max(0, 100 - (member.activeJobs * 25) - (conflict ? 100 : 0) - (qualified ? 0 : 100) + performanceBonus); return { technician: member.name, score, available: !conflict && qualified, activeJobs: member.activeJobs, completedJobs, noShows, performanceRate, reason: conflict ? `Already scheduled for ${conflict.time}` : !qualified ? `Missing required skill: ${requiredSkill}` : performanceRate !== null ? `${performanceRate}% completion history` : member.activeJobs ? `${member.activeJobs} active job${member.activeJobs === 1 ? '' : 's'}` : 'Available for this window' }; }).sort((a, b) => b.score - a.score || a.activeJobs - b.activeJobs); };
 const sendStatic = (req, res) => {
   const pageUrl = new URL(req.url, `http://${req.headers.host}`);
-  const requested = decodeURIComponent(pageUrl.pathname);
+  let requested;
+  try { requested = decodeURIComponent(pageUrl.pathname); } catch { return json(res, 400, { error: 'invalid_path' }); }
   if ((requested === '/portal' || requested === '/portal/' || requested === '/booking.html') && pageUrl.searchParams.has('service') && !Object.prototype.hasOwnProperty.call(serviceTenant, pageUrl.searchParams.get('service'))) return json(res, 404, { error: 'unknown_service' });
   const relative = requested === '/' || requested === '/portal' || requested === '/portal/' ? 'index.html' : requested.replace(/^\/+/, '');
+  if (relative.split(/[\\/]+/).some((segment) => segment.startsWith('.'))) return json(res, 404, { error: 'not_found' });
   const file = normalize(join(ROOT, relative));
   if (!file.startsWith(ROOT + sep) || !existsSync(file) || !statSync(file).isFile()) return json(res, 404, { error: 'not_found' });
-  res.writeHead(200, { 'content-type': MIME[extname(file)] || 'application/octet-stream', 'cache-control': 'no-store' }); createReadStream(file).pipe(res);
+  let publicFile;
+  try { publicFile = realpathSync(file); } catch { return json(res, 404, { error: 'not_found' }); }
+  if (!publicFile.startsWith(REAL_ROOT + sep)) return json(res, 404, { error: 'not_found' });
+  res.writeHead(200, { 'content-type': MIME[extname(publicFile)] || 'application/octet-stream', 'cache-control': 'no-store' }); createReadStream(publicFile).pipe(res);
 };
 
 const server = createServer(async (req, res) => {
