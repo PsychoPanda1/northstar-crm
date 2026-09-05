@@ -127,7 +127,7 @@ System events such as web-form lead capture, customer estimate approval, and rec
 - `GET|POST /api/invoices/:id/schedule` → read or create a tenant-scoped 2–12 installment schedule whose amounts must exactly match the invoice total; public payment links and customer portals expose derived paid amounts as payments settle
 - `GET /api/public/invoice?token=...` and `POST /api/public/invoice/payment-intent?token=...` → expose safe invoice balance and create an idempotent Card/ACH payment intent carrying the invoice's durable `customerId`; processor confirmation remains external
 - `POST /api/public/customer-portal/payment-intent?token=...` → create the same provider-pending intent with the portal customer's `customerId`, only when the invoice belongs to that customer
-- `POST /api/webhooks/payments` → accept an HMAC-signed, idempotent provider event and reconcile a succeeded intent into the invoice and payment ledger; set `NORTHSTAR_PAYMENT_WEBHOOK_SECRET` in production
+- `POST /api/webhooks/payments` → accept an HMAC-signed, idempotent provider event and reconcile a succeeded intent into the invoice and payment ledger while preserving its durable `customerId`; set `NORTHSTAR_PAYMENT_WEBHOOK_SECRET` in production
 
 ## Data model starting point
 
