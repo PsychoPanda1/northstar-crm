@@ -61,6 +61,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Customers can submit reschedule, cancellation, or question requests from the self-service portal
 - Accepted estimates can convert directly into scheduled, checklist-ready jobs
 - Server-side technician conflict detection for assignment and rescheduling
+- Multi-visit work orders with per-visit scheduling, technician assignment, and conflict checks
 - Server-enforced job lifecycle transitions prevent invalid field states and bypassing completion requirements
 - Service-plan renewal can schedule the next recurring visit and records the renewal event
 - Service plans support auditable pause, resume, and cancellation lifecycle controls

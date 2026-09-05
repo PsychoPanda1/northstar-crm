@@ -70,6 +70,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - Dispatch assignment, status, and reschedule mutations append auditable customer timeline events
 - `POST /api/jobs/:id/remind` → queue a deduplicated SMS/email appointment reminder for an open job
 - Jobs may declare a required skill; recommendations and assignment reject technicians without that skill
+- `GET|POST /api/jobs/:id/visits` → list or add scheduled visits for multi-day/multi-visit work orders
 - `POST /api/jobs/:id/customer-link` → issue a 72-hour customer portal link scoped to the job's customer
 - `POST /api/jobs/:id/review-link` → issue a 72-hour review link for a completed job
 - `GET /api/public/customer-portal?token=...` → customer-safe appointments, equipment, estimates, invoices, and service plans

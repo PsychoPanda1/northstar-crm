@@ -59,12 +59,15 @@ try {
   const unqualifiedAssignment = await request(`/api/jobs/${skillsJob.body.id}/assign`, jsonOptions('POST', { technician: specialist.body.name }, token));
   assert(specialist.response.status === 201 && specialist.body.skills.includes('Electrical') && unqualifiedAssignment.response.status === 422 && unqualifiedAssignment.body.error === 'technician_missing_required_skill', 'technician skill enforcement failed');
   const directJob = await request('/api/jobs', jsonOptions('POST', { customerId: createdCustomer.body.id, service: 'Scheduled repair', time: 'Tomorrow 8:00 AM' }, token));
+  const firstVisit = await request(`/api/jobs/${directJob.body.id}/visits`, jsonOptions('POST', { time: 'Tomorrow 2:00 PM', technician: 'Alex Rivera' }, token));
+  const listedVisits = await request(`/api/jobs/${directJob.body.id}/visits`, { headers: { authorization: `Bearer ${token}` } });
+  const duplicateVisit = await request(`/api/jobs/${directJob.body.id}/visits`, jsonOptions('POST', { time: 'Tomorrow 2:00 PM', technician: 'Alex Rivera' }, token));
   const conflictingDirectJob = await request('/api/jobs', jsonOptions('POST', { customerId: createdCustomer.body.id, service: 'Second repair', time: 'Tomorrow 8:00 AM' }, token));
   const missingCustomerJob = await request('/api/jobs', jsonOptions('POST', { customerId: 'missing-customer', time: 'Tomorrow 1:00 PM' }, token));
   const invalidDirectStatus = await request(`/api/jobs/${directJob.body.id}/status`, jsonOptions('POST', { status: 'In progress' }, token));
   const canceledDirectJob = await request(`/api/jobs/${directJob.body.id}/status`, jsonOptions('POST', { status: 'Canceled' }, token));
   const rebookedDirectJob = await request('/api/jobs', jsonOptions('POST', { customerId: createdCustomer.body.id, service: 'Replacement repair', time: 'Tomorrow 8:00 AM' }, token));
-  assert(createdCustomer.response.status === 201 && directJob.response.status === 201 && conflictingDirectJob.response.status === 409 && conflictingDirectJob.body.error === 'appointment_time_unavailable' && missingCustomerJob.response.status === 404 && invalidDirectStatus.response.status === 409 && invalidDirectStatus.body.error === 'invalid_job_transition' && canceledDirectJob.body.status === 'Canceled' && rebookedDirectJob.response.status === 201, 'direct job scheduling conflict protection failed');
+  assert(createdCustomer.response.status === 201 && directJob.response.status === 201 && firstVisit.response.status === 201 && listedVisits.body.visits.length === 1 && duplicateVisit.response.status === 409 && conflictingDirectJob.response.status === 409 && conflictingDirectJob.body.error === 'appointment_time_unavailable' && missingCustomerJob.response.status === 404 && invalidDirectStatus.response.status === 409 && invalidDirectStatus.body.error === 'invalid_job_transition' && canceledDirectJob.body.status === 'Canceled' && rebookedDirectJob.response.status === 201, 'direct job scheduling conflict protection failed');
   const technicianLogin = await request('/api/auth/demo-login?service=plumbing&role=technician', jsonOptions('POST', {}));
   const technicianSession = await request('/api/session', { headers: { authorization: `Bearer ${technicianLogin.body.token}` } });
   const technicianReports = await request('/api/reports/overview', { headers: { authorization: `Bearer ${technicianLogin.body.token}` } });

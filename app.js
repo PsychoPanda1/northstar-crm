@@ -147,6 +147,10 @@ const decorateAppointmentReminderButtons = () => { if (drawer.dataset.view !== '
 const appointmentReminderObserver = new MutationObserver(decorateAppointmentReminderButtons);
 appointmentReminderObserver.observe(recordList, { childList: true, subtree: true });
 recordList.addEventListener('click', async (event) => { const button = event.target.closest('[data-appointment-reminder-action]'); if (!button) return; const channel = window.prompt('Reminder channel: SMS or Email', 'SMS'); if (!['SMS', 'Email'].includes(channel)) return; button.disabled = true; try { const result = await repository.remindJob(button.dataset.jobId, channel); showToast(result.duplicate ? 'Reminder already queued recently.' : `${channel} appointment reminder queued.`); } catch { showToast('Could not queue appointment reminder.'); } finally { button.disabled = false; } });
+const decorateJobVisitButtons = () => { if (drawer.dataset.view !== 'dispatch') return; recordList.querySelectorAll('.dispatch-job .record-actions').forEach((actions) => { const job = actions.closest('[data-dispatch-job]'); if (!job || actions.querySelector('[data-job-visit-action]')) return; const button = document.createElement('button'); button.className = 'ghost-btn'; button.dataset.jobVisitAction = 'add'; button.dataset.jobId = job.dataset.dispatchJob; button.textContent = 'Add visit'; actions.append(button); }); };
+const jobVisitObserver = new MutationObserver(decorateJobVisitButtons);
+jobVisitObserver.observe(recordList, { childList: true, subtree: true });
+recordList.addEventListener('click', async (event) => { const button = event.target.closest('[data-job-visit-action]'); if (!button) return; const time = window.prompt('Visit schedule time', 'Next day 9:00 AM'); if (!time) return; const technician = window.prompt('Technician (optional)', ''); button.disabled = true; try { await repository.addJobVisit(button.dataset.jobId, time, technician || ''); showToast('Work-order visit added.'); openRecords('dispatch'); } catch { showToast('Could not add visit. Check technician conflicts.'); } finally { button.disabled = false; } });
 loadLiveSchedule();
 }
 bootstrap();
