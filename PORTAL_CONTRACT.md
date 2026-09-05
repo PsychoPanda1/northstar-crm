@@ -96,6 +96,7 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 - The technician page queues field `POST` actions locally during transient offline periods and replays them in order on reconnect; the prototype queue is device-local and production needs encrypted storage, retry limits, and conflict handling
 - Dispatch assignment, status, and reschedule mutations append auditable customer timeline events
 - `POST /api/jobs/:id/remind` → queue a deduplicated SMS/email appointment reminder for an open job
+- `POST /api/dispatch/reminders` → owner/dispatcher-only bulk queue of deduplicated SMS/email reminders for normalized appointments within a 1–168 hour horizon; skips terminal jobs and returns eligible, queued, and duplicate counts for safe operator reruns
 - Jobs may declare a required skill; recommendations and assignment reject technicians without that skill
 - `GET|POST /api/jobs/:id/visits` → list or add scheduled visits for multi-day/multi-visit work orders; creation accepts an optional `Idempotency-Key` and returns `duplicate: true` for a safe retry
 - `POST /api/jobs/:id/visits/:visitId/status` → advance a visit through Scheduled, En route, In progress, Completed, or Canceled states; same-state retries return `duplicate: true` without another timeline or audit event
