@@ -348,6 +348,8 @@ try {
   const dashboardAfterReview = await request('/api/dashboard', { headers: { authorization: `Bearer ${token}` } });
   const reportAfterReview = await request('/api/reports/overview', { headers: { authorization: `Bearer ${token}` } });
   assert(reportAfterReview.body.metrics.some((item) => item.label === 'Material spend') && reportAfterReview.body.metrics.some((item) => item.label === 'Tracked field time') && reportAfterReview.body.metrics.some((item) => item.label === 'Estimate close rate') && reportAfterReview.body.metrics.some((item) => item.label === 'Memberships sold') && reportAfterReview.body.metrics.some((item) => item.label === 'No-shows') && reportAfterReview.body.metrics.some((item) => item.label === 'Open customer requests'), 'operational report metrics missing');
+  const marketingReport = await request('/api/reports/marketing', { headers: { authorization: `Bearer ${token}` } });
+  assert(marketingReport.response.status === 200 && marketingReport.body.totalLeads >= 1 && marketingReport.body.channels.some((item) => item.source === 'Landing page' && item.leads >= 1) && marketingReport.body.channels.every((item) => item.conversionRate >= 0 && item.conversionRate <= 100), 'marketing attribution report missing');
   const reportExportResponse = await fetch(`${base}/api/export?type=reports`, { headers: { authorization: `Bearer ${token}` } });
   const reportExportCsv = await reportExportResponse.text();
   assert(reportExportResponse.status === 200 && reportExportCsv.includes('Gross margin'), 'report export missing');
