@@ -57,6 +57,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Customer status links and portals expose the recorded technician en-route timestamp when available
 - Landing-page availability and idempotent online booking into the dispatch queue
 - Environment-driven tenant and service routing supports adding new landing-page businesses without changing server source
+- Tenant-bound owner account configuration supports separate production logins for each attached landing-page business
 - Office-created jobs can carry normalized appointment ranges, with overlap-aware capacity conflict checks
 - Dispatch rescheduling can target a stable availability slot while preserving normalized appointment timestamps
 - Repeat online bookings match the tenant customer by email or normalized phone so history is not fragmented across appointments
