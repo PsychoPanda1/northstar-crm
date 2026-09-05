@@ -13,7 +13,7 @@ const messageWebhookSecret = 'smoke-message-webhook-secret';
 const ownerEmail = 'owner@example.test';
 const ownerPassword = 'smoke-owner-password';
 const ownerDigest = createHmac('sha256', 'northstar-local-demo-secret-change-me').update(ownerPassword).digest('hex');
-const serverEnv = { ...process.env, PORT: String(port), NORTHSTAR_DATA_FILE: dataFile, NORTHSTAR_PAYMENT_WEBHOOK_SECRET: webhookSecret, NORTHSTAR_MESSAGE_WEBHOOK_SECRET: messageWebhookSecret, NORTHSTAR_ALLOWED_ORIGINS: 'https://plumbing.example', NORTHSTAR_OWNER_EMAIL: ownerEmail, NORTHSTAR_OWNER_PASSWORD_DIGEST: ownerDigest };
+const serverEnv = { ...process.env, NODE_ENV: 'production', PORT: String(port), NORTHSTAR_DATA_FILE: dataFile, NORTHSTAR_PAYMENT_WEBHOOK_SECRET: webhookSecret, NORTHSTAR_MESSAGE_WEBHOOK_SECRET: messageWebhookSecret, NORTHSTAR_ALLOWED_ORIGINS: 'https://plumbing.example', NORTHSTAR_OWNER_EMAIL: ownerEmail, NORTHSTAR_OWNER_PASSWORD_DIGEST: ownerDigest };
 const server = spawn(process.execPath, ['server.mjs'], { cwd: new URL('.', import.meta.url), env: serverEnv, stdio: 'ignore' });
 let restartedServer;
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
@@ -23,7 +23,7 @@ try {
   for (let attempt = 0; attempt < 40; attempt += 1) { try { if ((await fetch(`${base}/api/health`)).ok) break; } catch {} await new Promise((resolve) => setTimeout(resolve, 50)); if (attempt === 39) throw new Error('server did not start'); }
   const portal = await fetch(`${base}/portal?service=plumbing`);
   const bookingPage = await fetch(`${base}/booking.html?service=plumbing`);
-  assert(portal.status === 200 && (await portal.text()).includes('northstar') && bookingPage.status === 200 && (await bookingPage.text()).includes('NORTHSTAR ONLINE BOOKING'), 'portal or booking landing handoff failed');
+  assert(portal.status === 200 && (await portal.text()).includes('northstar') && bookingPage.status === 200 && (await bookingPage.text()).includes('NORTHSTAR ONLINE BOOKING') && portal.headers.get('content-security-policy')?.includes("frame-ancestors 'none'") && portal.headers.get('x-content-type-options') === 'nosniff' && portal.headers.get('strict-transport-security')?.includes('max-age=31536000'), 'portal or security header verification failed');
   const malformed = await fetch(`${base}/api/public/leads`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{' });
   const oversized = await fetch(`${base}/api/public/leads`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name: 'x'.repeat(70_000) }) });
   const availability = await request('/api/public/availability?service=plumbing');

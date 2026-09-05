@@ -15,6 +15,7 @@ const DATA_FILE = process.env.NORTHSTAR_DATA_FILE || join(ROOT, '.northstar-data
 const SESSION_FILE = process.env.NORTHSTAR_SESSION_FILE || `${DATA_FILE}.sessions`;
 const ALLOWED_ORIGINS = new Set(String(process.env.NORTHSTAR_ALLOWED_ORIGINS || '').split(',').map((origin) => origin.trim()).filter(Boolean));
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.md': 'text/markdown; charset=utf-8' };
+const applySecurityHeaders = (res) => { res.setHeader('x-content-type-options', 'nosniff'); res.setHeader('x-frame-options', 'DENY'); res.setHeader('referrer-policy', 'no-referrer'); res.setHeader('permissions-policy', 'camera=(), microphone=(), geolocation=()'); res.setHeader('content-security-policy', "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"); if (process.env.NODE_ENV === 'production') res.setHeader('strict-transport-security', 'max-age=31536000; includeSubDomains'); };
 
 const tenants = {
   'johnson-service-co': { slug: 'johnson-service-co', businessName: 'Johnson Service Co.', serviceLabel: 'Home services' },
@@ -153,6 +154,7 @@ const sendStatic = (req, res) => {
 
 const server = createServer(async (req, res) => {
   try {
+    applySecurityHeaders(res);
     const requestUrl = new URL(req.url, `http://${req.headers.host}`);
     const pathname = requestUrl.pathname;
     const origin = req.headers.origin;
