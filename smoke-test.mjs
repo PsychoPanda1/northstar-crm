@@ -427,6 +427,11 @@ try {
   const assigned = await request(`/api/jobs/${converted.body.job.id}/assign`, jsonOptions('POST', { technician: 'Alex Rivera' }, token));
   const duplicateAssigned = await request(`/api/jobs/${converted.body.job.id}/assign`, jsonOptions('POST', { technician: 'Alex Rivera' }, token));
   const jobDetail = await request(`/api/jobs/${converted.body.job.id}`, { headers: { authorization: `Bearer ${token}` } });
+  const jobNoteOptions = { ...jsonOptions('POST', { note: 'Gate code is in the customer profile.' }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-job-note' } };
+  const jobNote = await request(`/api/jobs/${converted.body.job.id}/notes`, jobNoteOptions);
+  const duplicateJobNote = await request(`/api/jobs/${converted.body.job.id}/notes`, jobNoteOptions);
+  const notedJobDetail = await request(`/api/jobs/${converted.body.job.id}`, { headers: { authorization: `Bearer ${token}` } });
+  assert(jobNote.response.status === 201 && jobNote.body.note.note.includes('Gate code') && duplicateJobNote.response.status === 200 && duplicateJobNote.body.duplicate === true && notedJobDetail.body.job.notes[0].id === jobNote.body.note.id, 'job note workflow failed');
   const technicianDispatch = await request('/api/dispatch', { headers: { authorization: `Bearer ${technicianLogin.body.token}` } });
   const technicianDatedDispatch = await request('/api/dispatch?date=2026-09-12', { headers: { authorization: `Bearer ${technicianLogin.body.token}` } });
   const technicianRangedDispatch = await request('/api/dispatch?startDate=2026-09-12&endDate=2026-09-13', { headers: { authorization: `Bearer ${technicianLogin.body.token}` } });

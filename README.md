@@ -47,6 +47,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Technicians can add equipment records from the field, carrying model/serial, install, warranty, and source-job history into the customer profile
 - Technician job forms capture inspection results, notes, and optional customer acknowledgment for office review
 - Owners and dispatchers can require named digital forms on a job, and closeout enforces completion of those forms
+- Internal job handoff notes give dispatchers and assigned technicians a durable, audit-recorded place for access details and field context without exposing notes to customers
 - Owners and dispatchers can create job-linked change-order estimates for approved scope additions, preserving the originating job and audit trail
 - Customer portals label change-order estimates separately and show the scope note before approval
 - Failed or follow-up job forms create urgent or actionable owner notifications linked to the source job
