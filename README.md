@@ -18,7 +18,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Tenant-scoped demo repository with persistent task completion, action state, and operational notifications
 - Owner CSV exports for customer, lead, dispatch, estimate, invoice, plan, and activity workspaces
 - Structured job completion with technician assignment, completion notes, timestamps, and timeline events
-- Customer asset records with serial/install context and automatic timeline events
+- Customer asset records with durable customer links, serial/install context, retry-safe creation, and automatic timeline events
 - Consolidated customer profiles spanning work history, equipment, billing, plans, and activity
 - Multi-location customer records for commercial and repeat-service accounts
 - Secure 24-hour technician job links with mobile status updates and field completion
