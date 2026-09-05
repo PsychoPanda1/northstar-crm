@@ -177,7 +177,7 @@ Additional current routes include `POST /api/auth/login`, `POST /api/auth/refres
 
 ## Next product slices
 
-Landing pages can discover the version 2 integration manifest, including customer portal reschedule, cancellation, request, and payment-intent endpoints, without hard-coding service-specific routes.
+Landing pages can discover the version 2 integration manifest, including owner authentication, customer portal reschedule, cancellation, request, and payment-intent endpoints, without hard-coding service-specific routes.
 
 Completed customer-linked jobs can now move directly into invoicing from the dispatch workspace, including an idempotent `POST /api/jobs/:id/invoice` path with itemized subtotal, discount, and tax support for work that did not originate from an estimate.
 
