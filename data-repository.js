@@ -318,7 +318,7 @@ class NorthstarDemoRepository {
 
   async createJob(customerId, service, time) {
     if (!this.remote) throw new Error('API required for job creation');
-    const response = await fetch('/api/jobs', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ customerId, service, time }) });
+    const response = await fetch('/api/jobs', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({ customerId, service, time }) });
     if (!response.ok) throw new Error('job creation failed');
     return response.json();
   }
