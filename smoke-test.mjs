@@ -517,6 +517,7 @@ try {
   const portalConfirmDuplicate = await request(`/api/public/customer-portal/confirm${customerUrl.search}`, jsonOptions('POST', { jobId: customerPortal.body.jobs[0].id }));
   const confirmationAudit = await request(`/api/audit?search=${encodeURIComponent('appointment.confirmed')}`, { headers: { authorization: `Bearer ${token}` } });
   const portalEstimate = await request('/api/estimates', jsonOptions('POST', { customerId: converted.body.customer.id, service: 'Follow-up estimate', amount: 275 }, token));
+  const estimateCustomerLocation = await request(`/api/customers/${converted.body.customer.id}/locations`, { ...jsonOptions('POST', { label: 'Estimate property', address: '310 King St, Charleston' }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-estimate-location' } });
   const pricedEstimate = await request('/api/estimates', jsonOptions('POST', { customerId: converted.body.customer.id, service: 'Panel upgrade', subtotal: 1000, discount: 100, taxRate: 10 }, token));
   const publicPricedEstimate = await request(`/api/public/estimate?token=${encodeURIComponent(pricedEstimate.body.estimateApprovalToken)}`);
   const pricedApproval = await request(`/api/public/estimate/approve?token=${encodeURIComponent(pricedEstimate.body.estimateApprovalToken)}`, jsonOptions('POST', { approverName: 'Smoke Lead' }));
@@ -558,11 +559,11 @@ try {
   assert(portalPaymentHistory.some((payment) => payment.reference === 'PROVIDER-42' && payment.amount === 75 && payment.method === 'ACH') && portalPaymentHistory.every((payment) => !Object.prototype.hasOwnProperty.call(payment, 'tenantId') && !Object.prototype.hasOwnProperty.call(payment, 'invoiceId')), 'customer portal payment history privacy failed');
   const currentEstimateAvailability = await request('/api/public/availability?service=plumbing&days=7');
   const estimateSlot = currentEstimateAvailability.body.slotOptions.find((slot) => slot.id.startsWith('date-') && slot.id !== manualSlot.id);
-  const estimateConversionOptions = { ...jsonOptions('POST', { time: estimateSlot.label, slotId: estimateSlot.id }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-estimate-conversion' } };
+  const estimateConversionOptions = { ...jsonOptions('POST', { time: estimateSlot.label, slotId: estimateSlot.id, locationId: estimateCustomerLocation.body.id }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-estimate-conversion' } };
   const estimateJob = await request(`/api/estimates/${portalEstimate.body.id}/convert`, estimateConversionOptions);
   const duplicateEstimateJob = await request(`/api/estimates/${portalEstimate.body.id}/convert`, estimateConversionOptions);
   const estimateConversionAudit = await request('/api/audit?search=estimate.converted', { headers: { authorization: `Bearer ${token}` } });
-assert(estimateJob.response.status === 201 && estimateJob.body.job.slotId === estimateSlot.id && estimateJob.body.job.startsAt.endsWith('Z') && estimateJob.body.job.timeZone === 'America/New_York', 'estimate slot conversion workflow failed');
+  assert(estimateCustomerLocation.response.status === 201 && estimateJob.response.status === 201 && estimateJob.body.job.slotId === estimateSlot.id && estimateJob.body.job.locationId === estimateCustomerLocation.body.id && estimateJob.body.job.location === '310 King St, Charleston' && estimateJob.body.job.startsAt.endsWith('Z') && estimateJob.body.job.timeZone === 'America/New_York', 'estimate slot conversion workflow failed');
   const estimateJobAssigned = await request(`/api/jobs/${estimateJob.body.job.id}/assign`, jsonOptions('POST', { technician: 'Alex Rivera' }, token));
   const estimateTechLink = await request(`/api/jobs/${estimateJob.body.job.id}/technician-link`, jsonOptions('POST', {}, token));
   const estimateTechUrl = new URL(estimateTechLink.body.url, base);

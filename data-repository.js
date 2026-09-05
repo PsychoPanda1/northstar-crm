@@ -400,9 +400,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async convertLead(id, time, idempotencyKey = '', slotId = '') {
+  async convertLead(id, time, idempotencyKey = '', slotId = '', locationId = '') {
     if (!this.remote) throw new Error('API required for lead conversion');
-    const response = await fetch(`/api/leads/${encodeURIComponent(id)}/convert`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', ...(idempotencyKey ? { 'idempotency-key': idempotencyKey } : {}) }, body: JSON.stringify({ time, ...(slotId ? { slotId } : {}) }) });
+    const response = await fetch(`/api/leads/${encodeURIComponent(id)}/convert`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', ...(idempotencyKey ? { 'idempotency-key': idempotencyKey } : {}) }, body: JSON.stringify({ time, ...(slotId ? { slotId } : {}), ...(locationId ? { locationId } : {}) }) });
     if (!response.ok) throw new Error('lead conversion failed');
     return response.json();
   }
@@ -645,9 +645,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async convertEstimate(id, time, idempotencyKey = crypto.randomUUID(), slotId = '') {
+  async convertEstimate(id, time, idempotencyKey = crypto.randomUUID(), slotId = '', locationId = '') {
     if (!this.remote) throw new Error('API required for estimate conversion');
-    const response = await fetch(`/api/estimates/${encodeURIComponent(id)}/convert`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ time, ...(slotId ? { slotId } : {}) }) });
+    const response = await fetch(`/api/estimates/${encodeURIComponent(id)}/convert`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ time, ...(slotId ? { slotId } : {}), ...(locationId ? { locationId } : {}) }) });
     if (!response.ok) throw new Error('estimate conversion failed');
     return response.json();
   }
