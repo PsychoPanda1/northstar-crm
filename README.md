@@ -56,7 +56,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Three-way purchase reconciliation with vendor-invoice matching, quantity/price/vendor flags, and exception review
 - Tenant-scoped fleet vehicles with license-plate uniqueness, idempotent creation, lifecycle status, schedule-conflict checks, and dispatch assignment controls
 - Multi-technician job crews with primary-technician compatibility, skill validation, schedule-conflict checks, and audit history
-- Configurable tenant pricebook items for consistent service quoting across landing pages and the owner portal
+- Configurable tenant pricebook items for consistent service quoting across landing pages and the owner portal, including category, default duration, and taxable metadata
 - Explainable technician recommendations based on active workload and appointment conflicts
 - Skill-aware technician recommendations and server-side assignment enforcement
 - Technician-initiated Card/ACH payment intents scoped to the assigned job invoice
