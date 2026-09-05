@@ -33,6 +33,8 @@ try {
   const invalidContactLead = await request('/api/public/leads?service=plumbing', jsonOptions('POST', { name: 'Invalid Contact', email: 'not-an-email' }));
   const availability = await request('/api/public/availability?service=plumbing');
   const extendedAvailability = await request('/api/public/availability?service=plumbing&days=7');
+  const timezoneSafeAvailabilityCheck = (slot) => slot && slot.label.startsWith(new Intl.DateTimeFormat('en-US', { timeZone: slot.timeZone, weekday: 'short', month: 'short', day: 'numeric' }).format(new Date(slot.startsAt)));
+  assert(timezoneSafeAvailabilityCheck(extendedAvailability.body.slotOptions.find((slot) => slot.id.startsWith('date-'))), 'timezone-safe availability label failed');
   const tenantConfig = await request('/api/public/tenant?service=plumbing');
   const configuredTenantConfig = await request('/api/public/tenant?service=hvac');
   const unknownTenantConfig = await request('/api/public/tenant?service=not-a-service');
