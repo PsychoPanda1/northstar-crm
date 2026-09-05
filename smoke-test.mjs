@@ -177,8 +177,10 @@ try {
   const secondaryCrewLink = await request(`/api/jobs/${directJob.body.id}/technician-link`, jsonOptions('POST', { technician: 'Jordan Lee' }, token));
   const secondaryCrewToken = secondaryCrewLink.body.url ? new URL(secondaryCrewLink.body.url, 'http://localhost').searchParams.get('token') : '';
   const secondaryCrewView = await request(`/api/public/technician-job?token=${encodeURIComponent(secondaryCrewToken || '')}`);
+  const secondaryCrewFinding = await request(`/api/public/technician-job/finding?token=${encodeURIComponent(secondaryCrewToken || '')}`, { ...jsonOptions('POST', { title: 'Secondary crew finding', note: 'Secondary technician documented the field condition.', severity: 'Low' }), headers: { 'content-type': 'application/json', 'idempotency-key': 'smoke-secondary-crew-finding' } });
   assert(crewRoster.response.status === 200 && crewRoster.body.items.find((item) => item.name === 'Marcus Thompson')?.activeJobs >= 1 && crewRoster.body.items.find((item) => item.name === 'Jordan Lee')?.activeJobs >= 1, 'crew roster workload tracking failed');
   assert(secondaryCrewLink.response.status === 200 && secondaryCrewLink.body.technician === 'Jordan Lee' && secondaryCrewView.response.status === 200 && secondaryCrewView.body.technician === 'Jordan Lee', 'secondary crew technician link failed');
+  assert(secondaryCrewFinding.response.status === 201 && secondaryCrewFinding.body.finding.technician === 'Jordan Lee', 'crew field evidence attribution failed');
   const vehicleMaintenance = await request(`/api/vehicles/${vehicle.body.id}/status`, jsonOptions('POST', { status: 'Maintenance' }, token));
   const vehicleActive = await request(`/api/vehicles/${vehicle.body.id}/status`, jsonOptions('POST', { status: 'Active' }, token));
   const jobPriority = await request(`/api/jobs/${directJob.body.id}/priority`, jsonOptions('POST', { priority: 'Emergency' }, token));
