@@ -19,6 +19,7 @@ const server = readFileSync(`${root}server.mjs`, 'utf8');
 const tenantConfig = readFileSync(`${root}tenant-config.js`, 'utf8');
 const envExample = readFileSync(`${root}.env.example`, 'utf8');
 const containerRelease = readFileSync(`${root}.github/workflows/container-release.yml`, 'utf8');
+const robots = readFileSync(`${root}robots.txt`, 'utf8');
 const packageJson = JSON.parse(readFileSync(`${root}package.json`, 'utf8'));
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 assert(packageJson.scripts?.test === 'npm run check && npm run test:landing-client && npm run test:smoke && npm run test:production-boundary' && packageJson.scripts?.['test:landing-client'] === 'node scripts/landing-client-test.mjs', 'npm test must run the complete release verification suite');
@@ -26,6 +27,7 @@ assert(readFileSync(`${root}.github/workflows/ci.yml`, 'utf8').includes('run: np
 assert(readFileSync(`${root}.gitignore`, 'utf8').split(/\r?\n/).includes('.northstar-data.json'), 'private local state must remain ignored');
 assert(envExample.includes('NORTHSTAR_SESSION_SECRET=replace-with-32-plus-random-characters'), 'environment template must use an explicit session-secret placeholder');
 assert(containerRelease.includes('docker/build-push-action@v6') && containerRelease.includes('packages: write') && containerRelease.includes('actions/attest-build-provenance@v2') && containerRelease.includes('attestations: write') && containerRelease.includes("'v*.*.*'"), 'container release workflow must publish only through an explicit tagged release path');
+assert(robots.includes('User-agent: *') && robots.includes('Disallow: /') && server.includes("'.txt': 'text/plain; charset=utf-8'"), 'CRM host must prevent crawler discovery of private portal pages');
 assert(envExample.includes('NORTHSTAR_SERVICE_TENANTS_JSON='), 'environment template must document service-to-tenant mapping');
 assert(envExample.includes('NORTHSTAR_MESSAGE_PROVIDER_URL=') && envExample.includes('NORTHSTAR_PAYMENT_PROVIDER_URL='), 'environment template must document optional provider configuration');
 assert(server.includes("req.method === 'OPTIONS' && pathname.startsWith('/api/')") && server.includes("origin_not_allowed") && server.includes('access-control-allow-headers'), 'API CORS preflight must enforce the configured origin allow-list');
