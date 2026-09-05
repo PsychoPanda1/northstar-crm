@@ -208,6 +208,15 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async getAvailability(service = '', days = 7) {
+    if (!this.remote) throw new Error('API required for availability');
+    const params = new URLSearchParams({ days: String(days) });
+    if (service) params.set('service', service);
+    const response = await fetch(`/api/public/availability?${params}`);
+    if (!response.ok) throw new Error('availability unavailable');
+    return response.json();
+  }
+
   async recommendTechnicians(jobId) {
     if (!this.remote) throw new Error('API required for dispatch recommendations');
     const response = await fetch(`/api/dispatch/recommendations?jobId=${encodeURIComponent(jobId)}`, { headers: { authorization: `Bearer ${this.token}` } });
