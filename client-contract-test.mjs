@@ -52,6 +52,7 @@ assert(app.includes('Service history: ${item.serviceHistory.map'), 'customer pro
 assert(technician.includes('inventoryLocations') && technician.includes('locationId'), 'technician materials workflow does not expose stock location provenance');
 assert(app.includes('Edit asset') && repository.includes('updateAsset') && repository.includes('/api/assets/'), 'owner portal does not expose equipment record updates');
 assert(customer.includes('item.serviceHistory') && customer.includes('Equipment'), 'customer portal does not expose equipment service history');
+assert(customer.includes('plan.assetName') && server.includes('savedPlan?.assetName'), 'customer portal does not expose recurring-plan equipment context');
 assert(app.includes('name="assetId"') && app.includes('syncPlanAssets') && repository.includes('assetId =') && repository.includes('assetId ? { assetId }'), 'service plan equipment selector is not wired through the owner portal');
 assert(server.includes('webhookReplayFor') && server.includes("error: 'webhook_event_reused'") && server.includes('payloadFingerprint: payloadFingerprint(body)'), 'provider webhook replay protection is not enforced');
 assert(server.includes('accentSoft') && server.includes('focus.slice(0, 160)') && server.includes('NORTHSTAR_TENANTS_JSON'), 'configured tenant branding is not preserved by the API');
