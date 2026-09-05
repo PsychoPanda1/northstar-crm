@@ -515,7 +515,7 @@ try {
   const receivablesExportResponse = await fetch(`${base}/api/export?type=receivables`, { headers: { authorization: `Bearer ${token}` } });
   const receivablesExportCsv = await receivablesExportResponse.text();
   assert(technicianReport.response.status === 200 && technicianReport.body.technicians.some((item) => item.technician === 'Alex Rivera' && item.revenue >= 425 && Number.isFinite(item.grossMargin) && Number.isFinite(item.completionRate)), 'technician performance report missing');
-  assert(receivablesReport.response.status === 200 && Number.isFinite(receivablesReport.body.totals?.balance) && Number.isFinite(receivablesReport.body.totals?.overdueBalance) && receivablesReport.body.buckets?.length === 5 && receivablesReport.body.totals.overdueBalance <= receivablesReport.body.totals.balance, 'receivables aging report missing');
+  assert(receivablesReport.response.status === 200 && Number.isFinite(receivablesReport.body.totals?.balance) && Number.isFinite(receivablesReport.body.totals?.overdueBalance) && receivablesReport.body.buckets?.length === 5 && receivablesReport.body.customers?.length >= 1 && receivablesReport.body.customers.every((item) => Number.isFinite(item.balance) && item.overdueBalance <= item.balance) && receivablesReport.body.totals.overdueBalance <= receivablesReport.body.totals.balance, 'receivables aging report missing');
   assert(receivablesExportResponse.status === 200 && receivablesExportCsv.includes('bucket') && receivablesExportCsv.includes('daysPastDue'), 'receivables export missing');
   const reportExportResponse = await fetch(`${base}/api/export?type=reports`, { headers: { authorization: `Bearer ${token}` } });
   const reportExportCsv = await reportExportResponse.text();

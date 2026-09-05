@@ -20,7 +20,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Marketing source reporting summarizes landing-page leads, conversions, conversion rate, and attributed lead value
 - Landing-page campaign attribution preserves bounded UTM and click-ID context on public leads and booked jobs for source-aware follow-up
 - Campaign-level marketing performance is available in the owner portal and as a tenant-scoped CSV export
-- Accounts-receivable aging shows open balances by due-date bucket with invoice-level detail for collection follow-up
+- Accounts-receivable aging shows open balances by due-date bucket plus customer-level collection priorities
 - Open receivables can be exported as a tenant-scoped collection-worklist CSV
 - Owner/dispatcher reactivation campaigns queue deduplicated SMS/email follow-ups for customers without a recent completed service, with optional internal-tag targeting
 - Tenant-scoped demo repository with persistent task completion, action state, and operational notifications
