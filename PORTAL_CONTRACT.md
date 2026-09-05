@@ -27,7 +27,8 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 - `GET /api/public/tenant?service=...` → return safe tenant branding and the canonical booking path for a service landing page; it never exposes owner or customer data
 - The owner portal presentation resolver hydrates its safe branding from `/api/public/tenant`, so environment-configured service tenants render their own business name and service label without exposing tenant data to public customer pages
 - `booking.html?service=...` → reusable browser form for the public availability/booking contract, returning a customer status link after booking
-- `GET /api/public/job-status?token=...` → minimal customer-safe status response for the landing-page handoff, including optional stable slot and normalized appointment fields
+- `GET /api/public/job-status?token=...` → minimal customer-safe status response for the landing-page handoff, including optional stable slot, normalized appointment fields, and available reschedule slots
+- `POST /api/public/job-status/reschedule?token=...` → apply a new available slot using the status token returned by a landing-page booking; it is conflict-checked, idempotent, and records customer timeline/audit and notification events
 - `POST /api/public/customer-portal/request?token=...` accepts an optional `Idempotency-Key`, returns `duplicate: true` for safe retries of the same customer request, and records an actor-attributed `customer.request.received` audit event
 - `POST /api/public/customer-portal/location?token=...` → customer-token-only update of the primary service address or addition of a secondary address, with bounded validation, idempotent replay, tenant-scoped persistence, and customer-attributed audit history
 - Public status and customer-portal appointment records include optional `enRouteAt` without exposing owner or tenant identifiers
