@@ -48,7 +48,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - `GET /api/payments` → tenant-scoped payment ledger for reconciliation and accounting handoff
 - `GET /api/export?type=customers|leads|estimates|invoices|payments|plans|activities|dispatch|assets` → tenant-scoped CSV export for owner reporting and accounting handoff
 - `POST /api/jobs` → create a job after server-side tenant and role checks
-- `POST /api/leads/:id/convert` → convert a tenant-owned lead into a customer and scheduled job while preserving lead attribution
+- `POST /api/leads/:id/convert` → convert a tenant-owned lead into a customer and scheduled job while preserving lead attribution; rejects an active appointment already using the requested time
 - `POST /api/jobs/:id/assign` and `POST /api/jobs/:id/status` → update a tenant-owned job's technician and lifecycle state
 - `POST /api/jobs/:id/reschedule` → change the appointment time without recreating the job
 - Assignment and rescheduling reject active same-technician/time conflicts with `409 technician_schedule_conflict`
@@ -69,7 +69,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - `POST /api/requests/:id/resolve` → resolve a tenant-owned customer request with an optional owner note
 - `GET/POST /api/public/review?token=...` → read review state or submit one 1–5 rating and optional comment; duplicate submissions are rejected
 - `GET /api/plans` and `POST /api/plans` → list or create recurring service plans
-- `POST /api/plans/:id/renew` → renew a tenant-owned service plan and optionally schedule its next visit with `time`
+- `POST /api/plans/:id/renew` → renew a tenant-owned service plan and optionally schedule its next visit with `time`; rejects an active appointment already using the requested time
 - `GET /api/activities` and `POST /api/activities` → read or log tenant-owned customer calls, messages, and notes
 - `GET /api/audit` and `GET /api/export?type=audit` → read or export a tenant-scoped event ledger for workflow traceability; prototype activity events use a system actor and production should attach verified identity/provider actors
 - `GET /api/messages` and `POST /api/messages` → list or queue tenant-owned SMS/email messages; delivery remains provider-dependent until an external messaging service is connected
@@ -81,7 +81,7 @@ System events such as web-form lead capture, customer estimate approval, and rec
 - `POST /api/estimates` accepts an optional `catalogItemId` and snapshots the tenant pricebook item on the estimate so later catalog edits do not rewrite historical quotes
 - `POST /api/estimates` also accepts up to three labeled `options`; public approval may include `optionId`, which snapshots the selected amount before quote-to-cash conversion
 - `POST /api/estimates/:id/approve` → approve a tenant-owned estimate
-- `POST /api/estimates/:id/convert` → convert an accepted estimate into a scheduled, checklist-ready job
+- `POST /api/estimates/:id/convert` → convert an accepted estimate into a scheduled, checklist-ready job; rejects an active appointment already using the requested time
 - `POST /api/invoices` → create an invoice only from an approved estimate
 - `POST /api/invoices/:id/pay` → record a full or partial tenant-owned invoice payment with method/reference; returns updated balance and payment ledger entry
 - `POST /api/invoices/:id/payment-link` → issue a 72-hour invoice payment link for the owner to share
