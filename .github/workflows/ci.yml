@@ -24,6 +24,8 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - name: Run syntax checks
         run: npm run check
+      - name: Check setup utilities
+        run: node --check scripts/generate-owner-digest.mjs
       - name: Run isolated smoke suite
         run: npm run test:smoke
       - name: Build container image

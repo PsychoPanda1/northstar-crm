@@ -79,6 +79,8 @@ docker run --rm -p 4173:4173 -v northstar-data:/app/data \
 
 The image runs as the unprivileged `node` user, stores local state under `/app/data`, and exposes `/api/health` as its container health check. Configure owner authentication and payment webhook secrets through deployment environment variables; do not bake credentials into the image.
 
+To generate `NORTHSTAR_OWNER_PASSWORD_DIGEST` without putting the password in shell history, set `NORTHSTAR_SESSION_SECRET` in the environment and run `node scripts/generate-owner-digest.mjs`; store the printed digest only in the deployment secret configuration.
+
 This is intentionally dependency-free. Start the included API and static server directly with Node:
 
 ```powershell
