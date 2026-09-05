@@ -32,6 +32,7 @@ assert(invoice.includes('id="breakdown"') && invoice.includes('Remaining $'), 'i
 assert(invoice.includes('sessionStorage') && invoice.includes('idempotency-key') && invoice.includes('paymentKey'), 'invoice payment page does not preserve mobile retry identity');
 assert(customer.includes('sessionStorage') && customer.includes('retryKey') && customer.includes('idempotency-key'), 'customer portal actions do not preserve mobile retry identity');
 assert(customer.includes('data-action="job-request"') && customer.includes('/api/public/customer-portal/request'), 'customer portal does not expose appointment-scoped questions');
+assert(customer.includes('/api/public/customer-portal/calendar') && customer.includes('Add to calendar'), 'customer portal does not expose calendar handoff');
 assert(technician.includes('create-estimate') && technician.includes('/api/public/technician-job/estimate'), 'technician field estimate workflow is not wired');
 assert(app.includes("['Messages', profile.messages || []]") && app.includes("['Calls', profile.calls || []]"), 'owner customer profile does not expose communication history');
 assert(app.includes("result.results.messages || []") && app.includes("result.results.calls || []"), 'global search does not expose communication history');
