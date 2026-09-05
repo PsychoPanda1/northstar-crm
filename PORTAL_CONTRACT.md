@@ -146,6 +146,7 @@ System events such as web-form lead capture, customer estimate approval, and rec
 - `GET /api/public/invoice?token=...` and `POST /api/public/invoice/payment-intent?token=...` → expose safe invoice balance and create an idempotent Card/ACH payment intent carrying the invoice's durable `customerId`; processor confirmation remains external
 - `POST /api/public/customer-portal/payment-intent?token=...` → create the same provider-pending intent with the portal customer's `customerId`, only when the invoice belongs to that customer
 - `POST /api/webhooks/payments` → accept an HMAC-signed, idempotent provider event and reconcile a succeeded intent into the invoice and payment ledger while preserving its durable `customerId`; set `NORTHSTAR_PAYMENT_WEBHOOK_SECRET` in production
+- `POST /api/payment-intents/:id/retry` → owner/accountant-only retry of a failed provider intent while enforcing the current invoice balance, preserving invoice/customer/job context, linking the new intent through `retryOf`, and accepting an `Idempotency-Key`
 
 ## Data model starting point
 
