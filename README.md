@@ -60,6 +60,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Customer estimate approvals capture the typed approver name in the estimate and audit ledger
 - Customers can decline estimates with a bounded reason that becomes an auditable pipeline outcome
 - Secure 72-hour customer portal links with appointments, equipment, estimates, invoices, and service plans
+- Customer portal users can manage SMS/email contact preferences without exposing those flags in the general portal payload
 - Signed post-job review links with one-time 1–5 rating and timeline capture
 - Owner review workspace with searchable review history and CSV export
 - Review ratings feed dashboard satisfaction and owner reporting
