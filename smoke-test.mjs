@@ -147,9 +147,13 @@ try {
   assert(plan.response.status === 201 && renewedPlan.body.plan.status === 'Active' && renewedPlan.body.nextJob.service === 'Annual plumbing maintenance' && renewedPlan.body.nextJob.planId === plan.body.id && pausedPlan.body.plan.status === 'Paused' && resumedPlan.body.plan.status === 'Active' && canceledPlan.body.plan.status === 'Canceled', 'recurring plan workflow failed');
   const fieldJob = await request('/api/jobs', jsonOptions('POST', { customerId: converted.body.customer.id, service: 'Follow-up inspection', time: 'Friday 2:00 PM' }, token));
   await request(`/api/jobs/${fieldJob.body.id}/assign`, jsonOptions('POST', { technician: 'Alex Rivera' }, token));
+  const technicianVisit = await request(`/api/jobs/${fieldJob.body.id}/visits`, jsonOptions('POST', { time: 'Friday 4:00 PM', technician: 'Alex Rivera' }, token));
   const techLink = await request(`/api/jobs/${fieldJob.body.id}/technician-link`, jsonOptions('POST', {}, token));
   const techUrl = new URL(techLink.body.url, base);
   const techView = await request(`/api/public/technician-job${techUrl.search}`);
+  const techVisitEnRoute = await request(`/api/public/technician-job/visit-status${techUrl.search}`, jsonOptions('POST', { visitId: technicianVisit.body.id, status: 'En route' }));
+  const techVisitInProgress = await request(`/api/public/technician-job/visit-status${techUrl.search}`, jsonOptions('POST', { visitId: technicianVisit.body.id, status: 'In progress' }));
+  const techVisitCompleted = await request(`/api/public/technician-job/visit-status${techUrl.search}`, jsonOptions('POST', { visitId: technicianVisit.body.id, status: 'Completed' }));
   const techPhoto = await request(`/api/public/technician-job/photo${techUrl.search}`, jsonOptions('POST', { photoUrl: 'https://cdn.example.test/jobs/field-42.jpg', caption: 'Repaired coupling before reassembly.' }));
   const techViewWithPhoto = await request(`/api/public/technician-job${techUrl.search}`);
   const techLabor = await request(`/api/public/technician-job/labor${techUrl.search}`, jsonOptions('POST', { hours: 1.5 }));
@@ -161,7 +165,7 @@ try {
   const techIncomplete = await request(`/api/public/technician-job/complete${techUrl.search}`, jsonOptions('POST', { note: 'Attempted early completion.' }));
   for (let index = 0; index < checklistBeforeComplete.body.checklist.length; index += 1) await request(`/api/public/technician-job/checklist${techUrl.search}`, jsonOptions('POST', { index, completed: true }));
   const techComplete = await request(`/api/public/technician-job/complete${techUrl.search}`, jsonOptions('POST', { note: 'Inspected fittings and documented follow-up recommendations.' }));
-  assert(techLink.response.ok && techView.body.technician === 'Alex Rivera' && techPhoto.response.status === 201 && techViewWithPhoto.body.photos.length === 1 && techViewWithPhoto.body.photos[0].caption.includes('coupling') && techLabor.response.status === 201 && techLabor.body.entry.hours === 1.5 && techMaterial.response.status === 200 && techMaterial.body.material.onHand === 5 && techViewWithUsage.body.materials.find((item) => item.id === material.body.id)?.onHand === 5 && checklistBeforeComplete.body.checklist.length === 3 && techEnRoute.body.status === 'En route' && techStarted.body.status === 'In progress' && techIncomplete.response.status === 409 && techIncomplete.body.error === 'checklist_incomplete' && techComplete.body.status === 'Completed', 'technician mobile workflow failed');
+  assert(technicianVisit.response.status === 201 && techLink.response.ok && techView.body.technician === 'Alex Rivera' && techView.body.visits.length === 1 && techVisitEnRoute.body.status === 'En route' && techVisitInProgress.body.status === 'In progress' && techVisitCompleted.body.status === 'Completed' && techPhoto.response.status === 201 && techViewWithPhoto.body.photos.length === 1 && techViewWithPhoto.body.photos[0].caption.includes('coupling') && techLabor.response.status === 201 && techLabor.body.entry.hours === 1.5 && techMaterial.response.status === 200 && techMaterial.body.material.onHand === 5 && techViewWithUsage.body.materials.find((item) => item.id === material.body.id)?.onHand === 5 && checklistBeforeComplete.body.checklist.length === 3 && techEnRoute.body.status === 'En route' && techStarted.body.status === 'In progress' && techIncomplete.response.status === 409 && techIncomplete.body.error === 'checklist_incomplete' && techComplete.body.status === 'Completed', 'technician mobile workflow failed');
   const reviewLink = await request(`/api/jobs/${fieldJob.body.id}/review-link`, jsonOptions('POST', {}, token));
   const reviewUrl = new URL(reviewLink.body.url, base);
   const reviewView = await request(`/api/public/review${reviewUrl.search}`);
@@ -175,7 +179,6 @@ try {
   assert(reviewLink.response.ok && reviewView.body.submitted === false && review.response.status === 201 && review.body.rating === 5 && reviewDuplicate.response.status === 409 && reviewRecords.body.items.some((item) => item.comment.includes('Clear communication')) && reviewExportResponse.ok && reviewExportCsv.includes('Clear communication'), 'review workflow failed');
   const customerLink = await request(`/api/jobs/${fieldJob.body.id}/customer-link`, jsonOptions('POST', {}, token));
   const customerUrl = new URL(customerLink.body.url, base);
-  const fieldVisit = await request(`/api/jobs/${fieldJob.body.id}/visits`, jsonOptions('POST', { time: 'Friday 4:00 PM', technician: 'Alex Rivera' }, token));
   const customerPortal = await request(`/api/public/customer-portal${customerUrl.search}`);
   const portalConfirm = await request(`/api/public/customer-portal/confirm${customerUrl.search}`, jsonOptions('POST', { jobId: customerPortal.body.jobs[0].id }));
   const portalConfirmDuplicate = await request(`/api/public/customer-portal/confirm${customerUrl.search}`, jsonOptions('POST', { jobId: customerPortal.body.jobs[0].id }));
@@ -203,7 +206,7 @@ try {
   const requestNotifications = await request('/api/notifications?search=Smoke%20Lead', { headers: { authorization: `Bearer ${token}` } });
   const resolvedRequest = await request(`/api/requests/${customerRequest.body.id}/resolve`, jsonOptions('POST', { note: 'Sent the customer the confirmed service window.' }, token));
   const customerPortalToken = new URL(customerLink.body.url, base).searchParams.get('token');
-  assert(fieldVisit.response.status === 201 && customerPortal.body.jobs.some((item) => item.id === fieldJob.body.id && item.visits?.length === 1 && item.visits[0].technician === 'Alex Rivera'), 'customer portal visit visibility failed');
+  assert(technicianVisit.response.status === 201 && customerPortal.body.jobs.some((item) => item.id === fieldJob.body.id && item.visits?.length === 1 && item.visits[0].technician === 'Alex Rivera'), 'customer portal visit visibility failed');
   const cancellationRequest = await request('/api/public/customer-portal/request?token=' + encodeURIComponent(customerPortalToken), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ type: 'Cancellation request', message: 'Please cancel the next visit.' }) });
   assert(cancellationRequest.response.status === 201 && cancellationRequest.body.status === 'Open', 'customer cancellation request workflow failed');
   const jobCancellationRequest = await request('/api/public/customer-portal/request?token=' + encodeURIComponent(customerPortalToken), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ type: 'Cancellation request', jobId: customerPortal.body.jobs[0].id, message: 'Please cancel this appointment.' }) });
