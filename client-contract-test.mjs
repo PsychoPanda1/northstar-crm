@@ -49,4 +49,5 @@ assert(app.includes("Array.isArray(job.crew) && job.crew.includes(lane)"), 'disp
 assert(app.includes("Crew: ${detail.job.crew.join(', ')}"), 'job detail summary does not expose assigned crew');
 assert(app.includes('Service history: ${item.serviceHistory.map'), 'customer profile does not expose equipment service history');
 assert(technician.includes('inventoryLocations') && technician.includes('locationId'), 'technician materials workflow does not expose stock location provenance');
+assert(app.includes('Edit asset') && repository.includes('updateAsset') && repository.includes('/api/assets/'), 'owner portal does not expose equipment record updates');
 console.log('Northstar client contract checks passed');
