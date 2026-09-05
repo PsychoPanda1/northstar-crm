@@ -91,7 +91,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Owners and dispatchers can bulk-queue deduplicated follow-ups for aging open estimates
 - Landing-page retries can use an idempotency key to prevent duplicate leads
 - Owners can acknowledge active notifications while preserving the source record
-- Customers can submit reschedule, cancellation, or question requests from the self-service portal
+- Customers can submit reschedule, cancellation, or question requests from the self-service portal, while owners and dispatchers can reply through the provider-pending message ledger
 - Customer-initiated appointment cancellations create durable, deduplicated owner action notifications
 - Customer-initiated appointment reschedules also surface as auditable owner action notifications
 - Customer self-service requests accept idempotency keys so mobile retries do not create duplicate requests

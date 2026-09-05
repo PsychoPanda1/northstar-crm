@@ -570,11 +570,15 @@ assert(estimateJob.response.status === 201 && estimateJob.body.job.slotId === es
   const requestAudit = await request(`/api/audit?search=${encodeURIComponent('customer.request.received')}`, { headers: { authorization: `Bearer ${token}` } });
   const openRequests = await request('/api/requests?search=Smoke%20Lead', { headers: { authorization: `Bearer ${token}` } });
   const requestNotifications = await request('/api/notifications?search=Smoke%20Lead', { headers: { authorization: `Bearer ${token}` } });
+  const requestReplyOptions = { ...jsonOptions('POST', { channel: 'SMS', message: 'Yes, your next service window is confirmed.' }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-request-reply' } };
+  const requestReply = await request(`/api/requests/${customerRequest.body.id}/reply`, requestReplyOptions);
+  const requestReplyDuplicate = await request(`/api/requests/${customerRequest.body.id}/reply`, requestReplyOptions);
   const resolvedRequest = await request(`/api/requests/${customerRequest.body.id}/resolve`, jsonOptions('POST', { note: 'Sent the customer the confirmed service window.' }, token));
   const technicianRequestResolve = await request(`/api/requests/${customerRequest.body.id}/resolve`, jsonOptions('POST', { note: 'Technicians cannot resolve owner requests.' }, technicianLogin.body.token));
   assert(technicianRequestResolve.response.status === 403, 'technician request resolution permission failed');
   const customerPortalAfterRequest = await request(`/api/public/customer-portal${customerUrl.search}`);
   const resolutionAudit = await request(`/api/audit?search=${encodeURIComponent('customer.request.resolved')}`, { headers: { authorization: `Bearer ${token}` } });
+  assert(requestReply.response.status === 201 && requestReply.body.message.requestId === customerRequest.body.id && requestReply.body.message.status === 'Queued (provider pending)' && requestReplyDuplicate.response.status === 200 && requestReplyDuplicate.body.duplicate === true && customerPortalAfterRequest.body.messages.some((item) => item.message === 'Yes, your next service window is confirmed.' && item.tenantId === undefined), 'customer request reply workflow failed');
   const customerPortalToken = new URL(customerLink.body.url, base).searchParams.get('token');
   assert(Array.isArray(customerPortal.body.messages) && customerPortal.body.messages.length > 0 && customerPortal.body.messages.every((item) => item.customerId === undefined && item.tenantId === undefined && item.invoiceId === undefined), 'customer portal message privacy failed');
   assert(technicianVisit.response.status === 201 && customerPortal.body.jobs.some((item) => item.id === fieldJob.body.id && item.visits?.length === 2 && item.visits.every((visit) => visit.technician === 'Alex Rivera')), 'customer portal visit visibility failed');

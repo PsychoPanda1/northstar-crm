@@ -150,6 +150,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async replyToRequest(id, channel, message, idempotencyKey) {
+    if (!this.remote) throw new Error('API required for request replies');
+    const response = await fetch(`/api/requests/${encodeURIComponent(id)}/reply`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey || `request-reply-${Date.now()}` }, body: JSON.stringify({ channel, message }) });
+    if (!response.ok) throw new Error('request reply failed');
+    return response.json();
+  }
+
   completeTask(taskIndex, completed) {
     const completedTasks = new Set(this.state.completedTasks || []);
     completed ? completedTasks.add(taskIndex) : completedTasks.delete(taskIndex);
