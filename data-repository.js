@@ -29,12 +29,12 @@ const fetch = async (input, init = {}) => {
 class NorthstarDemoRepository {
   constructor(tenant) {
     this.tenant = tenant;
-    this.key = `northstar-demo:${tenant.slug}`;
-    this.state = JSON.parse(localStorage.getItem(this.key) || '{}');
-    this.tokenKey = `northstar-demo-token:${tenant.slug}`;
-    this.token = sessionStorage.getItem(this.tokenKey);
     this.apiAvailable = window.location.protocol !== 'file:';
     this.previewOnly = window.location.protocol === 'file:';
+    this.key = `northstar-demo:${tenant.slug}`;
+    this.state = this.previewOnly ? JSON.parse(localStorage.getItem(this.key) || '{}') : {};
+    this.tokenKey = `northstar-demo-token:${tenant.slug}`;
+    this.token = sessionStorage.getItem(this.tokenKey);
     this.authRequired = false;
     activeRepository = this;
     this.ready = this.connect();
@@ -195,13 +195,13 @@ class NorthstarDemoRepository {
     const completedTasks = new Set(this.state.completedTasks || []);
     completed ? completedTasks.add(taskIndex) : completedTasks.delete(taskIndex);
     this.state.completedTasks = [...completedTasks];
-    localStorage.setItem(this.key, JSON.stringify(this.state));
+    if (this.previewOnly) localStorage.setItem(this.key, JSON.stringify(this.state));
     if (this.remote) fetch(`/api/tasks/${taskIndex}`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ completed }) }).catch(() => {});
   }
 
   recordAction(action) {
     this.state.lastAction = { action, at: new Date().toISOString() };
-    localStorage.setItem(this.key, JSON.stringify(this.state));
+    if (this.previewOnly) localStorage.setItem(this.key, JSON.stringify(this.state));
     if (this.remote) fetch('/api/actions', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ action }) }).catch(() => {});
   }
 
@@ -951,5 +951,7 @@ class NorthstarDemoRepository {
     sessionStorage.removeItem(this.tokenKey);
     this.token = null;
     this.remote = null;
+    this.session = null;
+    this.state = {};
   }
 }

@@ -52,6 +52,8 @@ assert(estimate.includes("button.id='request-change'") && estimate.includes('/ap
 assert(estimate.includes('id="estimate-total"') && estimate.includes("input[name=\"estimate-option\"]") && estimate.includes("total.textContent='$'"), 'detailed estimate does not update the displayed total for the selected option');
 
 assert(repository.includes("this.previewOnly = window.location.protocol === 'file:'") && repository.includes("if (!this.previewOnly) throw new Error('authenticated dashboard required')"), 'repository preview fallback is not restricted to file previews');
+assert(repository.includes("this.state = this.previewOnly ? JSON.parse(localStorage.getItem(this.key) || '{}') : {}") && repository.includes('if (this.previewOnly) localStorage.setItem(this.key'), 'authenticated repository state must not read or write the preview local-storage cache');
+assert(repository.includes('this.session = null;') && repository.includes('this.state = {};') && repository.includes('sessionStorage.removeItem(this.tokenKey)'), 'repository logout must clear authenticated session state');
 assert(app.includes('repository.authRequired') && app.includes('Owner sign-in required'), 'HTTP authentication failure does not fail closed');
 assert(app.includes('decorateDispatchNoShows(); decorateDispatchRebooks();'), 'dispatch recovery actions are not reapplied after search');
 assert(app.includes("!['Canceled', 'No-show'].includes(status)"), 'dispatch rebooking does not include no-show jobs');
