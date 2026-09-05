@@ -57,7 +57,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - `GET /api/materials` and `POST /api/materials` → tenant-scoped inventory records with stock and reorder thresholds
 - `POST /api/jobs/:id/materials` → consume stocked material against a tenant-owned job, append an inventory transaction, and record an `inventory.consumed` audit event
 - `GET /api/purchase-orders`, `POST /api/purchase-orders`, and `POST /api/purchase-orders/:id/receive` → create and receive replenishment orders with automatic stock reconciliation; creation records `purchase-order.created`, while receipt accepts an optional positive whole-number `quantity`, tracks `receivedQuantity`, supports split shipments, and records an owner-auditable receipt event
-- `GET /api/job-costs` and `POST /api/jobs/:id/labor` → view tenant-scoped job profitability and log labor cost against a job
+- `GET /api/job-costs` and `POST /api/jobs/:id/labor` → view tenant-scoped job profitability and log labor cost against a job; labor writes record `labor.logged` audit events
 - `GET /api/payments` → tenant-scoped payment ledger for reconciliation and accounting handoff; signed provider webhooks record `invoice.payment.succeeded` or `invoice.payment.failed` audit events only after passing invoice-balance validation
 - `GET /api/export?type=customers|leads|estimates|invoices|payments|plans|activities|dispatch|assets` → tenant-scoped CSV export for owner reporting and accounting handoff
 - `POST /api/jobs` → create a job after server-side tenant and role checks; validates that the customer exists, rejects an active appointment already using the requested time, and records a `job.created` audit event
