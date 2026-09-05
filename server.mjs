@@ -1,4 +1,4 @@
-import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, randomBytes, randomUUID, scryptSync, timingSafeEqual } from 'node:crypto';
 import { accessSync, constants as fsConstants, createReadStream, existsSync, readFileSync, realpathSync, renameSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, extname, join, normalize, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -157,6 +157,8 @@ const isStrongSecret = (value) => String(value || '').length >= 32;
 const isPasswordDigest = (value) => /^[0-9a-f]{64}$/i.test(String(value || '').trim());
 const allowOwnerLogin = (req, identity = '') => { const key = `${req.socket.remoteAddress || 'unknown'}|${String(identity || '').trim().toLowerCase().slice(0, 120)}`; const now = Date.now(); const window = ownerLoginWindows.get(key); if (!window || now - window.startedAt >= 15 * 60_000) { ownerLoginWindows.set(key, { startedAt: now, count: 1 }); return true; } if (window.count >= 12) return false; window.count += 1; return true; };
 const secureTextEqual = (left, right) => { const a = Buffer.from(String(left)); const b = Buffer.from(String(right)); return a.length === b.length && timingSafeEqual(a, b); };
+const hashRuntimePassword = (password) => { const salt = randomBytes(16).toString('hex'); const digest = scryptSync(String(password), salt, 64).toString('hex'); return `scrypt$${salt}$${digest}`; };
+const verifyRuntimePassword = (password, encoded) => { const parts = String(encoded || '').split('$'); if (parts.length === 3 && parts[0] === 'scrypt' && /^[0-9a-f]{32}$/i.test(parts[1]) && /^[0-9a-f]{128}$/i.test(parts[2])) return secureTextEqual(scryptSync(String(password), parts[1], 64).toString('hex'), parts[2]); return secureTextEqual(createHmac('sha256', SECRET).update(String(password)).digest('hex'), encoded); };
 const sign = (value) => createHmac('sha256', SECRET).update(value).digest('base64url');
 const issueToken = (owner) => { const payload = Buffer.from(JSON.stringify({ sid: randomUUID(), sub: owner.id, name: String(owner.name || '').slice(0, 100), tenantId: owner.tenantId, role: owner.role, ...(owner.authVersion ? { authVersion: owner.authVersion } : {}), exp: Date.now() + 1000 * 60 * 60 * 8 })).toString('base64url'); return `${payload}.${sign(payload)}`; };
 const tokenExpiresAt = (token) => { try { return JSON.parse(Buffer.from(String(token).split('.')[0], 'base64url')).exp || null; } catch { return null; } };
@@ -417,7 +419,7 @@ const server = createServer(async (req, res) => {
       if (configuredOwner && secureTextEqual(digest, configuredOwner.passwordDigest)) { const account = { id: configuredOwner.id, name: configuredOwner.name, role: 'owner', tenantId: configuredOwner.tenantId }; return json(res, 200, { token: issueToken(account), owner: { id: account.id, name: account.name, role: account.role }, tenant: tenants[account.tenantId], permissions: rolePermissions.owner }); }
       const staff = configuredStaff.find((item) => item.tenantId === tenantId && secureTextEqual(email, item.email));
       const runtimeAccount = runtimeAccountsFor(tenantId).find((item) => item.tenantId === tenantId && secureTextEqual(email, item.email));
-      if (runtimeAccount && secureTextEqual(digest, runtimeAccount.passwordDigest)) { const account = { id: runtimeAccount.id, name: runtimeAccount.name, role: runtimeAccount.role, tenantId: runtimeAccount.tenantId, ...(runtimeAccount.passwordUpdatedAt ? { authVersion: runtimeAccount.passwordUpdatedAt } : {}) }; return json(res, 200, { token: issueToken(account), owner: { id: account.id, name: account.name, role: account.role }, tenant: tenants[account.tenantId], permissions: rolePermissions[account.role] }); }
+      if (runtimeAccount && verifyRuntimePassword(body.password, runtimeAccount.passwordDigest)) { const account = { id: runtimeAccount.id, name: runtimeAccount.name, role: runtimeAccount.role, tenantId: runtimeAccount.tenantId, ...(runtimeAccount.passwordUpdatedAt ? { authVersion: runtimeAccount.passwordUpdatedAt } : {}) }; return json(res, 200, { token: issueToken(account), owner: { id: account.id, name: account.name, role: account.role }, tenant: tenants[account.tenantId], permissions: rolePermissions[account.role] }); }
       if (staff && secureTextEqual(digest, staff.passwordDigest)) { const account = { id: staff.id, name: staff.name, role: staff.role, tenantId: staff.tenantId }; return json(res, 200, { token: issueToken(account), owner: { id: account.id, name: account.name, role: account.role }, tenant: tenants[account.tenantId], permissions: rolePermissions[account.role] }); }
       if (!secureTextEqual(email, OWNER_LOGIN_EMAIL) || !secureTextEqual(digest, OWNER_PASSWORD_DIGEST) || tenantId !== OWNER_TENANT_ID) return json(res, 401, { error: 'invalid_login' });
       const owner = { id: 'owner_configured', name: String(process.env.NORTHSTAR_OWNER_NAME || 'Workspace owner').slice(0, 100), role: 'owner', tenantId }; return json(res, 200, { token: issueToken(owner), owner: { id: owner.id, name: owner.name, role: owner.role }, tenant: tenants[tenantId], permissions: rolePermissions.owner });
@@ -441,7 +443,7 @@ const server = createServer(async (req, res) => {
       if (name.length < 2 || !validEmail(email) || password.length < 10 || !['dispatcher', 'technician', 'accountant'].includes(role)) return json(res, 422, { error: 'valid_user_name_email_password_and_role_required' });
       if (idempotencyKey) { const existing = saved.userAccounts.find((item) => item.idempotencyKey === idempotencyKey); if (existing) return json(res, 200, { user: view(existing), duplicate: true }); }
       if (saved.userAccounts.some((item) => item.email === email) || configuredStaff.some((item) => item.tenantId === claims.tenantId && item.email === email) || configuredOwners.some((item) => item.tenantId === claims.tenantId && item.email === email)) return json(res, 409, { error: 'user_email_already_exists' });
-      const account = { id: `USER-${Date.now()}`, tenantId: claims.tenantId, name, email, role, passwordDigest: createHmac('sha256', SECRET).update(password).digest('hex'), status: 'Active', createdAt: new Date().toISOString(), ...(idempotencyKey ? { idempotencyKey } : {}) };
+      const account = { id: `USER-${Date.now()}`, tenantId: claims.tenantId, name, email, role, passwordDigest: hashRuntimePassword(password), passwordUpdatedAt: new Date().toISOString(), status: 'Active', createdAt: new Date().toISOString(), ...(idempotencyKey ? { idempotencyKey } : {}) };
       saved.userAccounts.unshift(account);
       recordAudit(saved, claims, 'user.created', 'user', account.id, `${account.email} · ${account.role}`);
       persist();
@@ -477,7 +479,7 @@ const server = createServer(async (req, res) => {
       const body = await readBody(req);
       const password = String(body.password || '');
       if (password.length < 10) return json(res, 422, { error: 'password_must_be_at_least_10_characters' });
-      account.passwordDigest = createHmac('sha256', SECRET).update(password).digest('hex');
+      account.passwordDigest = hashRuntimePassword(password);
       account.passwordUpdatedAt = new Date().toISOString();
       recordAudit(saved, claims, 'user.password.reset', 'user', account.id, `${account.email} · owner reset`);
       persist();
