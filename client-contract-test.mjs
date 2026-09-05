@@ -51,4 +51,5 @@ assert(app.includes('Service history: ${item.serviceHistory.map'), 'customer pro
 assert(technician.includes('inventoryLocations') && technician.includes('locationId'), 'technician materials workflow does not expose stock location provenance');
 assert(app.includes('Edit asset') && repository.includes('updateAsset') && repository.includes('/api/assets/'), 'owner portal does not expose equipment record updates');
 assert(customer.includes('item.serviceHistory') && customer.includes('Equipment'), 'customer portal does not expose equipment service history');
+assert(repository.includes('assetId =') && repository.includes('assetId ? { assetId }'), 'service plan repository does not preserve equipment association');
 console.log('Northstar client contract checks passed');

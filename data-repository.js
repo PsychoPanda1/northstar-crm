@@ -577,9 +577,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async createPlan(customerId, service, amount, renewal, idempotencyKey = crypto.randomUUID()) {
+  async createPlan(customerId, service, amount, renewal, idempotencyKey = crypto.randomUUID(), assetId = '') {
     if (!this.remote) throw new Error('API required for service plan creation');
-    const response = await fetch('/api/plans', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ customerId, service, amount, renewal }) });
+    const response = await fetch('/api/plans', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ customerId, service, amount, renewal, ...(assetId ? { assetId } : {}) }) });
     if (!response.ok) throw new Error('service plan creation failed');
     return response.json();
   }

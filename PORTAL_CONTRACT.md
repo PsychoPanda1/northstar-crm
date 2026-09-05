@@ -239,6 +239,8 @@ Use `tenantId` on every business record: `customers`, `locations`, `leads`, `job
 
 ## Future-agent checklist
 
+- Recurring service plans may carry a customer-owned `assetId`; renewal and scheduled recurring jobs preserve that equipment association for system-specific maintenance history.
+
 - `GET /api/jobs/:id` returns a tenant-scoped work-order detail bundle for authenticated staff: job data, customer summary, estimate/invoice summaries, visits, field materials, labor, provider-pending messages, cost totals, and job audit events. Owners and dispatchers may read any tenant job; technicians may read only jobs assigned to their authenticated name.
 
 - Preserve the tenant and auth boundary when adding routes.
