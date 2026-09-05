@@ -191,6 +191,16 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async getRouteSummary(date = '', technician = '') {
+    if (!this.remote) throw new Error('API required for route summary');
+    const params = new URLSearchParams();
+    if (date) params.set('date', date);
+    if (technician) params.set('technician', technician);
+    const response = await fetch(`/api/dispatch/route-summary?${params}`, { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('route summary unavailable');
+    return response.json();
+  }
+
   async recommendTechnicians(jobId) {
     if (!this.remote) throw new Error('API required for dispatch recommendations');
     const response = await fetch(`/api/dispatch/recommendations?jobId=${encodeURIComponent(jobId)}`, { headers: { authorization: `Bearer ${this.token}` } });
