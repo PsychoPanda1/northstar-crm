@@ -151,7 +151,7 @@ docker run --rm -p 4173:4173 -v northstar-data:/app/data \
   northstar-crm
 ```
 
-The image runs as the unprivileged `node` user in production mode, stores local state under `/app/data`, and exposes `/api/ready` as its container readiness check. Readiness requires a non-default session secret, configured owner/staff authentication, and both webhook secrets; configure these through deployment environment variables and do not bake credentials into the image. Demo login is disabled in production unless `NORTHSTAR_ALLOW_DEMO_LOGIN=true` is explicitly set for an isolated preview or smoke environment.
+The image runs as the unprivileged `node` user in production mode, stores local state under `/app/data`, and exposes `/api/ready` as its container readiness check. Readiness requires a non-default session secret, configured owner/staff authentication, and all four webhook secrets (`NORTHSTAR_PAYMENT_WEBHOOK_SECRET`, `NORTHSTAR_MESSAGE_WEBHOOK_SECRET`, `NORTHSTAR_CALL_WEBHOOK_SECRET`, and `NORTHSTAR_FINANCING_WEBHOOK_SECRET`); configure these through deployment environment variables and do not bake credentials into the image. Demo login is disabled in production unless `NORTHSTAR_ALLOW_DEMO_LOGIN=true` is explicitly set for an isolated preview or smoke environment.
 
 To generate `NORTHSTAR_OWNER_PASSWORD_DIGEST` without putting the password in shell history, set `NORTHSTAR_SESSION_SECRET` in the environment and run `node scripts/generate-owner-digest.mjs`; store the printed digest only in the deployment secret configuration.
 
