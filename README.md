@@ -56,7 +56,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Dispatch rescheduling can target a stable availability slot while preserving normalized appointment timestamps
 - Repeat online bookings match the tenant customer by email or normalized phone so history is not fragmented across appointments
 - Reusable `booking.html` customer form for service-specific landing pages
-- Pricebook-linked estimates preserve the quoted service snapshot for reliable quote-to-cash records
+- Pricebook-linked estimates preserve the quoted service snapshot for reliable quote-to-cash records; optional expiration dates prevent stale quotes from being delivered or approved
 - Multi-option estimates let customers select a clearly labeled service tier before approval
 - Estimates can calculate subtotal, discounts, tax, and final total on the server
 - Customer estimate approvals capture the typed approver name in the estimate and audit ledger

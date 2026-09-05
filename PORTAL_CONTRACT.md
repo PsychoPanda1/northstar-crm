@@ -151,7 +151,7 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 
 System events such as web-form lead capture, customer estimate approval, and recorded payment are appended to the same activity timeline automatically.
 - `POST /api/auth/logout` → revoke the current session
-- `POST /api/estimates` → create a draft estimate for an existing tenant customer by canonical name or `customerId`; the estimate stores the durable customer link and accepts an optional `Idempotency-Key` for safe browser retries
+- `POST /api/estimates` → create a draft estimate for an existing tenant customer by canonical name or `customerId`; the estimate stores the durable customer link, accepts an optional normalized ISO `expiresAt` date, and accepts an optional `Idempotency-Key` for safe browser retries
 - `POST /api/estimates` accepts an optional `catalogItemId` and snapshots the tenant pricebook item on the estimate so later catalog edits do not rewrite historical quotes
 - `POST /api/estimates` also accepts up to three labeled `options`, or server-calculated `subtotal`, `discount`, and `taxRate` pricing components; public approval may include `optionId`, which snapshots the selected amount before quote-to-cash conversion
 - `GET /api/public/estimate?token=...` returns the customer-safe subtotal, discount, tax, and total breakdown when pricing components were used
@@ -160,7 +160,7 @@ System events such as web-form lead capture, customer estimate approval, and rec
 - `POST /api/estimates/:id/approve` → approve a tenant-owned estimate
 - `POST /api/estimates/:id/line-items` → owner/dispatcher-only replacement of up to 20 bounded draft-estimate line items; the server calculates subtotal, discount, tax, and total, supports idempotent retries, and preserves the itemized scope for the public estimate and resulting invoice
 - `GET /api/estimates/:id/revisions` → owner/dispatcher/accountant-only bounded immutable snapshots of prior estimate scope and pricing, including version, timestamp, and actor
-- `POST /api/estimates/:id/send` → owner/dispatcher-only delivery intent for an open estimate by SMS or email; marks it `Sent`, queues a provider-pending message with a secure estimate link, honors channel opt-outs, records `estimate.sent`, and supports idempotent retries
+- `POST /api/estimates/:id/send` → owner/dispatcher-only delivery intent for an open, non-expired estimate by SMS or email; marks it `Sent`, queues a provider-pending message with a secure estimate link, honors channel opt-outs, records `estimate.sent`, and supports idempotent retries
 - `POST /api/estimates/:id/remind` → queue an owner/dispatcher SMS or email follow-up for an open estimate, preserving its durable `customerId` and deduplicating for 24 hours
 - `POST /api/estimates/:id/convert` → convert an accepted estimate into a scheduled, checklist-ready job; accepts a preferred available `slotId` (or legacy `time`), preserves normalized appointment timestamps for slot-based conversions, rejects active appointment conflicts, accepts an optional `Idempotency-Key` for safe retries, and records an actor-attributed `estimate.converted` audit event
 - `POST /api/invoices` → create an invoice only from an approved estimate, carry forward its durable `customerId`, reject duplicate invoices for the same estimate, accept an optional `Idempotency-Key` for safe retries, and record an `invoice.created` audit event
