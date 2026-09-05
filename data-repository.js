@@ -155,6 +155,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async downloadJobCalendar(id) {
+    if (!this.remote) throw new Error('API required for calendar export');
+    const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/calendar`, { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('job calendar unavailable');
+    return response.blob();
+  }
+
   async recommendTechnicians(jobId) {
     if (!this.remote) throw new Error('API required for dispatch recommendations');
     const response = await fetch(`/api/dispatch/recommendations?jobId=${encodeURIComponent(jobId)}`, { headers: { authorization: `Bearer ${this.token}` } });

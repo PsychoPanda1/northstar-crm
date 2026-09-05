@@ -101,6 +101,9 @@ try {
   assert(idempotentJob.response.status === 201 && idempotentJobRetry.response.status === 200 && idempotentJobRetry.body.duplicate === true && idempotentJobRetry.body.id === idempotentJob.body.id, 'job creation idempotency failed');
   const jobCreationAudit = await request('/api/audit?search=Scheduled%20repair', { headers: { authorization: `Bearer ${token}` } });
   const structuredJob = await request('/api/jobs', jsonOptions('POST', { customerId: createdCustomer.body.id, service: 'Structured appointment', time: 'Saturday 9:00 AM', startsAt: '2026-09-12T13:00:00.000Z', endsAt: '2026-09-12T14:00:00.000Z', timeZone: 'America/New_York' }, token));
+  const calendarExport = await fetch(`${base}/api/jobs/${encodeURIComponent(structuredJob.body.id)}/calendar`, { headers: { authorization: `Bearer ${token}` } });
+  const calendarText = await calendarExport.text();
+  assert(structuredJob.response.status === 201 && calendarExport.status === 200 && calendarExport.headers.get('content-type')?.includes('text/calendar') && calendarText.includes('BEGIN:VCALENDAR') && calendarText.includes('SUMMARY:Structured appointment') && calendarText.includes('LOCATION:101 King St\\, Charleston'), 'job calendar export workflow failed');
   const reminderStart = new Date(Date.now() + 2 * 60 * 60 * 1000);
   const reminderCustomer = await request('/api/customers', jsonOptions('POST', { name: 'Reminder Customer', phone: '843-555-0186', email: 'reminder.customer@example.test' }, token));
   const reminderJob = await request('/api/jobs', jsonOptions('POST', { customerId: reminderCustomer.body.id, service: 'Reminder test', time: 'Upcoming appointment', startsAt: reminderStart.toISOString(), endsAt: new Date(reminderStart.getTime() + 60 * 60 * 1000).toISOString(), timeZone: 'America/New_York' }, token));
