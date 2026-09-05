@@ -1,0 +1,11 @@
+{
+  "name": "Northstar CRM Owner Workspace",
+  "short_name": "Northstar CRM",
+  "id": "/portal",
+  "start_url": "/portal",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f4f7f6",
+  "theme_color": "#203238",
+  "description": "Secure field-service operations workspace for service-business owners."
+}

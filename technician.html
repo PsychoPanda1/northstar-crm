@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#2c9d73" />
-  <link rel="manifest" href="/technician.webmanifest" />
+  <link rel="manifest" href="/northstar.webmanifest" />
   <title>Northstar Field Job</title>
   <style>
     :root{font-family:Inter,system-ui,sans-serif;color:#183044;background:#f4f8f7}body{margin:0;padding:24px}.card{max-width:520px;margin:4vh auto;background:#fff;border:1px solid #dfe8e6;border-radius:18px;padding:24px;box-shadow:0 18px 45px #18304414}h1{font-size:25px;margin:8px 0}.eyebrow{font-size:11px;letter-spacing:1.5px;font-weight:800;color:#2c9d73}.meta{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:22px 0}.meta div{background:#f3f8f6;border-radius:10px;padding:13px}.label{display:block;color:#78908b;font-size:11px;margin-bottom:5px}.value{font-weight:700}.status{display:inline-block;border-radius:999px;padding:7px 11px;background:#e8f5ef;color:#25835e;font-size:12px;font-weight:800}button{width:100%;border:0;border-radius:10px;padding:14px;margin-top:10px;font:inherit;font-weight:800;cursor:pointer;background:#2c9d73;color:#fff}button.secondary{background:#eaf2ef;color:#237b5b}button:disabled{opacity:.5;cursor:wait}textarea{width:100%;box-sizing:border-box;border:1px solid #d8e4e0;border-radius:10px;padding:12px;font:inherit;min-height:90px;margin-top:14px}#message{font-size:13px;color:#6d7c84;min-height:20px;margin-top:14px}
@@ -37,7 +37,7 @@
     <button class="secondary" id="use-material">Record material used</button>
     <div id="message"></div>
   </main>
-  <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/technician-sw.js', { scope: '/' }).catch(() => {});</script>
+  <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/northstar-sw.js', { scope: '/' }).catch(() => {});</script>
   <script>
     const token = new URLSearchParams(location.search).get('token');
     const queueKey = `northstar-field-queue:${(token || 'missing').slice(-24)}`;
