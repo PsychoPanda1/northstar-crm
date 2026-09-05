@@ -1,0 +1,213 @@
+openapi: 3.0.3
+info:
+  title: Northstar CRM Public Integration API
+  version: 2.0.0
+  description: Public, tenant-routed contract for service landing pages. Owner records and credentials are never exposed by these endpoints.
+servers:
+  - url: https://crm.example.com
+paths:
+  /api/public/tenant:
+    get:
+      summary: Discover a service tenant and integration manifest
+      parameters:
+        - $ref: '#/components/parameters/Service'
+      responses:
+        '200':
+          description: Tenant and versioned integration manifest
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TenantManifest'
+        '404':
+          $ref: '#/components/responses/UnknownService'
+  /api/public/catalog:
+    get:
+      summary: List customer-safe services
+      parameters:
+        - $ref: '#/components/parameters/Service'
+      responses:
+        '200':
+          description: Active services offered by the tenant
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/CatalogItem'
+        '404':
+          $ref: '#/components/responses/UnknownService'
+  /api/public/availability:
+    get:
+      summary: List available appointment slots
+      parameters:
+        - $ref: '#/components/parameters/Service'
+        - name: days
+          in: query
+          schema: { type: integer, minimum: 0, maximum: 14, default: 7 }
+        - name: catalogItemId
+          in: query
+          schema: { type: string, maxLength: 120 }
+      responses:
+        '200':
+          description: Capacity-aware slots in the tenant timezone
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [slotOptions, timeZone]
+                properties:
+                  timeZone: { type: string }
+                  slotOptions:
+                    type: array
+                    items: { $ref: '#/components/schemas/Slot' }
+        '404':
+          $ref: '#/components/responses/UnknownService'
+  /api/public/leads:
+    post:
+      summary: Capture a landing-page lead
+      parameters:
+        - $ref: '#/components/parameters/Service'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LeadRequest' }
+      responses:
+        '201': { $ref: '#/components/responses/LeadAccepted' }
+        '200': { $ref: '#/components/responses/Duplicate' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /api/public/bookings:
+    post:
+      summary: Create a customer booking
+      parameters:
+        - $ref: '#/components/parameters/Service'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BookingRequest' }
+      responses:
+        '201':
+          description: Booking accepted and routed to the tenant dispatch queue
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [id, booked, appointment, customerPortalToken]
+                properties:
+                  id: { type: string }
+                  booked: { type: boolean }
+                  appointment: { $ref: '#/components/schemas/Slot' }
+                  customerPortalToken: { type: string }
+                  customerPortalAccessToken: { type: string }
+        '200': { $ref: '#/components/responses/Duplicate' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+components:
+  parameters:
+    Service:
+      name: service
+      in: query
+      required: true
+      schema: { type: string, pattern: '^[a-z0-9-]{2,80}$' }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, minLength: 8, maxLength: 100 }
+  schemas:
+    TenantManifest:
+      type: object
+      required: [tenant, integration]
+      properties:
+        tenant:
+          type: object
+          required: [slug, businessName, serviceLabel, timeZone]
+          properties:
+            slug: { type: string }
+            businessName: { type: string }
+            serviceLabel: { type: string }
+            timeZone: { type: string }
+        integration:
+          type: object
+          required: [version, leadEndpoint, bookingEndpoint, availabilityEndpoint]
+          properties:
+            version: { type: integer, example: 2 }
+            leadEndpoint: { type: string }
+            bookingEndpoint: { type: string }
+            availabilityEndpoint: { type: string }
+            ownerPortalPath: { type: string }
+    CatalogItem:
+      type: object
+      required: [id, name, description, priceFrom, durationMinutes]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        description: { type: string }
+        priceFrom: { type: string }
+        durationMinutes: { type: integer, minimum: 15 }
+        category: { type: string }
+    Slot:
+      type: object
+      required: [id, label, startsAt, endsAt, timeZone]
+      properties:
+        id: { type: string }
+        label: { type: string }
+        startsAt: { type: string, format: date-time }
+        endsAt: { type: string, format: date-time }
+        timeZone: { type: string }
+    LeadRequest:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 2, maxLength: 100 }
+        phone: { type: string, maxLength: 40 }
+        email: { type: string, format: email, maxLength: 120 }
+        requestedService: { type: string, maxLength: 80 }
+        location: { type: string, maxLength: 120 }
+        message: { type: string, maxLength: 500 }
+        source: { type: string, maxLength: 80 }
+        website: { type: string, maxLength: 120, description: Leave empty; honeypot field. }
+    BookingRequest:
+      allOf:
+        - $ref: '#/components/schemas/LeadRequest'
+        - type: object
+          required: [location]
+          properties:
+            slotId: { type: string, maxLength: 120 }
+            time: { type: string, maxLength: 120 }
+            catalogItemId: { type: string, maxLength: 120 }
+            checklist:
+              type: array
+              maxItems: 12
+              items: { type: string, minLength: 2, maxLength: 120 }
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
+        requestId: { type: string }
+    Duplicate:
+      type: object
+      required: [duplicate]
+      properties: { duplicate: { type: boolean, enum: [true] } }
+  responses:
+    UnknownService:
+      description: Service key is not configured
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    ValidationError:
+      description: Request failed bounded validation
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    IdempotencyConflict:
+      description: Idempotency key was reused with a different payload
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    LeadAccepted:
+      description: Lead accepted
+      content: { application/json: { schema: { type: object, required: [id, received], properties: { id: { type: string }, received: { type: boolean } } } } }
