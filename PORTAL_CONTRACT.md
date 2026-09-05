@@ -64,6 +64,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - `POST /api/jobs/:id/technician-link` → issue a 24-hour, job-scoped technician mobile link for an assigned job
 - `GET/POST /api/public/technician-job...` → technician-safe job detail and status/completion updates through the signed link
 - `POST /api/public/technician-job/labor?token=...` → log field hours for the assigned job
+- `GET/POST /api/public/technician-job/clock?token=...` → read or update the assigned technician's clock-in/out state; completed sessions preserve elapsed field minutes and audit events
 - `POST /api/public/technician-job/materials?token=...` → consume available stock against the assigned job and append a source-tagged inventory transaction
 - `POST /api/public/technician-job/payment-intent?token=...` → create an idempotent provider-pending Card/ACH intent only for the assigned job's open invoice; provider confirmation remains external
 - New jobs include a required three-step field checklist; `POST /api/public/technician-job/checklist?token=...` updates checklist items and technician completion rejects incomplete work

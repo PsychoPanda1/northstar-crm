@@ -171,6 +171,11 @@ try {
   const techViewWithUsage = await request(`/api/public/technician-job${techUrl.search}`);
   const techEnRoute = await request(`/api/public/technician-job/status${techUrl.search}`, jsonOptions('POST', { status: 'En route' }));
   const techStarted = await request(`/api/public/technician-job/status${techUrl.search}`, jsonOptions('POST', { status: 'In progress' }));
+  const techClockIn = await request(`/api/public/technician-job/clock${techUrl.search}`, jsonOptions('POST', { action: 'in' }));
+  const techClockView = await request(`/api/public/technician-job/clock${techUrl.search}`);
+  const techClockOut = await request(`/api/public/technician-job/clock${techUrl.search}`, jsonOptions('POST', { action: 'out' }));
+  const techClockDuplicate = await request(`/api/public/technician-job/clock${techUrl.search}`, jsonOptions('POST', { action: 'out' }));
+  assert(techClockIn.response.status === 200 && techClockView.body.active === true && techClockOut.body.action === 'out' && techClockOut.body.clockInAt && techClockOut.body.clockOutAt && Number.isInteger(techClockOut.body.fieldMinutes) && techClockDuplicate.response.status === 409, 'technician clock workflow failed');
   const checklistBeforeComplete = await request(`/api/public/technician-job${techUrl.search}`);
   const techIncomplete = await request(`/api/public/technician-job/complete${techUrl.search}`, jsonOptions('POST', { note: 'Attempted early completion.' }));
   for (let index = 0; index < checklistBeforeComplete.body.checklist.length; index += 1) await request(`/api/public/technician-job/checklist${techUrl.search}`, jsonOptions('POST', { index, completed: true }));
