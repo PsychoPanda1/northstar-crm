@@ -178,6 +178,10 @@ docker run --rm -p 4173:4173 -v northstar-data:/app/data \
 
 The image runs as the unprivileged `node` user in production mode, stores local state under `/app/data`, and exposes `/api/ready` as its container readiness check. Readiness requires a non-default session secret, configured owner/staff authentication, and all four webhook secrets (`NORTHSTAR_PAYMENT_WEBHOOK_SECRET`, `NORTHSTAR_MESSAGE_WEBHOOK_SECRET`, `NORTHSTAR_CALL_WEBHOOK_SECRET`, and `NORTHSTAR_FINANCING_WEBHOOK_SECRET`); configure these through deployment environment variables and do not bake credentials into the image. Demo login is disabled in production unless `NORTHSTAR_ALLOW_DEMO_LOGIN=true` is explicitly set for an isolated preview or smoke environment.
 
+### Publish a release image
+
+Create a semantic-version tag such as `v0.2.0` and push it to GitHub. The `Publish Northstar container` workflow publishes both the versioned image and `latest` to `ghcr.io/psychopanda1/northstar-crm`; configure the required production environment variables in the service that runs the image, not in GitHub or the image itself. The workflow can also be started manually from Actions for an explicitly requested image publication.
+
 Use `.env.example` as the handoff checklist for a deployment or a service landing-page integration. Copy it to `.env` for local work (`Copy-Item .env.example .env` in PowerShell), replace every placeholder, and keep the resulting file out of Git and container images. The tenant slug and service mapping must match the `service` key used by each landing page; the example intentionally contains no working credentials.
 
 To generate a salted scrypt `NORTHSTAR_OWNER_PASSWORD_DIGEST` without putting the password in shell history, run `node scripts/generate-owner-digest.mjs`; store the printed digest only in the deployment secret configuration.
