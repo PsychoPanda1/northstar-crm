@@ -8,7 +8,13 @@ const NORTHSTAR_TENANTS = {
   carwash: { slug: 'harbor-shine', businessName: 'Harbor Shine Mobile', serviceLabel: 'Mobile car wash', accent: '#3f9da6', accentSoft: '#e5f5f5', focus: 'Keep routes full and customers coming back.' }
 };
 
-function resolveTenant() {
+async function resolveTenant() {
   const requested = new URLSearchParams(window.location.search).get('service');
-  return NORTHSTAR_TENANTS[requested] || NORTHSTAR_TENANTS.default;
+  const fallback = NORTHSTAR_TENANTS[requested] || NORTHSTAR_TENANTS.default;
+  try {
+    const response = await fetch(`/api/public/tenant?service=${encodeURIComponent(requested || 'default')}`);
+    const body = await response.json();
+    if (response.ok && body.tenant) return { ...fallback, ...body.tenant };
+  } catch {}
+  return fallback;
 }

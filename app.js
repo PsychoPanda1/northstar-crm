@@ -1,5 +1,5 @@
 async function bootstrap() {
-const tenant = resolveTenant();
+const tenant = await resolveTenant();
 const repository = new NorthstarDemoRepository(tenant);
 await repository.ready;
 const dashboard = repository.getDashboard();
