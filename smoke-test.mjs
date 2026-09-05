@@ -80,9 +80,10 @@ try {
   const technicianSession = await request('/api/session', { headers: { authorization: `Bearer ${technicianLogin.body.token}` } });
   const technicianReports = await request('/api/reports/overview', { headers: { authorization: `Bearer ${technicianLogin.body.token}` } });
   const technicianJobCreate = await request('/api/jobs', jsonOptions('POST', { customerId: 'not-allowed', time: 'tomorrow' }, technicianLogin.body.token));
+  const technicianOtherJobLabor = await request(`/api/jobs/${directJob.body.id}/labor`, jsonOptions('POST', { hours: 1, hourlyRate: 50 }, technicianLogin.body.token));
   const accountantLogin = await request('/api/auth/demo-login?service=plumbing&role=accountant', jsonOptions('POST', {}));
   const accountantReports = await request('/api/reports/overview', { headers: { authorization: `Bearer ${accountantLogin.body.token}` } });
-  assert(technicianLogin.response.ok && technicianSession.body.owner.role === 'technician' && technicianSession.body.permissions.includes('field:write') && !technicianSession.body.permissions.includes('jobs:write') && technicianReports.response.status === 403 && technicianJobCreate.response.status === 403 && accountantReports.response.ok, 'role permissions failed');
+  assert(technicianLogin.response.ok && technicianSession.body.owner.role === 'technician' && technicianSession.body.permissions.includes('field:write') && !technicianSession.body.permissions.includes('jobs:write') && !technicianSession.body.permissions.includes('inventory:write') && technicianReports.response.status === 403 && technicianJobCreate.response.status === 403 && technicianOtherJobLabor.response.status === 403 && accountantReports.response.ok, 'role permissions failed');
   const catalogItem = await request('/api/catalog', jsonOptions('POST', { name: 'Emergency pipe repair', description: 'Priority diagnosis and repair for active leaks', priceFrom: '$389' }, token));
   const catalog = await request('/api/catalog?search=Emergency%20pipe', { headers: { authorization: `Bearer ${token}` } });
   const accountantCatalogItem = await request('/api/catalog', jsonOptions('POST', { name: 'Unauthorized pricebook item', description: 'Should not be created', priceFrom: '$1' }, accountantLogin.body.token));
