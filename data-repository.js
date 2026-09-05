@@ -65,6 +65,13 @@ class NorthstarDemoRepository {
     return (await response.json()).items;
   }
 
+  async listDispatchForDate(date) {
+    if (!this.remote) throw new Error('API required for dated dispatch');
+    const response = await fetch(`/api/dispatch?date=${encodeURIComponent(date)}`, { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('dated dispatch unavailable');
+    return response.json();
+  }
+
   async getReport() {
     if (!this.remote) throw new Error('API required for reporting');
     const response = await fetch('/api/reports/overview', { headers: { authorization: `Bearer ${this.token}` } });
