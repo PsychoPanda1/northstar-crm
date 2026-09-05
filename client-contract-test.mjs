@@ -11,5 +11,6 @@ assert(repository.includes("this.previewOnly = window.location.protocol === 'fil
 assert(app.includes('repository.authRequired') && app.includes('Owner sign-in required'), 'HTTP authentication failure does not fail closed');
 assert(app.includes('decorateDispatchNoShows(); decorateDispatchRebooks();'), 'dispatch recovery actions are not reapplied after search');
 assert(app.includes("!['Canceled', 'No-show'].includes(status)"), 'dispatch rebooking does not include no-show jobs');
+assert(app.includes('Visit progress:') && app.includes('data-job-visit-summary'), 'owner job detail does not expose multi-visit progress');
 assert(customer.includes("job.status === 'No-show' ? 'Book a new visit'"), 'customer portal does not expose no-show recovery');
 console.log('Northstar client contract checks passed');
