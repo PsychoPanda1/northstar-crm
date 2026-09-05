@@ -59,6 +59,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Technician-initiated Card/ACH payment intents scoped to the assigned job invoice
 - Technicians can create idempotent field estimates for newly discovered work, preserving the assigned job, customer, technician, finding note, and owner-review status
 - Customer appointment confirmation through signed portal links with timeline visibility
+- Privacy-safe technician tracking heartbeat with customer-safe live-status metadata and owner audit evidence
 - Dispatch-triggered confirmation, en-route, and completion message templates linked to jobs
 - Owner/dispatcher no-show recording with reason, timeline, and audit evidence
 - No-show recovery from the dispatch board and owner action queue with available-slot and technician-conflict checks
