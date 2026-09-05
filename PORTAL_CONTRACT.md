@@ -36,7 +36,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - Demo login accepts `role=owner|dispatcher|technician|accountant`; production identity claims must map to the returned permission names and enforce them server-side
 - `field:write` is limited to field execution endpoints such as labor/material capture; `jobs:write` remains required for dispatch administration and job creation
 - Owner logout writes a session revocation record that survives API restarts in development; production should delegate session lifecycle and revocation to the identity provider
-- `GET /api/customers` and `POST /api/customers` → list or create tenant-owned customer profiles; creation requires a phone, preserves an optional email captured by the owner workspace, rejects duplicate phone/email contacts, and records a `customer.created` audit event
+- `GET /api/customers` and `POST /api/customers` → list or create tenant-owned customer profiles; creation requires a phone, preserves an optional email captured by the owner workspace, rejects duplicate phone/email contacts, accepts an optional `Idempotency-Key` for safe retries, and records a `customer.created` audit event
 - `GET /api/customers/:id` → return one tenant-scoped customer profile with related jobs, assets, estimates, invoices, plans, and activities
 - `GET /api/customers/:id/timeline?limit=...` → return a bounded, tenant-scoped customer timeline projection of activity and message history without requiring consumers to load the full profile payload
 - Records returned by the owner API enrich legacy name-based customer records with a matching tenant-scoped `customerId` when one can be resolved, preserving compatibility while enabling durable history links
