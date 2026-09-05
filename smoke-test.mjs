@@ -3,10 +3,15 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawn } from 'node:child_process';
 import { createHmac } from 'node:crypto';
+import { createServer as createHttpServer } from 'node:http';
 import { fileURLToPath } from 'node:url';
 
 const port = 4377;
+const paymentProviderPort = 4378;
 const base = `http://127.0.0.1:${port}`;
+const paymentProviderRequests = [];
+const paymentProvider = createHttpServer((req, res) => { let body = ''; req.on('data', (chunk) => { body += chunk; }); req.on('end', () => { try { paymentProviderRequests.push(JSON.parse(body)); } catch {} res.writeHead(202, { 'content-type': 'application/json' }); res.end(JSON.stringify({ status: 'accepted', providerReference: 'stub-payment-reference' })); }); });
+await new Promise((resolve) => paymentProvider.listen(paymentProviderPort, '127.0.0.1', resolve));
 const tempDir = mkdtempSync(join(tmpdir(), 'northstar-smoke-'));
 const dataFile = join(tempDir, 'state.json');
 writeFileSync(dataFile, '{malformed primary snapshot');
@@ -22,7 +27,7 @@ const staffPassword = 'smoke-dispatcher-password';
 const staffDigest = createHmac('sha256', 'smoke-session-secret-32-character-key').update(staffPassword).digest('hex');
 const hvacOwnerPassword = 'smoke-hvac-owner-password';
 const hvacOwnerDigest = createHmac('sha256', 'smoke-session-secret-32-character-key').update(hvacOwnerPassword).digest('hex');
-const serverEnv = { ...process.env, NODE_ENV: 'production', NORTHSTAR_ALLOW_DEMO_LOGIN: 'true', NORTHSTAR_SESSION_SECRET: 'smoke-session-secret-32-character-key', PORT: String(port), NORTHSTAR_DATA_FILE: dataFile, NORTHSTAR_PAYMENT_WEBHOOK_SECRET: webhookSecret, NORTHSTAR_MESSAGE_WEBHOOK_SECRET: messageWebhookSecret, NORTHSTAR_CALL_WEBHOOK_SECRET: callWebhookSecret, NORTHSTAR_FINANCING_WEBHOOK_SECRET: financingWebhookSecret, NORTHSTAR_ALLOWED_ORIGINS: 'https://plumbing.example', NORTHSTAR_OWNER_EMAIL: ownerEmail, NORTHSTAR_OWNER_PASSWORD_DIGEST: ownerDigest, NORTHSTAR_OWNER_TENANT_ID: 'clearwater-plumbing', NORTHSTAR_OWNERS_JSON: JSON.stringify([{ id: 'owner_configured_hvac', name: 'HVAC Workspace Owner', email: 'hvac-owner@example.test', passwordDigest: hvacOwnerDigest, tenantId: 'test-hvac' }]), NORTHSTAR_TENANTS_JSON: JSON.stringify([{ slug: 'test-hvac', businessName: 'Test HVAC', serviceLabel: 'HVAC', timeZone: 'America/New_York', accent: '#123456', accentSoft: '#abcdef', focus: 'Configured HVAC focus.', bookingStartHour: 7, bookingEndHour: 17, bookingIntervalMinutes: 60, workingDays: [1, 2, 3, 4, 5], blackoutDates: ['2099-12-25'] }]), NORTHSTAR_SERVICE_TENANTS_JSON: JSON.stringify({ hvac: 'test-hvac' }), NORTHSTAR_STAFF_JSON: JSON.stringify([{ id: 'staff_configured_dispatcher', name: 'Configured Dispatcher', email: 'dispatcher@example.test', passwordDigest: staffDigest, role: 'dispatcher', tenantId: 'clearwater-plumbing' }]) };
+const serverEnv = { ...process.env, NORTHSTAR_PAYMENT_PROVIDER_URL: 'http://127.0.0.1:4378/payment', NODE_ENV: 'production', NORTHSTAR_ALLOW_DEMO_LOGIN: 'true', NORTHSTAR_SESSION_SECRET: 'smoke-session-secret-32-character-key', PORT: String(port), NORTHSTAR_DATA_FILE: dataFile, NORTHSTAR_PAYMENT_WEBHOOK_SECRET: webhookSecret, NORTHSTAR_MESSAGE_WEBHOOK_SECRET: messageWebhookSecret, NORTHSTAR_CALL_WEBHOOK_SECRET: callWebhookSecret, NORTHSTAR_FINANCING_WEBHOOK_SECRET: financingWebhookSecret, NORTHSTAR_ALLOWED_ORIGINS: 'https://plumbing.example', NORTHSTAR_OWNER_EMAIL: ownerEmail, NORTHSTAR_OWNER_PASSWORD_DIGEST: ownerDigest, NORTHSTAR_OWNER_TENANT_ID: 'clearwater-plumbing', NORTHSTAR_OWNERS_JSON: JSON.stringify([{ id: 'owner_configured_hvac', name: 'HVAC Workspace Owner', email: 'hvac-owner@example.test', passwordDigest: hvacOwnerDigest, tenantId: 'test-hvac' }]), NORTHSTAR_TENANTS_JSON: JSON.stringify([{ slug: 'test-hvac', businessName: 'Test HVAC', serviceLabel: 'HVAC', timeZone: 'America/New_York', accent: '#123456', accentSoft: '#abcdef', focus: 'Configured HVAC focus.', bookingStartHour: 7, bookingEndHour: 17, bookingIntervalMinutes: 60, workingDays: [1, 2, 3, 4, 5], blackoutDates: ['2099-12-25'] }]), NORTHSTAR_SERVICE_TENANTS_JSON: JSON.stringify({ hvac: 'test-hvac' }), NORTHSTAR_STAFF_JSON: JSON.stringify([{ id: 'staff_configured_dispatcher', name: 'Configured Dispatcher', email: 'dispatcher@example.test', passwordDigest: staffDigest, role: 'dispatcher', tenantId: 'clearwater-plumbing' }]) };
 const server = spawn(process.execPath, [fileURLToPath(new URL('./server.mjs', import.meta.url))], { cwd: fileURLToPath(new URL('.', import.meta.url)), env: serverEnv, stdio: 'ignore' });
 let restartedServer;
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
@@ -828,6 +833,8 @@ const techViewWithAsset = await request(`/api/public/technician-job${techUrl.sea
   const portalPaymentIntent = await request(`/api/public/customer-portal/payment-intent${customerUrl.search}`, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': 'smoke-customer-portal-payment' }, body: JSON.stringify({ invoiceId: portalInvoiceView.id, amount: 75, method: 'ACH' }) });
   const portalPaymentIntentConflict = await request(`/api/public/customer-portal/payment-intent${customerUrl.search}`, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': 'smoke-customer-portal-payment' }, body: JSON.stringify({ invoiceId: portalInvoiceView.id, amount: 70, method: 'ACH' }) });
   assert(portalPaymentIntentConflict.response.status === 409 && portalPaymentIntentConflict.body.error === 'idempotency_key_reused', 'customer payment intent idempotency conflict protection failed');
+  const paymentDispatch = await request('/api/integrations/payments/dispatch', { ...jsonOptions('POST', { limit: 1 }, token), headers: { ...jsonOptions('POST', {}, token).headers } });
+  assert(paymentDispatch.response.status === 200 && paymentDispatch.body.submitted === 1 && paymentDispatch.body.intents[0].id === portalPaymentIntent.body.id && paymentProviderRequests.some((item) => item.paymentIntentId === portalPaymentIntent.body.id && item.amount === 75), 'payment provider dispatch failed');
   const portalWebhookBody = JSON.stringify({ tenantId: 'clearwater-plumbing', eventId: 'evt-portal-1', intentId: portalPaymentIntent.body.id, status: 'succeeded', reference: 'PROVIDER-42' });
   const portalWebhook = await request('/api/webhooks/payments', { method: 'POST', headers: { 'content-type': 'application/json', 'x-northstar-signature': createHmac('sha256', webhookSecret).update(portalWebhookBody).digest('hex') }, body: portalWebhookBody });
   const portalWebhookDuplicate = await request('/api/webhooks/payments', { method: 'POST', headers: { 'content-type': 'application/json', 'x-northstar-signature': createHmac('sha256', webhookSecret).update(portalWebhookBody).digest('hex') }, body: portalWebhookBody });
@@ -1029,4 +1036,4 @@ const appointmentQuestionOptions = { method: 'POST', headers: { 'content-type': 
   const revokedAfterRestart = await request('/api/session', { headers: { authorization: `Bearer ${token}` } });
   assert(revokedAfterRestart.response.status === 401, 'logout revocation did not survive restart');
   console.log('Northstar smoke test passed: intake, conversion, quote-to-cash, signed payment webhook, isolation, logout, restart revocation');
-} finally { server.kill(); restartedServer?.kill(); rmSync(tempDir, { recursive: true, force: true }); }
+} finally { server.kill(); restartedServer?.kill(); paymentProvider.close(); rmSync(tempDir, { recursive: true, force: true }); }
