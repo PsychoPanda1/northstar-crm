@@ -1,6 +1,6 @@
 import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
-import { createReadStream, existsSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs';
-import { extname, join, normalize, sep } from 'node:path';
+import { accessSync, constants as fsConstants, createReadStream, existsSync, readFileSync, renameSync, statSync, writeFileSync } from 'node:fs';
+import { dirname, extname, join, normalize, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createServer } from 'node:http';
 
@@ -15,6 +15,7 @@ const OWNER_LOGIN_EMAIL = String(process.env.NORTHSTAR_OWNER_EMAIL || '').trim()
 const OWNER_PASSWORD_DIGEST = String(process.env.NORTHSTAR_OWNER_PASSWORD_DIGEST || '').trim().toLowerCase();
 const DATA_FILE = process.env.NORTHSTAR_DATA_FILE || join(ROOT, '.northstar-data.json');
 const SESSION_FILE = process.env.NORTHSTAR_SESSION_FILE || `${DATA_FILE}.sessions`;
+const persistentStateWritable = () => { try { accessSync(DATA_FILE, fsConstants.F_OK | fsConstants.W_OK); return true; } catch { try { accessSync(dirname(DATA_FILE), fsConstants.F_OK | fsConstants.W_OK); return true; } catch { return false; } } };
 const ALLOWED_ORIGINS = new Set(String(process.env.NORTHSTAR_ALLOWED_ORIGINS || '').split(',').map((origin) => origin.trim()).filter(Boolean));
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.md': 'text/markdown; charset=utf-8' };
 const applySecurityHeaders = (res) => { res.setHeader('x-content-type-options', 'nosniff'); res.setHeader('x-frame-options', 'DENY'); res.setHeader('referrer-policy', 'no-referrer'); res.setHeader('permissions-policy', 'camera=(), microphone=(), geolocation=()'); res.setHeader('content-security-policy', "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"); if (process.env.NODE_ENV === 'production') res.setHeader('strict-transport-security', 'max-age=31536000; includeSubDomains'); };
@@ -211,7 +212,7 @@ const server = createServer(async (req, res) => {
     if ((pathname === '/api/public/leads' || pathname === '/api/public/bookings') && req.method === 'OPTIONS') { if (!origin || !ALLOWED_ORIGINS.has(origin)) return json(res, 403, { error: 'origin_not_allowed' }); res.writeHead(204, { 'access-control-allow-origin': origin, 'access-control-allow-methods': 'POST, OPTIONS', 'access-control-allow-headers': 'content-type, idempotency-key', 'vary': 'Origin' }); return res.end(); }
     if (pathname === '/api/public/leads' && req.method === 'OPTIONS') { if (!origin || !ALLOWED_ORIGINS.has(origin)) return json(res, 403, { error: 'origin_not_allowed' }); res.writeHead(204, { 'access-control-allow-origin': origin, 'access-control-allow-methods': 'POST, OPTIONS', 'access-control-allow-headers': 'content-type, idempotency-key', 'vary': 'Origin' }); return res.end(); }
     if (pathname === '/api/health' && req.method === 'GET') return json(res, 200, { ok: true, service: 'northstar-api', version: '0.3.0' });
-    if (pathname === '/api/ready' && req.method === 'GET') { const checks = { sessionSecret: SECRET !== DEFAULT_SESSION_SECRET, ownerAuth: Boolean((OWNER_LOGIN_EMAIL && OWNER_PASSWORD_DIGEST && tenants[OWNER_TENANT_ID]) || configuredStaff.length), paymentWebhookSecret: Boolean(process.env.NORTHSTAR_PAYMENT_WEBHOOK_SECRET), messageWebhookSecret: Boolean(process.env.NORTHSTAR_MESSAGE_WEBHOOK_SECRET), persistentState: Boolean(DATA_FILE) }; const ready = Object.values(checks).every(Boolean); return json(res, ready ? 200 : 503, { ok: ready, service: 'northstar-api', version: '0.3.0', checks }); }
+    if (pathname === '/api/ready' && req.method === 'GET') { const checks = { sessionSecret: SECRET !== DEFAULT_SESSION_SECRET, ownerAuth: Boolean((OWNER_LOGIN_EMAIL && OWNER_PASSWORD_DIGEST && tenants[OWNER_TENANT_ID]) || configuredStaff.length), paymentWebhookSecret: Boolean(process.env.NORTHSTAR_PAYMENT_WEBHOOK_SECRET), messageWebhookSecret: Boolean(process.env.NORTHSTAR_MESSAGE_WEBHOOK_SECRET), persistentState: persistentStateWritable() }; const ready = Object.values(checks).every(Boolean); return json(res, ready ? 200 : 503, { ok: ready, service: 'northstar-api', version: '0.3.0', checks }); }
     if (pathname === '/api/auth/demo-login' && req.method === 'POST') {
       if (!ALLOW_DEMO_LOGIN) return json(res, 404, { error: 'demo_login_disabled' });
       const body = await readBody(req); const service = body.service || requestUrl.searchParams.get('service') || 'default'; const role = String(body.role || requestUrl.searchParams.get('role') || 'owner').toLowerCase(); if (!demoStaff[role]) return json(res, 422, { error: 'invalid_demo_role' }); const tenantId = serviceTenant[service] || serviceTenant.default; const owner = { ...demoStaff[role], tenantId }; return json(res, 200, { token: issueToken(owner), owner: { id: owner.id, name: owner.name, role: owner.role }, tenant: tenants[tenantId], permissions: rolePermissions[role] });
