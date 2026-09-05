@@ -225,7 +225,7 @@ const server = createServer(async (req, res) => {
       const job = saved?.jobs.find((item) => item.id === (technicianCompletionPath ? claims.jobId : pathname.split('/')[3]));
       const activeVisits = openVisitsFor(job);
       const checklistComplete = !Array.isArray(job?.checklist) || job.checklist.every((item) => item.completed);
-      if (job && activeVisits.length && (ownerCompletionPath || checklistComplete)) return json(res, 409, { error: 'visits_incomplete', activeVisits: activeVisits.map((visit) => ({ id: visit.id, sequence: visit.sequence, status: visit.status })) });
+      if (job && activeVisits.length && (ownerCompletionPath ? ['owner', 'dispatcher'].includes(claims?.role) : checklistComplete)) return json(res, 409, { error: 'visits_incomplete', activeVisits: activeVisits.map((visit) => ({ id: visit.id, sequence: visit.sequence, status: visit.status })) });
     }
     const origin = req.headers.origin;
     if (origin && ALLOWED_ORIGINS.has(origin)) { res.setHeader('access-control-allow-origin', origin); res.setHeader('vary', 'Origin'); }
