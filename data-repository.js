@@ -120,6 +120,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async listJobVisits(jobId) {
+    if (!this.remote) throw new Error('API required for visit listing');
+    const response = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/visits`, { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('visit listing failed');
+    return response.json();
+  }
+
   async notifyJob(id, template, channel = 'SMS') {
     if (!this.remote) throw new Error('API required for job notifications');
     const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/notify`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ template, channel }) });
