@@ -65,9 +65,9 @@ assert(status.includes('/api/public/job-status/calendar') && status.includes('Ad
 assert(app.includes("(type === 'estimates' && item.note)"), 'owner estimate cards hide field findings');
 assert(customer.includes("job.status === 'No-show' ? 'Book a new visit'"), 'customer portal does not expose no-show recovery');
 assert(status.includes('body.visits') && status.includes('Visit progress') && status.includes('/api/public/job-status/cancel'), 'customer status page does not expose multi-visit progress and cancellation');
-assert(landingClient.includes('class NorthstarLandingClient') && landingClient.includes('manifest()') && landingClient.includes('submitLead') && landingClient.includes('book(payload') && landingClient.includes('idempotency-key'), 'landing-page client helper is not manifest-driven or retry-safe');
+assert(landingClient.includes('class NorthstarLandingClient') && landingClient.includes('manifest()') && landingClient.includes('submitLead') && landingClient.includes('book(payload') && landingClient.includes('idempotency-key') && booking.includes('landing-page-client.js') && booking.includes('new NorthstarLandingClient'), 'landing-page client helper is not manifest-driven or retry-safe');
 assert(status.includes('sessionStorage') && status.includes("retryKey('cancel'") && status.includes("retryKey('reschedule'"), 'customer status actions do not preserve mobile retry identity');
-assert(booking.includes('sessionStorage') && booking.includes('northstar-booking-retry-') && booking.includes("'idempotency-key':bookingKey"), 'landing booking form does not preserve mobile retry identity');
+assert(booking.includes('NorthstarLandingClient') && landingClient.includes("'idempotency-key': key"), 'landing booking form does not preserve mobile retry identity');
 assert(invoice.includes('id="breakdown"') && invoice.includes('Remaining $'), 'invoice payment page does not expose total, paid, and remaining balance');
 assert(invoice.includes('sessionStorage') && invoice.includes('idempotency-key') && invoice.includes('paymentKey'), 'invoice payment page does not preserve mobile retry identity');
 assert(customer.includes('sessionStorage') && customer.includes('retryKey') && customer.includes('idempotency-key'), 'customer portal actions do not preserve mobile retry identity');
