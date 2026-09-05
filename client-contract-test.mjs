@@ -86,6 +86,7 @@ assert(status.slice(status.indexOf('</html>') + 7).trim() === '' && status.lastI
 assert(status.includes('currentStatus') && status.includes('currentStatus !== body.status') && status.includes('location.reload()'), 'status link does not refresh lifecycle transitions');
 assert(status.includes('__northstarStatusPromise') && status.includes('response.clone().json()'), 'status controls do not share the initial status response');
 assert(server.includes('TRACKING_MAX_AGE_MS = 15 * 60 * 1000') && server.includes('trackingViewFor(item)') && server.includes('trackingViewFor(job)'), 'tracking projections do not enforce active-job freshness');
+assert(!server.includes('jobRebookReplayMatch'), 'server retains a shadowed rebooking replay handler');
 assert(app.includes("Date.now() - Date.parse(job.locationPing.recordedAt) <= 900000"), 'dispatch tracking display does not expire stale heartbeats');
 assert(customer.includes('portalRefreshTimer') && customer.includes("/api/public/customer-portal' + query") && customer.includes('document.hidden'), 'customer portal does not refresh active tracking while visible');
 assert(status.includes('tracking-freshness') && status.includes('Technician location') && status.includes('setInterval(refreshTracking, 30000)'), 'customer status link does not expose refreshed tracking freshness');
