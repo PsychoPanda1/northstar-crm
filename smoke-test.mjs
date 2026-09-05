@@ -10,7 +10,7 @@ const port = 4377;
 const paymentProviderPort = 4378;
 const base = `http://127.0.0.1:${port}`;
 const paymentProviderRequests = [];
-const paymentProvider = createHttpServer((req, res) => { let body = ''; req.on('data', (chunk) => { body += chunk; }); req.on('end', () => { try { paymentProviderRequests.push(JSON.parse(body)); } catch {} res.writeHead(202, { 'content-type': 'application/json' }); res.end(JSON.stringify({ status: 'accepted', providerReference: 'stub-payment-reference' })); }); });
+const paymentProvider = createHttpServer((req, res) => { let body = ''; req.on('data', (chunk) => { body += chunk; }); req.on('end', () => { try { paymentProviderRequests.push(JSON.parse(body)); } catch {} if (paymentProviderRequests.length >= 3) { res.writeHead(500, { 'content-type': 'application/json' }); res.end(JSON.stringify({ error: 'stub_provider_unavailable' })); return; } res.writeHead(202, { 'content-type': 'application/json' }); res.end(JSON.stringify({ status: 'accepted', providerReference: 'stub-payment-reference' })); }); });
 await new Promise((resolve) => paymentProvider.listen(paymentProviderPort, '127.0.0.1', resolve));
 const tempDir = mkdtempSync(join(tmpdir(), 'northstar-smoke-'));
 const dataFile = join(tempDir, 'state.json');
@@ -913,6 +913,9 @@ const appointmentQuestionOptions = { method: 'POST', headers: { 'content-type': 
   assert(paymentRetry.response.status === 201 && paymentRetry.body.intent.retryOf === technicianPaymentIntent.body.id && paymentRetry.body.intent.status === 'Pending provider' && paymentRetryDuplicate.response.status === 200 && paymentRetryDuplicate.body.duplicate === true, 'failed payment retry workflow failed');
   const paymentRetryDispatch = await request('/api/integrations/payments/dispatch', { ...jsonOptions('POST', { limit: 1 }, token), headers: { ...jsonOptions('POST', {}, token).headers } });
   assert(paymentRetryDispatch.response.status === 200 && paymentRetryDispatch.body.submitted === 1 && paymentRetryDispatch.body.intents[0].id === paymentRetry.body.intent.id && paymentProviderRequests.some((item) => item.paymentIntentId === paymentRetry.body.intent.id), 'payment retry provider dispatch failed');
+  const failedProviderIntent = await request('/api/public/customer-portal/payment-intent' + customerUrl.search, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': 'smoke-provider-failure' }, body: JSON.stringify({ invoiceId: portalInvoiceView.id, amount: 25, method: 'Card' }) });
+  const failedProviderDispatch = await request('/api/integrations/payments/dispatch', { ...jsonOptions('POST', { limit: 1 }, token), headers: { ...jsonOptions('POST', {}, token).headers } });
+  assert(failedProviderIntent.response.status === 201 && failedProviderDispatch.response.status === 200 && failedProviderDispatch.body.failed === 1 && failedProviderDispatch.body.intents[0].id === failedProviderIntent.body.id && failedProviderDispatch.body.intents[0].error === 'stub_provider_unavailable', 'payment provider failure handling failed');
   const guardJob = await request('/api/jobs', jsonOptions('POST', { customerId: converted.body.customer.id, service: 'Capacity check', time: 'Next Monday 10:00 AM' }, token));
   await request(`/api/jobs/${guardJob.body.id}/assign`, jsonOptions('POST', { technician: 'Alex Rivera' }, token));
   const conflictJob = await request('/api/jobs', jsonOptions('POST', { customerId: converted.body.customer.id, service: 'Same-time service', time: 'Next Monday 11:00 AM' }, token));
