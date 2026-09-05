@@ -181,6 +181,7 @@ try {
   const customerLink = await request(`/api/jobs/${fieldJob.body.id}/customer-link`, jsonOptions('POST', {}, token));
   const customerUrl = new URL(customerLink.body.url, base);
   const customerPortal = await request(`/api/public/customer-portal${customerUrl.search}`);
+  assert(customerPortal.body.jobs.some((item) => item.id === fieldJob.body.id && item.photos?.[0]?.caption.includes('coupling')), 'customer portal field evidence visibility failed');
   assert(customerPortal.body.assets?.[0]?.warrantyThrough === '2029-09-04', 'customer portal warranty visibility failed');
   const portalConfirm = await request(`/api/public/customer-portal/confirm${customerUrl.search}`, jsonOptions('POST', { jobId: customerPortal.body.jobs[0].id }));
   const portalConfirmDuplicate = await request(`/api/public/customer-portal/confirm${customerUrl.search}`, jsonOptions('POST', { jobId: customerPortal.body.jobs[0].id }));
