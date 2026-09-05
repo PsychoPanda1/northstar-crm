@@ -365,9 +365,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async createInvoice(estimateId) {
+  async createInvoice(estimateId, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for invoice creation');
-    const response = await fetch('/api/invoices', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ estimateId }) });
+    const response = await fetch('/api/invoices', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ estimateId }) });
     if (!response.ok) throw new Error('invoice creation failed');
     return response.json();
   }
