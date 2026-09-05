@@ -108,12 +108,15 @@ try {
   const material = await request('/api/materials', jsonOptions('POST', { name: '1/2 inch copper coupling', sku: 'CU-COUP-12', unit: 'each', unitCost: 8.5, onHand: 4, reorderPoint: 1 }, token));
   const materials = await request('/api/materials?search=copper', { headers: { authorization: `Bearer ${token}` } });
   assert(material.response.status === 201 && materials.body.items[0].status === 'In stock' && materials.body.items[0].onHand === 4, 'inventory receipt failed');
-  const message = await request('/api/messages', jsonOptions('POST', { customer: 'Smoke Lead', channel: 'SMS', message: 'Your technician is scheduled for tomorrow at 9:00 AM.' }, token));
+  const messageOptions = jsonOptions('POST', { customer: 'Smoke Lead', channel: 'SMS', message: 'Your technician is scheduled for tomorrow at 9:00 AM.' }, token);
+  messageOptions.headers['idempotency-key'] = 'smoke-outbound-message';
+  const message = await request('/api/messages', messageOptions);
+  const duplicateMessage = await request('/api/messages', { ...messageOptions, headers: { ...messageOptions.headers } });
   const messages = await request('/api/messages?search=Smoke%20Lead', { headers: { authorization: `Bearer ${token}` } });
   const messageEventBody = JSON.stringify({ tenantId: 'clearwater-plumbing', eventId: 'msg-event-1', messageId: message.body.id, status: 'sent', providerReference: 'SMS-42' });
   const messageDelivery = await request('/api/webhooks/messages', { method: 'POST', headers: { 'content-type': 'application/json', 'x-northstar-signature': createHmac('sha256', messageWebhookSecret).update(messageEventBody).digest('hex') }, body: messageEventBody });
   const messageDeliveryDuplicate = await request('/api/webhooks/messages', { method: 'POST', headers: { 'content-type': 'application/json', 'x-northstar-signature': createHmac('sha256', messageWebhookSecret).update(messageEventBody).digest('hex') }, body: messageEventBody });
-  assert(message.response.status === 201 && message.body.status === 'Queued (provider pending)' && messages.body.items.length === 1 && messages.body.items[0].channel === 'SMS' && messageDelivery.response.status === 200 && messageDelivery.body.message.status === 'Sent' && messageDeliveryDuplicate.response.status === 200 && messageDeliveryDuplicate.body.duplicate === true, 'message workflow failed');
+  assert(message.response.status === 201 && message.body.status === 'Queued (provider pending)' && duplicateMessage.response.status === 200 && duplicateMessage.body.duplicate === true && duplicateMessage.body.id === message.body.id && messages.body.items.length === 1 && messages.body.items[0].channel === 'SMS' && messageDelivery.response.status === 200 && messageDelivery.body.message.status === 'Sent' && messageDeliveryDuplicate.response.status === 200 && messageDeliveryDuplicate.body.duplicate === true, 'message workflow failed');
   const leadList = await request('/api/leads?search=Smoke%20Lead', { headers: { authorization: `Bearer ${token}` } });
   const leadNotifications = await request('/api/notifications?search=Smoke%20Lead', { headers: { authorization: `Bearer ${token}` } });
   const audit = await request('/api/audit?search=Smoke%20Lead', { headers: { authorization: `Bearer ${token}` } });
