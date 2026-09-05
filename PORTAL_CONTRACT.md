@@ -56,6 +56,7 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 - `GET /api/dashboard?range=week` → `{ metrics, pipeline, tasks, schedule, activity }`
 - `GET /api/reports/overview` → tenant-scoped funnel, scheduling, cash, recurring-revenue, and touchpoint metrics
 - `GET /api/reports/marketing` → owner/dispatcher/accountant-only source attribution report with lead counts, converted counts, conversion rates, scheduled jobs, attributed lead value, booked revenue, and collected revenue by landing-page source
+- `GET /api/reports/technicians` → owner/dispatcher/accountant-only technician performance report with jobs, completion/no-show counts, field hours, revenue, material/labor cost, gross margin, and completion rate
 - Report metrics also summarize estimate close rate, memberships sold, no-shows, open customer requests, tracked field hours, material spend, logged labor cost, and gross margin from recorded job data
 - `GET /api/export?type=reports` → tenant-scoped CSV of the report metrics for owner and accounting handoff
 - `GET /api/team` → tenant-scoped technician roster with derived availability and active-job counts used for assignment validation

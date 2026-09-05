@@ -79,6 +79,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async getTechnicianReport() {
+    if (!this.remote) throw new Error('API required for technician reporting');
+    const response = await fetch('/api/reports/technicians', { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('technician report unavailable');
+    return response.json();
+  }
+
   async getIntegrationHealth() {
     if (!this.remote) throw new Error('API required for integration health');
     const response = await fetch('/api/integrations/health', { headers: { authorization: `Bearer ${this.token}` } });
