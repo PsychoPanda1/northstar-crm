@@ -79,6 +79,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Estimates can calculate subtotal, discounts, tax, and final total on the server
 - Customer estimate approvals capture the typed approver name in the estimate and audit ledger
 - Customer estimate change requests route directly into the owner action queue
+- Owners can revise change-requested estimates and resend the updated scope
 - Customers can decline estimates with a bounded reason that becomes an auditable pipeline outcome
 - Secure 72-hour customer portal links with appointments, equipment, estimates, invoices, service plans, self-service rescheduling, and confirmed appointment cancellation
 - Customer portal users can manage SMS/email contact preferences without exposing those flags in the general portal payload
