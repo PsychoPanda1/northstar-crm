@@ -72,6 +72,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async getIntegrationHealth() {
+    if (!this.remote) throw new Error('API required for integration health');
+    const response = await fetch('/api/integrations/health', { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('integration health unavailable');
+    return response.json();
+  }
+
   async exportRecords(type) {
     if (!this.remote) throw new Error('API required for exports');
     const response = await fetch(`/api/export?type=${encodeURIComponent(type)}`, { headers: { authorization: `Bearer ${this.token}` } });
