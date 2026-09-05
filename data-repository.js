@@ -546,16 +546,16 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async consumeMaterial(jobId, materialId, quantity) {
+  async consumeMaterial(jobId, materialId, quantity, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for material usage');
-    const response = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/materials`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ materialId, quantity }) });
+    const response = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/materials`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ materialId, quantity }) });
     if (!response.ok) throw new Error('material usage failed');
     return response.json();
   }
 
-  async logLabor(jobId, technician, hours, hourlyRate) {
+  async logLabor(jobId, technician, hours, hourlyRate, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for labor logging');
-    const response = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/labor`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ technician, hours, hourlyRate }) });
+    const response = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/labor`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ technician, hours, hourlyRate }) });
     if (!response.ok) throw new Error('labor logging failed');
     return response.json();
   }
