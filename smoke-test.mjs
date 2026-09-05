@@ -38,7 +38,7 @@ try {
   const tenantConfig = await request('/api/public/tenant?service=plumbing');
   const configuredTenantConfig = await request('/api/public/tenant?service=hvac');
   const unknownTenantConfig = await request('/api/public/tenant?service=not-a-service');
-  assert(tenantConfig.body.integration?.bookingEndpoint === '/api/public/bookings?service=plumbing' && tenantConfig.body.integration?.leadEndpoint === '/api/public/leads?service=plumbing' && tenantConfig.body.integration?.availabilityEndpoint === '/api/public/availability?service=plumbing' && tenantConfig.body.integration?.capabilities?.customerPortal === true, 'landing integration manifest failed');
+  assert(tenantConfig.body.integration?.version === 1 && tenantConfig.body.integration?.bookingEndpoint === '/api/public/bookings?service=plumbing' && tenantConfig.body.integration?.leadEndpoint === '/api/public/leads?service=plumbing' && tenantConfig.body.integration?.availabilityEndpoint === '/api/public/availability?service=plumbing' && tenantConfig.body.integration?.capabilities?.customerPortal === true && tenantConfig.body.integration?.bookingRequirements?.location === 'required' && tenantConfig.body.integration?.bookingRequirements?.checklistMaxItems === 12, 'landing integration manifest failed');
   const readiness = await request('/api/ready');
   const secureLogin = await request('/api/auth/login?service=plumbing', jsonOptions('POST', { email: ownerEmail, password: ownerPassword }));
   const integrationHealth = await request('/api/integrations/health', { headers: { authorization: `Bearer ${secureLogin.body.token}` } });
