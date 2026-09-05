@@ -10,6 +10,8 @@ const status = readFileSync(`${root}status.html`, 'utf8');
 const invoice = readFileSync(`${root}invoice.html`, 'utf8');
 const booking = readFileSync(`${root}booking.html`, 'utf8');
 const technician = readFileSync(`${root}technician.html`, 'utf8');
+const technicianManifest = readFileSync(`${root}technician.webmanifest`, 'utf8');
+const technicianServiceWorker = readFileSync(`${root}technician-sw.js`, 'utf8');
 const server = readFileSync(`${root}server.mjs`, 'utf8');
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 assert(customer.includes('estimate.estimateUrl') && customer.includes('Open detailed estimate'), 'customer portal does not expose detailed estimate links');
@@ -42,6 +44,7 @@ assert(customer.includes('sessionStorage') && customer.includes('retryKey') && c
 assert(customer.includes('data-action="job-request"') && customer.includes('/api/public/customer-portal/request'), 'customer portal does not expose appointment-scoped questions');
 assert(customer.includes('/api/public/customer-portal/calendar') && customer.includes('Add to calendar'), 'customer portal does not expose calendar handoff');
 assert(technician.includes('create-estimate') && technician.includes('estimate-catalog') && technician.includes('/api/public/technician-job/estimate'), 'technician field estimate workflow is not wired');
+assert(technician.includes('technician.webmanifest') && technician.includes("serviceWorker.register('/technician-sw.js'") && technicianManifest.includes('"display": "standalone"') && technicianServiceWorker.includes("caches.match('/technician.html')") && !technicianServiceWorker.includes('cache.put') , 'technician field workspace is not safely installable');
 assert(app.includes("['Messages', profile.messages || []]") && app.includes("['Calls', profile.calls || []]"), 'owner customer profile does not expose communication history');
 assert(app.includes("result.results.messages || []") && app.includes("result.results.calls || []"), 'global search does not expose communication history');
 assert(app.includes('data-run-automations') && app.includes('runAutomations'), 'dispatch workspace does not expose coordinated customer automations');
