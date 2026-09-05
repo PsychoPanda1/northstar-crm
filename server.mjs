@@ -329,6 +329,7 @@ const server = createServer(async (req, res) => {
     applySecurityHeaders(res);
     const requestUrl = new URL(req.url, `http://${req.headers.host}`);
     const pathname = requestUrl.pathname;
+    if (req.method === 'OPTIONS' && pathname.startsWith('/api/')) { const origin = String(req.headers.origin || ''); if (!origin || !ALLOWED_ORIGINS.has(origin)) return json(res, 403, { error: 'origin_not_allowed' }); res.setHeader('access-control-allow-origin', origin); res.setHeader('access-control-allow-methods', 'GET,POST,PATCH,PUT,OPTIONS'); res.setHeader('access-control-allow-headers', 'content-type,authorization,idempotency-key,x-northstar-signature'); res.setHeader('access-control-max-age', '600'); res.setHeader('vary', 'Origin'); res.writeHead(204); return res.end(); }
     if (pathname === '/api/integrations/messages/dispatch' && req.method === 'POST') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); if (!['owner', 'dispatcher'].includes(claims.role)) return json(res, 403, { error: 'forbidden' }); if (!MESSAGE_PROVIDER_URL) return json(res, 503, { error: 'message_provider_not_configured' }); const saved = state.get(claims.tenantId); const body = await readBody(req); const result = await dispatchMessages(saved, claims, body.limit); if (result.error) return json(res, 503, result); return json(res, 200, result); }
     if (pathname === '/api/public/job-status/cancel' && req.method === 'POST') {
       const claims = readJobStatusToken(requestUrl.searchParams.get('token'));

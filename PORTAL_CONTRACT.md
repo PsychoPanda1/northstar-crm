@@ -40,6 +40,7 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 - Public status and customer-portal appointment records include optional `enRouteAt` without exposing owner or tenant identifiers
 - Malformed JSON and request bodies above 64 KiB return controlled `400 bad_request` responses
 - Public lead CORS is opt-in through `NORTHSTAR_ALLOWED_ORIGINS`; unlisted origins are rejected during preflight
+- API CORS preflight (`OPTIONS /api/...`) returns the allow-list methods and headers only for an origin in `NORTHSTAR_ALLOWED_ORIGINS`; unlisted origins receive `403 origin_not_allowed`, and the allow-list is never inferred from the request
 - `GET /api/session` → `{ owner, tenant, permissions }`
 - `GET /api/search?q=...` → owner/dispatcher/accountant-only tenant-scoped global search across customers, leads, jobs, estimates, and invoices; owner/dispatcher results also include bounded customer requests, while results remain role-safe
 - `POST /api/auth/refresh` → rotate a still-valid owner/staff bearer session, revoke the prior token and session ID, and return a replacement with `expiresAt`; expired or logged-out sessions cannot be refreshed
