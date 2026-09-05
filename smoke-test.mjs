@@ -197,6 +197,7 @@ try {
   const reviewDuplicate = await request(`/api/public/review${reviewUrl.search}`, jsonOptions('POST', { rating: 5 }));
   const dashboardAfterReview = await request('/api/dashboard', { headers: { authorization: `Bearer ${token}` } });
   const reportAfterReview = await request('/api/reports/overview', { headers: { authorization: `Bearer ${token}` } });
+  assert(reportAfterReview.body.metrics.some((item) => item.label === 'Material spend') && reportAfterReview.body.metrics.some((item) => item.label === 'Tracked field time'), 'operational report metrics missing');
   const reviewRecords = await request('/api/reviews?search=Smoke Lead', { headers: { authorization: `Bearer ${token}` } });
   const reviewExportResponse = await fetch(`${base}/api/export?type=reviews`, { headers: { authorization: `Bearer ${token}` } });
   const reviewExportCsv = await reviewExportResponse.text();
