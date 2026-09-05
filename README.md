@@ -25,7 +25,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Owner notes, equipment, and estimates use an explicit tenant-scoped customer picker so same-name accounts cannot be accidentally merged
 - Multi-location customer records for commercial and repeat-service accounts
 - Owner-managed customer tags support internal segmentation without leaking CRM metadata to customer portals
-- Customer contact preferences enforce SMS/email opt-outs for direct messages and reactivation campaigns
+- Customer contact preferences enforce SMS/email opt-outs for direct messages, appointment notifications, and reactivation campaigns
 - Secure 24-hour technician job links with mobile status updates and field completion
 - Technician links can capture field labor hours and consume stocked materials against the assigned job
 - Technicians can clock in/out across multiple sessions on an in-progress job; elapsed field minutes are aggregated with audit events
