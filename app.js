@@ -62,8 +62,9 @@ document.querySelector('#demo-login').addEventListener('click', () => { loginDia
 document.querySelector('#owner-login-form').addEventListener('submit', async (event) => { event.preventDefault(); const form = event.currentTarget; const message = document.querySelector('#login-message'); const submit = form.querySelector('button[type="submit"]'); submit.disabled = true; message.textContent = 'Signing in…'; try { await repository.login(form.elements.email.value, form.elements.password.value); window.location.reload(); } catch (error) { message.textContent = error.message === 'owner_auth_not_configured' ? 'Secure owner login is not configured for this preview.' : 'Sign-in failed. Check your email and password.'; submit.disabled = false; } });
 document.querySelector('#sign-out').addEventListener('click', async () => { await repository.logout(); loginDialog.close(); showToast('Demo session signed out.'); });
 document.querySelectorAll('[data-action]').forEach((button) => {
-  button.addEventListener('click', () => { repository.recordAction(button.dataset.action); if (button.dataset.action === 'View service plans') openRecords('plans'); else showToast(`${button.dataset.action} workspace ready to configure.`); });
+  button.addEventListener('click', () => { repository.recordAction(button.dataset.action); const views = { 'Review estimates': 'estimates', 'Open invoices': 'invoices', 'View service plans': 'plans', 'View pipeline': 'leads' }; if (views[button.dataset.action]) openRecords(views[button.dataset.action]); else showToast(`${button.dataset.action} workspace ready to configure.`); });
 });
+document.querySelector('.icon-btn[aria-label="Search"]')?.addEventListener('click', () => { const searchButton = document.querySelector('#global-search-view'); if (searchButton) searchButton.click(); else showToast('Global search is still loading.'); });
 const drawer = document.querySelector('#record-drawer');
 const drawerTitle = document.querySelector('#drawer-title');
 const recordList = document.querySelector('#record-list');
