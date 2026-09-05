@@ -89,6 +89,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Invoice payments support partial collection, remaining balances, payment methods, and references
 - Invoice installment schedules support deposits and milestone payments while deriving paid progress from the payment ledger
 - Signed customer invoice links create idempotent provider-pending payment intents without claiming settlement
+- Customer invoice links show settled payment history with safe references and recorded dates
 - Owners can generate secure invoice payment links directly from the invoice workspace
 - Owners and accountants can queue deduplicated invoice balance reminders from the invoice workspace
 - Customer portal invoices now expose secure payment actions scoped to the customer token
