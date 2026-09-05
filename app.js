@@ -50,6 +50,8 @@ document.querySelectorAll('nav a').forEach((link) => {
     if (link.dataset.view) { event.preventDefault(); if (link.dataset.view === 'reports') document.querySelector('#report-view').click(); else openRecords(link.dataset.view); }
   });
 });
+document.querySelector('#open-calendar').addEventListener('click', () => openRecords('dispatch'));
+document.querySelector('#open-activity').addEventListener('click', () => openRecords('activities'));
 document.querySelector('#workspace-switcher').addEventListener('click', () => loginDialog.showModal());
 document.querySelector('#owner-account').addEventListener('click', () => loginDialog.showModal());
 document.querySelector('#close-login').addEventListener('click', () => loginDialog.close());
