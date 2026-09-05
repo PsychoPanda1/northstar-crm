@@ -204,9 +204,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async convertLead(id, time) {
+  async convertLead(id, time, idempotencyKey = '') {
     if (!this.remote) throw new Error('API required for lead conversion');
-    const response = await fetch(`/api/leads/${encodeURIComponent(id)}/convert`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ time }) });
+    const response = await fetch(`/api/leads/${encodeURIComponent(id)}/convert`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', ...(idempotencyKey ? { 'idempotency-key': idempotencyKey } : {}) }, body: JSON.stringify({ time }) });
     if (!response.ok) throw new Error('lead conversion failed');
     return response.json();
   }
