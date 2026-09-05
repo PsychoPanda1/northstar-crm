@@ -181,7 +181,7 @@ Additional current routes include `POST /api/auth/login`, `POST /api/auth/refres
 
 ## Next product slices
 
-Landing pages can discover the version 2 integration manifest, including owner authentication, customer portal reschedule, cancellation, request, payment-intent, and financing-intent endpoints, without hard-coding service-specific routes. Financing requests remain provider-pending until a real financing partner is connected; Northstar never claims a credit decision locally.
+Landing pages can discover the version 2 integration manifest, including owner authentication, customer portal reschedule, cancellation, request, payment-intent, and financing-intent endpoints, without hard-coding service-specific routes. Financing requests remain provider-pending until a real financing partner is connected; Northstar never claims a credit decision locally. Provider status callbacks use `POST /api/webhooks/financing` with `NORTHSTAR_FINANCING_WEBHOOK_SECRET` and remain separate from invoice settlement.
 
 Completed customer-linked jobs can now move directly into invoicing from the dispatch workspace, including an idempotent `POST /api/jobs/:id/invoice` path with itemized subtotal, discount, and tax support for work that did not originate from an estimate.
 
