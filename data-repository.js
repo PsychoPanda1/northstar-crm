@@ -211,9 +211,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async createAsset(customer, name, serial, installed) {
+  async createAsset(customer, name, serial, installed, warrantyThrough) {
     if (!this.remote) throw new Error('API required for asset creation');
-    const response = await fetch('/api/assets', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ customer, name, serial, installed }) });
+    const response = await fetch('/api/assets', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ customer, name, serial, installed, warrantyThrough }) });
     if (!response.ok) throw new Error('asset creation failed');
     return response.json();
   }
