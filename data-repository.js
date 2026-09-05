@@ -295,6 +295,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async updateJobChecklist(jobId, items) {
+    if (!this.remote) throw new Error('API required for checklist management');
+    const response = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/checklist`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ items }) });
+    if (!response.ok) throw new Error('job checklist update failed');
+    return response.json();
+  }
+
   async createTeamMember(name, role, skills = []) {
     if (!this.remote) throw new Error('API required for team management');
     const response = await fetch('/api/team', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ name, role, skills }) });
