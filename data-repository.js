@@ -183,16 +183,16 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async logActivity(customer, channel, note) {
+  async logActivity(customer, channel, note, customerId = '', idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for activity logging');
-    const response = await fetch('/api/activities', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ customer, channel, note }) });
+    const response = await fetch('/api/activities', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ ...(customerId ? { customerId } : { customer }), channel, note }) });
     if (!response.ok) throw new Error('activity logging failed');
     return response.json();
   }
 
-  async sendMessage(customer, channel, message) {
+  async sendMessage(customer, channel, message, customerId = '', idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for messages');
-    const response = await fetch('/api/messages', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ customer, channel, message }) });
+    const response = await fetch('/api/messages', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ ...(customerId ? { customerId } : { customer }), channel, message }) });
     if (!response.ok) throw new Error('message queue failed');
     return response.json();
   }
