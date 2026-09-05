@@ -571,6 +571,8 @@ assert(estimateJob.response.status === 201 && estimateJob.body.job.slotId === es
   const openRequests = await request('/api/requests?search=Smoke%20Lead', { headers: { authorization: `Bearer ${token}` } });
   const requestNotifications = await request('/api/notifications?search=Smoke%20Lead', { headers: { authorization: `Bearer ${token}` } });
   const resolvedRequest = await request(`/api/requests/${customerRequest.body.id}/resolve`, jsonOptions('POST', { note: 'Sent the customer the confirmed service window.' }, token));
+  const technicianRequestResolve = await request(`/api/requests/${customerRequest.body.id}/resolve`, jsonOptions('POST', { note: 'Technicians cannot resolve owner requests.' }, technicianLogin.body.token));
+  assert(technicianRequestResolve.response.status === 403, 'technician request resolution permission failed');
   const customerPortalAfterRequest = await request(`/api/public/customer-portal${customerUrl.search}`);
   const resolutionAudit = await request(`/api/audit?search=${encodeURIComponent('customer.request.resolved')}`, { headers: { authorization: `Bearer ${token}` } });
   const customerPortalToken = new URL(customerLink.body.url, base).searchParams.get('token');
