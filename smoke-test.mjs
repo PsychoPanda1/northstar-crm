@@ -41,6 +41,10 @@ try {
   const login = await request('/api/auth/demo-login?service=plumbing', jsonOptions('POST', {}));
   assert(login.response.ok, 'demo login failed');
   const token = login.body.token;
+  const newTeamMember = await request('/api/team', jsonOptions('POST', { name: 'Jordan Lee', role: 'Apprentice' }, token));
+  const teamRoster = await request('/api/team', { headers: { authorization: `Bearer ${token}` } });
+  const duplicateTeamMember = await request('/api/team', jsonOptions('POST', { name: 'Jordan Lee', role: 'Field technician' }, token));
+  assert(newTeamMember.response.status === 201 && newTeamMember.body.name === 'Jordan Lee' && teamRoster.body.items.some((item) => item.name === 'Jordan Lee' && item.status === 'Available') && duplicateTeamMember.response.status === 409, 'team roster management failed');
   const createdCustomer = await request('/api/customers', jsonOptions('POST', { name: 'Direct Job Customer', phone: '843-555-0122' }, token));
   const directJob = await request('/api/jobs', jsonOptions('POST', { customerId: createdCustomer.body.id, service: 'Scheduled repair', time: 'Tomorrow 8:00 AM' }, token));
   const conflictingDirectJob = await request('/api/jobs', jsonOptions('POST', { customerId: createdCustomer.body.id, service: 'Second repair', time: 'Tomorrow 8:00 AM' }, token));
@@ -76,7 +80,7 @@ try {
   assert(leadList.body.items.length === 1 && leadNotifications.body.items.length === 1 && audit.body.items.length >= 1 && audit.body.items[0].entityType === 'customer' && leadNotifications.body.items[0].title === 'New lead needs follow-up' && notificationRead.body.read === true && readNotifications.body.items[0].read === true, 'owner cannot see captured lead or audit trail');
   const converted = await request(`/api/leads/${leadList.body.items[0].id}/convert`, jsonOptions('POST', { time: 'Tomorrow 9:00 AM' }, token));
   const recommendations = await request(`/api/dispatch/recommendations?jobId=${encodeURIComponent(converted.body.job.id)}`, { headers: { authorization: `Bearer ${token}` } });
-  assert(recommendations.response.ok && recommendations.body.recommendations.length === 3 && recommendations.body.recommendations.some((item) => item.available), 'dispatch recommendation failed');
+  assert(recommendations.response.ok && recommendations.body.recommendations.length >= 3 && recommendations.body.recommendations.some((item) => item.available), 'dispatch recommendation failed');
   const materialUse = await request(`/api/jobs/${converted.body.job.id}/materials`, jsonOptions('POST', { materialId: material.body.id, quantity: 3 }, token));
   const labor = await request(`/api/jobs/${converted.body.job.id}/labor`, jsonOptions('POST', { technician: 'Alex Rivera', hours: 2, hourlyRate: 75 }, token));
   const jobCosts = await request('/api/job-costs', { headers: { authorization: `Bearer ${token}` } });

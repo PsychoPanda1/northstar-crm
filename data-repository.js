@@ -250,6 +250,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async createTeamMember(name, role) {
+    if (!this.remote) throw new Error('API required for team management');
+    const response = await fetch('/api/team', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ name, role }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'team member creation failed');
+    return response.json();
+  }
+
   async createEstimate(customer, service, amount, catalogItemId = null) {
     if (!this.remote) throw new Error('API required for estimate creation');
     const response = await fetch('/api/estimates', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ customer, service, amount, ...(catalogItemId ? { catalogItemId } : {}) }) });

@@ -62,6 +62,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Payment ledger records are searchable and exportable for reconciliation
 - Dispatch assignment, status changes, and rescheduling are recorded in the customer timeline
 - Team roster availability and active-job counts are derived from live tenant jobs
+- Owners and dispatchers can add tenant-specific technicians or staff members to the roster
 
 ## Run locally
 
