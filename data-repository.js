@@ -113,6 +113,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async remindJob(id, channel = 'SMS') {
+    if (!this.remote) throw new Error('API required for appointment reminders');
+    const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/remind`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ channel }) });
+    if (!response.ok) throw new Error('appointment reminder failed');
+    return response.json();
+  }
+
   async recommendTechnicians(jobId) {
     if (!this.remote) throw new Error('API required for dispatch recommendations');
     const response = await fetch(`/api/dispatch/recommendations?jobId=${encodeURIComponent(jobId)}`, { headers: { authorization: `Bearer ${this.token}` } });
