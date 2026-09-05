@@ -278,6 +278,20 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async createPaymentSchedule(invoiceId, installments) {
+    if (!this.remote) throw new Error('API required for payment schedules');
+    const response = await fetch(`/api/invoices/${encodeURIComponent(invoiceId)}/schedule`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ installments }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'payment schedule creation failed');
+    return response.json();
+  }
+
+  async getPaymentSchedule(invoiceId) {
+    if (!this.remote) throw new Error('API required for payment schedules');
+    const response = await fetch(`/api/invoices/${encodeURIComponent(invoiceId)}/schedule`, { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('payment schedule unavailable');
+    return response.json();
+  }
+
   async payInvoice(id) {
     if (!this.remote) throw new Error('API required for payment');
     const response = await fetch(`/api/invoices/${encodeURIComponent(id)}/pay`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: '{}' });
