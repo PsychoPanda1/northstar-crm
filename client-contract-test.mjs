@@ -19,4 +19,5 @@ assert(app.includes("/^INV-\\d{13,}$/.test(item.id || '') && item.status !== 'Pa
 assert(customer.includes("job.status === 'No-show' ? 'Book a new visit'"), 'customer portal does not expose no-show recovery');
 assert(status.includes('body.visits') && status.includes('Visit progress') && status.includes('/api/public/job-status/cancel'), 'customer status page does not expose multi-visit progress and cancellation');
 assert(invoice.includes('id="breakdown"') && invoice.includes('Remaining $'), 'invoice payment page does not expose total, paid, and remaining balance');
+assert(invoice.includes('sessionStorage') && invoice.includes('idempotency-key') && invoice.includes('paymentKey'), 'invoice payment page does not preserve mobile retry identity');
 console.log('Northstar client contract checks passed');
