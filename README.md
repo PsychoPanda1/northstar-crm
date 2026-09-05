@@ -61,7 +61,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Purchase orders with vendor, receiving, and automatic stock reconciliation
 - Tenant-scoped inventory transaction ledger with searchable owner view and CSV export
 - Job profitability workspace combining material cost, logged labor, revenue, and gross margin
-- Reports summarize tracked field hours, material spend, logged labor cost, and gross margin
+- Reports summarize tracked field hours, material spend, logged labor cost, and gross margin, with CSV export for owner handoff
 - Labor entries feed customer timelines and job-cost reporting
 - Structured SMS/email message queue with explicit provider-pending status and timeline capture
 - Signed inbound SMS/email replies can be matched to customers and optional jobs for two-way communication history

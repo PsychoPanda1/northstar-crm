@@ -40,6 +40,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - `GET /api/dashboard?range=week` → `{ metrics, pipeline, tasks, schedule, activity }`
 - `GET /api/reports/overview` → tenant-scoped funnel, scheduling, cash, recurring-revenue, and touchpoint metrics
 - Report metrics also summarize tracked field hours, material spend, logged labor cost, and gross margin from recorded job data
+- `GET /api/export?type=reports` → tenant-scoped CSV of the report metrics for owner and accounting handoff
 - `GET /api/team` → tenant-scoped technician roster with derived availability and active-job counts used for assignment validation
 - `POST /api/jobs` accepts optional ISO `startsAt`, `endsAt`, and IANA `timeZone` fields; valid timestamp ranges participate in overlap-aware appointment conflict checks
 - `POST /api/jobs/:id/reschedule` accepts an available `slotId` or a legacy `time`; slot-based reschedules preserve normalized appointment metadata
