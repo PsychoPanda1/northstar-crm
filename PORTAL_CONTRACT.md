@@ -66,7 +66,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - `POST /api/jobs/:id/assign` and `POST /api/jobs/:id/status` → update a tenant-owned job's technician and lifecycle state; assignment records an actor-attributed `job.assigned` audit event
 - `POST /api/jobs/:id/no-show` → owner/dispatcher-only terminal transition from Confirmed or En route with a bounded reason, timestamp, activity, and audit event
 - Job status changes follow a server-enforced lifecycle; terminal jobs cannot be reassigned, `Completed` requires the dedicated completion endpoint, field states require an assigned technician, and lifecycle updates record `job.status.updated`
-- `POST /api/jobs/:id/reschedule` → change the appointment time without recreating the job and queue a customer reschedule notification
+- `POST /api/jobs/:id/reschedule` → change the appointment time without recreating the job, queue a customer reschedule notification, and record an actor-attributed `job.rescheduled` audit event
 - `POST /api/jobs/:id/checklist` → owner/dispatcher-only replacement of required checklist steps before a job starts; started or terminal jobs are locked
 - Assignment and rescheduling reject active same-technician/time conflicts with `409 technician_schedule_conflict`
 - `POST /api/jobs/:id/complete` → complete assigned work with a required note, timestamp, automatic customer timeline event, and actor-attributed `job.completed` audit event; repeated completion returns an idempotent duplicate response
