@@ -313,6 +313,7 @@ try {
   const resolvedRequest = await request(`/api/requests/${customerRequest.body.id}/resolve`, jsonOptions('POST', { note: 'Sent the customer the confirmed service window.' }, token));
   const resolutionAudit = await request(`/api/audit?search=${encodeURIComponent('customer.request.resolved')}`, { headers: { authorization: `Bearer ${token}` } });
   const customerPortalToken = new URL(customerLink.body.url, base).searchParams.get('token');
+  assert(Array.isArray(customerPortal.body.messages) && customerPortal.body.messages.length > 0 && customerPortal.body.messages.every((item) => item.customerId === undefined && item.tenantId === undefined && item.invoiceId === undefined), 'customer portal message privacy failed');
   assert(technicianVisit.response.status === 201 && customerPortal.body.jobs.some((item) => item.id === fieldJob.body.id && item.visits?.length === 1 && item.visits[0].technician === 'Alex Rivera'), 'customer portal visit visibility failed');
   const cancellationRequest = await request('/api/public/customer-portal/request?token=' + encodeURIComponent(customerPortalToken), { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ type: 'Cancellation request', message: 'Please cancel the next visit.' }) });
   assert(cancellationRequest.response.status === 201 && cancellationRequest.body.status === 'Open', 'customer cancellation request workflow failed');
