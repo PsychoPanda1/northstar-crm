@@ -51,7 +51,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - `GET /api/dispatch/recommendations?jobId=...` → rank available technicians by current workload and schedule conflicts; assignment still requires the normal server-side conflict check
 - `GET /api/catalog` → tenant-scoped service catalog for consistent estimates and landing-page vocabulary
 - `POST /api/catalog` → add a tenant-specific pricebook item; owner and dispatcher roles may write, while other roles remain read-only
-- `GET /api/assets` and `POST /api/assets` → tenant-scoped customer equipment records for repeat service context; create accepts an optional ISO-parseable `warrantyThrough` date, and the customer portal exposes it without tenant identifiers
+- `GET /api/assets` and `POST /api/assets` → tenant-scoped customer equipment records for repeat service context; create requires an existing tenant customer, stores `customerId`, accepts an optional ISO-parseable `warrantyThrough` date, and the customer portal exposes it without tenant identifiers
 - `GET /api/notifications` → tenant-scoped action queue for new leads, unassigned jobs, unpaid invoices, approaching renewals, and equipment warranties expiring within 30 days
 - `POST /api/notifications/:id/read` → acknowledge a currently active tenant notification without deleting its source record
 - `GET /api/reviews` → tenant-scoped completed-job ratings and comments
