@@ -2,6 +2,8 @@
 
 Northstar is the owner-facing portal attached to service-business landing pages. Landing pages may link owners to `/portal?service=plumbing` during the demo phase; the local server aliases `/portal` to the owner portal entry page. Production must resolve the tenant from the authenticated session on the server.
 
+Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON` (an array of `{ slug, businessName, serviceLabel, timeZone }`) and map landing-page service keys with `NORTHSTAR_SERVICE_TENANTS_JSON` (an object of service key to tenant slug). Invalid entries are ignored; configured staff and owner accounts remain tenant-bound.
+
 ## Current demo seam
 
 - `tenant-config.js` contains presentation-only configurations for plumbing, power washing, electrical, mobile car wash, and a home-services default.
