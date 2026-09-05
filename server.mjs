@@ -952,7 +952,7 @@ if (pathname === '/api/invoices' && req.method === 'POST') { const claims = auth
           return json(res, 200, { invoice: existingByKey, duplicate: true });
         }
       }
-      const existing = saved.invoices.find((item) => item.jobId === job.id);
+      const existing = saved.invoices.find((item) => item.jobId === job.id || (job.estimateId && item.estimateId === job.estimateId));
       if (existing) return json(res, 409, { error: 'job_invoice_already_exists', invoiceId: existing.id });
       if (!validPricing) return json(res, 422, { error: 'valid_job_invoice_pricing_required' });
       const invoice = { id: `INV-${Date.now()}`, tenantId: claims.tenantId, customerId: job.customerId, jobId: job.id, customer: job.customer, value: `${amount.toFixed(2)}`, amount, ...(lineItems.length ? { lineItems } : {}), ...(pricingRequested ? { subtotal, discount, taxRate, tax: Number((taxableSubtotal * taxRate / 100).toFixed(2)) } : {}), paidAmount: 0, balance: amount, status: 'Due', due, createdAt: new Date().toISOString(), ...(idempotencyKey ? { jobInvoiceIdempotencyKey: idempotencyKey, jobInvoiceFingerprint: fingerprint } : {}) };
