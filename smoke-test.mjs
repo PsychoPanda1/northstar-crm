@@ -570,7 +570,9 @@ try {
   const portalScheduleOptions = { ...jsonOptions('POST', { installments: [{ amount: 100, due: 'At booking' }, { amount: 175, due: 'On completion' }] }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-payment-schedule' } };
   const portalSchedule = await request(`/api/invoices/${portalInvoice.body.id}/schedule`, portalScheduleOptions);
   const duplicatePortalSchedule = await request(`/api/invoices/${portalInvoice.body.id}/schedule`, portalScheduleOptions);
+  const conflictingPortalSchedule = await request(`/api/invoices/${portalInvoice.body.id}/schedule`, { ...jsonOptions('POST', { installments: [{ amount: 75, due: 'At booking' }, { amount: 200, due: 'On completion' }] }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-payment-schedule' } });
   const portalScheduleView = await request(`/api/invoices/${portalInvoice.body.id}/schedule`, { headers: { authorization: `Bearer ${token}` } });
+  assert(conflictingPortalSchedule.response.status === 409 && conflictingPortalSchedule.body.error === 'idempotency_key_reused', 'payment schedule idempotency conflict protection failed');
   const customerPortalWithInvoice = await request(`/api/public/customer-portal${customerUrl.search}`);
   const portalInvoiceView = customerPortalWithInvoice.body.invoices.find((item) => item.id === portalInvoice.body.id);
   assert(customerPortalWithInvoice.body.invoices.some((item) => item.id === pricedInvoice.body.id && item.subtotal === 1000 && item.discount === 100 && item.tax === 90 && item.paymentUrl?.startsWith('/invoice.html?token=') && item.paymentLinkExpiresInHours === 72), 'customer portal invoice payment link visibility failed');
