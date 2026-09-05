@@ -72,7 +72,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - Assignment and rescheduling reject active same-technician/time conflicts with `409 technician_schedule_conflict`
 - `POST /api/jobs/:id/complete` → complete assigned work with a required note, timestamp, automatic customer timeline event, and actor-attributed `job.completed` audit event; repeated completion returns an idempotent duplicate response
 - `POST /api/jobs/:id/technician-link` → issue a 24-hour, job-scoped technician mobile link for an assigned job
-- `GET/POST /api/public/technician-job...` → technician-safe job detail and status/completion updates through the signed link; same-state status retries return an idempotent duplicate, status writes record `job.status.updated`, completion records `job.completed`, and repeated closeout requests return an idempotent duplicate response
+- `GET/POST /api/public/technician-job...` → technician-safe job detail and status/completion updates through the signed link; same-state job and visit-status retries return idempotent duplicates, status writes record `job.status.updated`, completion records `job.completed`, and repeated closeout requests return an idempotent duplicate response
 - `POST /api/public/technician-job/labor?token=...` → log field hours for the assigned job
 - `GET/POST /api/public/technician-job/clock?token=...` → read or update the assigned technician's clock-in/out state; append-only completed sessions preserve aggregate elapsed field minutes and audit events
 - Technician completion requires an inactive field clock; job-cost reporting exposes the resulting field minutes/hours separately from billable labor entries
@@ -87,7 +87,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - `POST /api/jobs/:id/remind` → queue a deduplicated SMS/email appointment reminder for an open job
 - Jobs may declare a required skill; recommendations and assignment reject technicians without that skill
 - `GET|POST /api/jobs/:id/visits` → list or add scheduled visits for multi-day/multi-visit work orders; creation accepts an optional `Idempotency-Key` and returns `duplicate: true` for a safe retry
-- `POST /api/jobs/:id/visits/:visitId/status` → advance a visit through Scheduled, En route, In progress, Completed, or Canceled states
+- `POST /api/jobs/:id/visits/:visitId/status` → advance a visit through Scheduled, En route, In progress, Completed, or Canceled states; same-state retries return `duplicate: true` without another timeline or audit event
 - `POST /api/jobs/:id/customer-link` → issue a 72-hour customer portal link scoped to the job's customer
 - `POST /api/jobs/:id/review-link` → issue a 72-hour review link for a completed job
 - `GET /api/public/customer-portal?token=...` → customer-safe appointments, completion notes, bounded photo evidence, optional customer acknowledgment, equipment, estimates, invoices, and service plans including pricing breakdowns and a recorded next recurring visit when scheduled
