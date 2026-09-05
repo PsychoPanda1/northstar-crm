@@ -55,6 +55,11 @@
       return this.request(`${url.pathname}${url.search}`);
     }
 
+    async ownerPortalUrl() {
+      const manifest = await this.manifest();
+      return this.url(manifest.integration.ownerPortalPath);
+    }
+
     async submitLead(payload, { idempotencyKey } = {}) {
       const manifest = await this.manifest();
       const key = idempotencyKey || makeKey(this.service, 'lead', payload);
