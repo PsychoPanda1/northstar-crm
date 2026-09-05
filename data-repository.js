@@ -239,9 +239,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async createMaterial(name, sku, unit, unitCost, onHand, reorderPoint) {
+  async createMaterial(name, sku, unit, unitCost, onHand, reorderPoint, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for material creation');
-    const response = await fetch('/api/materials', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ name, sku, unit, unitCost, onHand, reorderPoint }) });
+    const response = await fetch('/api/materials', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ name, sku, unit, unitCost, onHand, reorderPoint }) });
     if (!response.ok) throw new Error('material creation failed');
     return response.json();
   }
@@ -260,9 +260,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async createPurchaseOrder(materialId, vendor, quantity, unitCost) {
+  async createPurchaseOrder(materialId, vendor, quantity, unitCost, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for purchase orders');
-    const response = await fetch('/api/purchase-orders', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ materialId, vendor, quantity, unitCost }) });
+    const response = await fetch('/api/purchase-orders', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ materialId, vendor, quantity, unitCost }) });
     if (!response.ok) throw new Error('purchase order creation failed');
     return response.json();
   }
