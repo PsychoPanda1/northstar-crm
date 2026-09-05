@@ -39,4 +39,5 @@ assert(app.includes("['Messages', profile.messages || []]") && app.includes("['C
 assert(app.includes("result.results.messages || []") && app.includes("result.results.calls || []"), 'global search does not expose communication history');
 assert(app.includes('data-run-automations') && app.includes('runAutomations'), 'dispatch workspace does not expose coordinated customer automations');
 assert(app.includes("repository.getAvailability(serviceKey, 7)") && app.includes("name=\"slotId\""), 'new-job workflow does not expose tenant availability slots');
+assert(app.includes('jobLocationSelect') && app.includes('syncJobLocations') && app.includes('locationId: form.elements.locationId'), 'new-job workflow does not expose multi-location scheduling');
 console.log('Northstar client contract checks passed');
