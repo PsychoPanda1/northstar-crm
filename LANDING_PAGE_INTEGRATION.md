@@ -33,7 +33,7 @@ New landing pages can include the reusable landing-page-client.js browser helper
 
 Use this handoff sequence for plumbing, power washing, electrical, car wash, or a configured vertical:
 
-1. Add the tenant and service mapping to `NORTHSTAR_TENANTS_JSON` and `NORTHSTAR_SERVICE_TENANTS_JSON`; use a unique tenant slug and a real owner credential for production.
+1. Add the tenant and service mapping to `NORTHSTAR_TENANTS_JSON` and `NORTHSTAR_SERVICE_TENANTS_JSON`, then add its customer-facing services to `NORTHSTAR_CATALOG_JSON`; use a unique tenant slug and a real owner credential for production.
 2. Set `NORTHSTAR_ALLOWED_ORIGINS` to the exact landing-page origin, including scheme and host, then restart the CRM and verify `GET /api/public/tenant?service=<key>` returns the expected business.
 3. Copy `landing-page-client.js` into the landing page, construct `NorthstarLandingClient({ service: '<key>', apiBase: '<crm-origin>' })`, and use `manifest()`, `catalog()`, `availability()`, `submitLead()`, and `book()` rather than duplicating endpoint paths.
 4. Test one lead and one booking with a unique `Idempotency-Key`, confirm the owner portal shows the tenant-scoped records, and remove any preview/demo credentials before launch.
