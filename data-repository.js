@@ -530,9 +530,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async createEstimate(customer, service, amount, catalogItemId = null, customerId = '', idempotencyKey = crypto.randomUUID()) {
+  async createEstimate(customer, service, amount, catalogItemId = null, customerId = '', idempotencyKey = crypto.randomUUID(), pricing = {}) {
     if (!this.remote) throw new Error('API required for estimate creation');
-    const response = await fetch('/api/estimates', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ ...(customerId ? { customerId } : { customer }), service, amount, ...(catalogItemId ? { catalogItemId } : {}) }) });
+    const response = await fetch('/api/estimates', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ ...(customerId ? { customerId } : { customer }), service, amount, ...(catalogItemId ? { catalogItemId } : {}), ...pricing }) });
     if (!response.ok) throw new Error('estimate creation failed');
     return response.json();
   }
