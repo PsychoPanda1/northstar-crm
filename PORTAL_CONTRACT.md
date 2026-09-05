@@ -2,7 +2,7 @@
 
 Northstar is the owner-facing portal attached to service-business landing pages. Landing pages may link owners to `/portal?service=plumbing` during the demo phase; the local server aliases `/portal` to the owner portal entry page. Production must resolve the tenant from the authenticated session on the server.
 
-Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON` (an array of `{ slug, businessName, serviceLabel, timeZone }`) and map landing-page service keys with `NORTHSTAR_SERVICE_TENANTS_JSON` (an object of service key to tenant slug). `NORTHSTAR_OWNERS_JSON` may provide an array of tenant-bound owner records `{ id, name, email, passwordDigest, tenantId }` so each attached landing-page business can have its own owner login. Invalid entries are ignored; configured staff and owner accounts remain tenant-bound.
+Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON` (an array of `{ slug, businessName, serviceLabel, timeZone, accent?, accentSoft?, focus? }`) and map landing-page service keys with `NORTHSTAR_SERVICE_TENANTS_JSON` (an object of service key to tenant slug). Optional brand colors must be six-digit hex values and focus copy is bounded; sanitized values are returned by the public tenant manifest for owner-portal presentation. `NORTHSTAR_OWNERS_JSON` may provide an array of tenant-bound owner records `{ id, name, email, passwordDigest, tenantId }` so each attached landing-page business can have its own owner login. Invalid entries are ignored; configured staff and owner accounts remain tenant-bound.
 
 ## Current demo seam
 
