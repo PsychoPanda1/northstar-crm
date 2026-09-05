@@ -62,6 +62,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Configured tenants can expose booking start/end hours, slot intervals, operating weekdays, and blackout dates through `NORTHSTAR_TENANTS_JSON`; the landing manifest publishes the active booking window
 - Tenant-bound owner account configuration supports separate production logins for each attached landing-page business
 - Office-created jobs can carry normalized appointment ranges, with overlap-aware capacity conflict checks
+- The owner new-job workflow loads tenant-specific available slots and writes the selected normalized UTC range back into the work order
 - Dispatch rescheduling can target a stable availability slot while preserving normalized appointment timestamps
 - Repeat online bookings match the tenant customer by email or normalized phone so history is not fragmented across appointments
 - Reusable `booking.html` customer form for service-specific landing pages

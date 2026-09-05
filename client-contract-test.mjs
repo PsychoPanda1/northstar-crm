@@ -38,4 +38,5 @@ assert(technician.includes('create-estimate') && technician.includes('estimate-c
 assert(app.includes("['Messages', profile.messages || []]") && app.includes("['Calls', profile.calls || []]"), 'owner customer profile does not expose communication history');
 assert(app.includes("result.results.messages || []") && app.includes("result.results.calls || []"), 'global search does not expose communication history');
 assert(app.includes('data-run-automations') && app.includes('runAutomations'), 'dispatch workspace does not expose coordinated customer automations');
+assert(app.includes("repository.getAvailability(serviceKey, 7)") && app.includes("name=\"slotId\""), 'new-job workflow does not expose tenant availability slots');
 console.log('Northstar client contract checks passed');
