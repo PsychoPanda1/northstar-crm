@@ -56,7 +56,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - `POST /api/leads/:id/status` → move an unconverted tenant lead through `New`, `Contacted`, `Qualified`, `Estimate sent`, `Won`, or `Lost`; converted leads are locked
 - `POST /api/jobs/:id/assign` and `POST /api/jobs/:id/status` → update a tenant-owned job's technician and lifecycle state
 - Job status changes follow a server-enforced lifecycle; terminal jobs cannot be reassigned, `Completed` requires the dedicated completion endpoint, and field states require an assigned technician
-- `POST /api/jobs/:id/reschedule` → change the appointment time without recreating the job
+- `POST /api/jobs/:id/reschedule` → change the appointment time without recreating the job and queue a customer reschedule notification
 - Assignment and rescheduling reject active same-technician/time conflicts with `409 technician_schedule_conflict`
 - `POST /api/jobs/:id/complete` → complete assigned work with a required note, timestamp, and automatic customer timeline event
 - `POST /api/jobs/:id/technician-link` → issue a 24-hour, job-scoped technician mobile link for an assigned job
