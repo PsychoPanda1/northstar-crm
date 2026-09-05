@@ -23,7 +23,7 @@ const robots = readFileSync(`${root}robots.txt`, 'utf8');
 const openapi = readFileSync(`${root}openapi.yaml`, 'utf8');
 const packageJson = JSON.parse(readFileSync(`${root}package.json`, 'utf8'));
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
-assert(packageJson.scripts?.test === 'npm run check && npm run test:landing-client && npm run test:smoke && npm run test:production-boundary' && packageJson.scripts?.['test:landing-client'] === 'node scripts/landing-client-test.mjs', 'npm test must run the complete release verification suite');
+assert(packageJson.scripts?.test === 'npm run check && npm run test:landing-client && npm run test:smoke && npm run test:production-boundary && npm run test:persistence-recovery' && packageJson.scripts?.['test:landing-client'] === 'node scripts/landing-client-test.mjs' && packageJson.scripts?.['test:persistence-recovery'] === 'node scripts/persistence-recovery-test.mjs', 'npm test must run the complete release verification suite');
 assert(readFileSync(`${root}.github/workflows/ci.yml`, 'utf8').includes('run: npm test'), 'CI must invoke the complete release verification command');
 assert(readFileSync(`${root}.gitignore`, 'utf8').split(/\r?\n/).includes('.northstar-data.json'), 'private local state must remain ignored');
 assert(envExample.includes('NORTHSTAR_SESSION_SECRET=replace-with-32-plus-random-characters'), 'environment template must use an explicit session-secret placeholder');

@@ -3,5 +3,5 @@
   "version": "0.1.0",
   "private": true,
   "description": "A calm, powerful field-service CRM dashboard MVP",
-  "scripts": { "start": "node server.mjs", "check": "node --check server.mjs && node --check app.js && node --check data-repository.js && node --check tenant-config.js && node client-contract-test.mjs", "test:landing-client": "node scripts/landing-client-test.mjs", "test:smoke": "node smoke-test.mjs", "test:production-boundary": "node scripts/production-boundary-test.mjs", "test": "npm run check && npm run test:landing-client && npm run test:smoke && npm run test:production-boundary" }
+  "scripts": { "start": "node server.mjs", "check": "node --check server.mjs && node --check app.js && node --check data-repository.js && node --check tenant-config.js && node client-contract-test.mjs", "test:landing-client": "node scripts/landing-client-test.mjs", "test:smoke": "node smoke-test.mjs", "test:production-boundary": "node scripts/production-boundary-test.mjs", "test:persistence-recovery": "node scripts/persistence-recovery-test.mjs", "test": "npm run check && npm run test:landing-client && npm run test:smoke && npm run test:production-boundary && npm run test:persistence-recovery" }
 }
