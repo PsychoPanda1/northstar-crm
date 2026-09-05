@@ -95,8 +95,8 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - `POST /api/public/customer-portal/confirm?token=...` → confirm a customer-owned appointment idempotently and append a customer timeline event
 - `POST /api/requests/:id/resolve` → resolve a tenant-owned customer request with an optional owner note, record an actor-attributed `customer.request.resolved` audit event, and return an idempotent duplicate response when already resolved
 - `GET/POST /api/public/review?token=...` → read review state or submit one 1–5 rating and optional comment; duplicate submissions are rejected
-- `GET /api/plans` and `POST /api/plans` → list or create recurring service plans
-- `POST /api/plans/:id/renew` → renew a tenant-owned service plan and optionally schedule its next visit with `slotId` (preferred), legacy `time`, or normalized `startsAt`/`endsAt`; slot schedules preserve timezone metadata and reject active appointment conflicts
+- `GET /api/plans` and `POST /api/plans` → list or create recurring service plans; creation records a `plan.created` audit event
+- `POST /api/plans/:id/renew` → renew a tenant-owned service plan and optionally schedule its next visit with `slotId` (preferred), legacy `time`, or normalized `startsAt`/`endsAt`; slot schedules preserve timezone metadata, reject active appointment conflicts, and record `plan.renewed`
 - `POST /api/plans/:id/pause`, `/cancel`, or `/resume` → manage a plan lifecycle with optional audit notes; canceled plans remain locked
 - `GET /api/activities` and `POST /api/activities` → read or log tenant-owned customer calls, messages, and notes
 - `GET /api/audit` and `GET /api/export?type=audit` → read or export a tenant-scoped event ledger for workflow traceability; prototype activity events use a system actor and production should attach verified identity/provider actors
