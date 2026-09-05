@@ -115,8 +115,11 @@ try {
   const newTeamMember = await request('/api/team', teamMemberOptions);
   const duplicateNewTeamMember = await request('/api/team', teamMemberOptions);
   const teamRoster = await request('/api/team', { headers: { authorization: `Bearer ${token}` } });
+  const alexMember = teamRoster.body.items.find((item) => item.name === 'Alex Rivera');
+  const commissionRate = await request(`/api/team/${alexMember.id}/commission-rate`, { ...jsonOptions('POST', { commissionRate: 12.5 }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-alex-commission-rate' } });
+  const commissionTeamRoster = await request('/api/team', { headers: { authorization: `Bearer ${token}` } });
   const duplicateTeamMember = await request('/api/team', jsonOptions('POST', { name: 'Jordan Lee', role: 'Field technician' }, token));
-  assert(newTeamMember.response.status === 201 && newTeamMember.body.duplicate === false && duplicateNewTeamMember.response.status === 200 && duplicateNewTeamMember.body.duplicate === true && duplicateNewTeamMember.body.id === newTeamMember.body.id && newTeamMember.body.name === 'Jordan Lee' && teamRoster.body.items.some((item) => item.name === 'Jordan Lee' && item.status === 'Available') && duplicateTeamMember.response.status === 409, 'team roster management failed');
+  assert(newTeamMember.response.status === 201 && newTeamMember.body.duplicate === false && duplicateNewTeamMember.response.status === 200 && duplicateNewTeamMember.body.duplicate === true && duplicateNewTeamMember.body.id === newTeamMember.body.id && newTeamMember.body.name === 'Jordan Lee' && teamRoster.body.items.some((item) => item.name === 'Jordan Lee' && item.status === 'Available') && commissionRate.response.status === 200 && commissionRate.body.commissionRate === 12.5 && commissionTeamRoster.body.items.some((item) => item.name === 'Alex Rivera' && item.commissionRate === 12.5) && duplicateTeamMember.response.status === 409, 'team roster management failed');
   const createdCustomer = await request('/api/customers', jsonOptions('POST', { name: 'Direct Job Customer', phone: '843-555-0122', email: 'direct.customer@example.test' }, token));
   const globalSearch = await request('/api/search?q=Direct%20Job', { headers: { authorization: `Bearer ${token}` } });
   const invalidGlobalSearch = await request('/api/search?q=x', { headers: { authorization: `Bearer ${token}` } });
@@ -146,7 +149,6 @@ try {
   assert(addedCustomerLocation.response.status === 201 && locationJob.response.status === 201 && locationJob.body.locationId === addedCustomerLocation.body.id && locationJob.body.location === '205 King St, Charleston', 'multi-location job scheduling failed');
   const skillsJob = await request('/api/jobs', jsonOptions('POST', { customerId: createdCustomer.body.id, service: 'Panel inspection', requiredSkill: 'Plumbing', time: 'Next Tuesday 3:00 PM' }, token));
   const unqualifiedAssignment = await request(`/api/jobs/${skillsJob.body.id}/assign`, jsonOptions('POST', { technician: specialist.body.name }, token));
-  const alexMember = teamRoster.body.items.find((item) => item.name === 'Alex Rivera');
   const timeOffOptions = { ...jsonOptions('POST', { startsAt: '2026-09-20T13:00:00.000Z', endsAt: '2026-09-20T14:00:00.000Z', reason: 'Training block' }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-time-off' } };
   const timeOff = await request(`/api/team/${alexMember.id}/time-off`, timeOffOptions);
   const duplicateTimeOff = await request(`/api/team/${alexMember.id}/time-off`, timeOffOptions);
@@ -564,7 +566,7 @@ const techViewWithAsset = await request(`/api/public/technician-job${techUrl.sea
   const receivablesReport = await request('/api/reports/receivables', { headers: { authorization: `Bearer ${token}` } });
   const receivablesExportResponse = await fetch(`${base}/api/export?type=receivables`, { headers: { authorization: `Bearer ${token}` } });
   const receivablesExportCsv = await receivablesExportResponse.text();
-  assert(technicianReport.response.status === 200 && technicianReport.body.technicians.some((item) => item.technician === 'Alex Rivera' && item.revenue >= 425 && Number.isFinite(item.grossMargin) && Number.isFinite(item.completionRate)), 'technician performance report missing');
+  assert(technicianReport.response.status === 200 && technicianReport.body.technicians.some((item) => item.technician === 'Alex Rivera' && item.revenue >= 425 && Number.isFinite(item.grossMargin) && Number.isFinite(item.completionRate) && item.commissionRate === 12.5 && Number.isFinite(item.commissionableRevenue) && Number.isFinite(item.commissionDue)), 'technician performance or commission report missing');
   assert(receivablesReport.response.status === 200 && Number.isFinite(receivablesReport.body.totals?.balance) && Number.isFinite(receivablesReport.body.totals?.overdueBalance) && receivablesReport.body.buckets?.length === 5 && receivablesReport.body.customers?.length >= 1 && receivablesReport.body.customers.every((item) => Number.isFinite(item.balance) && item.overdueBalance <= item.balance) && receivablesReport.body.totals.overdueBalance <= receivablesReport.body.totals.balance, 'receivables aging report missing');
   assert(receivablesExportResponse.status === 200 && receivablesExportCsv.includes('bucket') && receivablesExportCsv.includes('daysPastDue'), 'receivables export missing');
   const reportExportResponse = await fetch(`${base}/api/export?type=reports`, { headers: { authorization: `Bearer ${token}` } });

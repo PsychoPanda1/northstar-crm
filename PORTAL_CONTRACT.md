@@ -68,6 +68,7 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 - `GET /api/reports/marketing` → owner/dispatcher/accountant-only source attribution report with lead counts, converted counts, conversion rates, scheduled jobs, attributed lead value, booked revenue, and collected revenue by landing-page source; when UTM campaigns are captured, the response also includes campaign rows with quoted, booked, and collected revenue
 - `GET /api/export?type=marketing-campaigns` → owner/dispatcher/accountant-only CSV export of tracked UTM campaigns with source, lead, conversion, conversion-rate, and attributed-value fields
 - `GET /api/reports/technicians` → owner/dispatcher/accountant-only technician performance report with jobs, completion/no-show counts, field hours, revenue, material/labor cost, gross margin, and completion rate
+- Technician performance also includes a configured commission rate, completed-job commissionable revenue, and payroll-ready commission due; rates default to 10% until changed by an owner
 - Report metrics also summarize estimate close rate, memberships sold, no-shows, open customer requests, tracked field hours, material spend, logged labor cost, and gross margin from recorded job data
 - `GET /api/export?type=reports` → tenant-scoped CSV of the report metrics for owner and accounting handoff
 - `GET /api/team` → tenant-scoped technician roster with derived availability (`Available`, `On job`, or `Unavailable`), active-job counts, non-canceled `timeOffBlocks`, and the next `unavailableUntil` timestamp used for dispatch visibility and assignment validation
@@ -77,6 +78,7 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 - `POST /api/jobs/:id/reschedule` accepts an available `slotId` or a legacy `time`; slot-based reschedules preserve normalized appointment metadata
 - Authenticated technician labor/material writes are limited to the technician's assigned work order; technician roles cannot create inventory or purchase orders
 - `POST /api/team` → owner/dispatcher-only creation of a tenant-scoped technician or staff roster member; duplicate names are rejected and an optional `Idempotency-Key` makes browser retries safe
+- `POST /api/team/:id/commission-rate` → owner-only update of a technician commission rate from 0% through 100%; the rate is tenant-scoped, persisted by technician name, idempotent for same-state retries, and audit logged
 - `GET /api/dispatch/recommendations?jobId=...` → owner/dispatcher-only ranking of available technicians by current workload and schedule conflicts; assignment still requires the normal server-side conflict check
 - Dispatch recommendations also include bounded completion/no-show history and use completion performance as a tie-breaker, while skill and schedule conflicts remain hard eligibility rules.
 - `GET /api/dispatch/route-manifest?date=YYYY-MM-DD&technician=...` → return a tenant-scoped, normalized-time route ordered by start time with customer, service, address, status, priority, and timezone; technicians are restricted to their own route, while owners and dispatchers may filter by technician
