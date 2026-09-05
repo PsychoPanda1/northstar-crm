@@ -59,6 +59,7 @@ assert(technician.includes('inventoryLocations') && technician.includes('locatio
 assert(app.includes('Edit asset') && repository.includes('updateAsset') && repository.includes('/api/assets/'), 'owner portal does not expose equipment record updates');
 assert(customer.includes('item.serviceHistory') && customer.includes('Equipment'), 'customer portal does not expose equipment service history');
 assert(customer.includes('plan.assetName') && server.includes('savedPlan?.assetName'), 'customer portal does not expose recurring-plan equipment context');
+assert(customer.includes('data-estimate-option') && customer.includes('input[data-estimate-option]') && customer.includes('input.dataset.amount'), 'customer portal does not update estimate total for selected options');
 assert(app.includes('name="assetId"') && app.includes('syncPlanAssets') && repository.includes('assetId =') && repository.includes('assetId ? { assetId }'), 'service plan equipment selector is not wired through the owner portal');
 assert(server.includes('webhookReplayFor') && server.includes("error: 'webhook_event_reused'") && server.includes('payloadFingerprint: payloadFingerprint(body)'), 'provider webhook replay protection is not enforced');
 assert(server.includes('approvalIdempotencyKey') && server.includes('approvalFingerprint') && server.includes("error: 'idempotency_key_reused'"), 'customer estimate approval retry protection is not enforced');
