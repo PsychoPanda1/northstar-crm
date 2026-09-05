@@ -29,6 +29,7 @@ class NorthstarDemoRepository {
       const session = await fetch('/api/session', { headers: { authorization: `Bearer ${this.token}` } });
       if (!session.ok) throw new Error('session unavailable');
       this.session = await session.json();
+      if (this.session.expiresAt && this.session.expiresAt - Date.now() < 30 * 60 * 1000) await this.refreshSession();
     } catch { this.remote = null; this.session = null; }
   }
 
@@ -38,6 +39,17 @@ class NorthstarDemoRepository {
     const response = await fetch('/api/auth/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email, password, service }) });
     if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'login failed');
     const result = await response.json(); this.token = result.token; sessionStorage.setItem(this.tokenKey, this.token); return result;
+  }
+
+  async refreshSession() {
+    if (!this.apiAvailable || !this.token) throw new Error('session unavailable');
+    const response = await fetch('/api/auth/refresh', { method: 'POST', headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('session refresh failed');
+    const result = await response.json();
+    this.token = result.token;
+    sessionStorage.setItem(this.tokenKey, this.token);
+    this.session = { owner: result.owner, tenant: result.tenant, permissions: result.permissions, expiresAt: result.expiresAt };
+    return result;
   }
 
   getDashboard() {
