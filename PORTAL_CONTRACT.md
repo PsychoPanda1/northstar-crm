@@ -32,6 +32,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - `GET /api/session` → `{ owner, tenant, permissions }`
 - `POST /api/auth/login` accepts configured owner or tenant-bound staff credentials without returning or storing passwords; failed attempts are rate-limited and successful sessions use the same signed tenant-scoped token contract. Set `NORTHSTAR_OWNER_EMAIL`, `NORTHSTAR_OWNER_PASSWORD_DIGEST`, optional `NORTHSTAR_STAFF_JSON`, and a strong `NORTHSTAR_SESSION_SECRET`; production should replace this local credential seam with an identity provider.
 - `POST /api/auth/demo-login` is disabled automatically when `NODE_ENV=production`; set `NORTHSTAR_ALLOW_DEMO_LOGIN=true` only for an explicitly isolated preview or smoke environment.
+- `GET /api/ready` returns `200` only when production signing, owner/staff authentication, webhook secrets, and persistent-state configuration are present; it is the container readiness contract, while `GET /api/health` remains a liveness check.
 - Demo login accepts `role=owner|dispatcher|technician|accountant`; production identity claims must map to the returned permission names and enforce them server-side
 - `field:write` is limited to field execution endpoints such as labor/material capture; `jobs:write` remains required for dispatch administration and job creation
 - Owner logout writes a session revocation record that survives API restarts in development; production should delegate session lifecycle and revocation to the identity provider
