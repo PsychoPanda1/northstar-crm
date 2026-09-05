@@ -66,6 +66,8 @@ assert(app.includes('data-job-invoice') && repository.includes('createJobInvoice
 assert(app.includes('Optional line items') && repository.includes('lineItems'), 'completed-job invoicing UI does not support itemized billing');
 assert(app.includes('Visit progress:') && app.includes('data-job-visit-summary'), 'owner job detail does not expose multi-visit progress');
 assert(app.includes('Choose an available visit slot') && app.includes('slot.startsAt') && repository.includes('appointment.slotId') && repository.includes('async addJobVisit'), 'multi-visit scheduling does not preserve normalized availability slots');
+assert(app.includes("repository.getAvailability(service, 7)") && app.includes("repository.convertLead(button.dataset.leadId, slot.label, crypto.randomUUID(), slot.id)") && app.includes("repository.convertEstimate(button.dataset.estimateId, slot.label, crypto.randomUUID(), slot.id"), 'owner lead and estimate scheduling must use normalized availability slots');
+assert(app.includes("repository.rescheduleJob(button.dataset.jobId, jobValue)") && app.includes("jobValue = slots[Number(choice) - 1].id"), 'owner dispatch rescheduling must use normalized availability slot IDs');
 assert(app.includes('campaign-report-view') && app.includes('Campaign performance') && repository.includes('getMarketingReport'), 'owner portal does not expose campaign performance reporting');
 assert(app.includes('receivables-report-view') && app.includes('Accounts receivable') && repository.includes('getReceivablesReport'), 'owner portal does not expose receivables aging reporting');
 assert(app.includes("/^INV-\\d{13,}$/.test(item.id || '') && item.status !== 'Paid'"), 'owner invoice cards do not expose collection for open balances');
