@@ -506,9 +506,10 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async receivePurchaseOrder(id, quantity = null, idempotencyKey = crypto.randomUUID()) {
+  async receivePurchaseOrder(id, quantity = null, idempotencyKey = crypto.randomUUID(), locationId = '') {
     if (!this.remote) throw new Error('API required for purchase order receiving');
-    const response = await fetch(`/api/purchase-orders/${encodeURIComponent(id)}/receive`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify(quantity === null ? {} : { quantity }) });
+    const body = { ...(quantity === null ? {} : { quantity }), ...(locationId ? { locationId } : {}) };
+    const response = await fetch(`/api/purchase-orders/${encodeURIComponent(id)}/receive`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify(body) });
     if (!response.ok) throw new Error('purchase order receiving failed');
     return response.json();
   }
