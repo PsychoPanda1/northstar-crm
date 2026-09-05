@@ -750,6 +750,27 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async listUsers() {
+    if (!this.remote) throw new Error('API required for user management');
+    const response = await fetch('/api/users', { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('user listing failed');
+    return response.json();
+  }
+
+  async createUser(name, email, password, role, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for user management');
+    const response = await fetch('/api/users', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ name, email, password, role }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'user creation failed');
+    return response.json();
+  }
+
+  async updateUserStatus(id, status) {
+    if (!this.remote) throw new Error('API required for user management');
+    const response = await fetch(`/api/users/${encodeURIComponent(id)}/status`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ status }) });
+    if (!response.ok) throw new Error('user status update failed');
+    return response.json();
+  }
+
   async listTeamTimeOff(teamMemberId) {
     if (!this.remote) throw new Error('API required for time-off management');
     const response = await fetch(`/api/team/${encodeURIComponent(teamMemberId)}/time-off`, { headers: { authorization: `Bearer ${this.token}` } });

@@ -85,6 +85,8 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 - `POST /api/jobs/:id/reschedule` accepts an available `slotId` or a legacy `time`; slot-based reschedules preserve normalized appointment metadata
 - Authenticated technician labor/material writes are limited to the technician's assigned work order; technician roles cannot create inventory or purchase orders
 - `POST /api/team` → owner/dispatcher-only creation of a tenant-scoped technician or staff roster member; duplicate names are rejected and an optional `Idempotency-Key` makes browser retries safe
+- `GET|POST /api/users` → owner-only tenant-scoped runtime account list/creation for dispatcher, technician, or accountant users; passwords are HMAC-digested server-side and never returned, account emails are unique across configured and runtime accounts, and creation accepts an `Idempotency-Key`
+- `POST /api/users/:id/status` → owner-only activation or suspension of a runtime account; suspended accounts cannot authenticate, and the current owner cannot suspend their own session
 - `POST /api/team/:id/commission-rate` → owner-only update of a technician commission rate from 0% through 100%; the rate is tenant-scoped, persisted by technician name, idempotent for same-state retries, and audit logged
 - `GET /api/dispatch/recommendations?jobId=...` → owner/dispatcher-only ranking of available technicians by current workload and schedule conflicts; assignment still requires the normal server-side conflict check
 - Dispatch recommendations also include bounded completion/no-show history and use completion performance as a tie-breaker, while skill and schedule conflicts remain hard eligibility rules.
