@@ -1,4 +1,4 @@
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawn } from 'node:child_process';
@@ -9,6 +9,8 @@ const port = 4377;
 const base = `http://127.0.0.1:${port}`;
 const tempDir = mkdtempSync(join(tmpdir(), 'northstar-smoke-'));
 const dataFile = join(tempDir, 'state.json');
+writeFileSync(dataFile, '{malformed primary snapshot');
+writeFileSync(`${dataFile}.tmp`, JSON.stringify({ 'test-hvac': { customers: [{ id: 'RECOVERY-CUSTOMER', tenantId: 'test-hvac', name: 'Recovered Customer', phone: '8435550199', location: '1 Recovery Way' }] } }));
 const webhookSecret = 'smoke-webhook-secret';
 const messageWebhookSecret = 'smoke-message-webhook-secret';
 const callWebhookSecret = 'smoke-call-webhook-secret';
