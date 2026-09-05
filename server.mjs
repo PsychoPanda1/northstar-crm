@@ -8,6 +8,8 @@ const ROOT = fileURLToPath(new URL('.', import.meta.url)).replace(/[\\/]$/, '');
 const PORT = Number(process.env.PORT || 4173);
 const SECRET = process.env.NORTHSTAR_SESSION_SECRET || 'northstar-local-demo-secret-change-me';
 const PAYMENT_WEBHOOK_SECRET = process.env.NORTHSTAR_PAYMENT_WEBHOOK_SECRET || `${SECRET}-payment-webhook`;
+const OWNER_LOGIN_EMAIL = String(process.env.NORTHSTAR_OWNER_EMAIL || '').trim().toLowerCase();
+const OWNER_PASSWORD_DIGEST = String(process.env.NORTHSTAR_OWNER_PASSWORD_DIGEST || '').trim().toLowerCase();
 const DATA_FILE = process.env.NORTHSTAR_DATA_FILE || join(ROOT, '.northstar-data.json');
 const SESSION_FILE = process.env.NORTHSTAR_SESSION_FILE || `${DATA_FILE}.sessions`;
 const ALLOWED_ORIGINS = new Set(String(process.env.NORTHSTAR_ALLOWED_ORIGINS || '').split(',').map((origin) => origin.trim()).filter(Boolean));
@@ -39,6 +41,7 @@ const blankState = () => ({ completedTasks: [], lastAction: null, leads: [], job
 const persisted = existsSync(DATA_FILE) ? JSON.parse(readFileSync(DATA_FILE, 'utf8')) : {};
 const state = new Map(Object.keys(tenants).map((tenantId) => [tenantId, { ...blankState(), ...(persisted[tenantId] || {}) }]));
 const publicLeadWindows = new Map();
+const ownerLoginWindows = new Map();
 const revokedTokens = new Set();
 const revokedSessionIds = new Set(existsSync(SESSION_FILE) ? JSON.parse(readFileSync(SESSION_FILE, 'utf8')) : []);
 const persist = () => { const snapshot = Object.fromEntries(state); writeFileSync(`${DATA_FILE}.tmp`, JSON.stringify(snapshot, null, 2)); renameSync(`${DATA_FILE}.tmp`, DATA_FILE); };
@@ -50,6 +53,8 @@ const json = (res, status, body) => { res.writeHead(status, { 'content-type': 'a
 const readBody = async (req) => { let body = ''; for await (const chunk of req) { body += chunk; if (Buffer.byteLength(body, 'utf8') > 64 * 1024) throw new Error('request_body_too_large'); } return body ? JSON.parse(body) : {}; };
 const readRawBody = async (req) => { let body = ''; for await (const chunk of req) { body += chunk; if (Buffer.byteLength(body, 'utf8') > 64 * 1024) throw new Error('request_body_too_large'); } return body; };
 const allowPublicLead = (req) => { const key = req.socket.remoteAddress || 'unknown'; const now = Date.now(); const window = publicLeadWindows.get(key); if (!window || now - window.startedAt >= 60_000) { publicLeadWindows.set(key, { startedAt: now, count: 1 }); return true; } if (window.count >= 20) return false; window.count += 1; return true; };
+const allowOwnerLogin = (req) => { const key = req.socket.remoteAddress || 'unknown'; const now = Date.now(); const window = ownerLoginWindows.get(key); if (!window || now - window.startedAt >= 15 * 60_000) { ownerLoginWindows.set(key, { startedAt: now, count: 1 }); return true; } if (window.count >= 8) return false; window.count += 1; return true; };
+const secureTextEqual = (left, right) => { const a = Buffer.from(String(left)); const b = Buffer.from(String(right)); return a.length === b.length && timingSafeEqual(a, b); };
 const sign = (value) => createHmac('sha256', SECRET).update(value).digest('base64url');
 const issueToken = (owner) => { const payload = Buffer.from(JSON.stringify({ sid: randomUUID(), sub: owner.id, tenantId: owner.tenantId, role: owner.role, exp: Date.now() + 1000 * 60 * 60 * 8 })).toString('base64url'); return `${payload}.${sign(payload)}`; };
 const issueJobStatusToken = (job) => { const payload = Buffer.from(JSON.stringify({ jobId: job.id, tenantId: job.tenantId, exp: Date.now() + 1000 * 60 * 60 * 72 })).toString('base64url'); return `${payload}.${sign(payload)}`; };
@@ -157,6 +162,13 @@ const server = createServer(async (req, res) => {
     if (pathname === '/api/health' && req.method === 'GET') return json(res, 200, { ok: true, service: 'northstar-api', version: '0.2.0' });
     if (pathname === '/api/auth/demo-login' && req.method === 'POST') {
       const body = await readBody(req); const service = body.service || requestUrl.searchParams.get('service') || 'default'; const role = String(body.role || requestUrl.searchParams.get('role') || 'owner').toLowerCase(); if (!demoStaff[role]) return json(res, 422, { error: 'invalid_demo_role' }); const tenantId = serviceTenant[service] || serviceTenant.default; const owner = { ...demoStaff[role], tenantId }; return json(res, 200, { token: issueToken(owner), owner: { id: owner.id, name: owner.name, role: owner.role }, tenant: tenants[tenantId], permissions: rolePermissions[role] });
+    }
+    if (pathname === '/api/auth/login' && req.method === 'POST') {
+      if (!OWNER_LOGIN_EMAIL || !OWNER_PASSWORD_DIGEST) return json(res, 503, { error: 'owner_auth_not_configured' });
+      if (!allowOwnerLogin(req)) return json(res, 429, { error: 'login_rate_limited' });
+      const body = await readBody(req); const service = body.service || requestUrl.searchParams.get('service') || 'default'; const tenantId = serviceTenant[service] || serviceTenant.default; const email = String(body.email || '').trim().toLowerCase(); const digest = createHmac('sha256', SECRET).update(String(body.password || '')).digest('hex');
+      if (!secureTextEqual(email, OWNER_LOGIN_EMAIL) || !secureTextEqual(digest, OWNER_PASSWORD_DIGEST)) return json(res, 401, { error: 'invalid_login' });
+      const owner = { id: 'owner_configured', name: String(process.env.NORTHSTAR_OWNER_NAME || 'Workspace owner').slice(0, 100), role: 'owner', tenantId }; return json(res, 200, { token: issueToken(owner), owner: { id: owner.id, name: owner.name, role: owner.role }, tenant: tenants[tenantId], permissions: rolePermissions.owner });
     }
     if (pathname === '/api/auth/logout' && req.method === 'POST') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); const token = (req.headers.authorization || '').slice(7); revokedTokens.add(token); revokedSessionIds.add(claims.sid); persistSessionRevocations(); return json(res, 200, { ok: true }); }
     if (pathname === '/api/public/availability' && req.method === 'GET') { const service = requestUrl.searchParams.get('service') || 'default'; const tenantId = serviceTenant[service] || serviceTenant.default; return json(res, 200, { tenant: tenants[tenantId], service, slots: bookingSlotsFor(tenantId) }); }

@@ -29,6 +29,14 @@ class NorthstarDemoRepository {
     } catch { this.apiAvailable = false; }
   }
 
+  async login(email, password) {
+    if (!this.apiAvailable) throw new Error('api unavailable');
+    const service = new URLSearchParams(window.location.search).get('service') || 'default';
+    const response = await fetch('/api/auth/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email, password, service }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'login failed');
+    const result = await response.json(); this.token = result.token; sessionStorage.setItem(this.tokenKey, this.token); return result;
+  }
+
   getDashboard() {
     if (this.remote) return this.remote;
     const seed = NORTHSTAR_DEMO_DATA[this.tenant.slug] || NORTHSTAR_DEMO_DATA['johnson-service-co'];

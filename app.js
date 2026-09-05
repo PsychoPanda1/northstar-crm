@@ -46,6 +46,7 @@ document.querySelector('#workspace-switcher').addEventListener('click', () => lo
 document.querySelector('#owner-account').addEventListener('click', () => loginDialog.showModal());
 document.querySelector('#close-login').addEventListener('click', () => loginDialog.close());
 document.querySelector('#demo-login').addEventListener('click', () => { loginDialog.close(); showToast(`Demo session active for ${tenant.businessName}.`); });
+document.querySelector('#owner-login-form').addEventListener('submit', async (event) => { event.preventDefault(); const form = event.currentTarget; const message = document.querySelector('#login-message'); const submit = form.querySelector('button[type="submit"]'); submit.disabled = true; message.textContent = 'Signing in…'; try { await repository.login(form.elements.email.value, form.elements.password.value); window.location.reload(); } catch (error) { message.textContent = error.message === 'owner_auth_not_configured' ? 'Secure owner login is not configured for this preview.' : 'Sign-in failed. Check your email and password.'; submit.disabled = false; } });
 document.querySelector('#sign-out').addEventListener('click', async () => { await repository.logout(); loginDialog.close(); showToast('Demo session signed out.'); });
 document.querySelectorAll('[data-action]').forEach((button) => {
   button.addEventListener('click', () => { repository.recordAction(button.dataset.action); if (button.dataset.action === 'View service plans') openRecords('plans'); else showToast(`${button.dataset.action} workspace ready to configure.`); });

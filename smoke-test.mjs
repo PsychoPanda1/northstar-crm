@@ -9,7 +9,11 @@ const base = `http://127.0.0.1:${port}`;
 const tempDir = mkdtempSync(join(tmpdir(), 'northstar-smoke-'));
 const dataFile = join(tempDir, 'state.json');
 const webhookSecret = 'smoke-webhook-secret';
-const server = spawn(process.execPath, ['server.mjs'], { cwd: new URL('.', import.meta.url), env: { ...process.env, PORT: String(port), NORTHSTAR_DATA_FILE: dataFile, NORTHSTAR_PAYMENT_WEBHOOK_SECRET: webhookSecret, NORTHSTAR_ALLOWED_ORIGINS: 'https://plumbing.example' }, stdio: 'ignore' });
+const ownerEmail = 'owner@example.test';
+const ownerPassword = 'smoke-owner-password';
+const ownerDigest = createHmac('sha256', 'northstar-local-demo-secret-change-me').update(ownerPassword).digest('hex');
+const serverEnv = { ...process.env, PORT: String(port), NORTHSTAR_DATA_FILE: dataFile, NORTHSTAR_PAYMENT_WEBHOOK_SECRET: webhookSecret, NORTHSTAR_ALLOWED_ORIGINS: 'https://plumbing.example', NORTHSTAR_OWNER_EMAIL: ownerEmail, NORTHSTAR_OWNER_PASSWORD_DIGEST: ownerDigest };
+const server = spawn(process.execPath, ['server.mjs'], { cwd: new URL('.', import.meta.url), env: serverEnv, stdio: 'ignore' });
 let restartedServer;
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 const request = async (path, options = {}) => { const response = await fetch(`${base}${path}`, options); const body = await response.json().catch(() => ({})); return { response, body }; };
@@ -22,12 +26,14 @@ try {
   const malformed = await fetch(`${base}/api/public/leads`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{' });
   const oversized = await fetch(`${base}/api/public/leads`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name: 'x'.repeat(70_000) }) });
   const availability = await request('/api/public/availability?service=plumbing');
+  const secureLogin = await request('/api/auth/login?service=plumbing', jsonOptions('POST', { email: ownerEmail, password: ownerPassword }));
+  const invalidLogin = await request('/api/auth/login?service=plumbing', jsonOptions('POST', { email: ownerEmail, password: 'wrong-password' }));
   const booking = await request('/api/public/bookings?service=plumbing', { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': 'smoke-booking-1' }, body: JSON.stringify({ name: 'Booked Customer', phone: '843-555-0111', requestedService: 'Emergency leak repair', time: 'Tomorrow 10:30 AM', source: 'Clearwater Plumbing landing page', website: '' }) });
   const duplicateBooking = await request('/api/public/bookings?service=plumbing', { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': 'smoke-booking-1' }, body: JSON.stringify({ name: 'Booked Customer', phone: '843-555-0111', requestedService: 'Emergency leak repair', time: 'Tomorrow 10:30 AM', source: 'Clearwater Plumbing landing page' }) });
   const availabilityAfterBooking = await request('/api/public/availability?service=plumbing');
   const cors = await fetch(`${base}/api/public/leads`, { method: 'OPTIONS', headers: { origin: 'https://plumbing.example' } });
   const blockedCors = await fetch(`${base}/api/public/leads`, { method: 'OPTIONS', headers: { origin: 'https://untrusted.example' } });
-  assert(malformed.status === 400 && oversized.status === 400 && availability.response.ok && availability.body.slots.includes('Tomorrow 10:30 AM') && booking.response.status === 201 && booking.body.booked === true && duplicateBooking.response.status === 200 && duplicateBooking.body.duplicate === true && availabilityAfterBooking.response.ok && !availabilityAfterBooking.body.slots.includes('Tomorrow 10:30 AM') && cors.status === 204 && cors.headers.get('access-control-allow-origin') === 'https://plumbing.example' && blockedCors.status === 403, 'malformed input protection or online booking failed');
+  assert(malformed.status === 400 && oversized.status === 400 && availability.response.ok && availability.body.slots.includes('Tomorrow 10:30 AM') && secureLogin.response.status === 200 && secureLogin.body.owner.role === 'owner' && invalidLogin.response.status === 401 && booking.response.status === 201 && booking.body.booked === true && duplicateBooking.response.status === 200 && duplicateBooking.body.duplicate === true && availabilityAfterBooking.response.ok && !availabilityAfterBooking.body.slots.includes('Tomorrow 10:30 AM') && cors.status === 204 && cors.headers.get('access-control-allow-origin') === 'https://plumbing.example' && blockedCors.status === 403, 'auth, malformed input protection, or online booking failed');
   const publicLead = await request('/api/public/leads', jsonOptions('POST', { service: 'plumbing', name: 'Smoke Lead', phone: '843-555-0100', idempotencyKey: 'smoke-lead-1' }));
   const duplicateLead = await request('/api/public/leads', jsonOptions('POST', { service: 'plumbing', name: 'Smoke Lead', phone: '843-555-0100', idempotencyKey: 'smoke-lead-1' }));
   assert(publicLead.response.status === 201 && publicLead.body.tenant.slug === 'clearwater-plumbing' && duplicateLead.response.status === 200 && duplicateLead.body.duplicate === true && duplicateLead.body.id === publicLead.body.id, 'public lead intake failed');
@@ -175,7 +181,7 @@ try {
   const revoked = await request('/api/session', { headers: { authorization: `Bearer ${token}` } });
   assert(logout.response.ok && revoked.response.status === 401, 'logout revocation failed');
   server.kill(); await new Promise((resolve) => setTimeout(resolve, 100));
-  restartedServer = spawn(process.execPath, ['server.mjs'], { cwd: new URL('.', import.meta.url), env: { ...process.env, PORT: String(port), NORTHSTAR_DATA_FILE: dataFile, NORTHSTAR_PAYMENT_WEBHOOK_SECRET: webhookSecret, NORTHSTAR_ALLOWED_ORIGINS: 'https://plumbing.example' }, stdio: 'ignore' });
+  restartedServer = spawn(process.execPath, ['server.mjs'], { cwd: new URL('.', import.meta.url), env: serverEnv, stdio: 'ignore' });
   for (let attempt = 0; attempt < 40; attempt += 1) { try { if ((await fetch(`${base}/api/health`)).ok) break; } catch {} await new Promise((resolve) => setTimeout(resolve, 50)); if (attempt === 39) throw new Error('server did not restart'); }
   const revokedAfterRestart = await request('/api/session', { headers: { authorization: `Bearer ${token}` } });
   assert(revokedAfterRestart.response.status === 401, 'logout revocation did not survive restart');

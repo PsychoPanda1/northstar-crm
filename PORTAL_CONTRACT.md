@@ -24,6 +24,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - Malformed JSON and request bodies above 64 KiB return controlled `400 bad_request` responses
 - Public lead CORS is opt-in through `NORTHSTAR_ALLOWED_ORIGINS`; unlisted origins are rejected during preflight
 - `GET /api/session` → `{ owner, tenant, permissions }`
+- `POST /api/auth/login` accepts configured owner credentials without returning or storing the password; failed attempts are rate-limited and successful sessions use the same signed tenant-scoped token contract. Set `NORTHSTAR_OWNER_EMAIL`, `NORTHSTAR_OWNER_PASSWORD_DIGEST`, and a strong `NORTHSTAR_SESSION_SECRET`; production should replace this local credential seam with an identity provider.
 - Demo login accepts `role=owner|dispatcher|technician|accountant`; production identity claims must map to the returned permission names and enforce them server-side
 - `field:write` is limited to field execution endpoints such as labor/material capture; `jobs:write` remains required for dispatch administration and job creation
 - Owner logout writes a session revocation record that survives API restarts in development; production should delegate session lifecycle and revocation to the identity provider
