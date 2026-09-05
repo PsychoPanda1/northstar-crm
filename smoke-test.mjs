@@ -580,8 +580,10 @@ const techViewWithAsset = await request(`/api/public/technician-job${techUrl.sea
   const techMaterialOptions = { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': 'smoke-technician-material' }, body: JSON.stringify({ materialId: material.body.id, quantity: 2, locationId: truck.body.id }) };
   const techMaterial = await request(`/api/public/technician-job/materials${techUrl.search}`, techMaterialOptions);
   const duplicateTechMaterial = await request(`/api/public/technician-job/materials${techUrl.search}`, { ...techMaterialOptions, headers: { ...techMaterialOptions.headers } });
+  const conflictingTechMaterial = await request(`/api/public/technician-job/materials${techUrl.search}`, { ...techMaterialOptions, body: JSON.stringify({ materialId: material.body.id, quantity: 1, locationId: truck.body.id }) });
   const techViewWithUsage = await request(`/api/public/technician-job${techUrl.search}`);
   const inventoryLedgerAfterTech = await request('/api/inventory-transactions', { headers: { authorization: `Bearer ${token}` } });
+  assert(techMaterial.response.status === 200 && techMaterial.body.transaction.locationId === truck.body.id && duplicateTechMaterial.response.status === 200 && duplicateTechMaterial.body.duplicate === true && conflictingTechMaterial.response.status === 409 && conflictingTechMaterial.body.error === 'idempotency_key_reused' && inventoryLedgerAfterTech.body.items.some((item) => item.detail.includes('Alex Rivera truck')), 'technician material location provenance failed');
   const techEnRoute = await request(`/api/public/technician-job/status${techUrl.search}`, jsonOptions('POST', { status: 'En route' }));
   const duplicateTechEnRoute = await request(`/api/public/technician-job/status${techUrl.search}`, jsonOptions('POST', { status: 'En route' }));
   const techStarted = await request(`/api/public/technician-job/status${techUrl.search}`, jsonOptions('POST', { status: 'In progress' }));
