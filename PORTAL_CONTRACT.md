@@ -91,7 +91,7 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 - `GET /api/catalog` → tenant-scoped service catalog for consistent estimates and landing-page vocabulary
 - `POST /api/catalog` → add a tenant-specific pricebook item; owner and dispatcher roles may write, while other roles remain read-only; an optional `Idempotency-Key` makes retries safe
 - `GET /api/assets` and `POST /api/assets` → tenant-scoped customer equipment records for repeat service context; create accepts a durable `customerId` (with legacy customer-name fallback), stores `customerId`, accepts an optional ISO-parseable `warrantyThrough` date, supports an optional `Idempotency-Key` for retry-safe writes, and the customer portal exposes it without tenant identifiers
-- `GET /api/notifications` → tenant-scoped action queue for new leads, unassigned jobs, unpaid invoices, approaching renewals, expiring equipment warranties, and technician field findings; safety findings include an urgent status and source `jobId`
+- `GET /api/notifications` → tenant-scoped action queue for new leads, unassigned jobs, unpaid invoices, approaching renewals, expiring equipment warranties, technician field findings, and job forms requiring follow-up; safety findings and failed forms include an urgent status and source `jobId`
 - `POST /api/notifications/:id/read` → acknowledge a currently active tenant notification without deleting its source record
 - `GET /api/reviews` → tenant-scoped completed-job ratings and comments
 - `GET /api/export?type=reviews` → tenant-scoped review history CSV for owner reporting
