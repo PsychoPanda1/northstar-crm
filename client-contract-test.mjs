@@ -46,4 +46,5 @@ assert(app.includes("repository.getAvailability(serviceKey, 7") && app.includes(
 assert(app.includes('jobLocationSelect') && app.includes('syncJobLocations') && app.includes('locationId: form.elements.locationId'), 'new-job workflow does not expose multi-location scheduling');
 assert(app.includes('Link equipment') && app.includes('linkJobAsset') && repository.includes('linkJobAsset'), 'job equipment association is not wired through the owner portal');
 assert(app.includes("Array.isArray(job.crew) && job.crew.includes(lane)"), 'dispatch board does not render crew jobs in each assigned technician lane');
+assert(app.includes("Crew: ${detail.job.crew.join(', ')}"), 'job detail summary does not expose assigned crew');
 console.log('Northstar client contract checks passed');
