@@ -21,6 +21,7 @@ const envExample = readFileSync(`${root}.env.example`, 'utf8');
 const containerRelease = readFileSync(`${root}.github/workflows/container-release.yml`, 'utf8');
 const robots = readFileSync(`${root}robots.txt`, 'utf8');
 const openapi = readFileSync(`${root}openapi.yaml`, 'utf8');
+const locationPicker = readFileSync(`${root}location-picker.js`, 'utf8');
 const packageJson = JSON.parse(readFileSync(`${root}package.json`, 'utf8'));
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 assert(packageJson.scripts?.test === 'npm run check && npm run test:landing-client && npm run test:smoke && npm run test:production-boundary && npm run test:persistence-recovery' && packageJson.scripts?.['test:landing-client'] === 'node scripts/landing-client-test.mjs' && packageJson.scripts?.['test:persistence-recovery'] === 'node scripts/persistence-recovery-test.mjs', 'npm test must run the complete release verification suite');
@@ -115,6 +116,7 @@ assert(server.includes("title: 'Completed job ready to invoice'") && app.include
 assert(app.includes('item.title === "Completed job ready to invoice"') && app.includes('data-job-invoice="${escapeHtml(item.jobId)}"'), 'cash-collection notifications do not expose a direct invoice action');
 for (const route of ['if (jobUpdateMatch && req.method', 'if (rescheduleMatch && req.method', 'if (jobNotifyMatch && req.method', 'if (approveMatch && req.method', 'if (estimateConvertMatch && req.method', "if (pathname === '/api/invoices' && req.method === 'POST')"]) { const line = server.slice(server.indexOf(route), server.indexOf('\n', server.indexOf(route))); assert(line.includes("['owner', 'dispatcher'].includes(claims.role)"), `missing owner/dispatcher guard for ${route}`); }
 assert(landingClient.includes('class NorthstarLandingClient') && landingClient.includes('manifest()') && landingClient.includes('ownerPortalUrl()') && landingClient.includes('ownerPortalPath') && landingClient.includes('submitLead') && landingClient.includes('book(payload') && landingClient.includes('idempotency-key') && booking.includes('landing-page-client.js') && booking.includes('new NorthstarLandingClient') && booking.includes('ownerPortalUrl()'), 'landing-page client helper is not manifest-driven or retry-safe');
+assert(index.includes('location-picker.js') && locationPicker.includes('name="locationId"') && locationPicker.includes('getCustomerProfile'), 'new-job workflow must support selecting a customer service location');
 assert(readFileSync(`${root}LANDING_PAGE_INTEGRATION.md`, 'utf8').includes('service_mismatch'), 'landing-page integration contract must document conflicting service rejection');
 assert(status.includes('sessionStorage') && status.includes("retryKey('cancel'") && status.includes("retryKey('reschedule'"), 'customer status actions do not preserve mobile retry identity');
 assert(booking.includes('NorthstarLandingClient') && landingClient.includes("'idempotency-key': key"), 'landing booking form does not preserve mobile retry identity');
