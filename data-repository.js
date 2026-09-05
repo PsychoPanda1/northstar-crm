@@ -378,6 +378,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async dispatchMessages(limit = 20) {
+    if (!this.remote) throw new Error('API required for message dispatch');
+    const response = await fetch('/api/integrations/messages/dispatch', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ limit }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'message dispatch failed');
+    return response.json();
+  }
+
   async getJobDetail(id) {
     if (!this.remote) throw new Error('API required for job detail');
     const response = await fetch(`/api/jobs/${encodeURIComponent(id)}`, { headers: { authorization: `Bearer ${this.token}` } });

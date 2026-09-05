@@ -66,6 +66,8 @@ try {
   const cookieSession = await request('/api/session', { headers: { cookie: sessionCookie } });
   const malformedCookieSession = await request('/api/session', { headers: { cookie: 'northstar_session=%ZZ' } });
   assert(secureLogin.response.status === 200 && secureLogin.response.headers.get('set-cookie')?.includes('HttpOnly') && cookieSession.response.ok && cookieSession.body.owner?.id === 'owner_configured' && malformedCookieSession.response.status === 401, 'secure cookie session authentication failed');
+  const messageDispatchUnavailable = await request('/api/integrations/messages/dispatch', jsonOptions('POST', { limit: 20 }, secureLogin.body.token));
+  assert(messageDispatchUnavailable.response.status === 503 && messageDispatchUnavailable.body.error === 'message_provider_not_configured', 'message provider configuration boundary failed');
   const integrationHealth = await request('/api/integrations/health', { headers: { authorization: `Bearer ${secureLogin.body.token}` } });
   const automationRunOptions = { method: 'POST', headers: { authorization: `Bearer ${secureLogin.body.token}`, 'content-type': 'application/json', 'idempotency-key': 'smoke-automation-run' }, body: JSON.stringify({ channel: 'Email', lookaheadHours: 168, estimateAgeDays: 1, invoiceAgeDays: 1, renewalDays: 30 }) };
   const automationRun = await request('/api/automations/run', automationRunOptions);
