@@ -40,7 +40,9 @@ try {
   const oversized = await fetch(`${base}/api/public/leads`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name: 'x'.repeat(70_000) }) });
   const invalidContactLead = await request('/api/public/leads?service=plumbing', jsonOptions('POST', { name: 'Invalid Contact', email: 'not-an-email' }));
   const availability = await request('/api/public/availability?service=plumbing');
+  const publicCatalog = await request('/api/public/catalog?service=plumbing');
   const extendedAvailability = await request('/api/public/availability?service=plumbing&days=7');
+  assert(publicCatalog.response.ok && publicCatalog.body.items.some((item) => item.name.includes('Plumbing')), 'public pricebook catalog failed');
   const timezoneSafeAvailabilityCheck = (slot) => slot && slot.label.startsWith(new Intl.DateTimeFormat('en-US', { timeZone: slot.timeZone, weekday: 'short', month: 'short', day: 'numeric' }).format(new Date(slot.startsAt)));
   assert(timezoneSafeAvailabilityCheck(extendedAvailability.body.slotOptions.find((slot) => slot.id.startsWith('date-'))), 'timezone-safe availability label failed');
   const tenantConfig = await request('/api/public/tenant?service=plumbing');
