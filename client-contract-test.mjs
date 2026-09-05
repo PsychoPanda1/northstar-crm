@@ -13,7 +13,7 @@ const technician = readFileSync(`${root}technician.html`, 'utf8');
 const server = readFileSync(`${root}server.mjs`, 'utf8');
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 assert(customer.includes('estimate.estimateUrl') && customer.includes('Open detailed estimate'), 'customer portal does not expose detailed estimate links');
-assert(customer.includes('approverName') && estimate.includes('approverName') && estimate.includes('Your name for approval'), 'customer estimate approval does not capture approver attribution');
+assert(customer.includes('approverName') && estimate.includes('approverName') && estimate.includes('Your name for approval') && estimate.includes('retryKey') && estimate.includes("'idempotency-key':retryKey"), 'customer estimate approval does not capture attribution or retry identity');
 
 assert(repository.includes("this.previewOnly = window.location.protocol === 'file:'") && repository.includes("if (!this.previewOnly) throw new Error('authenticated dashboard required')"), 'repository preview fallback is not restricted to file previews');
 assert(app.includes('repository.authRequired') && app.includes('Owner sign-in required'), 'HTTP authentication failure does not fail closed');
@@ -58,6 +58,7 @@ assert(customer.includes('item.serviceHistory') && customer.includes('Equipment'
 assert(customer.includes('plan.assetName') && server.includes('savedPlan?.assetName'), 'customer portal does not expose recurring-plan equipment context');
 assert(app.includes('name="assetId"') && app.includes('syncPlanAssets') && repository.includes('assetId =') && repository.includes('assetId ? { assetId }'), 'service plan equipment selector is not wired through the owner portal');
 assert(server.includes('webhookReplayFor') && server.includes("error: 'webhook_event_reused'") && server.includes('payloadFingerprint: payloadFingerprint(body)'), 'provider webhook replay protection is not enforced');
+assert(server.includes('approvalIdempotencyKey') && server.includes('approvalFingerprint') && server.includes("error: 'idempotency_key_reused'"), 'customer estimate approval retry protection is not enforced');
 assert(server.includes('accentSoft') && server.includes('focus.slice(0, 160)') && server.includes('NORTHSTAR_TENANTS_JSON'), 'configured tenant branding is not preserved by the API');
 assert(repository.includes('activeRepository.refreshPromise') && repository.includes('__northstarRetry') && repository.includes('await refreshPromise') && repository.includes('__northstarRefresh'), 'authenticated requests do not recover from an expired session');
 console.log('Northstar client contract checks passed');
