@@ -591,6 +591,9 @@ try {
   const publicPricedInvoice = await request(`/api/public/invoice${new URL(pricedInvoiceLink.body.url, base).search}`);
   const customerPortalWithEstimate = await request(`/api/public/customer-portal${customerUrl.search}`);
   assert(customerPortalWithEstimate.body.estimates.some((item) => item.service === 'Panel upgrade' && item.subtotal === pricedEstimate.body.subtotal && item.discount === pricedEstimate.body.discount && item.tax === pricedEstimate.body.tax), 'customer portal estimate pricing visibility failed');
+  const portalEstimateView = customerPortalWithEstimate.body.estimates.find((item) => item.id === portalEstimate.body.id);
+  const estimateFinancingIntent = await request(`/api/public/customer-portal/financing-intent${customerUrl.search}`, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': 'smoke-estimate-financing' }, body: JSON.stringify({ estimateId: portalEstimateView.id, amount: 200, termMonths: 12, provider: 'Community lender' }) });
+  assert(estimateFinancingIntent.response.status === 201 && estimateFinancingIntent.body.application.estimateId === portalEstimateView.id && estimateFinancingIntent.body.application.invoiceId === undefined && estimateFinancingIntent.body.application.status === 'Pending provider', 'estimate financing request workflow failed');
   const portalApproval = await request(`/api/public/estimate/approve?token=${encodeURIComponent(customerPortalWithEstimate.body.estimates.find((item) => item.id === portalEstimate.body.id).estimateApprovalToken)}`, jsonOptions('POST', { approverName: 'Smoke Lead' }));
   const portalInvoice = await request('/api/invoices', jsonOptions('POST', { estimateId: portalEstimate.body.id }, token));
   const bulkReceivables = await request('/api/receivables/reminders', jsonOptions('POST', { minBalance: 200, channel: 'Email' }, token));
