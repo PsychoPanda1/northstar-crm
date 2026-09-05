@@ -550,6 +550,7 @@ try {
   assert(rescheduleNotifications.response.ok && rescheduleNotifications.body.items.some((item) => item.title === 'Customer rescheduled appointment' && item.read === false), 'customer reschedule did not reach owner notifications');
   assert(statusView.response.status === 200 && statusView.body.availableRescheduleSlots?.length > 0 && statusReschedule.response.status === 200 && statusReschedule.body.job.slotId === statusRescheduleSlot.id, 'status-link reschedule mutation failed');
   assert(customerPortal.body.jobs.some((item) => item.id === fieldJob.body.id && item.photos?.[0]?.caption.includes('coupling')), 'customer portal field evidence visibility failed');
+  assert(customerPortal.body.jobs.some((item) => item.id === converted.body.job.id && item.status === 'Completed' && item.reviewUrl?.startsWith('/review.html?token=') && item.reviewLinkExpiresInHours === 72), 'customer portal completed-job review handoff failed');
   assert(customerPortal.body.jobs.some((item) => item.id === fieldJob.body.id && item.customerAcknowledgedBy === 'Smoke Lead'), 'customer portal customer acknowledgment visibility failed');
   assert(customerPortal.body.assets?.[0]?.warrantyThrough === warrantySoon, 'customer portal warranty visibility failed');
   const portalConfirm = await request(`/api/public/customer-portal/confirm${customerUrl.search}`, jsonOptions('POST', { jobId: customerPortal.body.jobs[0].id }));
