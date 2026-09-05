@@ -84,6 +84,7 @@ assert(!technician.includes('const shareLocation = () =>'), 'technician page ret
 assert(technician.includes('Location saved offline and will sync when online.'), 'technician tracking hides offline queue state');
 assert(status.slice(status.indexOf('</html>') + 7).trim() === '' && status.lastIndexOf('<script>') < status.indexOf('</html>'), 'status page scripts must remain inside the document');
 assert(status.includes('currentStatus') && status.includes('currentStatus !== body.status') && status.includes('location.reload()'), 'status link does not refresh lifecycle transitions');
+assert(status.includes('__northstarStatusPromise') && status.includes('response.clone().json()'), 'status controls do not share the initial status response');
 assert(customer.includes('portalRefreshTimer') && customer.includes("/api/public/customer-portal' + query") && customer.includes('document.hidden'), 'customer portal does not refresh active tracking while visible');
 assert(status.includes('tracking-freshness') && status.includes('Technician location') && status.includes('setInterval(refreshTracking, 30000)'), 'customer status link does not expose refreshed tracking freshness');
 assert(app.includes('decorateMessageReplyButtons') && app.includes('repository.replyToMessage') && !app.includes('repository.replyMessage'), 'owner message replies include an obsolete duplicate handler');
