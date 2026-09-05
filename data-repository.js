@@ -139,6 +139,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async updateJobPriority(id, priority) {
+    if (!this.remote) throw new Error('API required for job priority updates');
+    const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/priority`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ priority }) });
+    if (!response.ok) throw new Error('job priority update failed');
+    return response.json();
+  }
+
   async rescheduleJob(id, slotId) {
     if (!this.remote) throw new Error('API required for dispatch rescheduling');
     const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/reschedule`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ slotId }) });
