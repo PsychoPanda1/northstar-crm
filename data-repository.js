@@ -453,6 +453,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async remindPlans(days = 30, channel = 'SMS') {
+    if (!this.remote) throw new Error('API required for plan reminders');
+    const response = await fetch('/api/plans/reminders', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ days, channel }) });
+    if (!response.ok) throw new Error('plan reminders failed');
+    return response.json();
+  }
+
   async createPlan(customerId, service, amount, renewal, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for service plan creation');
     const response = await fetch('/api/plans', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ customerId, service, amount, renewal }) });
