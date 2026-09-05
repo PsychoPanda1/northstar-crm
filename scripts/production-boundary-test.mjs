@@ -1,5 +1,5 @@
 import { createHmac } from 'node:crypto';
-import { existsSync, unlinkSync } from 'node:fs';
+import { existsSync, readFileSync, unlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawn } from 'node:child_process';
@@ -42,6 +42,8 @@ const getJson = async (path, options) => {
 };
 
 try {
+  const ownerShell = readFileSync(join(root, 'index.html'), 'utf8');
+  if (/Example customer|Example property group|JOB-EXAMPLE|EST-EXAMPLE/.test(ownerShell)) throw new Error('demo-looking records embedded in owner shell');
   let ready = null;
   for (let attempt = 0; attempt < 100 && !ready?.ok; attempt += 1) {
     try { ready = await getJson('/api/ready'); } catch {}
