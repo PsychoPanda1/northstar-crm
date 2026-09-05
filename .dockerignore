@@ -4,3 +4,4 @@
 .northstar-data.json.sessions
 node_modules
 *.log
+.env*

@@ -1,3 +1,5 @@
 .northstar-data.json
 .northstar-data.json.tmp
 node_modules/
+.env*
+!.env.example
