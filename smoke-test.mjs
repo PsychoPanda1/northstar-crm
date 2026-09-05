@@ -65,6 +65,8 @@ try {
   const duplicateTeamMember = await request('/api/team', jsonOptions('POST', { name: 'Jordan Lee', role: 'Field technician' }, token));
   assert(newTeamMember.response.status === 201 && newTeamMember.body.name === 'Jordan Lee' && teamRoster.body.items.some((item) => item.name === 'Jordan Lee' && item.status === 'Available') && duplicateTeamMember.response.status === 409, 'team roster management failed');
   const createdCustomer = await request('/api/customers', jsonOptions('POST', { name: 'Direct Job Customer', phone: '843-555-0122', email: 'direct.customer@example.test' }, token));
+  const invalidOwnerCustomer = await request('/api/customers', jsonOptions('POST', { name: 'Invalid Owner Contact', phone: '843-555-0125', email: 'not-an-email' }, token));
+  assert(invalidOwnerCustomer.response.status === 422, 'owner customer email validation failed');
   const idempotentCustomerOptions = jsonOptions('POST', { name: 'Idempotent Customer', phone: '843-555-0123', email: 'idempotent.customer@example.test' }, token);
   idempotentCustomerOptions.headers['idempotency-key'] = 'smoke-customer-create';
   const idempotentCustomer = await request('/api/customers', idempotentCustomerOptions);
