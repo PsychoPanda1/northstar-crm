@@ -56,7 +56,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Owners and dispatchers can queue deduplicated SMS/email follow-ups for open estimates
 - Landing-page retries can use an idempotency key to prevent duplicate leads
 - Owners can acknowledge active notifications while preserving the source record
-- Customers can submit reschedule requests or questions from the self-service portal
+- Customers can submit reschedule, cancellation, or question requests from the self-service portal
 - Accepted estimates can convert directly into scheduled, checklist-ready jobs
 - Server-side technician conflict detection for assignment and rescheduling
 - Server-enforced job lifecycle transitions prevent invalid field states and bypassing completion requirements
