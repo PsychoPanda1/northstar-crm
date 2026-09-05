@@ -565,6 +565,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async getEstimateRevisions(estimateId) {
+    if (!this.remote) throw new Error('API required for estimate revisions');
+    const response = await fetch(`/api/estimates/${encodeURIComponent(estimateId)}/revisions`, { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('estimate revisions unavailable');
+    return response.json();
+  }
+
   async sendEstimate(estimateId, channel = 'SMS', idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for estimate delivery');
     const response = await fetch(`/api/estimates/${encodeURIComponent(estimateId)}/send`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ channel }) });
