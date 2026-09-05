@@ -295,9 +295,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async updateCustomer(id, fields) {
+  async updateCustomer(id, fields, idempotencyKey = '') {
     if (!this.remote) throw new Error('API required for customer profile updates');
-    const response = await fetch(`/api/customers/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify(fields) });
+    const response = await fetch(`/api/customers/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', ...(idempotencyKey ? { 'idempotency-key': idempotencyKey } : {}) }, body: JSON.stringify(fields) });
     if (!response.ok) throw new Error('customer profile update failed');
     return response.json();
   }

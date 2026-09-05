@@ -36,7 +36,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - Owner logout writes a session revocation record that survives API restarts in development; production should delegate session lifecycle and revocation to the identity provider
 - `GET /api/customers` and `POST /api/customers` → list or create tenant-owned customer profiles; creation requires a phone, preserves an optional email, rejects duplicate phone/email contacts, and records a `customer.created` audit event
 - `GET /api/customers/:id` → return one tenant-scoped customer profile with related jobs, assets, estimates, invoices, plans, and activities
-- `PATCH|PUT /api/customers/:id` → update an owner/dispatcher-managed customer's name, phone, email, or primary location with duplicate-contact protection and an actor-attributed `customer.updated` audit event
+- `PATCH|PUT /api/customers/:id` → update an owner/dispatcher-managed customer's name, phone, email, or primary location with duplicate-contact protection and an actor-attributed `customer.updated` audit event; accepts an optional `Idempotency-Key` and returns `duplicate: true` for a safe retry
 - `POST /api/customers/:id/locations` → add a tenant-scoped service address to a customer profile; accepts an optional `Idempotency-Key`, returns `duplicate: true` for safe retries, and appends an actor-attributed `location.created` audit event
 - `GET /api/dashboard?range=week` → `{ metrics, pipeline, tasks, schedule, activity }`
 - `GET /api/reports/overview` → tenant-scoped funnel, scheduling, cash, recurring-revenue, and touchpoint metrics
