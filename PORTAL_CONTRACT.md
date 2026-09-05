@@ -19,6 +19,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 ## Recommended API shape
 
 - `POST /api/public/leads` → accept a constrained landing-page inquiry using a service key; supports an `Idempotency-Key` header to make retries safe; production must add validation, rate limiting, spam protection, and durable storage
+- `GET /api/public/availability?service=...` and `POST /api/public/bookings?service=...` → expose landing-page slots and create an idempotent tenant-routed customer/job booking; production should replace prototype slots with live timezone-aware capacity
 - Malformed JSON and request bodies above 64 KiB return controlled `400 bad_request` responses
 - Public lead CORS is opt-in through `NORTHSTAR_ALLOWED_ORIGINS`; unlisted origins are rejected during preflight
 - `GET /api/session` → `{ owner, tenant, permissions }`
