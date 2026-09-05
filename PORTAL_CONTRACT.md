@@ -43,6 +43,7 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 - `GET /api/customers/:id` → return one tenant-scoped customer profile with related jobs, assets, estimates, invoices, plans, and activities
 - `GET /api/customers/:id/timeline?limit=...` → return a bounded, tenant-scoped customer timeline projection of activities, messages, job lifecycle, labor, and material-consumption records without requiring consumers to load the full profile payload
 - Records returned by the owner API enrich legacy name-based customer records with a matching tenant-scoped `customerId` when one can be resolved, preserving compatibility while enabling durable history links
+- Owner-facing business records, including derived team and catalog records plus system timeline/audit events, carry an explicit `tenantId` for exports and future managed-storage migration
 - Customer profile and timeline joins use an existing `customerId` as authoritative; name matching is only a compatibility fallback for records that have no durable customer link
 - The owner portal customer picker passes durable IDs for new notes, assets, and estimates; exact-name ambiguity is rejected in the browser instead of silently selecting the first account
 - `PATCH|PUT /api/customers/:id` → update an owner/dispatcher-managed customer's name, phone, email, or primary location with email-shape and duplicate-contact protection plus an actor-attributed `customer.updated` audit event; accepts an optional `Idempotency-Key` and returns `duplicate: true` for a safe retry
