@@ -72,6 +72,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async listDispatchForRange(startDate, endDate) {
+    if (!this.remote) throw new Error('API required for dispatch planning');
+    const response = await fetch(`/api/dispatch?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`, { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('dispatch planning unavailable');
+    return response.json();
+  }
+
   async getReport() {
     if (!this.remote) throw new Error('API required for reporting');
     const response = await fetch('/api/reports/overview', { headers: { authorization: `Bearer ${this.token}` } });

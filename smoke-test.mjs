@@ -231,8 +231,10 @@ try {
   const recommendations = await request(`/api/dispatch/recommendations?jobId=${encodeURIComponent(converted.body.job.id)}`, { headers: { authorization: `Bearer ${token}` } });
   const dispatchDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(booking.body.appointment.startsAt));
   const datedDispatch = await request(`/api/dispatch?date=${dispatchDate}`, { headers: { authorization: `Bearer ${token}` } });
+  const rangedDispatch = await request(`/api/dispatch?startDate=${dispatchDate}&endDate=${dispatchDate}`, { headers: { authorization: `Bearer ${token}` } });
   assert(recommendations.response.ok && recommendations.body.recommendations.length >= 3 && recommendations.body.recommendations.some((item) => item.available) && recommendations.body.recommendations.every((item) => Number.isInteger(item.completedJobs) && Number.isInteger(item.noShows) && (item.performanceRate === null || typeof item.performanceRate === 'number')), 'dispatch recommendation failed');
   assert(datedDispatch.response.ok && datedDispatch.body.date === dispatchDate && datedDispatch.body.items.some((item) => item.id === booking.body.id), 'dated dispatch filter failed');
+  assert(rangedDispatch.response.ok && rangedDispatch.body.startDate === dispatchDate && rangedDispatch.body.endDate === dispatchDate && rangedDispatch.body.items.some((item) => item.id === booking.body.id), 'dispatch range filter failed');
   const materialOptions = jsonOptions('POST', { materialId: material.body.id, quantity: 3 }, token);
   materialOptions.headers['idempotency-key'] = 'smoke-material-use';
   const materialUse = await request(`/api/jobs/${converted.body.job.id}/materials`, materialOptions);
