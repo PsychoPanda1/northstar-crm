@@ -70,6 +70,7 @@ Northstar is the owner-facing portal attached to service-business landing pages.
 - `GET/POST /api/public/technician-job/clock?token=...` → read or update the assigned technician's clock-in/out state; append-only completed sessions preserve aggregate elapsed field minutes and audit events
 - Technician completion requires an inactive field clock; job-cost reporting exposes the resulting field minutes/hours separately from billable labor entries
 - `POST /api/public/technician-job/materials?token=...` → consume available stock against the assigned job and append a source-tagged inventory transaction
+- `GET /api/inventory-transactions` → authenticated tenant-scoped ledger of stock receipts, job consumption, and purchase receipts; exportable through `/api/export?type=inventory-transactions`
 - `POST /api/public/technician-job/payment-intent?token=...` → create an idempotent provider-pending Card/ACH intent only for the assigned job's open invoice; provider confirmation remains external
 - New jobs include a required three-step field checklist; `POST /api/public/technician-job/checklist?token=...` updates checklist items and technician completion rejects incomplete work
 - `POST /api/public/technician-job/photo?token=...` → attach up to 20 bounded HTTPS photo references with captions to the assigned job; production should replace URLs with signed object-storage uploads
