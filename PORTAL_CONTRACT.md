@@ -211,6 +211,7 @@ System events such as web-form lead capture, customer estimate approval, and rec
 - `POST /api/public/estimate/decline?token=...` records a customer-provided decline reason, updates an open `Draft` or `Sent` estimate to `Declined`, and is safely idempotent on repeat submission
 - `POST /api/public/estimate/request-change?token=...` records a customer change request on an open `Draft` or `Sent` estimate, changes its status to `Change requested`, creates an owner action notification, and is idempotent on repeat submission
 - `POST /api/estimates/:id/approve` → approve a tenant-owned estimate
+- `POST /api/estimates/:id/approve` → owner/dispatcher-only approval of a tenant-owned Draft or Sent estimate; repeated approval is idempotent, expired estimates cannot be approved, and the verified actor is recorded in estimate activity and audit history
 - `POST /api/estimates/:id/line-items` → owner/dispatcher-only replacement of up to 20 bounded draft-estimate line items; the server calculates subtotal, discount, tax, and total, supports idempotent retries, and preserves the itemized scope for the public estimate and resulting invoice
 - A `Change requested` estimate can be revised through the same line-item endpoint; the revision creates an immutable prior-scope snapshot and returns the estimate to `Draft` after clearing the customer request, ready for owner resend
 - `GET /api/estimates/:id/revisions` → owner/dispatcher/accountant-only bounded immutable snapshots of prior estimate scope and pricing, including version, timestamp, and actor
