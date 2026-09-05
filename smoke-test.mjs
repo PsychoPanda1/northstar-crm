@@ -89,6 +89,9 @@ try {
   const duplicateTeamMember = await request('/api/team', jsonOptions('POST', { name: 'Jordan Lee', role: 'Field technician' }, token));
   assert(newTeamMember.response.status === 201 && newTeamMember.body.duplicate === false && duplicateNewTeamMember.response.status === 200 && duplicateNewTeamMember.body.duplicate === true && duplicateNewTeamMember.body.id === newTeamMember.body.id && newTeamMember.body.name === 'Jordan Lee' && teamRoster.body.items.some((item) => item.name === 'Jordan Lee' && item.status === 'Available') && duplicateTeamMember.response.status === 409, 'team roster management failed');
   const createdCustomer = await request('/api/customers', jsonOptions('POST', { name: 'Direct Job Customer', phone: '843-555-0122', email: 'direct.customer@example.test' }, token));
+  const globalSearch = await request('/api/search?q=Direct%20Job', { headers: { authorization: `Bearer ${token}` } });
+  const invalidGlobalSearch = await request('/api/search?q=x', { headers: { authorization: `Bearer ${token}` } });
+  assert(globalSearch.response.status === 200 && globalSearch.body.results.customers.some((item) => item.id === createdCustomer.body.id) && invalidGlobalSearch.response.status === 422, 'global search workflow failed');
   const invalidOwnerCustomer = await request('/api/customers', jsonOptions('POST', { name: 'Invalid Owner Contact', phone: '843-555-0125', email: 'not-an-email' }, token));
   assert(invalidOwnerCustomer.response.status === 422, 'owner customer email validation failed');
   const idempotentCustomerOptions = jsonOptions('POST', { name: 'Idempotent Customer', phone: '843-555-0123', email: 'idempotent.customer@example.test' }, token);

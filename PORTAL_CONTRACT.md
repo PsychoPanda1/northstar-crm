@@ -35,6 +35,7 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 - Malformed JSON and request bodies above 64 KiB return controlled `400 bad_request` responses
 - Public lead CORS is opt-in through `NORTHSTAR_ALLOWED_ORIGINS`; unlisted origins are rejected during preflight
 - `GET /api/session` → `{ owner, tenant, permissions }`
+- `GET /api/search?q=...` → owner/dispatcher/accountant-only tenant-scoped global search across customers, leads, jobs, estimates, and invoices; results are bounded and role-safe
 - `POST /api/auth/refresh` → rotate a still-valid owner/staff bearer session, revoke the prior token and session ID, and return a replacement with `expiresAt`; expired or logged-out sessions cannot be refreshed
 - `POST /api/auth/login` accepts configured owner or tenant-bound staff credentials without returning or storing passwords; failed attempts are rate-limited and successful sessions use the same signed tenant-scoped token contract. Set `NORTHSTAR_OWNER_EMAIL`, `NORTHSTAR_OWNER_PASSWORD_DIGEST`, `NORTHSTAR_OWNER_TENANT_ID`, optional `NORTHSTAR_STAFF_JSON`, and a strong `NORTHSTAR_SESSION_SECRET`; configured owner credentials cannot select a different tenant through the service parameter, and production should replace this local credential seam with an identity provider.
 - `POST /api/auth/demo-login` is disabled automatically when `NODE_ENV=production`; set `NORTHSTAR_ALLOW_DEMO_LOGIN=true` only for an explicitly isolated preview or smoke environment.

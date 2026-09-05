@@ -544,6 +544,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async globalSearch(query) {
+    if (!this.remote) throw new Error('API required for global search');
+    const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`, { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('global search failed');
+    return response.json();
+  }
+
   async updateEstimateLineItems(estimateId, items, discount = 0, taxRate = 0, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for estimate line items');
     const response = await fetch(`/api/estimates/${encodeURIComponent(estimateId)}/line-items`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ items, discount, taxRate }) });
