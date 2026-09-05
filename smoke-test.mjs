@@ -17,7 +17,8 @@ const jsonOptions = (method, body, token) => ({ method, headers: { 'content-type
 try {
   for (let attempt = 0; attempt < 40; attempt += 1) { try { if ((await fetch(`${base}/api/health`)).ok) break; } catch {} await new Promise((resolve) => setTimeout(resolve, 50)); if (attempt === 39) throw new Error('server did not start'); }
   const portal = await fetch(`${base}/portal?service=plumbing`);
-  assert(portal.status === 200 && (await portal.text()).includes('northstar'), 'portal landing handoff failed');
+  const bookingPage = await fetch(`${base}/booking.html?service=plumbing`);
+  assert(portal.status === 200 && (await portal.text()).includes('northstar') && bookingPage.status === 200 && (await bookingPage.text()).includes('NORTHSTAR ONLINE BOOKING'), 'portal or booking landing handoff failed');
   const malformed = await fetch(`${base}/api/public/leads`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{' });
   const oversized = await fetch(`${base}/api/public/leads`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name: 'x'.repeat(70_000) }) });
   const availability = await request('/api/public/availability?service=plumbing');
