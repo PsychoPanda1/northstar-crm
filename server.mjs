@@ -349,3 +349,6 @@ const server = createServer(async (req, res) => {
   } catch (error) { console.error(error); return json(res, 400, { error: 'bad_request' }); }
 });
 server.listen(PORT, () => console.log(`Northstar CRM running at http://localhost:${PORT}`));
+const shutdown = () => server.close(() => process.exit(0));
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
