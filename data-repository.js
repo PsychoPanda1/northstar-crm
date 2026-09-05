@@ -232,9 +232,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async createCatalogItem(name, description, priceFrom) {
+  async createCatalogItem(name, description, priceFrom, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for catalog editing');
-    const response = await fetch('/api/catalog', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ name, description, priceFrom }) });
+    const response = await fetch('/api/catalog', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ name, description, priceFrom }) });
     if (!response.ok) throw new Error('catalog item creation failed');
     return response.json();
   }
@@ -330,9 +330,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async createTeamMember(name, role, skills = []) {
+  async createTeamMember(name, role, skills = [], idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for team management');
-    const response = await fetch('/api/team', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ name, role, skills }) });
+    const response = await fetch('/api/team', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ name, role, skills }) });
     if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'team member creation failed');
     return response.json();
   }

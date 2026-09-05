@@ -62,10 +62,12 @@ try {
   const login = await request('/api/auth/demo-login?service=plumbing', jsonOptions('POST', {}));
   assert(login.response.ok, 'demo login failed');
   const token = login.body.token;
-  const newTeamMember = await request('/api/team', jsonOptions('POST', { name: 'Jordan Lee', role: 'Apprentice' }, token));
+  const teamMemberOptions = { ...jsonOptions('POST', { name: 'Jordan Lee', role: 'Apprentice' }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-team-member' } };
+  const newTeamMember = await request('/api/team', teamMemberOptions);
+  const duplicateNewTeamMember = await request('/api/team', teamMemberOptions);
   const teamRoster = await request('/api/team', { headers: { authorization: `Bearer ${token}` } });
   const duplicateTeamMember = await request('/api/team', jsonOptions('POST', { name: 'Jordan Lee', role: 'Field technician' }, token));
-  assert(newTeamMember.response.status === 201 && newTeamMember.body.name === 'Jordan Lee' && teamRoster.body.items.some((item) => item.name === 'Jordan Lee' && item.status === 'Available') && duplicateTeamMember.response.status === 409, 'team roster management failed');
+  assert(newTeamMember.response.status === 201 && newTeamMember.body.duplicate === false && duplicateNewTeamMember.response.status === 200 && duplicateNewTeamMember.body.duplicate === true && duplicateNewTeamMember.body.id === newTeamMember.body.id && newTeamMember.body.name === 'Jordan Lee' && teamRoster.body.items.some((item) => item.name === 'Jordan Lee' && item.status === 'Available') && duplicateTeamMember.response.status === 409, 'team roster management failed');
   const createdCustomer = await request('/api/customers', jsonOptions('POST', { name: 'Direct Job Customer', phone: '843-555-0122', email: 'direct.customer@example.test' }, token));
   const invalidOwnerCustomer = await request('/api/customers', jsonOptions('POST', { name: 'Invalid Owner Contact', phone: '843-555-0125', email: 'not-an-email' }, token));
   assert(invalidOwnerCustomer.response.status === 422, 'owner customer email validation failed');
@@ -121,7 +123,9 @@ try {
   const accountantLogin = await request('/api/auth/demo-login?service=plumbing&role=accountant', jsonOptions('POST', {}));
   const accountantReports = await request('/api/reports/overview', { headers: { authorization: `Bearer ${accountantLogin.body.token}` } });
   assert(technicianLogin.response.ok && technicianSession.body.owner.role === 'technician' && technicianSession.body.permissions.includes('field:write') && !technicianSession.body.permissions.includes('jobs:write') && !technicianSession.body.permissions.includes('inventory:write') && technicianReports.response.status === 403 && technicianJobCreate.response.status === 403 && technicianOtherJobLabor.response.status === 403 && accountantReports.response.ok, 'role permissions failed');
-  const catalogItem = await request('/api/catalog', jsonOptions('POST', { name: 'Emergency pipe repair', description: 'Priority diagnosis and repair for active leaks', priceFrom: '$389' }, token));
+  const catalogItemOptions = { ...jsonOptions('POST', { name: 'Emergency pipe repair', description: 'Priority diagnosis and repair for active leaks', priceFrom: '$389' }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-catalog-item' } };
+  const catalogItem = await request('/api/catalog', catalogItemOptions);
+  const duplicateCatalogItem = await request('/api/catalog', catalogItemOptions);
   const catalog = await request('/api/catalog?search=Emergency%20pipe', { headers: { authorization: `Bearer ${token}` } });
   const accountantCatalogItem = await request('/api/catalog', jsonOptions('POST', { name: 'Unauthorized pricebook item', description: 'Should not be created', priceFrom: '$1' }, accountantLogin.body.token));
   const pricebookCustomer = await request('/api/customers', jsonOptions('POST', { name: 'Pricebook Customer', phone: '843-555-0101' }, token));
@@ -131,7 +135,7 @@ try {
   const optionEstimateView = await request(`/api/public/estimate?token=${encodeURIComponent(optionEstimate.body.estimateApprovalToken)}`);
   const selectedOptionApproval = await request(`/api/public/estimate/approve?token=${encodeURIComponent(optionEstimate.body.estimateApprovalToken)}`, jsonOptions('POST', { optionId: 'OPTION-2', approverName: 'Options Customer' }));
   const invalidPricebookEstimate = await request('/api/estimates', jsonOptions('POST', { customer: 'Pricebook Customer', amount: 389, catalogItemId: 'other-tenant-catalog-item' }, token));
-  assert(catalogItem.response.status === 201 && catalog.body.items.some((item) => item.id === catalogItem.body.id) && accountantCatalogItem.response.status === 403 && pricebookCustomer.response.status === 201 && optionsCustomer.response.status === 201 && pricebookEstimate.response.status === 201 && pricebookEstimate.body.customerId === pricebookCustomer.body.id && pricebookEstimate.body.service === 'Emergency pipe repair' && pricebookEstimate.body.pricebookItem === 'Emergency pipe repair' && optionEstimate.response.status === 201 && optionEstimate.body.customerId === optionsCustomer.body.id && optionEstimateView.body.options.length === 3 && selectedOptionApproval.body.selectedOptionId === 'OPTION-2' && selectedOptionApproval.body.value === '$650.00' && invalidPricebookEstimate.response.status === 404, 'pricebook or estimate options workflow failed');
+  assert(catalogItem.response.status === 201 && catalogItem.body.duplicate === false && duplicateCatalogItem.response.status === 200 && duplicateCatalogItem.body.duplicate === true && duplicateCatalogItem.body.id === catalogItem.body.id && catalog.body.items.some((item) => item.id === catalogItem.body.id) && accountantCatalogItem.response.status === 403 && pricebookCustomer.response.status === 201 && optionsCustomer.response.status === 201 && pricebookEstimate.response.status === 201 && pricebookEstimate.body.customerId === pricebookCustomer.body.id && pricebookEstimate.body.service === 'Emergency pipe repair' && pricebookEstimate.body.pricebookItem === 'Emergency pipe repair' && optionEstimate.response.status === 201 && optionEstimate.body.customerId === optionsCustomer.body.id && optionEstimateView.body.options.length === 3 && selectedOptionApproval.body.selectedOptionId === 'OPTION-2' && selectedOptionApproval.body.value === '$650.00' && invalidPricebookEstimate.response.status === 404, 'pricebook or estimate options workflow failed');
   const inventoryMaterialOptions = { ...jsonOptions('POST', { name: '1/2 inch copper coupling', sku: 'CU-COUP-12', unit: 'each', unitCost: 8.5, onHand: 4, reorderPoint: 1 }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-material' } };
   const material = await request('/api/materials', inventoryMaterialOptions);
   const duplicateMaterial = await request('/api/materials', inventoryMaterialOptions);

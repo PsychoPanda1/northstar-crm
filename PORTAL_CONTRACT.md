@@ -56,10 +56,10 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 - `POST /api/jobs` accepts optional ISO `startsAt`, `endsAt`, and IANA `timeZone` fields; valid timestamp ranges participate in overlap-aware appointment conflict checks
 - `POST /api/jobs/:id/reschedule` accepts an available `slotId` or a legacy `time`; slot-based reschedules preserve normalized appointment metadata
 - Authenticated technician labor/material writes are limited to the technician's assigned work order; technician roles cannot create inventory or purchase orders
-- `POST /api/team` → owner/dispatcher-only creation of a tenant-scoped technician or staff roster member; duplicate names are rejected
+- `POST /api/team` → owner/dispatcher-only creation of a tenant-scoped technician or staff roster member; duplicate names are rejected and an optional `Idempotency-Key` makes browser retries safe
 - `GET /api/dispatch/recommendations?jobId=...` → rank available technicians by current workload and schedule conflicts; assignment still requires the normal server-side conflict check
 - `GET /api/catalog` → tenant-scoped service catalog for consistent estimates and landing-page vocabulary
-- `POST /api/catalog` → add a tenant-specific pricebook item; owner and dispatcher roles may write, while other roles remain read-only
+- `POST /api/catalog` → add a tenant-specific pricebook item; owner and dispatcher roles may write, while other roles remain read-only; an optional `Idempotency-Key` makes retries safe
 - `GET /api/assets` and `POST /api/assets` → tenant-scoped customer equipment records for repeat service context; create accepts a durable `customerId` (with legacy customer-name fallback), stores `customerId`, accepts an optional ISO-parseable `warrantyThrough` date, supports an optional `Idempotency-Key` for retry-safe writes, and the customer portal exposes it without tenant identifiers
 - `GET /api/notifications` → tenant-scoped action queue for new leads, unassigned jobs, unpaid invoices, approaching renewals, and equipment warranties expiring within 30 days
 - `POST /api/notifications/:id/read` → acknowledge a currently active tenant notification without deleting its source record
