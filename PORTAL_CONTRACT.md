@@ -133,7 +133,7 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 - `POST /api/public/technician-job/labor?token=...` → log field hours for the assigned job
 - `GET/POST /api/public/technician-job/clock?token=...` → read or update the assigned technician's clock-in/out state; `Idempotency-Key` makes mobile retries replay the original transition, while append-only completed sessions preserve aggregate elapsed field minutes and audit events
 - Technician completion requires an inactive field clock; job-cost reporting exposes the resulting field minutes/hours separately from billable labor entries
-- `POST /api/public/technician-job/materials?token=...` → consume available stock against the assigned job and append a source-tagged inventory transaction
+- `POST /api/public/technician-job/materials?token=...` → consume available stock against the assigned job and append a source-tagged inventory transaction; an optional active `locationId` records and validates the supplying warehouse, truck, or van stock, while the technician projection exposes active inventory locations for field selection
 - `GET /api/inventory-transactions` → authenticated tenant-scoped ledger of stock receipts, job consumption, and purchase receipts; exportable through `/api/export?type=inventory-transactions`
 - Inbound message webhooks create owner-facing `Customer message needs response` notifications that use the existing tenant-scoped notification read route
 - `POST /api/public/technician-job/payment-intent?token=...` → create an idempotent provider-pending Card/ACH intent only for the assigned job's open job- or estimate-linked invoice; conflicting amount/method payloads under a reused idempotency key are rejected, and provider confirmation remains external
