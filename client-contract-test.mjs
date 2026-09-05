@@ -23,6 +23,7 @@ assert(app.includes("!['Canceled', 'No-show'].includes(status)"), 'dispatch rebo
 assert(app.includes('data-job-invoice') && repository.includes('createJobInvoice'), 'completed-job invoicing action is not wired through the client repository');
 assert(app.includes('Optional line items') && repository.includes('lineItems'), 'completed-job invoicing UI does not support itemized billing');
 assert(app.includes('Visit progress:') && app.includes('data-job-visit-summary'), 'owner job detail does not expose multi-visit progress');
+assert(app.includes('Choose an available visit slot') && app.includes('slot.startsAt') && repository.includes('appointment.slotId') && repository.includes('async addJobVisit'), 'multi-visit scheduling does not preserve normalized availability slots');
 assert(app.includes('campaign-report-view') && app.includes('Campaign performance') && repository.includes('getMarketingReport'), 'owner portal does not expose campaign performance reporting');
 assert(app.includes('receivables-report-view') && app.includes('Accounts receivable') && repository.includes('getReceivablesReport'), 'owner portal does not expose receivables aging reporting');
 assert(app.includes("/^INV-\\d{13,}$/.test(item.id || '') && item.status !== 'Paid'"), 'owner invoice cards do not expose collection for open balances');

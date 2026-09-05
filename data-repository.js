@@ -248,7 +248,7 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async addJobVisit(id, time, technician = '') {
+  async addJobVisit(id, time, technician = '', appointment = {}) {
     if (!this.remote) throw new Error('API required for multi-visit scheduling');
     const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/visits`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ time, ...(technician ? { technician } : {}) }) });
     if (!response.ok) throw new Error('job visit creation failed');
