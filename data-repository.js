@@ -243,6 +243,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async updateRouteOrder(date, technician, jobIds, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for route ordering');
+    const response = await fetch('/api/dispatch/route-order', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ date, technician, jobIds }) });
+    if (!response.ok) throw new Error('route ordering failed');
+    return response.json();
+  }
+
   async getInvoiceReceipt(id) {
     if (!this.remote) throw new Error('API required for invoice receipt');
     const response = await fetch(`/api/invoices/${encodeURIComponent(id)}/receipt`, { headers: { authorization: `Bearer ${this.token}` } });
