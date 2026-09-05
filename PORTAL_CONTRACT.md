@@ -60,6 +60,7 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 - `POST /api/customers/:id/preferences` → owner/dispatcher-only update of tenant-scoped SMS/email opt-out flags; direct messages, appointment notifications, estimate/invoice reminders, and reactivation campaigns reject or skip opted-out channels, while customer tokens never expose preference metadata
 - `GET /api/dashboard?range=week` → `{ metrics, pipeline, tasks, schedule, activity }`
 - `GET /api/reports/overview` → tenant-scoped funnel, scheduling, cash, recurring-revenue, and touchpoint metrics
+- `GET /api/reports/receivables` → owner/dispatcher/accountant-only open-invoice aging with current, 1–30, 31–60, 61–90, and 90+ day buckets, balances, and invoice-level detail
 - `GET /api/reports/marketing` → owner/dispatcher/accountant-only source attribution report with lead counts, converted counts, conversion rates, scheduled jobs, attributed lead value, booked revenue, and collected revenue by landing-page source; when UTM campaigns are captured, the response also includes campaign rows with quoted, booked, and collected revenue
 - `GET /api/export?type=marketing-campaigns` → owner/dispatcher/accountant-only CSV export of tracked UTM campaigns with source, lead, conversion, conversion-rate, and attributed-value fields
 - `GET /api/reports/technicians` → owner/dispatcher/accountant-only technician performance report with jobs, completion/no-show counts, field hours, revenue, material/labor cost, gross margin, and completion rate

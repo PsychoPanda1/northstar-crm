@@ -112,6 +112,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async getReceivablesReport() {
+    if (!this.remote) throw new Error('API required for receivables reporting');
+    const response = await fetch('/api/reports/receivables', { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('receivables report unavailable');
+    return response.json();
+  }
+
   async getTechnicianReport() {
     if (!this.remote) throw new Error('API required for technician reporting');
     const response = await fetch('/api/reports/technicians', { headers: { authorization: `Bearer ${this.token}` } });
