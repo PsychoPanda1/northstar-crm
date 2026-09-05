@@ -358,9 +358,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async convertEstimate(id, time) {
+  async convertEstimate(id, time, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for estimate conversion');
-    const response = await fetch(`/api/estimates/${encodeURIComponent(id)}/convert`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ time }) });
+    const response = await fetch(`/api/estimates/${encodeURIComponent(id)}/convert`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ time }) });
     if (!response.ok) throw new Error('estimate conversion failed');
     return response.json();
   }
