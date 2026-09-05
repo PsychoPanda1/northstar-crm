@@ -130,7 +130,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Per-visit lifecycle transitions for multi-visit work orders
 - Server-enforced job lifecycle transitions prevent invalid field states and bypassing completion requirements
 - Service-plan renewal can schedule the next recurring visit using the same timezone-aware capacity slots as public booking, and normalized renewal dates can drive deduplicated SMS/email reminder campaigns
-- Service plans support auditable pause, resume, and cancellation lifecycle controls
+- Service plans support auditable pause, resume, cancellation, and idempotent monthly/quarterly/annual visit-series scheduling
 - Invoice payments support partial collection, remaining balances, payment methods, and references
 - Invoice installment schedules support deposits and milestone payments while deriving paid progress from the payment ledger
 - Signed customer invoice links create idempotent provider-pending payment intents without claiming settlement
@@ -198,6 +198,8 @@ Available local API routes include `GET /api/health`, `POST /api/auth/demo-login
 Additional current routes include `POST /api/auth/login`, `POST /api/auth/refresh`, `GET /api/integrations/health`, `POST /api/automations/run`, `GET /api/public/tenant`, `GET /api/public/availability?days=...` (up to a 14-day weekday booking window), `POST /api/public/bookings`, `POST /api/public/customer-portal/reschedule`, `POST /api/public/customer-portal/cancel`, `POST /api/public/customer-portal/financing-intent`, `POST /api/public/job-status/reschedule`, `POST /api/public/estimate/decline`, `POST /api/webhooks/calls/inbound`, `GET /api/calls`, `GET /api/dispatch?date=...`, `GET /api/dispatch?startDate=...&endDate=...`, `GET|POST /api/dispatch/capacity`, `POST /api/dispatch/route-order`, `GET /api/dispatch/route-manifest`, `GET /api/dispatch/route-summary`, `GET /api/dispatch/route-calendar`, `POST /api/dispatch/reminders`, `POST /api/dispatch/bulk-invoice`, `POST /api/estimates/reminders`, `POST /api/plans/reminders`, `POST /api/customers/reactivation`, `POST /api/customers/:id/tags`, `GET /api/reports/marketing`, `GET /api/reports/technicians`, `POST /api/messages/:id/retry`, `POST /api/payment-intents/:id/retry`, `GET /api/jobs/:id`, `GET /api/jobs/:id/calendar`, `POST /api/jobs/:id/rebook` (owner/dispatcher recovery for canceled appointments), `GET /api/invoices/:id/receipt`, `POST /api/team`, and `GET|POST /api/invoices/:id/schedule`. See [PORTAL_CONTRACT.md](PORTAL_CONTRACT.md) for request shapes, role boundaries, and customer-safe response rules.
 
 ## Next product slices
+
+Recurring plans can be scheduled as idempotent 1–12 visit series through `POST /api/plans/:id/schedule`; see [PORTAL_CONTRACT.md](PORTAL_CONTRACT.md) for the normalized request shape and lifecycle rules.
 
 Landing pages can discover the version 2 integration manifest, including owner authentication, customer portal reschedule, cancellation, request, payment-intent, and financing-intent endpoints, without hard-coding service-specific routes. Financing requests remain provider-pending until a real financing partner is connected; Northstar never claims a credit decision locally. Provider status callbacks use `POST /api/webhooks/financing` with `NORTHSTAR_FINANCING_WEBHOOK_SECRET` and remain separate from invoice settlement.
 
