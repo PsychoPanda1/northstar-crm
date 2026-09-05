@@ -141,6 +141,7 @@ System events such as web-form lead capture, customer estimate approval, and rec
 - `POST /api/estimates` also accepts up to three labeled `options`, or server-calculated `subtotal`, `discount`, and `taxRate` pricing components; public approval may include `optionId`, which snapshots the selected amount before quote-to-cash conversion
 - `GET /api/public/estimate?token=...` returns the customer-safe subtotal, discount, tax, and total breakdown when pricing components were used
 - `POST /api/public/estimate/approve?token=...` requires `approverName` and stores the typed approver in the estimate audit record
+- `POST /api/public/estimate/decline?token=...` records a customer-provided decline reason, updates the estimate lifecycle to `Declined`, and is safely idempotent on repeat submission
 - `POST /api/estimates/:id/approve` → approve a tenant-owned estimate
 - `POST /api/estimates/:id/remind` → queue an owner/dispatcher SMS or email follow-up for an open estimate, preserving its durable `customerId` and deduplicating for 24 hours
 - `POST /api/estimates/:id/convert` → convert an accepted estimate into a scheduled, checklist-ready job; accepts a preferred available `slotId` (or legacy `time`), preserves normalized appointment timestamps for slot-based conversions, rejects active appointment conflicts, accepts an optional `Idempotency-Key` for safe retries, and records an actor-attributed `estimate.converted` audit event
