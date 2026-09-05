@@ -155,7 +155,7 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 - `POST /api/public/technician-job/asset?token=...` → add a customer equipment record from the assigned field job, including model/serial, install details, and an optional warranty date; the asset is linked to the customer and source job with idempotent replay and audit history
 - `POST /api/public/technician-job/form?token=...` → submit a bounded job form with form name, result, field notes, and optional customer acknowledgment; submissions are assigned-job-only, capped, audit logged, and idempotent for offline replay
 - Required forms are returned separately from submitted forms; a required form must match by name and be completed before the technician can complete the job, with remaining form names returned in the validation error
-- The technician page queues field `POST` actions locally during transient offline periods and replays them in order on reconnect; the prototype queue is device-local and production needs encrypted storage, retry limits, and conflict handling
+- The technician page queues field `POST` actions locally during transient offline periods and replays them in order on reconnect; the queue is device-local and production should replace it with encrypted managed storage while preserving stable idempotency and explicit conflict handling
 - Dispatch assignment, status, and reschedule mutations append auditable customer timeline events
 - `POST /api/jobs/:id/remind` → queue a deduplicated SMS/email appointment reminder for an open job
 - `GET /api/jobs/:id/calendar` → owner/dispatcher/accountant-only iCalendar download for a job with normalized UTC appointment bounds; exports only the selected appointment and service address, with no broader CRM data
