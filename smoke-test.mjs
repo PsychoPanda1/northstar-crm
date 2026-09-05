@@ -583,6 +583,8 @@ try {
   const estimateTechUrl = new URL(estimateTechLink.body.url, base);
   const technicianPaymentIntent = await request(`/api/public/technician-job/payment-intent${estimateTechUrl.search}`, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': 'smoke-technician-payment' }, body: JSON.stringify({ amount: 50, method: 'Card' }) });
   const technicianPaymentDuplicate = await request(`/api/public/technician-job/payment-intent${estimateTechUrl.search}`, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': 'smoke-technician-payment' }, body: JSON.stringify({ amount: 50, method: 'Card' }) });
+  const technicianPaymentConflict = await request(`/api/public/technician-job/payment-intent${estimateTechUrl.search}`, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': 'smoke-technician-payment' }, body: JSON.stringify({ amount: 55, method: 'Card' }) });
+  assert(technicianPaymentConflict.response.status === 409 && technicianPaymentConflict.body.error === 'idempotency_key_reused', 'technician payment intent idempotency conflict protection failed');
   const failedPaymentBody = JSON.stringify({ tenantId: 'clearwater-plumbing', eventId: 'evt-technician-failed', intentId: technicianPaymentIntent.body.id, status: 'failed' });
   const failedPaymentWebhook = await request('/api/webhooks/payments', { method: 'POST', headers: { 'content-type': 'application/json', 'x-northstar-signature': createHmac('sha256', webhookSecret).update(failedPaymentBody).digest('hex') }, body: failedPaymentBody });
   const failedPaymentAudit = await request('/api/audit?search=invoice.payment.failed', { headers: { authorization: `Bearer ${token}` } });
