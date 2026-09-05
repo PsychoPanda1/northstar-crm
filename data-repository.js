@@ -547,6 +547,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async billPlanCycle(period, due = 'Due on receipt', idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for plan billing');
+    const response = await fetch('/api/plans/billing-cycle', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ period, due }) });
+    if (!response.ok) throw new Error('plan billing cycle failed');
+    return response.json();
+  }
+
   async getCustomerProfile(id) {
     if (!this.remote) throw new Error('API required for customer profiles');
     const response = await fetch(`/api/customers/${encodeURIComponent(id)}`, { headers: { authorization: `Bearer ${this.token}` } });

@@ -40,6 +40,7 @@ assert(app.includes("result.results.messages || []") && app.includes("result.res
 assert(app.includes('data-run-automations') && app.includes('runAutomations'), 'dispatch workspace does not expose coordinated customer automations');
 assert(app.includes('data-plan-schedule') && app.includes('Schedule visits') && repository.includes('schedulePlanVisits') && repository.includes('/schedule'), 'service plan recurring-visit scheduling is not wired through the owner portal');
 assert(app.includes('data-plan-bill') && app.includes('Bill period') && repository.includes('createPlanInvoice') && repository.includes('/invoice'), 'service plan billing is not wired through the owner portal');
+assert(app.includes('data-plan-cycle') && app.includes('Bill active plans for a period') && repository.includes('billPlanCycle') && repository.includes('/billing-cycle'), 'batch service-plan billing is not wired through the owner portal');
 assert(app.includes("repository.getAvailability(serviceKey, 7)") && app.includes("name=\"slotId\""), 'new-job workflow does not expose tenant availability slots');
 assert(app.includes('jobLocationSelect') && app.includes('syncJobLocations') && app.includes('locationId: form.elements.locationId'), 'new-job workflow does not expose multi-location scheduling');
 console.log('Northstar client contract checks passed');
