@@ -158,6 +158,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Warranty dates within 30 days automatically surface as owner follow-up notifications
 - Completed jobs can expose technician completion notes and bounded HTTPS photo evidence in the customer portal
 - Dispatch can batch-invoice up to 50 completed jobs with all-or-nothing validation, direct job links, optional per-job amounts, validated per-job line items, and idempotent replay protection
+- Completed customer jobs without an invoice surface an owner action and a direct invoice path from job detail
 - Technicians can optionally record the customer acknowledgment name at completion, with the acknowledgment preserved in the portal and timeline
 
 ## Run locally
