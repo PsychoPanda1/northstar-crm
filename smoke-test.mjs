@@ -125,7 +125,10 @@ try {
   assert(location.response.status === 201 && location.body.label === 'Second property', 'multi-location workflow failed');
   const plan = await request('/api/plans', jsonOptions('POST', { customer: 'Smoke Lead', service: 'Annual plumbing maintenance', amount: 89, renewal: 'Sep 2027' }, token));
   const renewedPlan = await request(`/api/plans/${plan.body.id}/renew`, jsonOptions('POST', { time: 'Next month 9:00 AM' }, token));
-  assert(plan.response.status === 201 && renewedPlan.body.plan.status === 'Active' && renewedPlan.body.nextJob.service === 'Annual plumbing maintenance' && renewedPlan.body.nextJob.planId === plan.body.id, 'recurring plan workflow failed');
+  const pausedPlan = await request(`/api/plans/${plan.body.id}/pause`, jsonOptions('POST', { note: 'Customer requested a seasonal pause.' }, token));
+  const resumedPlan = await request(`/api/plans/${plan.body.id}/resume`, jsonOptions('POST', {}, token));
+  const canceledPlan = await request(`/api/plans/${plan.body.id}/cancel`, jsonOptions('POST', { note: 'Customer moved out of service area.' }, token));
+  assert(plan.response.status === 201 && renewedPlan.body.plan.status === 'Active' && renewedPlan.body.nextJob.service === 'Annual plumbing maintenance' && renewedPlan.body.nextJob.planId === plan.body.id && pausedPlan.body.plan.status === 'Paused' && resumedPlan.body.plan.status === 'Active' && canceledPlan.body.plan.status === 'Canceled', 'recurring plan workflow failed');
   const fieldJob = await request('/api/jobs', jsonOptions('POST', { customerId: converted.body.customer.id, service: 'Follow-up inspection', time: 'Friday 2:00 PM' }, token));
   await request(`/api/jobs/${fieldJob.body.id}/assign`, jsonOptions('POST', { technician: 'Alex Rivera' }, token));
   const techLink = await request(`/api/jobs/${fieldJob.body.id}/technician-link`, jsonOptions('POST', {}, token));
