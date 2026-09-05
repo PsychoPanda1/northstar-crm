@@ -54,6 +54,7 @@ const actionableNotificationsFor = (tenantId) => { const saved = state.get(tenan
 const blankState = () => ({ completedTasks: [], lastAction: null, leads: [], jobs: [], estimates: [], invoices: [], payments: [], paymentIntents: [], paymentEvents: [], paymentSchedules: [], teamMembers: [], plans: [], activities: [], customers: [], assets: [], locations: [], reviews: [], requests: [], materials: [], inventoryTransactions: [], purchaseOrders: [], laborEntries: [], messages: [], messageEvents: [], catalogItems: [], auditEvents: [], notificationReads: [], routeOrderRequests: [] });
 const persisted = existsSync(DATA_FILE) ? JSON.parse(readFileSync(DATA_FILE, 'utf8')) : {};
 const state = new Map(Object.keys(tenants).map((tenantId) => [tenantId, { ...blankState(), ...(persisted[tenantId] || {}) }]));
+for (const saved of state.values()) saved.routeOrderRequests = Array.isArray(saved.routeOrderRequests) ? saved.routeOrderRequests : [];
 const publicLeadWindows = new Map();
 const ownerLoginWindows = new Map();
 const revokedTokens = new Set();
