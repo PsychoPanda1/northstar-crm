@@ -610,6 +610,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async bookCall(callId, details = {}, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for call booking');
+    const response = await fetch(`/api/calls/${encodeURIComponent(callId)}/book`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify(details) });
+    if (!response.ok) throw new Error('call booking failed');
+    return response.json();
+  }
+
   async globalSearch(query) {
     if (!this.remote) throw new Error('API required for global search');
     const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`, { headers: { authorization: `Bearer ${this.token}` } });
