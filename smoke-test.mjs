@@ -358,6 +358,9 @@ try {
   assert(customerPortalWithEstimate.body.estimates.some((item) => item.service === 'Panel upgrade' && item.subtotal === pricedEstimate.body.subtotal && item.discount === pricedEstimate.body.discount && item.tax === pricedEstimate.body.tax), 'customer portal estimate pricing visibility failed');
   const portalApproval = await request(`/api/public/estimate/approve?token=${encodeURIComponent(customerPortalWithEstimate.body.estimates.find((item) => item.id === portalEstimate.body.id).estimateApprovalToken)}`, jsonOptions('POST', { approverName: 'Smoke Lead' }));
   const portalInvoice = await request('/api/invoices', jsonOptions('POST', { estimateId: portalEstimate.body.id }, token));
+  const bulkReceivables = await request('/api/receivables/reminders', jsonOptions('POST', { minBalance: 200, channel: 'Email' }, token));
+  const bulkReceivablesRetry = await request('/api/receivables/reminders', jsonOptions('POST', { minBalance: 200, channel: 'Email' }, token));
+  assert(portalInvoice.response.status === 201 && bulkReceivables.response.status === 200 && bulkReceivables.body.eligibleInvoices >= 1 && bulkReceivables.body.queued >= 1 && bulkReceivablesRetry.response.status === 200 && bulkReceivablesRetry.body.duplicates >= 1, 'bulk receivables reminder workflow failed');
   const portalScheduleOptions = { ...jsonOptions('POST', { installments: [{ amount: 100, due: 'At booking' }, { amount: 175, due: 'On completion' }] }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-payment-schedule' } };
   const portalSchedule = await request(`/api/invoices/${portalInvoice.body.id}/schedule`, portalScheduleOptions);
   const duplicatePortalSchedule = await request(`/api/invoices/${portalInvoice.body.id}/schedule`, portalScheduleOptions);

@@ -438,6 +438,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async remindReceivables(minBalance = 0, channel = 'Email') {
+    if (!this.remote) throw new Error('API required for receivables reminders');
+    const response = await fetch('/api/receivables/reminders', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ minBalance, channel }) });
+    if (!response.ok) throw new Error('receivables reminders failed');
+    return response.json();
+  }
+
   async logout() {
     if (this.token && this.remote) await fetch('/api/auth/logout', { method: 'POST', headers: { authorization: `Bearer ${this.token}` } });
     sessionStorage.removeItem(this.tokenKey);
