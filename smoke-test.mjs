@@ -106,6 +106,9 @@ try {
   const calendarExport = await fetch(`${base}/api/jobs/${encodeURIComponent(structuredJob.body.id)}/calendar`, { headers: { authorization: `Bearer ${token}` } });
   const calendarText = await calendarExport.text();
   assert(structuredJob.response.status === 201 && calendarExport.status === 200 && calendarExport.headers.get('content-type')?.includes('text/calendar') && calendarText.includes('BEGIN:VCALENDAR') && calendarText.includes('SUMMARY:Structured appointment') && calendarText.includes('LOCATION:101 King St\\, Charleston'), 'job calendar export workflow failed');
+  const routeManifest = await request('/api/dispatch/route-manifest?date=2026-09-12', { headers: { authorization: `Bearer ${token}` } });
+  const technicianRouteManifest = await request('/api/dispatch/route-manifest?date=2026-09-12&technician=Alex%20Rivera', { headers: { authorization: `Bearer ${token}` } });
+  assert(routeManifest.response.status === 200 && routeManifest.body.stops.some((stop) => stop.id === structuredJob.body.id && stop.location === '101 King St, Charleston') && technicianRouteManifest.response.status === 200 && technicianRouteManifest.body.stops.every((stop) => stop.technician === 'Alex Rivera'), 'dispatch route manifest workflow failed');
   const reminderStart = new Date(Date.now() + 2 * 60 * 60 * 1000);
   const reminderCustomer = await request('/api/customers', jsonOptions('POST', { name: 'Reminder Customer', phone: '843-555-0186', email: 'reminder.customer@example.test' }, token));
   const reminderJob = await request('/api/jobs', jsonOptions('POST', { customerId: reminderCustomer.body.id, service: 'Reminder test', time: 'Upcoming appointment', startsAt: reminderStart.toISOString(), endsAt: new Date(reminderStart.getTime() + 60 * 60 * 1000).toISOString(), timeZone: 'America/New_York' }, token));
