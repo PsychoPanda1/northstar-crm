@@ -18,6 +18,7 @@ assert(app.includes('Visit progress:') && app.includes('data-job-visit-summary')
 assert(app.includes("/^INV-\\d{13,}$/.test(item.id || '') && item.status !== 'Paid'"), 'owner invoice cards do not expose collection for open balances');
 assert(customer.includes("job.status === 'No-show' ? 'Book a new visit'"), 'customer portal does not expose no-show recovery');
 assert(status.includes('body.visits') && status.includes('Visit progress') && status.includes('/api/public/job-status/cancel'), 'customer status page does not expose multi-visit progress and cancellation');
+assert(status.includes('sessionStorage') && status.includes("retryKey('cancel'") && status.includes("retryKey('reschedule'"), 'customer status actions do not preserve mobile retry identity');
 assert(invoice.includes('id="breakdown"') && invoice.includes('Remaining $'), 'invoice payment page does not expose total, paid, and remaining balance');
 assert(invoice.includes('sessionStorage') && invoice.includes('idempotency-key') && invoice.includes('paymentKey'), 'invoice payment page does not preserve mobile retry identity');
 assert(customer.includes('sessionStorage') && customer.includes('retryKey') && customer.includes('idempotency-key'), 'customer portal actions do not preserve mobile retry identity');
