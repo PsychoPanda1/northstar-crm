@@ -207,6 +207,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async importTenantSnapshot(snapshot, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for snapshot import');
+    const response = await fetch('/api/import/tenant-snapshot', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify(snapshot) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'snapshot import failed');
+    return response.json();
+  }
+
   async markNotificationRead(id) {
     if (!this.remote) throw new Error('API required for notification state');
     const response = await fetch(`/api/notifications/${encodeURIComponent(id)}/read`, { method: 'POST', headers: { authorization: `Bearer ${this.token}` } });
