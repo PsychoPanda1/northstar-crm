@@ -42,6 +42,16 @@
       return this.manifestPromise;
     }
 
+    async tenant() {
+      const manifest = await this.manifest();
+      return manifest.tenant || {};
+    }
+
+    async publicContact() {
+      const tenant = await this.tenant();
+      return { ...(tenant.contactPhone ? { phone: tenant.contactPhone } : {}), ...(tenant.contactEmail ? { email: tenant.contactEmail } : {}), ...(tenant.serviceArea ? { serviceArea: tenant.serviceArea } : {}) };
+    }
+
     async catalog() {
       const manifest = await this.manifest();
       return this.request(manifest.integration.catalogEndpoint);

@@ -11,7 +11,7 @@ const sandbox = {
   crypto: { randomUUID: () => 'landing-test-key' },
   fetch: async (url, options) => {
     calls.push({ url, options });
-    return { ok: true, status: 200, headers: { get: () => 'landing-request-1' }, json: async () => ({ integration: { ownerPortalPath: '/portal?service=plumbing', leadEndpoint: '/api/public/leads?service=plumbing', bookingEndpoint: '/api/public/bookings?service=plumbing' } }) };
+    return { ok: true, status: 200, headers: { get: () => 'landing-request-1' }, json: async () => ({ tenant: { contactPhone: '(843) 555-0100', contactEmail: 'hello@example.test', serviceArea: 'Charleston area' }, integration: { ownerPortalPath: '/portal?service=plumbing', leadEndpoint: '/api/public/leads?service=plumbing', bookingEndpoint: '/api/public/bookings?service=plumbing' } }) };
   }
 };
 sandbox.globalThis = sandbox;
@@ -19,6 +19,8 @@ vm.runInNewContext(source, sandbox, { filename: 'landing-page-client.js' });
 const client = new sandbox.NorthstarLandingClient({ service: 'plumbing', apiBase: 'https://crm.example.test' });
 const ownerUrl = await client.ownerPortalUrl();
 if (ownerUrl !== 'https://crm.example.test/portal?service=plumbing') throw new Error(`owner URL resolution failed: ${ownerUrl}`);
+const contact = await client.publicContact();
+if (contact.phone !== '(843) 555-0100' || contact.email !== 'hello@example.test' || contact.serviceArea !== 'Charleston area') throw new Error('public contact helper failed');
 await client.submitLead({ name: 'Landing Test', phone: '8435550100' });
 if (calls.length !== 2 || calls[1].options.headers['idempotency-key'] !== 'landing-test-key') throw new Error('landing lead retry contract failed');
 console.log('Northstar landing client test passed');
