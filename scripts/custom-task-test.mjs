@@ -23,6 +23,9 @@ try {
   const listed = await request('/api/tasks', { headers: { authorization: `Bearer ${login.body.token}` } });
   const completed = await request(`/api/tasks/${created.body.task.id}`, { method: 'PATCH', headers: { authorization: `Bearer ${login.body.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ status: 'Completed' }) });
   const after = await request('/api/tasks', { headers: { authorization: `Bearer ${login.body.token}` } });
-  if (created.response.status !== 201 || duplicate.response.status !== 200 || !duplicate.body.duplicate || !listed.body.items.some((item) => item.id === created.body.task.id) || completed.response.status !== 200 || completed.body.task.status !== 'Completed' || after.body.items.some((item) => item.id === created.body.task.id)) throw new Error('custom task lifecycle failed');
+  const history = await request('/api/tasks?includeCompleted=true', { headers: { authorization: `Bearer ${login.body.token}` } });
+  const technicianLogin = await post('/api/auth/demo-login?service=plumbing', { service: 'plumbing', role: 'technician' });
+  const technicianTasks = await request('/api/tasks', { headers: { authorization: `Bearer ${technicianLogin.body.token}` } });
+  if (created.response.status !== 201 || duplicate.response.status !== 200 || !duplicate.body.duplicate || !listed.body.items.some((item) => item.id === created.body.task.id) || completed.response.status !== 200 || completed.body.task.status !== 'Completed' || after.body.items.some((item) => item.id === created.body.task.id) || !history.body.items.some((item) => item.id === created.body.task.id && item.status === 'Completed') || technicianTasks.response.status !== 403) throw new Error('custom task lifecycle or role boundary failed');
   console.log('Northstar custom task checks passed');
 } finally { if (child && !child.killed) child.kill(); for (const file of [dataFile, `${dataFile}.sessions`, `${dataFile}.tmp`, `${dataFile}.backup`]) if (existsSync(file)) rmSync(file, { force: true }); }
