@@ -161,6 +161,20 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async getCustomReportPreferences() {
+    if (!this.remote) throw new Error('API required for reporting preferences');
+    const response = await fetch('/api/reports/custom/preferences', { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('reporting preferences unavailable');
+    return response.json();
+  }
+
+  async saveCustomReportPreferences(metrics, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for reporting preferences');
+    const response = await fetch('/api/reports/custom/preferences', { method: 'PATCH', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ metrics }) });
+    if (!response.ok) throw new Error('reporting preferences update failed');
+    return response.json();
+  }
+
   async getMarketingReport() {
     if (!this.remote) throw new Error('API required for marketing reporting');
     const response = await fetch('/api/reports/marketing', { headers: { authorization: `Bearer ${this.token}` } });

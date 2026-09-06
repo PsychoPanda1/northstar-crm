@@ -23,7 +23,11 @@ try {
   const available = await request('/api/reports/custom', { headers });
   const selected = await request('/api/reports/custom?metric=Cash%20collected&metric=No-shows', { headers });
   const unknown = await request('/api/reports/custom?metric=Secret%20metric', { headers });
-  if (!login.response.ok || available.response.status !== 200 || available.body.metrics?.length !== 8 || !available.body.availableMetrics?.includes('Gross margin') || selected.response.status !== 200 || selected.body.metrics?.length !== 2 || selected.body.metrics[0]?.label !== 'No-shows' || selected.body.metrics[1]?.label !== 'Cash collected' || unknown.response.status !== 422) throw new Error('custom report metric selection or validation failed');
+  const preferences = await request('/api/reports/custom/preferences', { headers });
+  const saved = await request('/api/reports/custom/preferences', { method: 'PATCH', headers: { ...headers, 'content-type': 'application/json', 'idempotency-key': 'custom-report-preferences-test' }, body: JSON.stringify({ metrics: ['Cash collected', 'Gross margin'] }) });
+  const persisted = await request('/api/reports/custom/preferences', { headers });
+  const duplicate = await request('/api/reports/custom/preferences', { method: 'PATCH', headers: { ...headers, 'content-type': 'application/json', 'idempotency-key': 'custom-report-preferences-test' }, body: JSON.stringify({ metrics: ['Cash collected', 'Gross margin'] }) });
+  if (!login.response.ok || available.response.status !== 200 || available.body.metrics?.length !== 8 || !available.body.availableMetrics?.includes('Gross margin') || selected.response.status !== 200 || selected.body.metrics?.length !== 2 || selected.body.metrics[0]?.label !== 'No-shows' || selected.body.metrics[1]?.label !== 'Cash collected' || unknown.response.status !== 422 || preferences.response.status !== 200 || saved.response.status !== 200 || persisted.body.metrics?.join('|') !== 'Cash collected|Gross margin' || duplicate.body.duplicate !== true) throw new Error('custom report metric selection or persistence failed');
   console.log('Northstar custom report test passed');
 } finally {
   if (child && !child.killed) child.kill();
