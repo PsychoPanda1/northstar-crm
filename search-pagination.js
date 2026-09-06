@@ -7,6 +7,7 @@
 
   let nextPage = null;
   let loading = false;
+  const notify = (value) => { const toast = document.querySelector('#toast'); if (!toast) return; toast.textContent = value; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 2800); };
 
   const escape = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
   const groups = {
@@ -46,7 +47,7 @@
       if (!query) return;
       loading = true; button.disabled = true; button.textContent = 'Loading…';
       try { const result = await repository.globalSearchPage(query, { page: nextPage.page, pageSize: nextPage.pageSize || 20 }); appendResults(result.results); nextPage = result.pagination?.hasMore ? { page: result.pagination.nextPage, pageSize: result.pagination.pageSize } : null; button.remove(); sync(); }
-      catch { button.disabled = false; button.textContent = 'Load more results'; showToast('More search results are unavailable.'); }
+      catch { button.disabled = false; button.textContent = 'Load more results'; notify('More search results are unavailable.'); }
       finally { loading = false; }
     });
     list.append(button);
