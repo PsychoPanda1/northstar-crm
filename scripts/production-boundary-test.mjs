@@ -92,6 +92,8 @@ try {
   });
   if (!login.response.ok) throw new Error('configured owner login failed');
   const headers = { authorization: `Bearer ${login.body.token}` };
+  const snapshot = await getJson('/api/export?type=tenant-snapshot', { headers });
+  if (!snapshot.response.ok || !snapshot.response.headers.get('content-type')?.includes('application/json') || snapshot.body.schemaVersion !== 1 || snapshot.body.tenant?.slug !== 'johnson-service-co' || Object.values(snapshot.body.collections || {}).some((items) => !Array.isArray(items))) throw new Error('tenant snapshot export was not safe or tenant-scoped');
   const collections = await Promise.all(['customers', 'leads', 'estimates', 'invoices', 'plans', 'activities', 'dispatch', 'team'].map((type) => getJson(`/api/${type}`, { headers })));
   if (collections.some(({ body }) => Array.isArray(body.items) && body.items.length > 0)) throw new Error('preview records exposed through authenticated API');
   const dashboard = await getJson('/api/dashboard', { headers });

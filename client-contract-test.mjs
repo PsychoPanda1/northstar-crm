@@ -35,6 +35,7 @@ assert(containerRelease.includes('docker/build-push-action@v6') && containerRele
 assert(robots.includes('User-agent: *') && robots.includes('Disallow: /') && server.includes("'.txt': 'text/plain; charset=utf-8'"), 'CRM host must prevent crawler discovery of private portal pages');
 assert(openapi.includes('openapi: 3.0.3') && openapi.includes('/api/public/tenant:') && openapi.includes('/api/public/bookings:') && openapi.includes('IdempotencyKey'), 'public landing-page OpenAPI contract is incomplete');
 assert(server.includes("pathname === '/api/openapi.yaml'") && server.includes("application/yaml; charset=utf-8"), 'canonical public OpenAPI endpoint is missing');
+assert(server.includes('tenantSnapshotFor') && server.includes('owner_required_for_tenant_snapshot') && server.includes('snapshotSafeValue'), 'owner-only tenant snapshot export is missing');
 assert(envExample.includes('NORTHSTAR_SERVICE_TENANTS_JSON='), 'environment template must document service-to-tenant mapping');
 assert(envExample.includes('NORTHSTAR_MESSAGE_PROVIDER_URL=') && envExample.includes('NORTHSTAR_PAYMENT_PROVIDER_URL='), 'environment template must document optional provider configuration');
 assert(envExample.includes('NORTHSTAR_MESSAGE_RETRY_LIMIT=') && server.includes('messageRetryDelayMs') && server.includes('Retry scheduled') && server.includes('retryable'), 'bounded transient message retry contract is missing');
