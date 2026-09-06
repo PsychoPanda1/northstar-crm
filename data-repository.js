@@ -694,6 +694,14 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async listDocumentDeliveries(status = '') {
+    if (!this.remote) throw new Error('API required for document deliveries');
+    const query = status ? `?status=${encodeURIComponent(status)}` : '';
+    const response = await fetch(`/api/integrations/documents${query}`, { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('document deliveries unavailable');
+    return response.json();
+  }
+
   async getJobDetail(id) {
     if (!this.remote) throw new Error('API required for job detail');
     const response = await fetch(`/api/jobs/${encodeURIComponent(id)}`, { headers: { authorization: `Bearer ${this.token}` } });
