@@ -426,6 +426,37 @@ const server = createServer(async (req, res) => {
     const suppliedRequestId = String(req.headers['x-request-id'] || '').trim();
     const requestId = /^[A-Za-z0-9:_-]{8,80}$/.test(suppliedRequestId) ? suppliedRequestId : randomUUID();
     res.setHeader('x-request-id', requestId);
+    if (pathname === '/api/requests/bulk-priority' && req.method === 'POST') {
+      const claims = authenticate(req);
+      if (!claims) return json(res, 401, { error: 'unauthorized' });
+      if (!['owner', 'dispatcher'].includes(claims.role)) return json(res, 403, { error: 'forbidden' });
+      const body = await readBody(req);
+      const rawRequestIds = Array.isArray(body.requestIds) ? [...new Set(body.requestIds.map((id) => String(id).trim()).filter(Boolean))] : [];
+      const requestIds = rawRequestIds.slice(0, 50);
+      const priority = String(body.priority || '').trim();
+      const priorities = ['Low', 'Normal', 'High', 'Urgent'];
+      if (!rawRequestIds.length || rawRequestIds.length > 50 || !priorities.includes(priority)) return json(res, 422, { error: 'valid_bulk_request_priority_required' });
+      const saved = state.get(claims.tenantId);
+      saved.requestBulkPriorityRequests = saved.requestBulkPriorityRequests || [];
+      const idempotencyKey = String(req.headers['idempotency-key'] || '').trim().slice(0, 100);
+      const fingerprint = payloadFingerprint({ requestIds, priority });
+      if (idempotencyKey) {
+        const existing = saved.requestBulkPriorityRequests.find((item) => item.idempotencyKey === idempotencyKey);
+        if (existing) {
+          if (existing.fingerprint !== fingerprint) return json(res, 409, { error: 'idempotency_key_reused' });
+          return json(res, 200, { ...existing.result, duplicate: true });
+        }
+      }
+      const requests = requestIds.map((id) => saved.requests.find((item) => item.id === id));
+      if (requests.some((request) => !request)) return json(res, 404, { error: 'request_not_found' });
+      if (requests.some((request) => request.status !== 'Open')) return json(res, 409, { error: 'request_not_open' });
+      const updatedAt = new Date().toISOString();
+      for (const request of requests) { const previous = request.priority || 'Normal'; request.priority = priority; request.priorityUpdatedAt = updatedAt; recordActivity(saved, request.customer, 'Customer request', request.type + ' priority changed from ' + previous + ' to ' + priority + '.', 'Priority updated'); recordAudit(saved, claims, 'customer.request.priority.updated', 'request', request.id, request.type + ' · ' + previous + ' -> ' + priority); }
+      const result = { priority, updated: requests.map((request) => ({ id: request.id, priority: request.priority })), updatedAt };
+      if (idempotencyKey) { saved.requestBulkPriorityRequests.unshift({ idempotencyKey, fingerprint, result }); saved.requestBulkPriorityRequests = saved.requestBulkPriorityRequests.slice(0, 100); }
+      persist();
+      return json(res, 200, { ...result, duplicate: false });
+    }
     if (pathname === '/api/requests/bulk-assign' && req.method === 'POST') {
       const claims = authenticate(req);
       if (!claims) return json(res, 401, { error: 'unauthorized' });
