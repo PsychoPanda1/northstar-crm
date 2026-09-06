@@ -19,6 +19,8 @@ const required = [
   "repository.listPage('requests'",
   "new Set(['messages', 'calls'])",
   'Load more ${type}',
+  "new Set(['materials', 'purchase-orders', 'inventory-transactions', 'assets', 'plans'])",
+  'repository.listPage(type, { search, page, pageSize: 50 })',
   'Integration health is unavailable',
   'data-job-tracking-history',
   'repository.getJobLocationHistory',
