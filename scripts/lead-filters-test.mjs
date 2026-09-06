@@ -12,7 +12,7 @@ const required = [
   'leadQueueFilters.assignedTo = assignee.value.trim()',
   'leadQueueFilters.source = source.value.trim()',
   "type === 'leads' ? leadQueueFilters : {}",
-  "['', 'All stages'], ['New', 'New'], ['Contacted', 'Contacted'], ['Qualified', 'Qualified'], ['Estimate sent', 'Estimate sent'], ['Won', 'Won'], ['Lost', 'Lost'], ['Converted', 'Converted']"
+  "[['', 'All stages'], ...leadStages.map((stage) => [stage, stage])]"
 ];
 for (const snippet of required) {
   if (!source.includes(snippet)) throw new Error(`lead filter wiring missing: ${snippet}`);
