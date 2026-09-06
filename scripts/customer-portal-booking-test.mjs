@@ -29,7 +29,7 @@ try {
   const duplicate = await book();
   const duplicateBody = await duplicate.json();
   const refreshedPortal = await (await fetch(`${base}/api/public/customer-portal?token=${encodeURIComponent(token)}`)).json();
-  assert(response.status === 201 && body.booked && duplicate.status === 200 && duplicateBody.duplicate && duplicateBody.id === body.id && refreshedPortal.jobs?.some((job) => job.id === body.id && job.service === 'Drain cleaning'), 'customer portal booking idempotency failed');
+  assert(response.status === 201 && body.booked && body.notification?.template === 'confirmation' && duplicate.status === 200 && duplicateBody.duplicate && duplicateBody.id === body.id && duplicateBody.notification?.jobId === body.id && refreshedPortal.jobs?.some((job) => job.id === body.id && job.service === 'Drain cleaning'), 'customer portal booking idempotency or confirmation handoff failed');
   console.log('Northstar customer portal booking test passed');
 } finally {
   server.kill();
