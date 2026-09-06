@@ -144,6 +144,7 @@ assert(app.includes("repository.getAvailability(service, 7)") && app.includes("r
 assert(app.includes("repository.rescheduleJob(button.dataset.jobId, jobValue)") && app.includes("jobValue = slots[Number(choice) - 1].id"), 'owner dispatch rescheduling must use normalized availability slot IDs');
 assert(app.includes('campaign-report-view') && app.includes('Campaign performance') && repository.includes('getMarketingReport'), 'owner portal does not expose campaign performance reporting');
 assert(app.includes('receivables-report-view') && app.includes('Accounts receivable') && repository.includes('getReceivablesReport'), 'owner portal does not expose receivables aging reporting');
+assert(app.includes('profile-summary') && app.includes('Completed service') && app.includes('Open balance'), 'owner customer profiles do not expose service and value summary');
 assert(app.includes("/^INV-\\d{13,}$/.test(item.id || '') && item.status !== 'Paid'"), 'owner invoice cards do not expose collection for open balances');
 assert(status.includes('body.reviewUrl') && status.includes('Leave a review'), 'customer status page does not expose completed-job review handoff');
 assert(status.includes('/api/public/job-status/calendar') && status.includes('Add to calendar'), 'customer status page does not expose calendar handoff');
