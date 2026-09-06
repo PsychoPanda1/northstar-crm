@@ -20,7 +20,10 @@ try {
   const loginResponse = await fetch(`${base}/api/auth/demo-login?service=manifest`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ service: 'manifest', role: 'owner' }) });
   const loginBody = await loginResponse.json();
   const statusResponse = await fetch(`${base}/api/leads/${leadBody.id}/status`, { method: 'POST', headers: { authorization: `Bearer ${loginBody.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ status: 'Site visit' }) });
-  assert(leadResponse.status === 201 && loginResponse.ok && statusResponse.status === 200 && (await statusResponse.json()).lead?.status === 'Site visit', 'custom lead stage was not accepted by the owner pipeline');
+  const statusBody = await statusResponse.json();
+  const filteredResponse = await fetch(`${base}/api/leads?status=${encodeURIComponent('Site visit')}`, { headers: { authorization: `Bearer ${loginBody.token}` } });
+  const filteredBody = await filteredResponse.json();
+  assert(leadResponse.status === 201 && loginResponse.ok && statusResponse.status === 200 && statusBody.lead?.status === 'Site visit' && statusBody.lead.stageHistory?.at(-1)?.to === 'Site visit' && filteredResponse.status === 200 && filteredBody.items?.some((item) => item.id === leadBody.id), 'custom lead stage was not accepted and filterable by the owner pipeline');
   assert(!JSON.stringify(body).includes('passwordDigest') && !JSON.stringify(body).includes('ownerEmail'), 'public tenant manifest exposed private account fields');
   console.log('Northstar tenant manifest checks passed');
 } finally {

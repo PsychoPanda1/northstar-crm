@@ -17,7 +17,7 @@ const required = [
 for (const snippet of required) {
   if (!source.includes(snippet)) throw new Error(`lead filter wiring missing: ${snippet}`);
 }
-for (const snippet of ["requestUrl.searchParams.get('source')", 'sourceFilter', 'invalid_lead_queue_status_filter']) {
+for (const snippet of ["requestUrl.searchParams.get('source')", 'sourceFilter', 'invalid_lead_queue_status_filter', 'leadStagesFor(claims.tenantId)']) {
   if (!server.includes(snippet)) throw new Error(`lead server filter wiring missing: ${snippet}`);
 }
 for (const snippet of ['contactLead(', 'data-lead-contact', "leadContactMatch", 'lead.contact.queued']) {
