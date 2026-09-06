@@ -3,6 +3,7 @@ import { accessSync, constants as fsConstants, copyFileSync, createReadStream, e
 import { dirname, extname, join, normalize, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createServer } from 'node:http';
+import { optimizeCoordinateRoute } from './route-optimizer.mjs';
 
 const ROOT = fileURLToPath(new URL('.', import.meta.url)).replace(/[\\/]$/, '');
 const REAL_ROOT = realpathSync(ROOT);
@@ -487,6 +488,36 @@ const server = createServer(async (req, res) => {
     applySecurityHeaders(res);
     const requestUrl = new URL(req.url, `http://${req.headers.host}`);
     const pathname = requestUrl.pathname;
+    if (pathname === '/api/dispatch/route-optimize' && req.method === 'POST') {
+      const claims = authenticate(req);
+      if (!claims) return json(res, 401, { error: 'unauthorized' });
+      if (!['owner', 'dispatcher'].includes(claims.role)) return json(res, 403, { error: 'forbidden' });
+      const body = await readBody(req);
+      const date = String(body.date || '').trim();
+      const technician = String(body.technician || '').trim();
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !technician) return json(res, 422, { error: 'valid_route_optimize_request_required' });
+      const saved = state.get(claims.tenantId);
+      const localDate = (iso) => new Intl.DateTimeFormat('en-CA', { timeZone: tenants[claims.tenantId].timeZone, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(iso));
+      const jobs = saved.jobs.filter((job) => jobHasTechnician(job, technician) && job.startsAt && localDate(job.startsAt) === date && !['Canceled', 'No-show'].includes(job.status));
+      const coordinatesFor = (job) => { const source = job.coordinates || job.locationCoordinates || job; const latitude = Number(source.latitude ?? source.lat); const longitude = Number(source.longitude ?? source.lng ?? source.lon); return Number.isFinite(latitude) && latitude >= -90 && latitude <= 90 && Number.isFinite(longitude) && longitude >= -180 && longitude <= 180 ? { latitude, longitude } : null; };
+      const stops = jobs.map((job) => ({ job, coordinates: coordinatesFor(job) })).filter((item) => item.coordinates);
+      if (stops.length < 2) return json(res, 422, { error: 'two_coordinate_stops_required', coordinateStops: stops.length, skippedStops: jobs.length - stops.length });
+      const idempotencyKey = String(req.headers['idempotency-key'] || '').trim().slice(0, 100);
+      const fingerprint = payloadFingerprint({ date, technician, jobIds: stops.map((item) => item.job.id), startLatitude: body.startLatitude ?? null, startLongitude: body.startLongitude ?? null, respectTimeWindows: body.respectTimeWindows !== false });
+      saved.routeOptimizationRequests = saved.routeOptimizationRequests || [];
+      const existing = idempotencyKey ? saved.routeOptimizationRequests.find((item) => item.key === idempotencyKey) : null;
+      if (existing) { if (existing.fingerprint !== fingerprint) return json(res, 409, { error: 'idempotency_key_reused' }); return json(res, 200, { ...existing.result, duplicate: true }); }
+      const startLatitude = Number(body.startLatitude);
+      const startLongitude = Number(body.startLongitude);
+      const start = Number.isFinite(startLatitude) && startLatitude >= -90 && startLatitude <= 90 && Number.isFinite(startLongitude) && startLongitude >= -180 && startLongitude <= 180 ? { latitude: startLatitude, longitude: startLongitude } : null;
+      const optimized = optimizeCoordinateRoute(stops, start, { respectTimeWindows: body.respectTimeWindows !== false });
+      optimized.ordered.forEach((item, index) => { item.job.routeOrder = index + 1; item.job.routeOptimization = optimized.method; item.job.routeDistanceKm = optimized.distanceKm; });
+      const result = { date, technician, jobIds: optimized.ordered.map((item) => item.job.id), optimizedStops: optimized.ordered.length, skippedStops: jobs.length - optimized.ordered.length, method: optimized.method, distanceKm: optimized.distanceKm, passes: optimized.passes };
+      if (idempotencyKey) saved.routeOptimizationRequests.unshift({ key: idempotencyKey, fingerprint, result });
+      recordAudit(saved, claims, 'route.order.optimized', 'route', date + ':' + technician, `${optimized.ordered.length} coordinate stops optimized; ${jobs.length - optimized.ordered.length} skipped; ${optimized.distanceKm} km`);
+      persist();
+      return json(res, 200, { ...result, duplicate: false });
+    }
     const suppliedRequestId = String(req.headers['x-request-id'] || '').trim();
     const requestId = /^[A-Za-z0-9:_-]{8,80}$/.test(suppliedRequestId) ? suppliedRequestId : randomUUID();
     res.setHeader('x-request-id', requestId);

@@ -25,8 +25,8 @@ try {
   const optimized = await post('/api/dispatch/route-optimize', { date, technician: 'Alex Rivera', startLatitude: 32.8000, startLongitude: -79.9000 }, headers);
   const duplicate = await post('/api/dispatch/route-optimize', { date, technician: 'Alex Rivera', startLatitude: 32.8000, startLongitude: -79.9000 }, headers);
   const saved = JSON.parse(readFileSync(dataFile, 'utf8'))[tenantId];
-  const mapped = saved.jobs.filter((item) => item.routeOptimization === 'coordinate_nearest_neighbor');
-  if (!login.response.ok || optimized.response.status !== 200 || optimized.body.optimizedStops !== 3 || optimized.body.skippedStops !== 1 || duplicate.response.status !== 200 || !duplicate.body.duplicate || mapped.length !== 3 || mapped.some((item) => !Number.isInteger(item.routeOrder))) throw new Error('route optimization did not safely order mapped stops or deduplicate');
+  const mapped = saved.jobs.filter((item) => item.routeOptimization === 'coordinate_nearest_neighbor_2opt_time_safe');
+  if (!login.response.ok || optimized.response.status !== 200 || optimized.body.optimizedStops !== 3 || optimized.body.skippedStops !== 1 || optimized.body.method !== 'coordinate_nearest_neighbor_2opt_time_safe' || !Number.isFinite(optimized.body.distanceKm) || duplicate.response.status !== 200 || !duplicate.body.duplicate || mapped.length !== 3 || mapped.some((item) => !Number.isInteger(item.routeOrder) || item.routeDistanceKm !== optimized.body.distanceKm)) throw new Error('route optimization did not safely order mapped stops, report distance, or deduplicate');
   console.log('Northstar route optimization test passed');
 } finally {
   if (child && !child.killed) child.kill();
