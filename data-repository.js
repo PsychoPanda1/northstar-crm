@@ -210,6 +210,35 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async listCustomReportSchedules() {
+    if (!this.remote) throw new Error('API required for report schedules');
+    const response = await fetch('/api/reports/custom/schedules', { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('report schedules unavailable');
+    return response.json();
+  }
+
+  async createCustomReportSchedule(viewId, recipient, frequency = 'weekly', nextRunAt = '', idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for report schedules');
+    const body = { viewId, recipient, frequency, ...(nextRunAt ? { nextRunAt } : {}) };
+    const response = await fetch('/api/reports/custom/schedules', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify(body) });
+    if (!response.ok) throw new Error('report schedule creation failed');
+    return response.json();
+  }
+
+  async updateCustomReportSchedule(id, updates) {
+    if (!this.remote) throw new Error('API required for report schedules');
+    const response = await fetch(`/api/reports/custom/schedules/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify(updates) });
+    if (!response.ok) throw new Error('report schedule update failed');
+    return response.json();
+  }
+
+  async deleteCustomReportSchedule(id) {
+    if (!this.remote) throw new Error('API required for report schedules');
+    const response = await fetch(`/api/reports/custom/schedules/${encodeURIComponent(id)}`, { method: 'DELETE', headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('report schedule deletion failed');
+    return response.json();
+  }
+
   async getMarketingReport(range = {}) {
     if (!this.remote) throw new Error('API required for marketing reporting');
     const query = new URLSearchParams(); if (range?.startDate) query.set('startDate', String(range.startDate)); if (range?.endDate) query.set('endDate', String(range.endDate)); const response = await fetch(`/api/reports/marketing${query.toString() ? `?${query}` : ''}`, { headers: { authorization: `Bearer ${this.token}` } });
