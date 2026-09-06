@@ -70,6 +70,24 @@
       return this.url(manifest.integration.ownerPortalPath);
     }
 
+    async ownerPasswordLogin(email, password) {
+      const manifest = await this.manifest();
+      const integration = manifest.integration || {};
+      if (!Array.isArray(integration.ownerAuthMethods) || !integration.ownerAuthMethods.includes('password') || !integration.ownerAuthEndpoint) {
+        const error = new Error('password_owner_auth_unavailable');
+        error.status = 404;
+        throw error;
+      }
+      if (typeof email !== 'string' || !email.trim() || typeof password !== 'string' || !password) throw new Error('owner_credentials_required');
+      const endpoint = new URL(this.url(integration.ownerAuthEndpoint));
+      endpoint.searchParams.set('service', this.service);
+      return this.request(`${endpoint.pathname}${endpoint.search}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), password, service: this.service })
+      });
+    }
+
     async ownerOidcLogin(idToken) {
       const manifest = await this.manifest();
       const integration = manifest.integration || {};
