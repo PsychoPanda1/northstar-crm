@@ -62,6 +62,9 @@ const required = [
   ,'populateAllCustomers'
   ,'select.dataset.allCustomersLoaded'
   ,'customers.map((item) => `<option value="${escapeHtml(item.id)}">'
+  ,'estimateSnapshot'
+  ,'data-approved-estimate-scope'
+  ,'APPROVED LINE ITEMS'
 ];
 for (const snippet of required) {
   if (!source.includes(snippet)) throw new Error(`integration dispatch UI wiring missing: ${snippet}`);
