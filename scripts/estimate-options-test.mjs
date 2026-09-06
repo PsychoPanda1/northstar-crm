@@ -22,6 +22,8 @@ try {
   const token = login.body.token;
   const customer = await postJson('/api/customers', { name: 'Option Package Customer', phone: '843-555-0199', location: 'Package test address' }, token);
   const estimate = await postJson('/api/estimates', { customerId: customer.body.id, service: 'Water heater service', options: [{ label: 'Good', description: 'Repair', amount: 499 }, { label: 'Better', description: 'Repair plus protection', amount: 799 }] }, token);
+  const job = await postJson('/api/jobs', { customerId: customer.body.id, service: 'Water heater service', time: 'Package document test appointment' }, token);
+  const customerLink = await request(`/api/jobs/${job.body.id}/customer-link`, { method: 'POST', headers: { authorization: `Bearer ${token}` } });
   const headers = { authorization: `Bearer ${token}`, 'content-type': 'application/json', 'idempotency-key': 'estimate-options-1' };
   const details = [{ id: 'OPTION-1', items: ['Diagnostic', 'Repair'] }, { id: 'OPTION-2', items: ['Diagnostic', 'Repair', 'Protection plan'] }];
   const updated = await request(`/api/estimates/${estimate.body.id}/options`, { method: 'PATCH', headers, body: JSON.stringify({ options: details }) });
@@ -29,7 +31,9 @@ try {
   const publicView = await request(`/api/public/estimate?token=${encodeURIComponent(estimate.body.estimateApprovalToken)}`);
   const pdfResponse = await fetch(`${base}/api/public/estimate/pdf?token=${encodeURIComponent(estimate.body.estimateApprovalToken)}`);
   const pdfBytes = Buffer.from(await pdfResponse.arrayBuffer());
-  if (customer.response.status !== 201 || estimate.response.status !== 201 || updated.response.status !== 200 || updated.body.estimate?.options?.[1]?.items?.[2] !== 'Protection plan' || duplicate.response.status !== 200 || duplicate.body.duplicate !== true || publicView.response.status !== 200 || publicView.body.options?.[0]?.items?.[0] !== 'Diagnostic' || pdfResponse.status !== 200 || pdfResponse.headers.get('content-type') !== 'application/pdf' || !pdfBytes.subarray(0, 8).toString('ascii').startsWith('%PDF-1.4')) throw new Error('estimate option detail or PDF contract failed');
+  const customerPortalToken = new URL(customerLink.body.url, base).searchParams.get('token');
+  const portalPdfResponse = await fetch(`${base}/api/public/customer-portal/estimate/pdf?token=${encodeURIComponent(customerPortalToken)}&estimateId=${encodeURIComponent(estimate.body.id)}`);
+  if (customer.response.status !== 201 || estimate.response.status !== 201 || job.response.status !== 201 || customerLink.response.status !== 200 || updated.response.status !== 200 || updated.body.estimate?.options?.[1]?.items?.[2] !== 'Protection plan' || duplicate.response.status !== 200 || duplicate.body.duplicate !== true || publicView.response.status !== 200 || publicView.body.options?.[0]?.items?.[0] !== 'Diagnostic' || pdfResponse.status !== 200 || pdfResponse.headers.get('content-type') !== 'application/pdf' || !pdfBytes.subarray(0, 8).toString('ascii').startsWith('%PDF-1.4') || portalPdfResponse.status !== 200 || portalPdfResponse.headers.get('content-type') !== 'application/pdf') throw new Error('estimate option detail or PDF contract failed');
   console.log('Northstar estimate option detail test passed');
 } finally {
   if (child && !child.killed) child.kill();
