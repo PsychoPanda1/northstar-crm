@@ -68,6 +68,7 @@ assert(server.includes("!String(runtimeAccount.passwordDigest).startsWith('scryp
 assert(server.includes('const publicServiceFor = (requestUrl, body)') && server.includes("error: 'service_mismatch'"), 'public intake must reject conflicting service identifiers');
 assert(technician.includes('idempotency-key') && technician.includes('conflicts') && technician.includes('response.status'), 'technician offline replay must use idempotency and surface permanent conflicts');
 assert(technician.includes('queue-review') && technician.includes('data-queue-retry') && technician.includes('data-queue-discard') && technician.includes('writeReview'), 'technician offline conflicts must remain actionable after replay');
+assert(technician.includes('AES-GCM') && technician.includes('PBKDF2') && technician.includes('queueReady') && technician.includes('version: 1'), 'technician offline queue must be encrypted at rest and hydrated before replay');
 assert(!/Michael Torres|Aisha Patel|Lakeside Property Group|Sarah Chen|Daniel Brooks|Jordan Smith|King St|Coming St|Wentworth Ave|JOB-2188|EST-1048/.test(index), 'unauthenticated owner markup must not contain concrete private-looking demo records');
 assert(app.includes('const renderLiveActivity') && app.includes('loadLiveActivity();'), 'owner dashboard activity must hydrate from tenant records');
 assert(app.includes('const renderLiveFocus') && app.includes('loadLiveFocus();') && app.includes('openRecords(\'notifications\')'), 'owner dashboard focus must hydrate from live notifications');
