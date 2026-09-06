@@ -6,7 +6,10 @@ const required = [
   'data-integration-dispatch="payments"',
   'repository.dispatchMessages(20)',
   'repository.dispatchPayments(20)',
-  'Integration health is unavailable'
+  'Integration health is unavailable',
+  'data-job-tracking-history',
+  'repository.getJobLocationHistory',
+  'Could not load technician tracking history'
 ];
 for (const snippet of required) {
   if (!source.includes(snippet)) throw new Error(`integration dispatch UI wiring missing: ${snippet}`);
