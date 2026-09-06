@@ -197,6 +197,12 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async getReadiness() {
+    if (!this.remote) throw new Error('API required for readiness');
+    const response = await fetch('/api/ready', { cache: 'no-store' });
+    return response.json();
+  }
+
   async getOperationalMetrics() {
     if (!this.remote) throw new Error('API required for operational metrics');
     const response = await fetch('/api/operations/metrics', { headers: { authorization: `Bearer ${this.token}` } });
