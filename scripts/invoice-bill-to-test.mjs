@@ -24,8 +24,11 @@ try {
   const updated = await post('/api/invoices/INV-BILL-1/bill-to', { name: 'Lowcountry Property Group', email: 'ap@example.test', phone: '843-555-0100', address: '4 Accounts Plaza', terms: 'Net 30' }, { ...auth, 'idempotency-key': 'bill-to-1' });
   const duplicate = await post('/api/invoices/INV-BILL-1/bill-to', { name: 'Lowcountry Property Group', email: 'ap@example.test', phone: '843-555-0100', address: '4 Accounts Plaza', terms: 'Net 30' }, { ...auth, 'idempotency-key': 'bill-to-1' });
   const invalid = await post('/api/invoices/INV-BILL-1/bill-to', { name: 'Group', terms: 'Net 90' }, { ...auth, 'idempotency-key': 'bill-to-2' });
+  const link = await post('/api/invoices/INV-BILL-1/payment-link', {}, auth);
+  const paymentUrl = link.body.url ? new URL(link.body.url, base) : null;
+  const publicInvoice = paymentUrl ? await request('/api/public/invoice?token=' + encodeURIComponent(paymentUrl.searchParams.get('token'))) : { response: { ok: false }, body: {} };
   const persisted = JSON.parse(readFileSync(dataFile, 'utf8'))[tenantId];
-  if (!login.response.ok || updated.response.status !== 200 || updated.body.invoice?.billTo?.terms !== 'Net 30' || duplicate.response.status !== 200 || !duplicate.body.duplicate || invalid.response.status !== 422 || persisted.invoices[0].billTo?.name !== 'Lowcountry Property Group') throw new Error('invoice bill-to workflow did not save, deduplicate, or validate safely');
+  if (!login.response.ok || updated.response.status !== 200 || updated.body.invoice?.billTo?.terms !== 'Net 30' || duplicate.response.status !== 200 || !duplicate.body.duplicate || invalid.response.status !== 422 || link.response.status !== 200 || publicInvoice.response.status !== 200 || publicInvoice.body.billTo?.name !== 'Lowcountry Property Group' || publicInvoice.body.billTo?.terms !== 'Net 30' || persisted.invoices[0].billTo?.name !== 'Lowcountry Property Group') throw new Error('invoice bill-to workflow did not save, deduplicate, validate, or expose safely');
   console.log('Northstar invoice bill-to test passed');
 } finally {
   if (child && !child.killed) child.kill();
