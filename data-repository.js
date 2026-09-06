@@ -1067,6 +1067,20 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async listUserInvites() {
+    if (!this.remote) throw new Error('API required for user invitations');
+    const response = await fetch('/api/users/invites', { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('user invitation listing failed');
+    return response.json();
+  }
+
+  async revokeUserInvite(id) {
+    if (!this.remote) throw new Error('API required for user invitations');
+    const response = await fetch(`/api/users/invites/${encodeURIComponent(id)}/revoke`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: '{}' });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'user invitation revoke failed');
+    return response.json();
+  }
+
   async updateUserStatus(id, status) {
     if (!this.remote) throw new Error('API required for user management');
     const response = await fetch(`/api/users/${encodeURIComponent(id)}/status`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ status }) });

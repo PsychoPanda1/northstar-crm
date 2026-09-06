@@ -35,6 +35,13 @@ try {
   if (accept.response.status !== 201 || !accept.body.token || accept.body.owner?.role !== 'dispatcher') throw new Error('invite acceptance failed');
   const replay = await request('/api/auth/invites/accept', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token, password: 'dispatcher-password-123' }) });
   if (replay.response.status !== 410 || replay.body.error !== 'invite_expired_or_invalid') throw new Error('invite was reusable');
+  const secondInvite = await request('/api/users/invites', { method: 'POST', headers: { ...authorization, 'idempotency-key': 'invite-revoke-once' }, body: JSON.stringify({ name: 'Revoked Technician', email: 'revoked@example.test', role: 'technician' }) });
+  if (secondInvite.response.status !== 201) throw new Error('second invite creation failed');
+  const revoke = await request(`/api/users/invites/${encodeURIComponent(secondInvite.body.invite.id)}/revoke`, { method: 'POST', headers: authorization, body: '{}' });
+  if (revoke.response.status !== 200 || revoke.body.invite?.status !== 'Revoked') throw new Error('invite revocation failed');
+  const revokedToken = new URL(secondInvite.body.inviteUrl).searchParams.get('token');
+  const revokedAccept = await request('/api/auth/invites/accept', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token: revokedToken, password: 'technician-password-123' }) });
+  if (revokedAccept.response.status !== 410) throw new Error('revoked invite was accepted');
   const users = await request('/api/users', { headers: { authorization: `Bearer ${login.body.token}` } });
   if (!users.response.ok || !users.body.items.some((item) => item.email === 'dispatcher@example.test' && item.role === 'dispatcher')) throw new Error('accepted account missing from owner user list');
   console.log('Northstar user invitation checks passed');

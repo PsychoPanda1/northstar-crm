@@ -1154,19 +1154,20 @@ if (pathname === '/api/ready' && req.method === 'GET') { const checks = { config
     }
      if (pathname === '/api/auth/refresh' && req.method === 'POST') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); const oldToken = (req.headers.authorization || '').slice(7); revokedTokens.add(oldToken); revokedSessionIds.add(claims.sid); const account = { id: claims.sub, name: claims.name, role: claims.role, tenantId: claims.tenantId }; const token = issueToken(account); persistSessionRevocations(); return json(res, 200, { token, expiresAt: tokenExpiresAt(token), owner: { id: account.id, name: account.name, role: account.role }, tenant: tenants[account.tenantId], permissions: rolePermissions[account.role] }); }
      if (pathname === '/api/auth/logout' && req.method === 'POST') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); const token = (req.headers.authorization || '').slice(7); revokedTokens.add(token); revokedSessionIds.add(claims.sid); persistSessionRevocations(); res.setHeader('set-cookie', 'northstar_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0'); return json(res, 200, { ok: true }); }
-    if (pathname === '/api/users/invites' && req.method === 'POST') {
+    if (pathname === '/api/users/invites' && (req.method === 'GET' || req.method === 'POST')) {
       const claims = authenticate(req);
       if (!claims) return json(res, 401, { error: 'unauthorized' });
       if (claims.role !== 'owner') return json(res, 403, { error: 'owner_required' });
+      const saved = state.get(claims.tenantId);
+      saved.userInvites = saved.userInvites || [];
+      if (req.method === 'GET') return json(res, 200, { items: saved.userInvites.map((item) => ({ id: item.id, tenantId: item.tenantId, name: item.name, email: item.email, role: item.role, status: item.status === 'Pending' && Date.parse(item.expiresAt) <= Date.now() ? 'Expired' : item.status, createdAt: item.createdAt, expiresAt: item.expiresAt, acceptedAt: item.acceptedAt || null, revokedAt: item.revokedAt || null })) });
       const body = await readBody(req);
       const name = String(body.name || '').trim().slice(0, 100);
       const email = String(body.email || '').trim().toLowerCase().slice(0, 120);
       const role = String(body.role || '').trim().toLowerCase();
       const idempotencyKey = String(req.headers['idempotency-key'] || '').trim().slice(0, 100);
       if (name.length < 2 || !validEmail(email) || !['dispatcher', 'technician', 'accountant'].includes(role)) return json(res, 422, { error: 'valid_invite_name_email_and_role_required' });
-      const saved = state.get(claims.tenantId);
       saved.userAccounts = saved.userAccounts || [];
-      saved.userInvites = saved.userInvites || [];
       if (idempotencyKey) { const existing = saved.userInvites.find((item) => item.idempotencyKey === idempotencyKey); if (existing) return json(res, 409, { error: 'invite_already_created', inviteId: existing.id, expiresAt: existing.expiresAt }); }
       if (saved.userAccounts.some((item) => item.email === email) || configuredStaff.some((item) => item.tenantId === claims.tenantId && item.email === email) || configuredOwners.some((item) => item.tenantId === claims.tenantId && item.email === email)) return json(res, 409, { error: 'user_email_already_exists' });
       const pending = saved.userInvites.find((item) => item.email === email && item.status === 'Pending' && Date.parse(item.expiresAt) > Date.now());
@@ -1181,6 +1182,23 @@ if (pathname === '/api/ready' && req.method === 'GET') { const checks = { config
       recordAudit(saved, claims, 'user.invite.created', 'user_invite', invite.id, `${email} · ${role} · expires ${expiresAt}`);
       persist();
       return json(res, 201, { invite: { id: invite.id, email, role, expiresAt, status: invite.status }, inviteUrl, duplicate: false });
+    }
+    const inviteRevokeMatch = pathname.match(/^\/api\/users\/invites\/([^/]+)\/revoke$/);
+    if (inviteRevokeMatch && req.method === 'POST') {
+      const claims = authenticate(req);
+      if (!claims) return json(res, 401, { error: 'unauthorized' });
+      if (claims.role !== 'owner') return json(res, 403, { error: 'owner_required' });
+      const saved = state.get(claims.tenantId);
+      const invite = (saved.userInvites || []).find((item) => item.id === inviteRevokeMatch[1]);
+      if (!invite) return json(res, 404, { error: 'invite_not_found' });
+      if (invite.status === 'Accepted') return json(res, 409, { error: 'accepted_invite_locked' });
+      if (invite.status === 'Revoked') return json(res, 200, { invite: { id: invite.id, status: invite.status, revokedAt: invite.revokedAt || null }, duplicate: true });
+      invite.status = 'Revoked';
+      invite.revokedAt = new Date().toISOString();
+      delete invite.tokenHash;
+      recordAudit(saved, claims, 'user.invite.revoked', 'user_invite', invite.id, `${invite.email} · ${invite.role}`);
+      persist();
+      return json(res, 200, { invite: { id: invite.id, status: invite.status, revokedAt: invite.revokedAt }, duplicate: false });
     }
     if (pathname === '/api/users' && (req.method === 'GET' || req.method === 'POST')) {
       const claims = authenticate(req);
