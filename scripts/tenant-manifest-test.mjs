@@ -17,13 +17,17 @@ try {
   assert(response.status === 200 && body.tenant?.contactPhone === tenant.contactPhone && body.tenant?.contactEmail === tenant.contactEmail && body.tenant?.serviceArea === tenant.serviceArea && JSON.stringify(body.tenant?.leadStages) === JSON.stringify(tenant.leadStages), 'public tenant configuration was not exposed safely');
   const leadResponse = await fetch(`${base}/api/public/leads?service=manifest`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name: 'Pipeline Test', phone: '843-555-0111' }) });
   const leadBody = await leadResponse.json();
+  const campaignLeadResponse = await fetch(`${base}/api/public/leads?service=manifest`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name: 'Campaign Pipeline Test', phone: '843-555-0112', utm_source: 'google', utm_campaign: 'spring-repair' }) });
+  const campaignLeadBody = await campaignLeadResponse.json();
   const loginResponse = await fetch(`${base}/api/auth/demo-login?service=manifest`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ service: 'manifest', role: 'owner' }) });
   const loginBody = await loginResponse.json();
   const statusResponse = await fetch(`${base}/api/leads/${leadBody.id}/status`, { method: 'POST', headers: { authorization: `Bearer ${loginBody.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ status: 'Site visit' }) });
   const statusBody = await statusResponse.json();
   const filteredResponse = await fetch(`${base}/api/leads?status=${encodeURIComponent('Site visit')}`, { headers: { authorization: `Bearer ${loginBody.token}` } });
   const filteredBody = await filteredResponse.json();
-  assert(leadResponse.status === 201 && loginResponse.ok && statusResponse.status === 200 && statusBody.lead?.status === 'Site visit' && statusBody.lead.stageHistory?.at(-1)?.to === 'Site visit' && filteredResponse.status === 200 && filteredBody.items?.some((item) => item.id === leadBody.id), 'custom lead stage was not accepted and filterable by the owner pipeline');
+  const campaignFilterResponse = await fetch(`${base}/api/leads?source=${encodeURIComponent('spring-repair')}`, { headers: { authorization: `Bearer ${loginBody.token}` } });
+  const campaignFilterBody = await campaignFilterResponse.json();
+  assert(leadResponse.status === 201 && campaignLeadResponse.status === 201 && loginResponse.ok && statusResponse.status === 200 && statusBody.lead?.status === 'Site visit' && statusBody.lead.stageHistory?.at(-1)?.to === 'Site visit' && filteredResponse.status === 200 && filteredBody.items?.some((item) => item.id === leadBody.id) && campaignFilterResponse.status === 200 && campaignFilterBody.items?.some((item) => item.id === campaignLeadBody.id), 'custom lead stage or campaign attribution was not accepted and filterable by the owner pipeline');
   assert(!JSON.stringify(body).includes('passwordDigest') && !JSON.stringify(body).includes('ownerEmail'), 'public tenant manifest exposed private account fields');
   console.log('Northstar tenant manifest checks passed');
 } finally {
