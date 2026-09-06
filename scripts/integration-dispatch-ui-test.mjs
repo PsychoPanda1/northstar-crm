@@ -17,6 +17,8 @@ const required = [
   'repository.listPage(state.type',
   'Load more requests',
   "repository.listPage('requests'",
+  "new Set(['messages', 'calls'])",
+  'Load more ${type}',
   'Integration health is unavailable',
   'data-job-tracking-history',
   'repository.getJobLocationHistory',
