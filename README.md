@@ -237,6 +237,10 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Completed customer jobs without an invoice surface an owner action and a direct invoice path from job detail
 - Technicians can optionally record the customer acknowledgment name at completion, with the acknowledgment preserved in the portal and timeline
 
+## Production activation
+
+Use [PRODUCTION_ACTIVATION.md](PRODUCTION_ACTIVATION.md) to separate verified local implementation from provider credentials, managed infrastructure, and external release authorization.
+
 ## Run locally
 
 ### Run as a container
