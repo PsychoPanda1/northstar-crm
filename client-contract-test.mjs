@@ -16,6 +16,7 @@ const productionBoundary = readFileSync(`${root}scripts/production-boundary-test
 const technician = readFileSync(`${root}technician.html`, 'utf8');
 const ownerManifest = readFileSync(`${root}northstar.webmanifest`, 'utf8');
 const northstarServiceWorker = readFileSync(`${root}northstar-sw.js`, 'utf8');
+const releaseReadiness = readFileSync(`${root}release-readiness-owner.js`, 'utf8');
 const server = readFileSync(`${root}server.mjs`, 'utf8');
 const portal = readFileSync(`${root}PORTAL_CONTRACT.md`, 'utf8');
 const tenantConfig = readFileSync(`${root}tenant-config.js`, 'utf8');
@@ -226,6 +227,7 @@ assert(app.includes("result.results.messages || []") && app.includes("result.res
 assert(app.includes("result.results.assets || []") && app.includes("result.results.plans || []") && app.includes("result.results.materials || []") && app.includes("result.results.purchaseOrders || []") && server.includes('const assets = saved.assets.filter') && server.includes('const purchaseOrders = saved.purchaseOrders.filter'), 'global search does not expose operational inventory and asset records');
 assert(app.includes('data-global-search=') && app.includes('global-search-view') && app.includes("Requests: 'requests'") && app.includes("'Purchase orders': 'purchase-orders'"), 'global search results do not provide actionable record navigation');
 assert(index.includes('search-pagination.js') && searchPagination.includes('global-search-load-more') && searchPagination.includes('globalSearchPage'), 'global search owner UI does not expose bounded pagination');
+assert(index.includes('release-readiness-owner.js') && releaseReadiness.includes('getReadiness') && releaseReadiness.includes('release-readiness-view') && releaseReadiness.includes('Needs attention'), 'owner workspace does not expose the authoritative release-readiness gate');
 assert(app.includes('data-run-automations') && app.includes('runAutomations'), 'dispatch workspace does not expose coordinated customer automations');
 assert(app.includes('data-request-action="reply"') && app.includes('replyToRequest') && app.includes('Reply queued by') && !app.includes('data-request-reply'), 'owner request queue does not expose one canonical customer reply workflow');
 assert(server.includes('resolutionIdempotencyKey') && repository.includes('resolveRequest(id, note, idempotencyKey') && app.includes('resolveRequest(requestButton.dataset.requestId, note, crypto.randomUUID())'), 'customer request resolution is not retry-safe end to end');
