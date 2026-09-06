@@ -6,7 +6,7 @@ The comparison domains are based on [ServiceTitan's feature areas](https://www.s
 
 | Domain | Northstar today | Evidence | Remaining work before production parity |
 | --- | --- | --- | --- |
-| Customer and location records | Implemented | Customer profiles, saved locations, assets, tags, preferences, merge, service history | Connect managed shared storage and operational data retention policy |
+| Customer and location records | Implemented | Customer profiles, saved locations, assets, tags, preferences, merge, service history, owner-only privacy export | Connect managed shared storage and operational data retention policy |
 | Lead capture and sales pipeline | Implemented | Idempotent landing-page intake, attribution, SLA alerts, owner-configurable tenant stages, stage/owner/source filtering, assignment, conversion, provider handoff with delivery state | Configure a production marketing connector and verify its replay/rotation operations |
 | Call booking and contact center | Implemented | Signed inbound call webhook, customer matching, outcomes, booking, audit history | Connect a real telephony provider and verify webhook replay/rotation operations |
 | Pricebook and estimates | Implemented | Tenant catalog, duration-aware capacity, itemized estimates, included-work option packages, revisions, signed PDF artifact, send/approve/decline, conversion | Connect production outbound document delivery provider |

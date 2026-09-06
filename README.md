@@ -38,6 +38,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Secure 24-hour technician job links with mobile status updates and field completion
 - Generated pre-job briefs for technicians with bounded landing-page intake, scoped customer history, known equipment, prior findings, priorities, and service-specific checks
 - Signed technician field guides provide service-specific safety reminders and diagnostic steps without requiring an external AI provider
+- Owner-only customer privacy exports collect the customer record and linked service history without exposing runtime credentials
 - Technician links can capture field labor hours and consume stocked materials against the assigned job
 - Crew members can receive individually scoped technician links while visit-level actions remain assigned to the designated visit technician
 - Technicians can clock in/out across multiple sessions on an in-progress job; elapsed field minutes are aggregated with audit events
