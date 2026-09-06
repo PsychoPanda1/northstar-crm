@@ -46,6 +46,8 @@ jobs:
         run: node scripts/snapshot-import-test.mjs
       - name: Run estimate media test
         run: node scripts/estimate-media-test.mjs
+      - name: Check estimate media owner UI wiring
+        run: node scripts/estimate-media-ui-test.mjs
       - name: Run appointment reply test
         run: node scripts/appointment-reply-test.mjs
       - name: Check integration dispatch UI wiring
