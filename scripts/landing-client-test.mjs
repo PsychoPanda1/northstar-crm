@@ -25,4 +25,6 @@ await client.ownerOidcLogin('signed-id-token');
 if (calls[1].url !== 'https://crm.example.test/api/auth/oidc' || calls[1].options.method !== 'POST' || JSON.parse(calls[1].options.body).idToken !== 'signed-id-token') throw new Error('landing OIDC owner login helper failed');
 await client.submitLead({ name: 'Landing Test', phone: '8435550100' });
 if (calls.length !== 3 || calls[2].options.headers['idempotency-key'] !== 'landing-test-key') throw new Error('landing lead retry contract failed');
+client.manifestPromise = Promise.resolve({ integration: { ownerAuthMethods: ['password'], ownerOidcAuthEndpoint: null } });
+try { await client.ownerOidcLogin('signed-id-token'); throw new Error('password-only tenant accepted OIDC'); } catch (error) { if (error.message !== 'oidc_owner_auth_unavailable' || error.status !== 404 || calls.length !== 3) throw error; }
 console.log('Northstar landing client test passed');
