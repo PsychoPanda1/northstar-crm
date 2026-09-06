@@ -175,9 +175,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async getMarketingReport() {
+  async getMarketingReport(range = {}) {
     if (!this.remote) throw new Error('API required for marketing reporting');
-    const response = await fetch('/api/reports/marketing', { headers: { authorization: `Bearer ${this.token}` } });
+    const query = new URLSearchParams(); if (range?.startDate) query.set('startDate', String(range.startDate)); if (range?.endDate) query.set('endDate', String(range.endDate)); const response = await fetch(`/api/reports/marketing${query.toString() ? `?${query}` : ''}`, { headers: { authorization: `Bearer ${this.token}` } });
     if (!response.ok) throw new Error('marketing report unavailable');
     return response.json();
   }
@@ -189,9 +189,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async getTechnicianReport() {
+  async getTechnicianReport(range = {}) {
     if (!this.remote) throw new Error('API required for technician reporting');
-    const response = await fetch('/api/reports/technicians', { headers: { authorization: `Bearer ${this.token}` } });
+    const query = new URLSearchParams(); if (range?.startDate) query.set('startDate', String(range.startDate)); if (range?.endDate) query.set('endDate', String(range.endDate)); const response = await fetch(`/api/reports/technicians${query.toString() ? `?${query}` : ''}`, { headers: { authorization: `Bearer ${this.token}` } });
     if (!response.ok) throw new Error('technician report unavailable');
     return response.json();
   }

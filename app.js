@@ -5,6 +5,9 @@ const serviceKey = new URLSearchParams(window.location.search).get('service') ||
 const repository = new NorthstarDemoRepository(tenant);
 window.northstarRepository = repository;
 await repository.ready;
+const promptReportRange = async () => { const startDate = window.prompt('Report start date (YYYY-MM-DD, blank for all)', ''); if (startDate === null) throw new Error('report_cancelled'); const endDate = window.prompt('Report end date (YYYY-MM-DD, blank for all)', ''); if (endDate === null) throw new Error('report_cancelled'); const start = startDate.trim(); const end = endDate.trim(); if ((start && !/^\d{4}-\d{2}-\d{2}$/.test(start)) || (end && !/^\d{4}-\d{2}-\d{2}$/.test(end)) || (start && end && start > end)) throw new Error('valid_report_date_range_required'); return { startDate: start || '', endDate: end || '' }; };
+const originalGetMarketingReport = repository.getMarketingReport.bind(repository); repository.getMarketingReport = (range) => originalGetMarketingReport(range || promptReportRange());
+const originalGetTechnicianReport = repository.getTechnicianReport.bind(repository); repository.getTechnicianReport = (range) => originalGetTechnicianReport(range || promptReportRange());
 const sessionPermissions = new Set(repository.session?.permissions || (repository.previewOnly ? ['jobs:write', 'reports:read'] : []));
 document.querySelectorAll('[data-required-permission]').forEach((node) => { node.hidden = !sessionPermissions.has(node.dataset.requiredPermission); });
 const sessionRole = repository.session?.owner?.role || 'owner';
