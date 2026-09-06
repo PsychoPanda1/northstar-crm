@@ -5,11 +5,11 @@ import { join } from 'node:path';
 
 const suffix = `${process.pid}-${Date.now()}`;
 const dataFile = join(tmpdir(), `northstar-asset-due-${suffix}.json`);
-const port = 4700 + (process.pid % 500);
+const port = 10000 + ((process.pid + Date.now()) % 40000);
 const env = { ...process.env, NODE_ENV: 'development', PORT: String(port), NORTHSTAR_DATA_FILE: dataFile, NORTHSTAR_SESSION_FILE: `${dataFile}.sessions` };
 const child = spawn(process.execPath, ['server.mjs'], { env, stdio: 'ignore' });
 const base = `http://127.0.0.1:${port}`;
-const waitForServer = async () => { for (let attempt = 0; attempt < 200; attempt += 1) { try { if ((await fetch(`${base}/api/health`)).ok) return; } catch {} await new Promise((resolve) => setTimeout(resolve, 25)); } throw new Error('asset due test server did not start'); };
+const waitForServer = async () => { for (let attempt = 0; attempt < 800; attempt += 1) { try { if ((await fetch(`${base}/api/health`)).ok) return; } catch {} await new Promise((resolve) => setTimeout(resolve, 25)); } throw new Error('asset due test server did not start'); };
 const request = async (path, options = {}) => { const response = await fetch(`${base}${path}`, options); return { response, body: await response.json().catch(() => ({})) }; };
 const cleanup = () => { child.kill(); for (const file of [dataFile, `${dataFile}.sessions`, `${dataFile}.tmp`]) if (existsSync(file)) rmSync(file, { force: true }); };
 try {
