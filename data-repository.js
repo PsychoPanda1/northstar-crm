@@ -1394,9 +1394,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async bulkInvoiceJobs(jobIds, amount, due = '30 days', idempotencyKey = crypto.randomUUID(), lineItems = {}) {
+  async bulkInvoiceJobs(jobIds, amount, due = '30 days', idempotencyKey = crypto.randomUUID(), lineItems = {}, amounts = {}) {
     if (!this.remote) throw new Error('API required for bulk job invoicing');
-    const response = await fetch('/api/dispatch/bulk-invoice', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ jobIds, amount, due, ...(lineItems && Object.keys(lineItems).length ? { lineItems } : {}) }) });
+    const response = await fetch('/api/dispatch/bulk-invoice', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ jobIds, ...(amount !== undefined ? { amount } : {}), due, ...(amounts && Object.keys(amounts).length ? { amounts } : {}), ...(lineItems && Object.keys(lineItems).length ? { lineItems } : {}) }) });
     if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'bulk job invoicing failed');
     return response.json();
   }
