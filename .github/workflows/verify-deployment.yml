@@ -1,0 +1,35 @@
+name: Verify hosted Northstar deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      deployment_url:
+        description: 'HTTPS origin of the deployed CRM'
+        required: true
+        type: string
+      service:
+        description: 'Optional landing-page service key to validate'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+
+      - name: Verify hosted deployment
+        env:
+          NORTHSTAR_DEPLOYMENT_URL: ${{ inputs.deployment_url }}
+          NORTHSTAR_DEPLOYMENT_SERVICE: ${{ inputs.service }}
+        run: npm run verify:deployment

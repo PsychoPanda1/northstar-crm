@@ -63,6 +63,11 @@ For a local loopback check only, add
 sufficient: it does not prove provider settlement, identity-provider behavior,
 backup restoration, or the complete customer journey.
 
+The same check is available as the manual `Verify hosted Northstar deployment`
+GitHub Actions workflow. Supply the deployed HTTPS origin and optional service
+key in the workflow inputs; the workflow only reads the repository and does not
+need provider credentials.
+
 `/api/ready` must return HTTP 200 with every returned check true. Validate at least one complete tenant journey: landing-page lead or booking → customer → estimate → approval → scheduled job → technician closeout → invoice → signed payment settlement → customer portal conversation. Confirm the corresponding audit events, provider delivery states, notifications, and customer-safe payloads.
 
 ## 5. Release and handoff
