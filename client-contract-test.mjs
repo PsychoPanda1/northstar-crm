@@ -77,6 +77,7 @@ assert(server.includes('Customer request overdue') && server.includes('days}d op
 assert(app.includes('data-notification-open="requests"') && app.includes('data-request-action="reply"') && app.includes('repository.replyToRequest'), 'request alerts do not expose a direct reply action');
 assert(app.includes('data-request-action="resolve"') && app.includes('repository.resolveRequest'), 'request alerts do not expose a direct resolve action');
 assert(index.includes('data-nav-count="requests"') && app.includes("repository.list('requests')"), 'navigation should expose live request counts');
+assert(index.includes('data-view="requests" data-required-permission="requests:read"') && server.includes("rolePermissions.owner.push('requests:read')") && server.includes("rolePermissions.dispatcher.push('requests:read')"), 'request navigation must follow role permissions');
 assert(app.includes('data-invoice-reminder-action="remind"') && app.includes('data-notification-open="invoices"') && app.includes('repository.remindInvoice'), 'invoice alerts do not expose a direct reminder action');
 assert(app.includes('data-estimate-reminder-action="remind"') && app.includes('data-notification-open="estimates"') && app.includes('repository.remindEstimate'), 'estimate alerts do not expose a direct follow-up action');
 assert(app.includes('data-lead-quick-contact') && app.includes("repository.updateLeadStatus(quickContactButton.dataset.leadQuickContact, 'Contacted'"), 'lead notifications do not expose a direct contact action');
