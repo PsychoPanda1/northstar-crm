@@ -1,0 +1,41 @@
+import { createSign, generateKeyPairSync } from 'node:crypto';
+import { createServer } from 'node:http';
+import { existsSync, unlinkSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { spawn } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+
+const root = fileURLToPath(new URL('../', import.meta.url));
+const suffix = `${process.pid}-${Date.now()}`;
+const dataFile = join(tmpdir(), `northstar-oidc-${suffix}.json`);
+const sessionFile = `${dataFile}.sessions`;
+const port = 4500 + Math.floor(Math.random() * 200);
+const { publicKey, privateKey } = generateKeyPairSync('rsa', { modulusLength: 2048 });
+const jwk = { ...publicKey.export({ format: 'jwk' }), kid: 'northstar-test-key', kty: 'RSA', use: 'sig', alg: 'RS256' };
+const jwksServer = createServer((_req, res) => { res.writeHead(200, { 'content-type': 'application/json' }); res.end(JSON.stringify({ keys: [jwk] })); });
+await new Promise((resolve) => jwksServer.listen(0, '127.0.0.1', resolve));
+const jwksPort = jwksServer.address().port;
+const secret = 'northstar-oidc-test-session-secret-32';
+const env = { ...process.env, NODE_ENV: 'development', PORT: String(port), NORTHSTAR_ALLOW_DEMO_LOGIN: 'false', NORTHSTAR_DATA_FILE: dataFile, NORTHSTAR_SESSION_FILE: sessionFile, NORTHSTAR_SESSION_SECRET: secret, NORTHSTAR_OWNER_EMAIL: 'owner@example.test', NORTHSTAR_OWNER_PASSWORD_DIGEST: 'scrypt$0123456789abcdef0123456789abcdef$0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef', NORTHSTAR_OWNER_TENANT_ID: 'johnson-service-co', NORTHSTAR_TENANTS_JSON: JSON.stringify([{ slug: 'johnson-service-co', businessName: 'Johnson Service Co.', serviceLabel: 'Home services', timeZone: 'America/New_York' }]), NORTHSTAR_SERVICE_TENANTS_JSON: JSON.stringify({ default: 'johnson-service-co' }), NORTHSTAR_CATALOG_JSON: JSON.stringify([{ tenantId: 'johnson-service-co', id: 'inspection', name: 'Inspection', description: 'A production test service', priceFrom: '$100', durationMinutes: 60 }]), NORTHSTAR_PAYMENT_WEBHOOK_SECRET: 'payment-secret-32-characters-for-test', NORTHSTAR_MESSAGE_WEBHOOK_SECRET: 'message-secret-32-characters-for-test', NORTHSTAR_CALL_WEBHOOK_SECRET: 'call-secret-32-characters-for-test', NORTHSTAR_FINANCING_WEBHOOK_SECRET: 'financing-secret-32-characters-for-test', NORTHSTAR_OIDC_ISSUER: 'http://issuer.example.test', NORTHSTAR_OIDC_AUDIENCE: 'northstar-owner-portal', NORTHSTAR_OIDC_JWKS_URL: `http://127.0.0.1:${jwksPort}/jwks`, NORTHSTAR_OIDC_ACCOUNTS_JSON: JSON.stringify([{ subject: 'user-123', id: 'oidc-owner-123', name: 'OIDC Owner', role: 'owner', tenantId: 'johnson-service-co' }]) };
+const child = spawn(process.execPath, ['server.mjs'], { cwd: root, env, stdio: 'ignore' });
+const cleanup = () => { child.kill(); jwksServer.close(); for (const file of [dataFile, sessionFile, `${dataFile}.tmp`]) if (existsSync(file)) unlinkSync(file); };
+const assert = (condition, message) => { if (!condition) throw new Error(message); };
+const waitForServer = async () => { for (let attempt = 0; attempt < 200; attempt += 1) { try { const response = await fetch(`http://127.0.0.1:${port}/api/health`); if (response.ok) return; } catch {} await new Promise((resolve) => setTimeout(resolve, 50)); } throw new Error('OIDC test server did not start'); };
+const tokenFor = (subject) => { const header = Buffer.from(JSON.stringify({ alg: 'RS256', typ: 'JWT', kid: jwk.kid })).toString('base64url'); const payload = Buffer.from(JSON.stringify({ iss: 'http://issuer.example.test', aud: 'northstar-owner-portal', sub: subject, exp: Math.floor(Date.now() / 1000) + 300 })).toString('base64url'); const signer = createSign('RSA-SHA256'); signer.update(`${header}.${payload}`); signer.end(); return `${header}.${payload}.${signer.sign(privateKey).toString('base64url')}`; };
+try {
+  await waitForServer();
+  const valid = await fetch(`http://127.0.0.1:${port}/api/auth/oidc`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ idToken: tokenFor('user-123') }) });
+  const validBody = await valid.json();
+  const session = await fetch(`http://127.0.0.1:${port}/api/session`, { headers: { authorization: `Bearer ${validBody.token}` } });
+  const validToken = tokenFor('user-123');
+  const [validHeader, validPayload, validSignature] = validToken.split('.');
+  const tamperedToken = `${validHeader}.${validPayload}.${validSignature[0] === 'a' ? 'b' : 'a'}${validSignature.slice(1)}`;
+  const tampered = await fetch(`http://127.0.0.1:${port}/api/auth/oidc`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ idToken: tamperedToken }) });
+  const unprovisioned = await fetch(`http://127.0.0.1:${port}/api/auth/oidc`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ idToken: tokenFor('not-provisioned') }) });
+  assert(valid.status === 200 && validBody.owner?.id === 'oidc-owner-123' && validBody.owner?.role === 'owner', 'valid OIDC token was not exchanged');
+  assert(session.status === 200 && (await session.json()).tenant?.slug === 'johnson-service-co', 'OIDC session did not preserve tenant scope');
+  assert(tampered.status === 401, 'tampered OIDC signature was accepted');
+  assert(unprovisioned.status === 403, 'unprovisioned OIDC subject was accepted');
+  console.log('Northstar OIDC authentication test passed');
+} finally { cleanup(); }
