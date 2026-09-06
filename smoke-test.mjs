@@ -168,6 +168,9 @@ try {
   const publicLead = await request('/api/public/leads', jsonOptions('POST', { service: 'plumbing', name: 'Smoke Lead', phone: '843-555-0100', email: 'smoke.lead@example.test', location: '101 King St, Charleston', message: 'Kitchen faucet is leaking.', utm_source: 'google', utm_medium: 'cpc', utm_campaign: 'summer-leak-repair', idempotencyKey: 'smoke-lead-1' }));
   const duplicateLead = await request('/api/public/leads', jsonOptions('POST', { service: 'plumbing', name: 'Smoke Lead', phone: '843-555-0100', email: 'smoke.lead@example.test', location: '101 King St, Charleston', message: 'Kitchen faucet is leaking.', utm_source: 'google', utm_medium: 'cpc', utm_campaign: 'summer-leak-repair', idempotencyKey: 'smoke-lead-1' }));
   const conflictingLead = await request('/api/public/leads', jsonOptions('POST', { service: 'plumbing', name: 'Different Lead', phone: '843-555-0199', idempotencyKey: 'smoke-lead-1' }));
+  const preStatusLeadNotifications = await request('/api/notifications?search=Smoke%20Lead', { headers: { authorization: `Bearer ${secureLogin.body.token}` } });
+  const preStatusNotificationRead = await request(`/api/notifications/${preStatusLeadNotifications.body.items[0]?.id || 'missing'}/read`, jsonOptions('POST', {}, secureLogin.body.token));
+  const postReadLeadNotifications = await request('/api/notifications?search=Smoke%20Lead', { headers: { authorization: `Bearer ${secureLogin.body.token}` } });
   const qualifiedLead = await request(`/api/leads/${publicLead.body.id}/status`, { ...jsonOptions('POST', { status: 'Qualified', note: 'Confirmed scope and service window.' }, secureLogin.body.token), headers: { ...jsonOptions('POST', {}, secureLogin.body.token).headers, 'idempotency-key': 'smoke-lead-status' } });
   const duplicateQualifiedLead = await request(`/api/leads/${publicLead.body.id}/status`, { ...jsonOptions('POST', { status: 'Qualified', note: 'Confirmed scope and service window.' }, secureLogin.body.token), headers: { ...jsonOptions('POST', {}, secureLogin.body.token).headers, 'idempotency-key': 'smoke-lead-status' } });
   const conflictingQualifiedLead = await request(`/api/leads/${publicLead.body.id}/status`, { ...jsonOptions('POST', { status: 'Lost', note: 'Conflicting status.' }, secureLogin.body.token), headers: { ...jsonOptions('POST', {}, secureLogin.body.token).headers, 'idempotency-key': 'smoke-lead-status' } });
@@ -436,10 +439,10 @@ try {
   const failedMessageNotifications = await request('/api/notifications?search=Message%20delivery%20failed', { headers: { authorization: `Bearer ${token}` } });
   assert(failedMessageNotifications.response.ok && failedMessageNotifications.body.items.some((item) => item.title === 'Message delivery failed' && item.messageId === failedMessage.body.id && item.status === 'Urgent'), 'failed message did not reach owner attention queue');
   const leadList = await request('/api/leads?search=Smoke%20Lead', { headers: { authorization: `Bearer ${token}` } });
-  const leadNotifications = await request('/api/notifications?search=Smoke%20Lead', { headers: { authorization: `Bearer ${token}` } });
+  const leadNotifications = preStatusLeadNotifications;
   const audit = await request('/api/audit?search=Smoke%20Lead', { headers: { authorization: `Bearer ${token}` } });
-  const notificationRead = await request(`/api/notifications/${leadNotifications.body.items[0].id}/read`, jsonOptions('POST', {}, token));
-  const readNotifications = await request('/api/notifications?search=Smoke%20Lead', { headers: { authorization: `Bearer ${token}` } });
+  const notificationRead = preStatusNotificationRead;
+  const readNotifications = postReadLeadNotifications;
   const technicianNotifications = await request('/api/notifications', { headers: { authorization: `Bearer ${technicianLogin.body.token}` } });
   assert(leadList.body.items.length === 1 && leadNotifications.body.items.length === 1 && leadNotifications.body.items[0].leadId === leadList.body.items[0].id && audit.body.items.length >= 1 && audit.body.items.some((item) => item.entityType === 'lead' && item.action === 'lead.received') && leadNotifications.body.items[0].title === 'New lead needs follow-up' && notificationRead.body.read === true && readNotifications.body.items[0].read === true && technicianNotifications.response.status === 403, 'owner cannot see captured lead or audit trail');
   const converted = await request(`/api/leads/${leadList.body.items[0].id}/convert`, { ...jsonOptions('POST', { time: 'Tomorrow 9:00 AM' }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-lead-conversion' } });
