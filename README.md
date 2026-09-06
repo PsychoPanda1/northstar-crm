@@ -127,6 +127,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - The dashboard surfaces open customer requests as a live KPI alongside lead, appointment, and estimate risk
 - Customer request triage supports Low, Normal, High, and Urgent priority so safety-sensitive service issues reach owners immediately
 - The Requests workspace keeps that priority visible beside the customer message for dispatcher handoff
+- Global search also indexes and displays request priority so urgent customer work is discoverable from anywhere in the owner portal
 - The lead action queue flags uncontacted leads that breach the configurable response SLA (`NORTHSTAR_LEAD_RESPONSE_SLA_HOURS`) and records the first response timestamp when staff begin follow-up
 - The owner dashboard exposes a live `Leads at risk` KPI for uncontacted leads past that response SLA
 - The owner dashboard exposes a live `Late appointments` KPI for confirmed visits that have passed their normalized start time
