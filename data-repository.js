@@ -153,9 +153,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async getCustomReport(metrics = [], range = {}) {
+  async getCustomReport(metrics = [], range = {}, filters = {}) {
     if (!this.remote) throw new Error('API required for custom reporting');
-    const query = new URLSearchParams(); (Array.isArray(metrics) ? metrics : []).slice(0, 20).forEach((metric) => query.append('metric', metric)); if (range?.startDate) query.set('startDate', String(range.startDate)); if (range?.endDate) query.set('endDate', String(range.endDate));
+    const query = new URLSearchParams(); (Array.isArray(metrics) ? metrics : []).slice(0, 20).forEach((metric) => query.append('metric', metric)); if (range?.startDate) query.set('startDate', String(range.startDate)); if (range?.endDate) query.set('endDate', String(range.endDate)); Object.entries(filters || {}).slice(0, 4).forEach(([key, value]) => { if (value) query.set(key, String(value)); });
     const response = await fetch(`/api/reports/custom${query.toString() ? `?${query}` : ''}`, { headers: { authorization: `Bearer ${this.token}` } });
     if (!response.ok) throw new Error('custom report unavailable');
     return response.json();
@@ -182,9 +182,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async createCustomReportView(name, metrics, startDate = '', endDate = '', idempotencyKey = crypto.randomUUID()) {
+  async createCustomReportView(name, metrics, startDate = '', endDate = '', filters = {}, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for report views');
-    const response = await fetch('/api/reports/custom/views', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ name, metrics, startDate, endDate }) });
+    const response = await fetch('/api/reports/custom/views', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ name, metrics, startDate, endDate, filters }) });
     if (!response.ok) throw new Error('report view creation failed');
     return response.json();
   }
