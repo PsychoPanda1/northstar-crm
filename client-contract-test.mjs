@@ -165,7 +165,8 @@ assert(app.includes('Service history: ${item.serviceHistory.map'), 'customer pro
 assert(technician.includes('inventoryLocations') && technician.includes('locationId'), 'technician materials workflow does not expose stock location provenance');
 assert(app.includes('Edit asset') && repository.includes('updateAsset') && repository.includes('/api/assets/'), 'owner portal does not expose equipment record updates');
 assert(customer.includes('item.serviceHistory') && customer.includes('Equipment'), 'customer portal does not expose equipment service history');
-assert(customer.includes('Payment plan installment number') && customer.includes('installmentId:installment.id'), 'customer portal payment action does not target scheduled installments');
+assert(customer.includes('Payment plan installment number') && customer.includes('installmentId:installment.id') && customer.includes("details('Payment attempts'"), 'customer portal payment action does not target scheduled installments and attempts');
+assert(server.includes('paymentAttemptsFor') && server.includes('paymentAttempts: paymentAttemptsFor'), 'customer payment attempt history is not projected safely');
 assert(customer.includes('plan.assetName') && server.includes('savedPlan?.assetName'), 'customer portal does not expose recurring-plan equipment context');
 assert(customer.includes('data-estimate-option') && customer.includes('input[data-estimate-option]') && customer.includes('input.dataset.amount'), 'customer portal does not update estimate total for selected options');
 assert(app.includes('name="assetId"') && app.includes('syncPlanAssets') && repository.includes('assetId =') && repository.includes('assetId ? { assetId }'), 'service plan equipment selector is not wired through the owner portal');
