@@ -78,6 +78,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Owner/dispatcher review requests can be queued by SMS or email after completion, honoring channel opt-outs and deduplicating signed 72-hour review links
 - Customer status links and portals expose the recorded technician en-route timestamp when available
 - Existing customers can book another service directly from their secure portal using the tenant's available capacity and saved service location
+- Repeat customers can choose among saved service locations when booking, with the selected address preserved on the new job for accurate dispatch
 - Landing-page availability and idempotent online booking into the dispatch queue
 - Configurable online-booking auto-assignment selects the highest-scoring available qualified technician, while safely leaving unmatched bookings for dispatch review
 - Versioned, tenant-configurable guided intake fields render on the reusable booking page and persist validated answers on the resulting lead or job for service-specific triage

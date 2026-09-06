@@ -399,6 +399,7 @@ components:
         service: { type: string, minLength: 2, maxLength: 100 }
         catalogItemId: { type: string, maxLength: 120 }
         slotId: { type: string, maxLength: 120 }
+        locationId: { type: string, maxLength: 160, description: Customer-owned saved service location; omitted uses the primary location. }
         intakeAnswers:
           type: object
           additionalProperties: { oneOf: [{ type: string }, { type: boolean }] }

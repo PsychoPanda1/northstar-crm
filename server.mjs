@@ -643,6 +643,47 @@ const server = createServer(async (req, res) => {
     if (origin && ALLOWED_ORIGINS.has(origin)) { res.setHeader('access-control-allow-origin', origin); res.setHeader('vary', 'Origin'); }
     const publicMutationScope = pathname.startsWith('/api/public/technician-job') ? 'technician-field' : pathname.startsWith('/api/public/customer-portal') || pathname.startsWith('/api/public/job-status') || pathname.startsWith('/api/public/estimate/') || pathname === '/api/public/invoice/payment-intent' ? 'public-portal' : '';
     if (req.method === 'POST' && publicMutationScope && !allowPublicMutation(req, publicMutationScope)) return rateLimited(res, 'rate_limited');
+    if (pathname === '/api/public/customer-portal/book' && req.method === 'POST') {
+      const claims = readCustomerToken(requestUrl.searchParams.get('token'));
+      if (!claims) return json(res, 401, { error: 'invalid_customer_token' });
+      const profile = customerProfileFor(claims.tenantId, claims.customerId);
+      if (!profile) return json(res, 404, { error: 'customer_not_found' });
+      const saved = state.get(claims.tenantId);
+      const body = await readBody(req);
+      const requestedService = String(body.service || '').trim().slice(0, 100);
+      const catalogItemId = String(body.catalogItemId || '').trim();
+      const catalogItem = catalogItemId ? recordsFor(claims.tenantId, 'catalog').find((item) => item.id === catalogItemId && item.active !== false) : null;
+      if (catalogItemId && !catalogItem) return json(res, 404, { error: 'catalog_item_not_found' });
+      const service = String(requestedService || catalogItem?.name || '').trim().slice(0, 100);
+      const locationId = String(body.locationId || `${profile.customer.id}_primary`).trim();
+      const location = locationId === `${profile.customer.id}_primary` ? { id: locationId, address: profile.customer.location } : profile.locations.find((item) => item.id === locationId);
+      if (!location || !String(location.address || '').trim()) return json(res, 404, { error: 'location_not_found' });
+      const idempotencyKey = String(req.headers['idempotency-key'] || '').trim().slice(0, 100);
+      const preFingerprint = payloadFingerprint({ customerId: claims.customerId, service, catalogItemId, slotId: String(body.slotId || ''), locationId, intakeAnswers: body.intakeAnswers || {} });
+      if (idempotencyKey) { const existing = saved.jobs.find((item) => item.portalBookingIdempotencyKey === idempotencyKey); if (existing) { if (existing.portalBookingFingerprint !== preFingerprint) return json(res, 409, { error: 'idempotency_key_reused' }); return json(res, 200, { id: existing.id, booked: true, duplicate: true, notification: saved.messages.find((item) => item.jobId === existing.id && item.template === 'confirmation') || null, appointment: { slotId: existing.slotId, label: existing.time, startsAt: existing.startsAt, endsAt: existing.endsAt, timeZone: existing.timeZone }, locationId: existing.locationId || `${profile.customer.id}_primary` }); } }
+      const slot = availableBookingSlotRecordsFor(claims.tenantId, { days: 14, ...(catalogItem?.durationMinutes ? { durationMinutes: catalogItem.durationMinutes } : {}) }).find((item) => item.id === String(body.slotId));
+      if (!service || !slot) return json(res, 422, { error: 'service_and_available_time_required' });
+      const intakeResult = intakeAnswersFor(claims.tenantId, body.intakeAnswers);
+      if (intakeResult.error) return json(res, 422, { error: intakeResult.error, ...(intakeResult.fieldId ? { fieldId: intakeResult.fieldId } : {}) });
+      const fingerprint = payloadFingerprint({ customerId: claims.customerId, service, catalogItemId, slotId: slot.id, locationId, intakeAnswers: intakeResult.answers });
+      if (idempotencyKey) { const existing = saved.jobs.find((item) => item.portalBookingIdempotencyKey === idempotencyKey); if (existing) { if (existing.portalBookingFingerprint !== fingerprint) return json(res, 409, { error: 'idempotency_key_reused' }); return json(res, 200, { id: existing.id, booked: true, duplicate: true, appointment: { slotId: existing.slotId, label: existing.time, startsAt: existing.startsAt, endsAt: existing.endsAt, timeZone: existing.timeZone }, locationId: existing.locationId || `${profile.customer.id}_primary` }); } }
+      const job = { id: `${claims.tenantId}_job_${Date.now()}`, tenantId: claims.tenantId, customerId: claims.customerId, customer: profile.customer.name, location: String(location.address).trim(), locationId, ...(catalogItem ? { catalogItemId: catalogItem.id, pricebookItem: catalogItem.name, ...(catalogItem.category ? { pricebookCategoryAtCreation: catalogItem.category } : {}), ...(catalogItem.durationMinutes ? { pricebookDurationAtCreation: catalogItem.durationMinutes } : {}), ...(catalogItem.taxable !== undefined ? { pricebookTaxableAtCreation: catalogItem.taxable } : {}) } : {}), service: String(catalogItem?.name || service), technician: null, status: 'Unassigned', priority: 'Normal', time: slot.label, slotId: slot.id, startsAt: slot.startsAt, endsAt: slot.endsAt, timeZone: slot.timeZone, source: 'Customer portal booking', ...(Object.keys(intakeResult.answers).length ? { intakeAnswers: intakeResult.answers } : {}), checklist: checklistFor(catalogItem?.checklist), ...(idempotencyKey ? { portalBookingIdempotencyKey: idempotencyKey, portalBookingFingerprint: fingerprint } : {}) };
+      saved.jobs.unshift(job); const notification = queueJobNotification(saved, job, 'confirmation'); recordActivity(saved, profile.customer.name, 'Customer portal booking', `Booked ${job.service} for ${job.time} from the customer portal.`, 'Received'); recordAudit(saved, { name: profile.customer.name, role: 'customer' }, 'booking.received', 'job', job.id, `${job.service} · ${job.time} · customer portal · ${job.location}`); persist(); return json(res, 201, { id: job.id, booked: true, duplicate: false, notification, appointment: { slotId: slot.id, label: slot.label, startsAt: slot.startsAt, endsAt: slot.endsAt, timeZone: slot.timeZone }, locationId });
+    }
+    if (pathname === '/api/public/customer-portal' && req.method === 'GET') {
+      const claims = readCustomerToken(requestUrl.searchParams.get('token'));
+      if (!claims) return json(res, 401, { error: 'invalid_customer_token' });
+      const portal = customerPortalFor(claims.tenantId, claims.customerId);
+      if (!portal) return json(res, 404, { error: 'customer_not_found' });
+      const saved = state.get(claims.tenantId);
+      portal.locations = [{ id: `${claims.customerId}_primary`, label: 'Primary service address', address: portal.customer.location || 'Address pending' }, ...(saved.locations || []).filter((item) => item.customerId === claims.customerId).map((item) => ({ id: item.id, label: item.label, address: item.address }))];
+      portal.messages = customerMessagesFor(claims.tenantId, claims.customerId, portal.customer.name); portal.requests = customerRequestsFor(claims.tenantId, claims.customerId);
+      portal.jobs = portal.jobs.map((job) => ({ ...job, visits: (saved.jobs.find((item) => item.id === job.id)?.visits || []).map((visit) => ({ id: visit.id, sequence: visit.sequence, time: visit.time, technician: visit.technician || null, status: visit.status })) }));
+      portal.estimates = portal.estimates.map((estimate) => { const savedEstimate = saved.estimates.find((item) => item.id === estimate.id || (item.customer === portal.customer.name && item.service === estimate.service && item.value === estimate.value)); return savedEstimate?.subtotal !== undefined ? { ...estimate, subtotal: savedEstimate.subtotal, discount: savedEstimate.discount, taxRate: savedEstimate.taxRate, tax: savedEstimate.tax } : estimate; });
+      portal.invoices = portal.invoices.map((invoice) => { const savedInvoice = saved.invoices.find((item) => item.id === invoice.id); return savedInvoice && (savedInvoice.subtotal !== undefined || savedInvoice.lineItems?.length) ? { ...invoice, ...(savedInvoice.subtotal !== undefined ? { subtotal: savedInvoice.subtotal, discount: savedInvoice.discount, taxRate: savedInvoice.taxRate, tax: savedInvoice.tax } : {}), ...(savedInvoice.lineItems?.length ? { lineItems: savedInvoice.lineItems.map((item) => ({ description: item.description, quantity: item.quantity, unitPrice: item.unitPrice, amount: item.amount })) } : {}) } : invoice; });
+      portal.invoices = portal.invoices.map((invoice) => invoice.balance > 0 && invoice.status !== 'Paid' ? { ...invoice, paymentUrl: `/invoice.html?token=${encodeURIComponent(issueInvoiceToken(saved.invoices.find((item) => item.id === invoice.id) || invoice))}`, paymentLinkExpiresInHours: 72 } : invoice);
+      return json(res, 200, portal);
+    }
     const publicServicePaths = new Set(['/api/public/tenant', '/api/public/catalog', '/api/public/availability', '/api/public/bookings', '/api/public/leads']);
     const requestedPublicService = requestUrl.searchParams.get('service');
     if (publicServicePaths.has(pathname) && requestedPublicService && !Object.prototype.hasOwnProperty.call(serviceTenant, requestedPublicService)) return json(res, 404, { error: 'unknown_service' });

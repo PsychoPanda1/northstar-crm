@@ -72,5 +72,29 @@
   load();
 })();
 </script>
+<script>
+(() => {
+  let selectedLocationId = '';
+  const originalFetch = window.fetch.bind(window);
+  window.fetch = (input, init = {}) => {
+    const url = typeof input === 'string' ? input : input?.url || '';
+    if (selectedLocationId && url.includes('/api/public/customer-portal/book') && init.body) {
+      try { const body = JSON.parse(init.body); body.locationId = selectedLocationId; init = { ...init, body: JSON.stringify(body) }; } catch {}
+    }
+    return originalFetch(input, init);
+  };
+  document.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-action="book"]');
+    if (!button) return;
+    const locations = window.__northstarPortal?.locations || [];
+    if (!locations.length) return;
+    const choice = window.prompt('Choose a service location:\n' + locations.map((item, index) => `${index + 1}. ${item.label} · ${item.address}`).join('\n'), '1');
+    if (choice === null) { event.preventDefault(); event.stopImmediatePropagation(); return; }
+    const location = locations[Number(choice) - 1];
+    if (!location) { event.preventDefault(); event.stopImmediatePropagation(); return; }
+    selectedLocationId = location.id;
+  }, true);
+})();
+</script>
 </body>
 </html>

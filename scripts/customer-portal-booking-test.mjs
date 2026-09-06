@@ -23,13 +23,19 @@ try {
   const token = bookingBody.customerPortalAccessToken;
   const portal = await (await fetch(`${base}/api/public/customer-portal?token=${encodeURIComponent(token)}`)).json();
   assert(portal.availableBookingSlots?.length, 'customer portal booking slots unavailable');
-  const book = () => fetch(`${base}/api/public/customer-portal/book?token=${encodeURIComponent(token)}`, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': 'portal-booking-repeatable' }, body: JSON.stringify({ service: 'Drain cleaning', slotId: nextSlot.id, intakeAnswers: { issue_type: 'Clog or drain', urgency: 'This week' } }) });
+  const locationResponse = await fetch(`${base}/api/public/customer-portal/location?token=${encodeURIComponent(token)}`, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': 'portal-location-create' }, body: JSON.stringify({ mode: 'additional', label: 'Rental property', address: '22 Portal Lane' }) });
+  const locationBody = await locationResponse.json();
+  assert(locationResponse.status === 200 && locationBody.mode === 'additional' && locationBody.address === '22 Portal Lane', 'customer portal secondary location failed');
+  const updatedPortal = await (await fetch(`${base}/api/public/customer-portal?token=${encodeURIComponent(token)}`)).json();
+  const requestedLocationId = updatedPortal.locations?.find((item) => item.address === '22 Portal Lane')?.id;
+  assert(requestedLocationId, 'customer portal secondary location was not persisted');
+  const book = () => fetch(`${base}/api/public/customer-portal/book?token=${encodeURIComponent(token)}`, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': 'portal-booking-repeatable' }, body: JSON.stringify({ service: 'Drain cleaning', slotId: nextSlot.id, locationId: requestedLocationId, intakeAnswers: { issue_type: 'Clog or drain', urgency: 'This week' } }) });
   const response = await book();
   const body = await response.json();
   const duplicate = await book();
   const duplicateBody = await duplicate.json();
   const refreshedPortal = await (await fetch(`${base}/api/public/customer-portal?token=${encodeURIComponent(token)}`)).json();
-  assert(response.status === 201 && body.booked && body.notification?.template === 'confirmation' && duplicate.status === 200 && duplicateBody.duplicate && duplicateBody.id === body.id && duplicateBody.notification?.jobId === body.id && refreshedPortal.jobs?.some((job) => job.id === body.id && job.service === 'Drain cleaning'), 'customer portal booking idempotency or confirmation handoff failed');
+  assert(response.status === 201 && body.booked && body.locationId === requestedLocationId && body.notification?.template === 'confirmation' && duplicate.status === 200 && duplicateBody.duplicate && duplicateBody.id === body.id && duplicateBody.locationId === requestedLocationId && duplicateBody.notification?.jobId === body.id && refreshedPortal.jobs?.some((job) => job.id === body.id && job.service === 'Drain cleaning' && job.location === '22 Portal Lane'), 'customer portal booking idempotency, location, or confirmation handoff failed');
   console.log('Northstar customer portal booking test passed');
 } finally {
   server.kill();
