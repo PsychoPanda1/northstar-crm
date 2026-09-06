@@ -1,0 +1,34 @@
+services:
+  northstar:
+    build:
+      context: .
+    image: northstar-crm:local
+    restart: unless-stopped
+    ports:
+      - "${NORTHSTAR_PORT:-4173}:4173"
+    environment:
+      NODE_ENV: production
+      PORT: 4173
+      NORTHSTAR_SESSION_SECRET: "${NORTHSTAR_SESSION_SECRET:?Set NORTHSTAR_SESSION_SECRET in .env}"
+      NORTHSTAR_OWNER_EMAIL: "${NORTHSTAR_OWNER_EMAIL:?Set NORTHSTAR_OWNER_EMAIL in .env}"
+      NORTHSTAR_OWNER_PASSWORD_DIGEST: "${NORTHSTAR_OWNER_PASSWORD_DIGEST:?Set NORTHSTAR_OWNER_PASSWORD_DIGEST in .env}"
+      NORTHSTAR_OWNER_TENANT_ID: "${NORTHSTAR_OWNER_TENANT_ID:?Set NORTHSTAR_OWNER_TENANT_ID in .env}"
+      NORTHSTAR_PAYMENT_WEBHOOK_SECRET: "${NORTHSTAR_PAYMENT_WEBHOOK_SECRET:?Set NORTHSTAR_PAYMENT_WEBHOOK_SECRET in .env}"
+      NORTHSTAR_MESSAGE_WEBHOOK_SECRET: "${NORTHSTAR_MESSAGE_WEBHOOK_SECRET:?Set NORTHSTAR_MESSAGE_WEBHOOK_SECRET in .env}"
+      NORTHSTAR_CALL_WEBHOOK_SECRET: "${NORTHSTAR_CALL_WEBHOOK_SECRET:?Set NORTHSTAR_CALL_WEBHOOK_SECRET in .env}"
+      NORTHSTAR_FINANCING_WEBHOOK_SECRET: "${NORTHSTAR_FINANCING_WEBHOOK_SECRET:?Set NORTHSTAR_FINANCING_WEBHOOK_SECRET in .env}"
+      NORTHSTAR_DATA_FILE: /app/data/state.json
+      NORTHSTAR_SESSION_FILE: /app/data/state.json.sessions
+      NORTHSTAR_SQLITE_FILE: /app/data/northstar.sqlite
+      NORTHSTAR_BACKUP_FILE: /app/data/state.json.backup
+    volumes:
+      - northstar-data:/app/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4173/api/ready').then(r => { if (!r.ok) process.exit(1); }).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 5s
+      retries: 3
+
+volumes:
+  northstar-data:

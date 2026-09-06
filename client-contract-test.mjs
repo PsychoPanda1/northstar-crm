@@ -22,6 +22,7 @@ const tenantConfig = readFileSync(`${root}tenant-config.js`, 'utf8');
 const envExample = readFileSync(`${root}.env.example`, 'utf8');
 const containerRelease = readFileSync(`${root}.github/workflows/container-release.yml`, 'utf8');
 const ci = readFileSync(`${root}.github/workflows/ci.yml`, 'utf8');
+const compose = readFileSync(`${root}docker-compose.yml`, 'utf8');
 const robots = readFileSync(`${root}robots.txt`, 'utf8');
 const openapi = readFileSync(`${root}openapi.yaml`, 'utf8');
 const locationPicker = readFileSync(`${root}location-picker.js`, 'utf8');
@@ -33,6 +34,7 @@ assert(packageJson.scripts?.test?.endsWith('npm run test:ci-contracts') && packa
 assert(index.includes('data-required-permission="jobs:write"') && index.includes('data-required-permission="reports:read"') && app.includes('sessionPermissions') && app.includes("repository.previewOnly ? ['jobs:write', 'reports:read']") && app.includes('sessionRoleLabel'), 'portal UI must reflect authenticated role permissions without breaking local preview');
 assert(readFileSync(`${root}.github/workflows/ci.yml`, 'utf8').includes('run: npm test'), 'CI must invoke the complete release verification command');
 assert(ci.includes('run: npm test') && !ci.includes('node scripts/dispatch-filters-test.mjs') && !ci.includes('node scripts/tenant-manifest-test.mjs'), 'CI must keep one authoritative test suite instead of duplicating contract checks');
+assert(compose.includes('northstar-data:/app/data') && compose.includes('NORTHSTAR_SESSION_SECRET:?') && compose.includes('NORTHSTAR_PAYMENT_WEBHOOK_SECRET:?') && compose.includes('api/ready'), 'Compose deployment must require secrets, persist data, and expose the readiness gate');
 assert(readFileSync(`${root}.gitignore`, 'utf8').split(/\r?\n/).includes('.northstar-data.json'), 'private local state must remain ignored');
 assert(envExample.includes('NORTHSTAR_SESSION_SECRET=replace-with-32-plus-random-characters'), 'environment template must use an explicit session-secret placeholder');
 assert(server.includes('BACKUP_FILE') && server.includes('primaryPersisted') && envExample.includes('NORTHSTAR_BACKUP_FILE=/app/data/state.json.backup'), 'persistence recovery backup contract is missing');
