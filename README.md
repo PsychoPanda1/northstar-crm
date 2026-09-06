@@ -274,6 +274,8 @@ Additional current routes include `GET /api/openapi.yaml` (the canonical machine
 
 ## Next product slices
 
+Invoices support an owner-managed bill-to snapshot for commercial accounts, property managers, and multi-location operators, including payment terms separate from the service customer.
+
 Open estimates can now carry up to ten auditable HTTPS reference, before/after, or document links for customer-facing context through the signed estimate experience.
 
 Recurring plans can be scheduled as idempotent 1–12 visit series through `POST /api/plans/:id/schedule`, billed individually through `POST /api/plans/:id/invoice`, or billed in one active-plan cycle through `POST /api/plans/billing-cycle`; see [PORTAL_CONTRACT.md](PORTAL_CONTRACT.md) for normalized request shapes and lifecycle rules.
