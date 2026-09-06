@@ -240,7 +240,7 @@ Set `NORTHSTAR_PUBLIC_URL` to the deployed HTTPS origin so provider-delivered re
 
 Set `NORTHSTAR_MESSAGE_RETRY_LIMIT` from `0` to `5` to enable bounded automatic retries for transient message-provider timeouts and 408/409/425/429/5xx responses. Retries use a one-minute, five-minute, fifteen-minute, then thirty-minute backoff; missing recipients and other permanent 4xx failures remain visible as `Failed`, and each attempt uses the stable message ID as the provider idempotency key.
 
-For an additional JSON-adapter recovery layer, set `NORTHSTAR_BACKUP_FILE` to a separate path on the same persistent volume. Northstar copies the previous valid snapshot there before each write and uses it if the primary snapshot cannot be parsed at startup. The container's SQLite mode provides transactional single-host persistence; horizontally scaled production deployments still require a managed shared database and coordinated session strategy.
+For an additional JSON-adapter recovery layer, set `NORTHSTAR_BACKUP_FILE` to a separate path on the same persistent volume. Northstar copies the previous valid snapshot there before each write and uses it if the primary snapshot cannot be parsed at startup. The container's SQLite mode uses WAL, normal synchronous durability, and a bounded busy timeout for safer single-host concurrent readers/writers; horizontally scaled production deployments still require a managed shared database and coordinated session strategy.
 
 ### Publish a release image
 
