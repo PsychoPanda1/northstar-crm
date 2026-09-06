@@ -23,8 +23,9 @@ try {
   const headers = { authorization: `Bearer ${login.body.token}` };
   const middle = await request('/api/dispatch?date=2026-09-08', { headers });
   const last = await request('/api/dispatch?date=2026-09-09', { headers });
+  const summary = await request('/api/dispatch/route-summary?date=2026-09-08', { headers });
   const ids = middle.body.items?.map((item) => item.id) || [];
-  if (!login.response.ok || middle.response.status !== 200 || last.response.status !== 200 || !ids.includes('JOB-MULTI-DAY') || !ids.includes('JOB-SINGLE-DAY') || !last.body.items?.some((item) => item.id === 'JOB-MULTI-DAY')) throw new Error('multi-day jobs were not projected across every covered dispatch date');
+  if (!login.response.ok || middle.response.status !== 200 || last.response.status !== 200 || summary.response.status !== 200 || summary.body.totalStops !== 2 || !ids.includes('JOB-MULTI-DAY') || !ids.includes('JOB-SINGLE-DAY') || !last.body.items?.some((item) => item.id === 'JOB-MULTI-DAY')) throw new Error('multi-day jobs were not projected across every covered dispatch date');
   console.log('Northstar multi-day dispatch test passed');
 } finally {
   if (child && !child.killed) child.kill();
