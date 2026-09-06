@@ -88,6 +88,15 @@ class NorthstarDemoRepository {
     return (await response.json()).items;
   }
 
+  async listPage(type, { search = '', page = 1, pageSize = 50 } = {}) {
+    if (!this.remote) return { items: [], total: 0, page, pageSize, hasMore: false };
+    const query = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
+    if (search) query.set('search', search);
+    const response = await fetch(`/api/${type}?${query}`, { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('records unavailable');
+    return response.json();
+  }
+
   async listDispatchForDate(date) {
     if (!this.remote) throw new Error('API required for dated dispatch');
     const response = await fetch(`/api/dispatch?date=${encodeURIComponent(date)}`, { headers: { authorization: `Bearer ${this.token}` } });
