@@ -47,7 +47,7 @@ const child = spawn(process.execPath, ['server.mjs'], { cwd: root, env, stdio: '
 const invalidChild = spawn(process.execPath, ['server.mjs'], { cwd: root, env: { ...env, PORT: String(invalidPort), NORTHSTAR_DATA_FILE: invalidDataFile, NORTHSTAR_SESSION_FILE: invalidSessionFile, NORTHSTAR_REQUEST_RESPONSE_SLA_HOURS: '0', NORTHSTAR_OIDC_ISSUER: 'https://issuer.example.test' }, stdio: 'ignore' });
 const strictChild = spawn(process.execPath, ['server.mjs'], { cwd: root, env: { ...env, PORT: String(strictPort), NORTHSTAR_DATA_FILE: strictDataFile, NORTHSTAR_SESSION_FILE: strictSessionFile, NORTHSTAR_REQUIRE_LIVE_PROVIDERS: 'true' }, stdio: 'ignore' });
 const oidcOnlyChild = spawn(process.execPath, ['server.mjs'], { cwd: root, env: { ...env, PORT: String(oidcOnlyPort), NORTHSTAR_DATA_FILE: oidcOnlyDataFile, NORTHSTAR_SESSION_FILE: oidcOnlySessionFile, NORTHSTAR_OWNER_EMAIL: '', NORTHSTAR_OWNER_PASSWORD_DIGEST: '', NORTHSTAR_OWNERS_JSON: '[]', NORTHSTAR_STAFF_JSON: '[]', NORTHSTAR_OIDC_ISSUER: 'https://issuer.example.test', NORTHSTAR_OIDC_AUDIENCE: 'northstar-owner-portal', NORTHSTAR_OIDC_JWKS_URL: 'https://issuer.example.test/.well-known/jwks.json', NORTHSTAR_OIDC_ACCOUNTS_JSON: JSON.stringify([{ subject: 'oidc-owner', id: 'oidc-owner', name: 'OIDC Owner', role: 'owner', tenantId: 'johnson-service-co' }]) }, stdio: 'ignore' });
-const outboundUrlChild = spawn(process.execPath, ['server.mjs'], { cwd: root, env: { ...env, PORT: String(outboundUrlPort), NORTHSTAR_DATA_FILE: outboundUrlDataFile, NORTHSTAR_SESSION_FILE: outboundUrlSessionFile, NORTHSTAR_PUBLIC_URL: '', NORTHSTAR_MESSAGE_PROVIDER_URL: 'https://provider.example.test/messages' }, stdio: 'ignore' });
+const outboundUrlChild = spawn(process.execPath, ['server.mjs'], { cwd: root, env: { ...env, PORT: String(outboundUrlPort), NORTHSTAR_DATA_FILE: outboundUrlDataFile, NORTHSTAR_SESSION_FILE: outboundUrlSessionFile, NORTHSTAR_PUBLIC_URL: 'http://crm.example.test', NORTHSTAR_MESSAGE_PROVIDER_URL: 'https://provider.example.test/messages' }, stdio: 'ignore' });
 const base = `http://127.0.0.1:${port}`;
 const invalidBase = `http://127.0.0.1:${invalidPort}`;
 const strictBase = `http://127.0.0.1:${strictPort}`;
@@ -101,7 +101,7 @@ try {
     try { outboundUrlReady = await getJsonFrom(outboundUrlBase, '/api/ready'); } catch {}
     if (!outboundUrlReady) await new Promise((resolve) => setTimeout(resolve, 100));
   }
-  if (!outboundUrlReady || outboundUrlReady.response.status !== 503 || outboundUrlReady.body.checks?.publicUrlConfiguration !== false) throw new Error('provider-backed delivery did not require an HTTPS public URL');
+  if (!outboundUrlReady || outboundUrlReady.response.status !== 503 || outboundUrlReady.body.checks?.publicUrlConfiguration !== false) throw new Error('provider-backed delivery did not reject a non-HTTPS public URL');
   let oidcOnlyReady = null;
   for (let attempt = 0; attempt < 200 && !oidcOnlyReady; attempt += 1) {
     try { oidcOnlyReady = await getJsonFrom(oidcOnlyBase, '/api/ready'); } catch {}
