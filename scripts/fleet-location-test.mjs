@@ -27,11 +27,12 @@ try {
   const location = { eventId: 'fleet-event-1', tenantId, vehicleId, latitude: 32.7765, longitude: -79.9311, accuracy: 8, speed: 32.4, heading: 180, recordedAt: '2020-01-02T14:00:00.000Z', provider: 'test-gps' };
   const received = await signedPost('/api/webhooks/fleet/location', location);
   const duplicate = await signedPost('/api/webhooks/fleet/location', location);
+  const delayed = await signedPost('/api/webhooks/fleet/location', { ...location, eventId: 'fleet-event-0', latitude: 31.5, recordedAt: '2019-12-31T14:00:00.000Z' });
   const conflict = await signedPost('/api/webhooks/fleet/location', { ...location, latitude: 33 });
   const locations = await request('/api/vehicles/locations', { headers: { authorization: `Bearer ${login.body.token}` } });
   const saved = JSON.parse(readFileSync(dataFile, 'utf8'))[tenantId];
   const item = locations.body.items?.find((entry) => entry.vehicleId === vehicleId);
-  if (!login.response.ok || received.response.status !== 200 || duplicate.response.status !== 200 || !duplicate.body.duplicate || conflict.response.status !== 409 || locations.response.status !== 200 || item?.location?.latitude !== 32.7765 || item?.location?.speed !== 32.4 || item?.status !== 'stale' || saved.fleetLocationEvents?.length !== 1 || saved.vehicles?.[0]?.locationPings?.length !== 1) throw new Error('fleet telemetry did not validate, deduplicate, persist, or project safely');
+  if (!login.response.ok || received.response.status !== 200 || received.body.applied !== true || duplicate.response.status !== 200 || !duplicate.body.duplicate || delayed.response.status !== 200 || delayed.body.applied !== false || conflict.response.status !== 409 || locations.response.status !== 200 || item?.location?.latitude !== 32.7765 || item?.location?.speed !== 32.4 || item?.status !== 'stale' || saved.fleetLocationEvents?.length !== 2 || saved.vehicles?.[0]?.locationPings?.length !== 1 || !saved.auditEvents?.some((entry) => entry.action === 'vehicle.location.stale_event_ignored')) throw new Error('fleet telemetry did not validate, deduplicate, retain, or order events safely');
   console.log('Northstar fleet location test passed');
 } finally {
   if (child && !child.killed) child.kill();

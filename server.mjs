@@ -532,12 +532,16 @@ const server = createServer(async (req, res) => {
       const event = { eventId, tenantId, vehicleId, location, receivedAt: new Date().toISOString(), payloadFingerprint: payloadFingerprint(body) };
       saved.fleetLocationEvents.unshift(event);
       saved.fleetLocationEvents = saved.fleetLocationEvents.slice(0, 500);
-      vehicle.locationPing = location;
-      vehicle.locationPings = [...(Array.isArray(vehicle.locationPings) ? vehicle.locationPings : []), location].slice(-100);
-      vehicle.locationUpdatedAt = location.recordedAt;
-      recordAudit(saved, { name: 'fleet provider', role: 'system' }, 'vehicle.location.updated', 'vehicle', vehicle.id, `${vehicle.name} · ${location.latitude},${location.longitude}`);
+      const currentRecordedAt = Date.parse(vehicle.locationPing?.recordedAt || '');
+      const applied = !Number.isFinite(currentRecordedAt) || parsedRecordedAt >= currentRecordedAt;
+      if (applied) {
+        vehicle.locationPing = location;
+        vehicle.locationPings = [...(Array.isArray(vehicle.locationPings) ? vehicle.locationPings : []), location].slice(-100);
+        vehicle.locationUpdatedAt = location.recordedAt;
+      }
+      recordAudit(saved, { name: 'fleet provider', role: 'system' }, applied ? 'vehicle.location.updated' : 'vehicle.location.stale_event_ignored', 'vehicle', vehicle.id, `${vehicle.name} · ${location.latitude},${location.longitude} · ${location.recordedAt}`);
       persist();
-      return json(res, 200, { eventId, vehicleId, recordedAt, duplicate: false });
+      return json(res, 200, { eventId, vehicleId, recordedAt, applied, duplicate: false });
     }
     const inventoryAdjustMatch = pathname.match(/^\/api\/materials\/([^/]+)\/adjust$/);
     if (inventoryAdjustMatch && req.method === 'POST') {
