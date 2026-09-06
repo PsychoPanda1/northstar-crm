@@ -31,6 +31,7 @@ assert(readFileSync(`${root}.github/workflows/ci.yml`, 'utf8').includes('run: np
 assert(readFileSync(`${root}.gitignore`, 'utf8').split(/\r?\n/).includes('.northstar-data.json'), 'private local state must remain ignored');
 assert(envExample.includes('NORTHSTAR_SESSION_SECRET=replace-with-32-plus-random-characters'), 'environment template must use an explicit session-secret placeholder');
 assert(server.includes('BACKUP_FILE') && server.includes('primaryPersisted') && envExample.includes('NORTHSTAR_BACKUP_FILE=/app/data/state.json.backup'), 'persistence recovery backup contract is missing');
+assert(server.includes("OIDC_ACCOUNTS.some((item) => item.role === 'owner' && tenants[item.tenantId])"), 'production readiness must recognize an OIDC-provisioned owner');
 assert(containerRelease.includes('docker/build-push-action@v6') && containerRelease.includes('packages: write') && containerRelease.includes('actions/attest-build-provenance@v2') && containerRelease.includes('attestations: write') && containerRelease.includes("'v*.*.*'"), 'container release workflow must publish only through an explicit tagged release path');
 assert(robots.includes('User-agent: *') && robots.includes('Disallow: /') && server.includes("'.txt': 'text/plain; charset=utf-8'"), 'CRM host must prevent crawler discovery of private portal pages');
 assert(openapi.includes('openapi: 3.0.3') && openapi.includes('/api/public/tenant:') && openapi.includes('/api/public/bookings:') && openapi.includes('IdempotencyKey'), 'public landing-page OpenAPI contract is incomplete');

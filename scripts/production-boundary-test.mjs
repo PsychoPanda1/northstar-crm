@@ -11,10 +11,13 @@ const dataFile = join(tmpdir(), `northstar-production-boundary-${process.pid}-${
 const sessionFile = `${dataFile}.sessions`;
 const invalidPort = port + 1;
 const strictPort = port + 2;
+const oidcOnlyPort = port + 3;
 const invalidDataFile = join(tmpdir(), `northstar-production-boundary-invalid-${process.pid}-${Date.now()}.json`);
 const invalidSessionFile = `${invalidDataFile}.sessions`;
 const strictDataFile = join(tmpdir(), `northstar-production-boundary-strict-${process.pid}-${Date.now()}.json`);
 const strictSessionFile = `${strictDataFile}.sessions`;
+const oidcOnlyDataFile = join(tmpdir(), `northstar-production-boundary-oidc-${process.pid}-${Date.now()}.json`);
+const oidcOnlySessionFile = `${oidcOnlyDataFile}.sessions`;
 const secret = 'northstar-production-boundary-secret-32';
 const password = 'boundary-test-password';
 const env = {
@@ -40,14 +43,17 @@ const env = {
 const child = spawn(process.execPath, ['server.mjs'], { cwd: root, env, stdio: 'ignore' });
 const invalidChild = spawn(process.execPath, ['server.mjs'], { cwd: root, env: { ...env, PORT: String(invalidPort), NORTHSTAR_DATA_FILE: invalidDataFile, NORTHSTAR_SESSION_FILE: invalidSessionFile, NORTHSTAR_REQUEST_RESPONSE_SLA_HOURS: '0', NORTHSTAR_OIDC_ISSUER: 'https://issuer.example.test' }, stdio: 'ignore' });
 const strictChild = spawn(process.execPath, ['server.mjs'], { cwd: root, env: { ...env, PORT: String(strictPort), NORTHSTAR_DATA_FILE: strictDataFile, NORTHSTAR_SESSION_FILE: strictSessionFile, NORTHSTAR_REQUIRE_LIVE_PROVIDERS: 'true' }, stdio: 'ignore' });
+const oidcOnlyChild = spawn(process.execPath, ['server.mjs'], { cwd: root, env: { ...env, PORT: String(oidcOnlyPort), NORTHSTAR_DATA_FILE: oidcOnlyDataFile, NORTHSTAR_SESSION_FILE: oidcOnlySessionFile, NORTHSTAR_OWNER_EMAIL: '', NORTHSTAR_OWNER_PASSWORD_DIGEST: '', NORTHSTAR_OWNERS_JSON: '[]', NORTHSTAR_STAFF_JSON: '[]', NORTHSTAR_OIDC_ISSUER: 'https://issuer.example.test', NORTHSTAR_OIDC_AUDIENCE: 'northstar-owner-portal', NORTHSTAR_OIDC_JWKS_URL: 'https://issuer.example.test/.well-known/jwks.json', NORTHSTAR_OIDC_ACCOUNTS_JSON: JSON.stringify([{ subject: 'oidc-owner', id: 'oidc-owner', name: 'OIDC Owner', role: 'owner', tenantId: 'johnson-service-co' }]) }, stdio: 'ignore' });
 const base = `http://127.0.0.1:${port}`;
 const invalidBase = `http://127.0.0.1:${invalidPort}`;
 const strictBase = `http://127.0.0.1:${strictPort}`;
+const oidcOnlyBase = `http://127.0.0.1:${oidcOnlyPort}`;
 const cleanup = () => {
   child.kill();
   invalidChild.kill();
   strictChild.kill();
-  for (const file of [dataFile, sessionFile, `${dataFile}.tmp`, invalidDataFile, invalidSessionFile, `${invalidDataFile}.tmp`, strictDataFile, strictSessionFile, `${strictDataFile}.tmp`]) {
+  oidcOnlyChild.kill();
+  for (const file of [dataFile, sessionFile, `${dataFile}.tmp`, invalidDataFile, invalidSessionFile, `${invalidDataFile}.tmp`, strictDataFile, strictSessionFile, `${strictDataFile}.tmp`, oidcOnlyDataFile, oidcOnlySessionFile, `${oidcOnlyDataFile}.tmp`]) {
     if (existsSync(file)) unlinkSync(file);
   }
 };
@@ -84,6 +90,12 @@ try {
     if (!strictReady) await new Promise((resolve) => setTimeout(resolve, 100));
   }
   if (!strictReady || strictReady.response.status !== 503 || strictReady.body.checks?.liveMessageProvider !== false || strictReady.body.checks?.livePaymentProvider !== false) throw new Error('live provider requirement did not fail production readiness');
+  let oidcOnlyReady = null;
+  for (let attempt = 0; attempt < 200 && !oidcOnlyReady; attempt += 1) {
+    try { oidcOnlyReady = await getJsonFrom(oidcOnlyBase, '/api/ready'); } catch {}
+    if (!oidcOnlyReady) await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  if (!oidcOnlyReady || !oidcOnlyReady.response.ok || oidcOnlyReady.body.checks?.identityProviderConfiguration !== true || oidcOnlyReady.body.checks?.ownerAuth !== true) throw new Error('OIDC-only owner configuration did not become production-ready');
 
   const login = await getJson('/api/auth/login', {
     method: 'POST',
