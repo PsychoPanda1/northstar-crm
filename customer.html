@@ -96,5 +96,39 @@
   }, true);
 })();
 </script>
+<script>
+(() => {
+  const token = new URLSearchParams(location.search).get('token');
+  if (!token) return;
+  const query = `?token=${encodeURIComponent(token)}`;
+  const message = (value) => { const target = document.querySelector('#message'); if (target) target.textContent = value; };
+  const dialog = document.createElement('dialog');
+  dialog.setAttribute('aria-labelledby', 'preferences-title');
+  dialog.innerHTML = '<form method="dialog" style="min-width:min(420px,78vw);padding:8px"><h2 id="preferences-title">Messaging preferences</h2><p>Choose which appointment and service messages you would like to receive.</p><label style="display:block;margin:14px 0"><input name="sms" type="checkbox"> SMS updates</label><label style="display:block;margin:14px 0"><input name="email" type="checkbox"> Email updates</label><div style="display:flex;gap:8px;justify-content:flex-end"><button value="cancel">Cancel</button><button id="save-preferences" value="default">Save preferences</button></div><p id="preferences-error" role="alert" style="color:#a34b35"></p></form>';
+  document.body.append(dialog);
+  const form = dialog.querySelector('form');
+  const open = async (event) => {
+    const button = event.target.closest('[data-action="preferences"]');
+    if (!button) return;
+    event.preventDefault(); event.stopImmediatePropagation();
+    const current = await fetch('/api/public/customer-portal/preferences' + query).then((result) => result.ok ? result.json() : {}).catch(() => ({}));
+    form.elements.sms.checked = !current.contactPreferences?.smsOptOut;
+    form.elements.email.checked = !current.contactPreferences?.emailOptOut;
+    form.querySelector('#preferences-error').textContent = '';
+    dialog.showModal();
+  };
+  document.addEventListener('click', open, true);
+  form.addEventListener('submit', async (event) => {
+    if (event.submitter?.value !== 'default') return;
+    event.preventDefault();
+    const save = form.querySelector('#save-preferences'); save.disabled = true;
+    try {
+      const response = await fetch('/api/public/customer-portal/preferences' + query, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({ smsOptOut: !form.elements.sms.checked, emailOptOut: !form.elements.email.checked }) });
+      if (!response.ok) throw new Error('save_failed');
+      dialog.close(); message('Messaging preferences updated.');
+    } catch { form.querySelector('#preferences-error').textContent = 'Preferences could not be updated. Please try again.'; } finally { save.disabled = false; }
+  });
+})();
+</script>
 </body>
 </html>
