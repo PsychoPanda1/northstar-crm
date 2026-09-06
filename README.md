@@ -222,6 +222,8 @@ The image runs as the unprivileged `node` user in production mode, stores transa
 
 Set `NORTHSTAR_REQUIRE_LIVE_PROVIDERS=true` for a production deployment that must not become ready until both the server-side message provider and payment provider URLs are configured. Leave it `false` only for an intentional preview or a deployment that does not yet accept provider-backed communications or payments; `/api/integrations/health` still reports each provider's live configuration status to authenticated staff.
 
+Set `NORTHSTAR_PUBLIC_URL` to the deployed HTTPS origin so provider-delivered review and payment links are clickable outside the CRM host.
+
 Set `NORTHSTAR_MESSAGE_RETRY_LIMIT` from `0` to `5` to enable bounded automatic retries for transient message-provider timeouts and 408/409/425/429/5xx responses. Retries use a one-minute, five-minute, fifteen-minute, then thirty-minute backoff; missing recipients and other permanent 4xx failures remain visible as `Failed`, and each attempt uses the stable message ID as the provider idempotency key.
 
 For an additional JSON-adapter recovery layer, set `NORTHSTAR_BACKUP_FILE` to a separate path on the same persistent volume. Northstar copies the previous valid snapshot there before each write and uses it if the primary snapshot cannot be parsed at startup. The container's SQLite mode provides transactional single-host persistence; horizontally scaled production deployments still require a managed shared database and coordinated session strategy.
