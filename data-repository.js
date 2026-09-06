@@ -653,6 +653,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async fulfillServicePlanRequest(id, note, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for service plan request fulfillment');
+    const response = await fetch(`/api/requests/${encodeURIComponent(id)}/fulfill-plan`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ note }) });
+    if (!response.ok) throw new Error('service plan request fulfillment failed');
+    return response.json();
+  }
+
   async listTasks(includeCompleted = false) {
     if (!this.remote) return (this.state.customTasks || []).filter((item) => includeCompleted || item.status !== 'Completed');
     const result = await this.listPage('tasks', { includeCompleted, page: 1, pageSize: 200 });
