@@ -25,6 +25,7 @@
     "test:lead-bulk-status": "node scripts/lead-bulk-status-test.mjs",
     "test:lead-sla": "node scripts/lead-sla-test.mjs",
     "test:request-conversion": "node scripts/request-conversion-test.mjs",
+    "test:quote-to-cash": "node scripts/quote-to-cash-test.mjs",
     "test:persistence-recovery": "node scripts/persistence-recovery-test.mjs",
     "test:automation-worker": "node scripts/automation-worker-test.mjs",
     "test:message-retry": "node scripts/message-retry-test.mjs",

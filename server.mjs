@@ -1835,8 +1835,10 @@ if (pathname === '/api/invoices' && req.method === 'POST') { const claims = auth
       if (job.status !== 'Completed') return json(res, 409, { error: 'completed_job_required' });
       if (!job.customerId) return json(res, 409, { error: 'customer_required_for_invoice' });
       const body = await readBody(req);
-      const requestedAmount = body.amount === undefined ? null : Number(body.amount);
-      const rawLineItems = Array.isArray(body.lineItems) ? body.lineItems.slice(0, 20) : [];
+      const sourceEstimate = job.estimateId ? saved.estimates.find((item) => item.id === job.estimateId) : null;
+      const hasExplicitPricing = body.amount !== undefined || body.subtotal !== undefined || body.discount !== undefined || body.taxRate !== undefined || Array.isArray(body.lineItems);
+      const requestedAmount = body.amount === undefined ? (!hasExplicitPricing && sourceEstimate ? Number(sourceEstimate.amount) : null) : Number(body.amount);
+      const rawLineItems = Array.isArray(body.lineItems) ? body.lineItems.slice(0, 20) : (!hasExplicitPricing && sourceEstimate ? (sourceEstimate.lineItems || []).slice(0, 20) : []);
       const lineItems = rawLineItems.map((item) => {
         const description = String(item.description || '').trim().slice(0, 120);
         const quantity = Number(item.quantity);
@@ -1845,11 +1847,11 @@ if (pathname === '/api/invoices' && req.method === 'POST') { const claims = auth
       });
       const due = String(body.due || '30 days').slice(0, 80);
       const subtotal = body.subtotal === undefined ? (lineItems.length ? Number(lineItems.reduce((sum, item) => sum + item.amount, 0).toFixed(2)) : requestedAmount) : Number(body.subtotal);
-      const discount = Number(body.discount ?? 0);
-      const taxRate = Number(body.taxRate ?? 0);
+      const discount = Number(body.discount ?? (!hasExplicitPricing && sourceEstimate ? sourceEstimate.discount : 0));
+      const taxRate = Number(body.taxRate ?? (!hasExplicitPricing && sourceEstimate ? sourceEstimate.taxRate : 0));
       const taxableSubtotal = subtotal - discount;
       const amount = Number((taxableSubtotal + taxableSubtotal * taxRate / 100).toFixed(2));
-      const pricingRequested = body.subtotal !== undefined || body.discount !== undefined || body.taxRate !== undefined || lineItems.length > 0;
+      const pricingRequested = hasExplicitPricing || Boolean(sourceEstimate && !hasExplicitPricing);
       const validLineItems = lineItems.every((item) => item.description.length >= 2 && Number.isFinite(item.quantity) && item.quantity > 0 && item.quantity <= 1000 && Number.isFinite(item.unitPrice) && item.unitPrice > 0 && item.amount > 0);
       const lineItemsMatchSubtotal = !lineItems.length || Math.round(lineItems.reduce((sum, item) => sum + item.amount, 0) * 100) === Math.round(subtotal * 100);
       const validPricing = Number.isFinite(subtotal) && subtotal > 0 && Number.isFinite(discount) && discount >= 0 && discount <= subtotal && Number.isFinite(taxRate) && taxRate >= 0 && taxRate <= 30 && Number.isFinite(amount) && amount > 0 && amount <= 1000000 && validLineItems && lineItemsMatchSubtotal && (!pricingRequested || requestedAmount === null || Math.round(requestedAmount * 100) === Math.round(amount * 100));
@@ -1865,7 +1867,7 @@ if (pathname === '/api/invoices' && req.method === 'POST') { const claims = auth
       const existing = saved.invoices.find((item) => item.jobId === job.id || (job.estimateId && item.estimateId === job.estimateId));
       if (existing) return json(res, 409, { error: 'job_invoice_already_exists', invoiceId: existing.id });
       if (!validPricing) return json(res, 422, { error: 'valid_job_invoice_pricing_required' });
-  const invoice = { id: `INV-${Date.now()}`, tenantId: claims.tenantId, customerId: job.customerId, jobId: job.id, customer: job.customer, value: `$${amount.toFixed(2)}`, amount, ...(lineItems.length ? { lineItems } : {}), ...(pricingRequested ? { subtotal, discount, taxRate, tax: Number((taxableSubtotal * taxRate / 100).toFixed(2)) } : {}), paidAmount: 0, balance: amount, status: 'Due', due, createdAt: new Date().toISOString(), ...(idempotencyKey ? { jobInvoiceIdempotencyKey: idempotencyKey, jobInvoiceFingerprint: fingerprint } : {}) };
+  const invoice = { id: `INV-${Date.now()}`, tenantId: claims.tenantId, customerId: job.customerId, jobId: job.id, ...(sourceEstimate ? { estimateId: sourceEstimate.id } : {}), customer: job.customer, value: `$${amount.toFixed(2)}`, amount, ...(lineItems.length ? { lineItems } : {}), ...(pricingRequested ? { subtotal, discount, taxRate, tax: Number((taxableSubtotal * taxRate / 100).toFixed(2)) } : {}), paidAmount: 0, balance: amount, status: 'Due', due, createdAt: new Date().toISOString(), ...(idempotencyKey ? { jobInvoiceIdempotencyKey: idempotencyKey, jobInvoiceFingerprint: fingerprint } : {}) };
       saved.invoices.unshift(invoice);
       recordActivity(saved, job.customer, 'Invoice', `Invoice ${invoice.id} created for completed ${job.service}.`, invoice.status);
       recordAudit(saved, claims, 'invoice.created', 'invoice', invoice.id, `${job.id} · ${invoice.customer} · ${invoice.value}`);
