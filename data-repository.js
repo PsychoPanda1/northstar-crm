@@ -508,6 +508,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async bulkUpdateLeadStatus(leadIds, status, note = '', idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for bulk lead status updates');
+    const response = await fetch('/api/leads/bulk-status', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ leadIds, status, ...(note ? { note } : {}) }) });
+    if (!response.ok) throw new Error('bulk lead status update failed');
+    return response.json();
+  }
+
   async createCustomer(name, phone, location, email = '') {
     if (!this.remote) throw new Error('API required for customer creation');
     const response = await fetch('/api/customers', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({ name, phone, location, ...(email ? { email } : {}) }) });
