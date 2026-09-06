@@ -94,6 +94,9 @@ try {
   const headers = { authorization: `Bearer ${login.body.token}` };
   const snapshot = await getJson('/api/export?type=tenant-snapshot', { headers });
   if (!snapshot.response.ok || !snapshot.response.headers.get('content-type')?.includes('application/json') || snapshot.body.schemaVersion !== 1 || snapshot.body.tenant?.slug !== 'johnson-service-co' || Object.values(snapshot.body.collections || {}).some((items) => !Array.isArray(items))) throw new Error('tenant snapshot export was not safe or tenant-scoped');
+  const snapshotValidation = await getJson('/api/import/tenant-snapshot/validate', { method: 'POST', headers: { ...headers, 'content-type': 'application/json' }, body: JSON.stringify(snapshot.body) });
+  const mismatchedSnapshotValidation = await getJson('/api/import/tenant-snapshot/validate', { method: 'POST', headers: { ...headers, 'content-type': 'application/json' }, body: JSON.stringify({ ...snapshot.body, tenant: { ...snapshot.body.tenant, slug: 'other-tenant' } }) });
+  if (!snapshotValidation.response.ok || snapshotValidation.body.valid !== true || mismatchedSnapshotValidation.body.valid !== false || !mismatchedSnapshotValidation.body.errors?.includes('snapshot_tenant_mismatch')) throw new Error('tenant snapshot validation did not fail closed');
   const collections = await Promise.all(['customers', 'leads', 'estimates', 'invoices', 'plans', 'activities', 'dispatch', 'team'].map((type) => getJson(`/api/${type}`, { headers })));
   if (collections.some(({ body }) => Array.isArray(body.items) && body.items.length > 0)) throw new Error('preview records exposed through authenticated API');
   const dashboard = await getJson('/api/dashboard', { headers });
