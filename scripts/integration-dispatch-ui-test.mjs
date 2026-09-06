@@ -53,7 +53,10 @@ const required = [
   'repository.invoicePaymentLink(button.dataset.invoiceId)',
   'select-visible-leads',
   'select-visible-requests',
-  'Clear visible ${view} selection'
+  'Clear visible ${view} selection',
+  'Schedule service',
+  'northstarScheduleCustomerId',
+  'observeDialogSelection(button.dataset.customerId)'
 ];
 for (const snippet of required) {
   if (!source.includes(snippet)) throw new Error(`integration dispatch UI wiring missing: ${snippet}`);
