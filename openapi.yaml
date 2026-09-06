@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Northstar CRM Public Integration API
-  version: 2.0.0
+  version: 2.1.0
   description: Public, tenant-routed contract for service landing pages. Owner records and credentials are never exposed by these endpoints.
 servers:
   - url: https://crm.example.com
@@ -112,6 +112,87 @@ paths:
         '409': { $ref: '#/components/responses/IdempotencyConflict' }
         '422': { $ref: '#/components/responses/ValidationError' }
         '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/job-status:
+    get:
+      summary: Read a customer-safe appointment status
+      parameters:
+        - $ref: '#/components/parameters/StatusToken'
+      responses:
+        '200':
+          description: Customer-safe job status and reschedule choices
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/JobStatus' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /api/public/job-status/reschedule:
+    post:
+      summary: Reschedule an appointment from a status link
+      parameters:
+        - $ref: '#/components/parameters/StatusToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RescheduleRequest' }
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/customer-portal:
+    get:
+      summary: Read a customer-safe service portal
+      parameters:
+        - $ref: '#/components/parameters/CustomerToken'
+      responses:
+        '200':
+          description: Customer-owned appointments, requests, estimates, invoices, and service plans
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CustomerPortal' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /api/public/customer-portal/availability:
+    get:
+      summary: List customer portal booking availability
+      parameters:
+        - $ref: '#/components/parameters/CustomerToken'
+        - name: catalogItemId
+          in: query
+          schema: { type: string, maxLength: 120 }
+      responses:
+        '200':
+          description: Capacity-aware slots for the selected customer-safe service
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [slots]
+                properties:
+                  slots:
+                    type: array
+                    items: { $ref: '#/components/schemas/Slot' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/public/customer-portal/book:
+    post:
+      summary: Book another service from the customer portal
+      parameters:
+        - $ref: '#/components/parameters/CustomerToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PortalBookingRequest' }
+      responses:
+        '201': { $ref: '#/components/responses/MutationAccepted' }
+        '200': { $ref: '#/components/responses/Duplicate' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
 components:
   parameters:
     Service:
@@ -124,6 +205,16 @@ components:
       in: header
       required: true
       schema: { type: string, minLength: 8, maxLength: 100 }
+    StatusToken:
+      name: token
+      in: query
+      required: true
+      schema: { type: string, minLength: 20, maxLength: 400 }
+    CustomerToken:
+      name: token
+      in: query
+      required: true
+      schema: { type: string, minLength: 20, maxLength: 400 }
   schemas:
     TenantManifest:
       type: object
@@ -209,6 +300,43 @@ components:
               type: array
               maxItems: 12
               items: { type: string, minLength: 2, maxLength: 120 }
+    PortalBookingRequest:
+      type: object
+      required: [service, slotId]
+      properties:
+        service: { type: string, minLength: 2, maxLength: 100 }
+        catalogItemId: { type: string, maxLength: 120 }
+        slotId: { type: string, maxLength: 120 }
+        intakeAnswers:
+          type: object
+          additionalProperties: { oneOf: [{ type: string }, { type: boolean }] }
+    RescheduleRequest:
+      type: object
+      required: [slotId]
+      properties:
+        slotId: { type: string, maxLength: 120 }
+    JobStatus:
+      type: object
+      required: [service, status, time, availableRescheduleSlots]
+      properties:
+        service: { type: string }
+        location: { type: string }
+        status: { type: string }
+        time: { type: string }
+        availableRescheduleSlots:
+          type: array
+          items: { $ref: '#/components/schemas/Slot' }
+    CustomerPortal:
+      type: object
+      required: [customer, jobs, catalog]
+      properties:
+        customer: { type: object }
+        catalog:
+          type: array
+          items: { $ref: '#/components/schemas/CatalogItem' }
+        jobs:
+          type: array
+          items: { type: object }
     Error:
       type: object
       required: [error]
@@ -223,6 +351,15 @@ components:
     UnknownService:
       description: Service key is not configured
       content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    Unauthorized:
+      description: Missing or invalid signed customer token
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    NotFound:
+      description: Customer or catalog item was not found
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    MutationAccepted:
+      description: Mutation was accepted
+      content: { application/json: { schema: { type: object, additionalProperties: true } } }
     ValidationError:
       description: Request failed bounded validation
       content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
