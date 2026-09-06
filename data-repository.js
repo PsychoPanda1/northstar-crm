@@ -990,6 +990,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async addEstimateMedia(estimateId, url, caption = 'Supporting estimate image', kind = 'reference', idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for estimate media');
+    const response = await fetch(`/api/estimates/${encodeURIComponent(estimateId)}/media`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ url, caption, kind }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'estimate media failed');
+    return response.json();
+  }
+
   async updateCallOutcome(callId, outcome, note = '', idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for call outcomes');
     const response = await fetch(`/api/calls/${encodeURIComponent(callId)}/outcome`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ outcome, note }) });

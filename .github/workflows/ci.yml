@@ -44,6 +44,8 @@ jobs:
         run: node scripts/inbound-lead-message-test.mjs
       - name: Run tenant snapshot import test
         run: node scripts/snapshot-import-test.mjs
+      - name: Run estimate media test
+        run: node scripts/estimate-media-test.mjs
       - name: Check integration dispatch UI wiring
         run: node scripts/integration-dispatch-ui-test.mjs
       - name: Check integration dispatch permissions
