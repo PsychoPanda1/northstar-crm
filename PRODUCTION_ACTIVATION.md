@@ -48,6 +48,21 @@ curl -i https://crm.example.com/api/ready
 curl -i https://crm.example.com/api/health
 ```
 
+The repository also provides a bounded deployment verifier. It requires HTTPS,
+checks health, readiness, and the canonical OpenAPI contract, and can validate a
+configured tenant manifest without printing credentials:
+
+```sh
+NORTHSTAR_DEPLOYMENT_URL=https://crm.example.com \
+NORTHSTAR_DEPLOYMENT_SERVICE=your-service \
+npm run verify:deployment
+```
+
+For a local loopback check only, add
+`NORTHSTAR_DEPLOYMENT_ALLOW_HTTP=true`. A passing verifier is necessary but not
+sufficient: it does not prove provider settlement, identity-provider behavior,
+backup restoration, or the complete customer journey.
+
 `/api/ready` must return HTTP 200 with every returned check true. Validate at least one complete tenant journey: landing-page lead or booking → customer → estimate → approval → scheduled job → technician closeout → invoice → signed payment settlement → customer portal conversation. Confirm the corresponding audit events, provider delivery states, notifications, and customer-safe payloads.
 
 ## 5. Release and handoff

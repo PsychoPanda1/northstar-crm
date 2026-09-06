@@ -47,6 +47,7 @@
     "test": "npm run check && npm run test:html-scripts && npm run test:landing-client && npm run test:smoke && npm run test:production-boundary && npm run test:oidc-auth && npm run test:customer-merge && npm run test:sqlite-storage && npm run test:intake-fields && npm run test:accounting-export && npm run test:customer-portal-booking && npm run test:catalog-idempotency && npm run test:lead-assignment && npm run test:lead-bulk-status && npm run test:lead-sla && npm run test:request-conversion && npm run test:persistence-recovery && npm run test:automation-worker && npm run test:message-retry && npm run test:rate-limit && npm run test:search-pagination && npm run test:ci-contracts",
     "test:document-provider": "node scripts/document-provider-test.mjs",
     "test:user-invite": "node scripts/user-invite-test.mjs",
-    "test:custom-task": "node scripts/custom-task-test.mjs"
+    "test:custom-task": "node scripts/custom-task-test.mjs",
+    "verify:deployment": "node scripts/verify-deployment.mjs"
   }
 }
