@@ -75,6 +75,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Automatic customer notifications when jobs are assigned, en route, or completed, with deduplication before provider delivery
 - Customer status links and portals expose the recorded technician en-route timestamp when available
 - Landing-page availability and idempotent online booking into the dispatch queue
+- Versioned, tenant-configurable guided intake fields render on the reusable booking page and persist validated answers on the resulting lead or job for service-specific triage
 - Environment-driven tenant and service routing supports adding new landing-page businesses without changing server source
 - Configured tenants can expose booking start/end hours, slot intervals, operating weekdays, and blackout dates through `NORTHSTAR_TENANTS_JSON`; the landing manifest publishes the active booking window
 - Tenant-bound owner account configuration supports separate production logins for each attached landing-page business

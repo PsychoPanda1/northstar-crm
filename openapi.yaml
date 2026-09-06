@@ -137,6 +137,10 @@ components:
             businessName: { type: string }
             serviceLabel: { type: string }
             timeZone: { type: string }
+            intakeFields:
+              type: array
+              maxItems: 8
+              items: { $ref: '#/components/schemas/IntakeField' }
         integration:
           type: object
           required: [version, leadEndpoint, bookingEndpoint, availabilityEndpoint]
@@ -165,6 +169,18 @@ components:
         startsAt: { type: string, format: date-time }
         endsAt: { type: string, format: date-time }
         timeZone: { type: string }
+    IntakeField:
+      type: object
+      required: [id, type, label, required]
+      properties:
+        id: { type: string, pattern: '^[a-z][a-z0-9_]{1,39}$' }
+        type: { type: string, enum: [text, textarea, select, checkbox] }
+        label: { type: string, minLength: 2, maxLength: 100 }
+        required: { type: boolean }
+        options:
+          type: array
+          maxItems: 8
+          items: { type: string, maxLength: 80 }
     LeadRequest:
       type: object
       required: [name]
@@ -177,6 +193,9 @@ components:
         message: { type: string, maxLength: 500 }
         source: { type: string, maxLength: 80 }
         website: { type: string, maxLength: 120, description: Leave empty; honeypot field. }
+        intakeAnswers:
+          type: object
+          additionalProperties: { oneOf: [{ type: string }, { type: boolean }] }
     BookingRequest:
       allOf:
         - $ref: '#/components/schemas/LeadRequest'
