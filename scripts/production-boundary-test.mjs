@@ -9,6 +9,9 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const port = 4300 + Math.floor(Math.random() * 200);
 const dataFile = join(tmpdir(), `northstar-production-boundary-${process.pid}-${Date.now()}.json`);
 const sessionFile = `${dataFile}.sessions`;
+const invalidPort = port + 1;
+const invalidDataFile = join(tmpdir(), `northstar-production-boundary-invalid-${process.pid}-${Date.now()}.json`);
+const invalidSessionFile = `${invalidDataFile}.sessions`;
 const secret = 'northstar-production-boundary-secret-32';
 const password = 'boundary-test-password';
 const env = {
@@ -32,15 +35,22 @@ const env = {
 };
 
 const child = spawn(process.execPath, ['server.mjs'], { cwd: root, env, stdio: 'ignore' });
+const invalidChild = spawn(process.execPath, ['server.mjs'], { cwd: root, env: { ...env, PORT: String(invalidPort), NORTHSTAR_DATA_FILE: invalidDataFile, NORTHSTAR_SESSION_FILE: invalidSessionFile, NORTHSTAR_REQUEST_RESPONSE_SLA_HOURS: '0' }, stdio: 'ignore' });
 const base = `http://127.0.0.1:${port}`;
+const invalidBase = `http://127.0.0.1:${invalidPort}`;
 const cleanup = () => {
   child.kill();
-  for (const file of [dataFile, sessionFile, `${dataFile}.tmp`]) {
+  invalidChild.kill();
+  for (const file of [dataFile, sessionFile, `${dataFile}.tmp`, invalidDataFile, invalidSessionFile, `${invalidDataFile}.tmp`]) {
     if (existsSync(file)) unlinkSync(file);
   }
 };
 const getJson = async (path, options) => {
   const response = await fetch(`${base}${path}`, options);
+  return { response, body: await response.json().catch(() => ({})) };
+};
+const getJsonFrom = async (origin, path, options) => {
+  const response = await fetch(`${origin}${path}`, options);
   return { response, body: await response.json().catch(() => ({})) };
 };
 
@@ -53,6 +63,12 @@ try {
     if (!ready?.response?.ok) await new Promise((resolve) => setTimeout(resolve, 100));
   }
   if (!ready?.response?.ok || ready.body.checks?.configuration !== true || ready.body.checks?.requestResponseSlaConfiguration !== true) throw new Error('production server did not become ready with valid configuration');
+  let invalidReady = null;
+  for (let attempt = 0; attempt < 100 && !invalidReady; attempt += 1) {
+    try { invalidReady = await getJsonFrom(invalidBase, '/api/ready'); } catch {}
+    if (!invalidReady) await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  if (!invalidReady || invalidReady.response.status !== 503 || invalidReady.body.checks?.requestResponseSlaConfiguration !== false) throw new Error('invalid request SLA configuration did not fail production readiness');
 
   const login = await getJson('/api/auth/login', {
     method: 'POST',
