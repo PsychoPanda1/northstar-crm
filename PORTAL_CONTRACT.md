@@ -214,6 +214,7 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 - The owner navigation renders live counts for scheduled jobs, new leads plus unread notifications, and open customer requests; these are UI summaries only and do not replace server-side tenant authorization
 - The Customer Requests navigation entry requires `requests:read`, granted only to owner and dispatcher roles; the server remains authoritative for queue authorization
 - Sessions without `requests:read` skip the restricted request-count fetch so customer, schedule, and inbox counts continue to load for technicians and accountants
+- Navigation counts refresh every 30 seconds while the owner workspace is open so request, lead, and schedule changes become visible without a full-page reload
 - `POST /api/public/customer-portal/request?token=...` → accept a customer reschedule, cancellation, or question request and route it into the owner action queue; reused idempotency keys reject conflicting job/type/message payloads
 - `POST /api/public/customer-portal/confirm?token=...` → confirm a customer-owned appointment idempotently and append a customer timeline event
 - `POST /api/requests/:id/resolve` → owner/dispatcher-only resolution of a tenant-owned customer request with an optional owner note and `Idempotency-Key`; the key is bound to the resolution note, changed payloads return `409 idempotency_key_reused`, and safe retries return an idempotent duplicate without repeating activity/audit side effects

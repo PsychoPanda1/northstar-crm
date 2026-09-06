@@ -249,6 +249,7 @@ loadLiveSchedule();
 loadLiveActivity();
 loadLiveFocus();
 loadLiveNavigationCounts();
+setInterval(loadLiveNavigationCounts, 30000);
 }
 bootstrap();
 recordList.addEventListener('click', async (event) => { const button = event.target.closest('[data-customer-action="edit"]'); if (!button) return; const name = window.prompt('Customer name', button.dataset.customerName || ''); if (!name) return; const phone = window.prompt('Phone', button.dataset.customerPhone || ''); if (!phone) return; const email = window.prompt('Email (optional)', button.dataset.customerEmail || '') ?? ''; const location = window.prompt('Primary service address', button.dataset.customerLocation || '') ?? ''; button.disabled = true; try { const profile = await repository.updateCustomer(button.dataset.customerId, { name, phone, email, location }, crypto.randomUUID()); drawerTitle.textContent = `${profile.name} profile`; const refreshed = await repository.getCustomerProfile(button.dataset.customerId); renderProfile(refreshed); showToast('Customer profile updated.'); } catch { showToast('Could not update customer profile.'); button.disabled = false; } });
