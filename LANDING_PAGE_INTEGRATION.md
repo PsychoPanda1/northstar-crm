@@ -33,6 +33,10 @@ Landing pages should resolve their service identity from `GET /api/public/tenant
 
 New landing pages can include the reusable landing-page-client.js browser helper. Construct NorthstarLandingClient with a service key, then call manifest(), catalog(), availability(), ownerPortalUrl(), ownerPasswordLogin(), ownerOidcLogin(), refreshOwnerSession(), logoutOwnerSession(), submitLead(), or book(). `ownerPortalUrl()` resolves the manifest's tenant-specific owner portal path, including the service context, so an owner-login link does not need to hard-code `/portal` or a service key. `ownerPasswordLogin(email, password)` binds the service key into the tenant-bound password login request without persisting credentials. `ownerOidcLogin(idToken)` is a provider-neutral helper that exchanges an already-issued signed ID token only when the tenant manifest advertises `oidc`; the identity provider SDK and token acquisition remain the landing page's responsibility. `refreshOwnerSession(token)` and `logoutOwnerSession(token)` use manifest-discovered endpoints and send the current token only as an authorization header. It resolves routes through the versioned tenant manifest and creates session-stable idempotency keys for lead and booking retries. Pass apiBase when the CRM is hosted on another origin, and add that origin to NORTHSTAR_ALLOWED_ORIGINS.
 
+## Customer portal messaging
+
+The customer portal exposes `POST /api/public/customer-portal/message?token=...` for authenticated customer messages. Send `{ channel: 'SMS' | 'Email', message }` with an `Idempotency-Key`; the message is tenant-scoped, honors the customer's opt-out preference, appears in the owner conversation workspace and action queue, and returns `duplicate: true` on a safe retry. Provider delivery remains server-side and provider-pending until `NORTHSTAR_MESSAGE_PROVIDER_URL` is configured.
+
 ## Attach a new service page
 
 Use this handoff sequence for plumbing, power washing, electrical, car wash, or a configured vertical:
