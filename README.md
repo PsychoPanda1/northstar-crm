@@ -283,7 +283,7 @@ Run `node smoke-test.mjs` to launch an isolated temporary server and verify publ
 
 See [PORTAL_CONTRACT.md](PORTAL_CONTRACT.md) before adding authentication, APIs, or landing-page integrations.
 
-See [PARITY_MATRIX.md](PARITY_MATRIX.md) for the maintained ServiceTitan/Jobber-style capability map, current evidence, and remaining production work.
+See [PARITY_MATRIX.md](PARITY_MATRIX.md) for the maintained ServiceTitan/Jobber-style capability map, current evidence, and remaining production work. Owners can save reusable, tenant-scoped report views through `/api/reports/custom/views` so recurring service operators can return to the same KPI and date-window definition.
 
 See [LANDING_PAGE_INTEGRATION.md](LANDING_PAGE_INTEGRATION.md) for the copyable form submission contract used by future service landing pages.
 

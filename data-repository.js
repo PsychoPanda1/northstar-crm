@@ -175,6 +175,34 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async listCustomReportViews() {
+    if (!this.remote) throw new Error('API required for report views');
+    const response = await fetch('/api/reports/custom/views', { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('report views unavailable');
+    return response.json();
+  }
+
+  async createCustomReportView(name, metrics, startDate = '', endDate = '', idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for report views');
+    const response = await fetch('/api/reports/custom/views', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ name, metrics, startDate, endDate }) });
+    if (!response.ok) throw new Error('report view creation failed');
+    return response.json();
+  }
+
+  async getCustomReportView(id) {
+    if (!this.remote) throw new Error('API required for report views');
+    const response = await fetch(`/api/reports/custom/views/${encodeURIComponent(id)}`, { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('report view unavailable');
+    return response.json();
+  }
+
+  async deleteCustomReportView(id) {
+    if (!this.remote) throw new Error('API required for report views');
+    const response = await fetch(`/api/reports/custom/views/${encodeURIComponent(id)}`, { method: 'DELETE', headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('report view deletion failed');
+    return response.json();
+  }
+
   async getMarketingReport(range = {}) {
     if (!this.remote) throw new Error('API required for marketing reporting');
     const query = new URLSearchParams(); if (range?.startDate) query.set('startDate', String(range.startDate)); if (range?.endDate) query.set('endDate', String(range.endDate)); const response = await fetch(`/api/reports/marketing${query.toString() ? `?${query}` : ''}`, { headers: { authorization: `Bearer ${this.token}` } });
