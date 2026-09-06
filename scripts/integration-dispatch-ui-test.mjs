@@ -50,7 +50,10 @@ const required = [
   'repository.createPaymentSchedule(button.dataset.invoiceId',
   'repository.getPaymentSchedule(button.dataset.invoiceId)',
   'data-invoice-link-action',
-  'repository.invoicePaymentLink(button.dataset.invoiceId)'
+  'repository.invoicePaymentLink(button.dataset.invoiceId)',
+  'select-visible-leads',
+  'select-visible-requests',
+  'Clear visible ${view} selection'
 ];
 for (const snippet of required) {
   if (!source.includes(snippet)) throw new Error(`integration dispatch UI wiring missing: ${snippet}`);
