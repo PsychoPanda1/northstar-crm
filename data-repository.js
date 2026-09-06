@@ -1010,6 +1010,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async exportCustomerPrivacy(id) {
+    if (!this.remote) throw new Error('API required for customer privacy exports');
+    const response = await fetch(`/api/customers/${encodeURIComponent(id)}/privacy-export`, { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('customer privacy export unavailable');
+    return response.json();
+  }
+
   async getCustomerTimeline(id, limit = 100) {
     if (!this.remote) throw new Error('API required for customer timelines');
     const response = await fetch(`/api/customers/${encodeURIComponent(id)}/timeline?limit=${encodeURIComponent(limit)}`, { headers: { authorization: `Bearer ${this.token}` } });
