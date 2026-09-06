@@ -243,7 +243,7 @@ Set `NORTHSTAR_REQUIRE_LIVE_PROVIDERS=true` for a production deployment that mus
 
 Set `NORTHSTAR_PUBLIC_URL` to the deployed HTTPS origin so provider-delivered review, estimate, estimate-PDF, and payment links are clickable outside the CRM host. Estimate delivery keeps relative `estimateUrl` and `estimatePdfUrl` fields for browser routing and includes resolved `publicEstimateUrl` and `publicEstimatePdfUrl` fields for outbound providers.
 
-Set `NORTHSTAR_LEAD_PROVIDER_URL` and optional `NORTHSTAR_LEAD_PROVIDER_API_KEY` to enable the authenticated owner/dispatcher lead handoff at `POST /api/integrations/leads/dispatch`. The provider receives a stable `leadId` idempotency key and attribution context; delivery remains explicitly `Delivered` or `Failed` in the tenant record.
+Set `NORTHSTAR_LEAD_PROVIDER_URL` and optional `NORTHSTAR_LEAD_PROVIDER_API_KEY` to enable the authenticated owner/dispatcher lead handoff at `POST /api/integrations/leads/dispatch`. The provider receives a stable `leadId` idempotency key and attribution context; delivery remains explicitly `Delivered`, `Retry scheduled`, or `Failed` in the tenant record. `NORTHSTAR_LEAD_RETRY_LIMIT` accepts `0`–`5` bounded retries using the same 1/5/15/30-minute backoff as message delivery.
 
 Set `NORTHSTAR_MESSAGE_RETRY_LIMIT` from `0` to `5` to enable bounded automatic retries for transient message-provider timeouts and 408/409/425/429/5xx responses. Retries use a one-minute, five-minute, fifteen-minute, then thirty-minute backoff; missing recipients and other permanent 4xx failures remain visible as `Failed`, and each attempt uses the stable message ID as the provider idempotency key.
 
