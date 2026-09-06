@@ -1,4 +1,5 @@
 (() => {
+  const boot = () => {
   const repository = window.northstarRepository;
   const drawer = document.querySelector('#record-drawer');
   const list = document.querySelector('#record-list');
@@ -53,5 +54,11 @@
 
   const search = repository.globalSearch.bind(repository);
   repository.globalSearch = async (query) => { const result = await search(query); nextPage = result.pagination?.hasMore ? { page: result.pagination.nextPage, pageSize: result.pagination.pageSize } : null; return result; };
-  new MutationObserver(sync).observe(drawer, { attributes: true, childList: true, subtree: true });
+    new MutationObserver(sync).observe(drawer, { attributes: true, childList: true, subtree: true });
+  };
+  if (window.northstarRepository) boot();
+  else {
+    const timer = setInterval(() => { if (!window.northstarRepository) return; clearInterval(timer); boot(); }, 50);
+    setTimeout(() => clearInterval(timer), 30000);
+  }
 })();
