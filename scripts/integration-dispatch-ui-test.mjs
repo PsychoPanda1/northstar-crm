@@ -65,6 +65,7 @@ const required = [
   ,'estimateSnapshot'
   ,'data-approved-estimate-scope'
   ,'APPROVED LINE ITEMS'
+  ,"Jobs: 'dispatch'"
 ];
 for (const snippet of required) {
   if (!source.includes(snippet)) throw new Error(`integration dispatch UI wiring missing: ${snippet}`);
