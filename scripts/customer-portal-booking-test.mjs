@@ -35,7 +35,13 @@ try {
   const duplicate = await book();
   const duplicateBody = await duplicate.json();
   const refreshedPortal = await (await fetch(`${base}/api/public/customer-portal?token=${encodeURIComponent(token)}`)).json();
-  assert(response.status === 201 && body.booked && body.locationId === requestedLocationId && body.notification?.template === 'confirmation' && duplicate.status === 200 && duplicateBody.duplicate && duplicateBody.id === body.id && duplicateBody.locationId === requestedLocationId && duplicateBody.notification?.jobId === body.id && refreshedPortal.jobs?.some((job) => job.id === body.id && job.service === 'Drain cleaning' && job.location === '22 Portal Lane'), 'customer portal booking idempotency, location, or confirmation handoff failed');
+  const messageRequest = () => fetch(`${base}/api/public/customer-portal/message?token=${encodeURIComponent(token)}`, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': 'portal-message-repeatable' }, body: JSON.stringify({ channel: 'SMS', message: 'Can you confirm the arrival window?' }) });
+  const messageResponse = await messageRequest();
+  const messageBody = await messageResponse.json();
+  const duplicateMessage = await messageRequest();
+  const duplicateMessageBody = await duplicateMessage.json();
+  const messagePortal = await (await fetch(`${base}/api/public/customer-portal?token=${encodeURIComponent(token)}`)).json();
+  assert(response.status === 201 && body.booked && body.locationId === requestedLocationId && body.notification?.template === 'confirmation' && duplicate.status === 200 && duplicateBody.duplicate && duplicateBody.id === body.id && duplicateBody.locationId === requestedLocationId && duplicateBody.notification?.jobId === body.id && refreshedPortal.jobs?.some((job) => job.id === body.id && job.service === 'Drain cleaning' && job.location === '22 Portal Lane') && messageResponse.status === 201 && messageBody.message?.direction === 'inbound' && duplicateMessage.status === 200 && duplicateMessageBody.duplicate && duplicateMessageBody.message?.id === messageBody.message.id && messagePortal.messages?.some((item) => item.id === messageBody.message.id), 'customer portal booking or message workflow failed');
   console.log('Northstar customer portal booking test passed');
 } finally {
   server.kill();

@@ -14,7 +14,7 @@
 <h1 id="name">Loading…</h1>
 <div class="intro" id="location"></div>
 <div id="content"></div>
-<div class="actions" id="global-actions"><button data-action="book">Book another service</button><button data-action="referral">Refer a friend</button><button data-action="request" data-type="Question">Ask a question</button><button data-action="request" data-type="Cancellation request">Request cancellation</button><button data-action="request" data-type="Reschedule request">Request a reschedule</button><button data-action="preferences">Manage messaging preferences</button></div>
+<div class="actions" id="global-actions"><button data-action="book">Book another service</button><button data-action="referral">Refer a friend</button><button data-action="message">Message the office</button><button data-action="request" data-type="Question">Ask a question</button><button data-action="request" data-type="Cancellation request">Request cancellation</button><button data-action="request" data-type="Reschedule request">Request a reschedule</button><button data-action="preferences">Manage messaging preferences</button></div>
 <div id="message" role="status" aria-live="polite"></div>
 </main>
 <script>
@@ -132,6 +132,26 @@
 </script>
 <script>
 (() => { const token = new URLSearchParams(location.search).get('token'); const button = document.querySelector('[data-action="referral"]'); if (!token || !button) return; button.addEventListener('click', async () => { button.disabled = true; try { const response = await fetch('/api/public/customer-portal/referral-link?token=' + encodeURIComponent(token)); const result = await response.json(); if (!response.ok) throw new Error(); const url = new URL(result.url, location.href).href; window.prompt('Share this referral link', url); } catch { document.querySelector('#message').textContent = 'Referral link could not be created.'; } finally { button.disabled = false; } }); })();
+</script>
+<script>
+(() => {
+  const token = new URLSearchParams(location.search).get('token');
+  const button = document.querySelector('[data-action="message"]');
+  if (!token || !button) return;
+  button.addEventListener('click', async () => {
+    const message = window.prompt('Message for the service office');
+    if (!message?.trim()) return;
+    const channel = window.prompt('Channel: SMS or Email', 'SMS');
+    if (!['SMS', 'Email'].includes(channel)) return;
+    button.disabled = true;
+    try {
+      const response = await fetch('/api/public/customer-portal/message?token=' + encodeURIComponent(token), { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({ channel, message: message.trim() }) });
+      document.querySelector('#message').textContent = response.ok ? 'Message sent to the service office.' : 'That message could not be sent. Check your messaging preference.';
+      if (response.ok) window.location.reload();
+    } catch { document.querySelector('#message').textContent = 'That message could not be sent. Please try again.'; }
+    finally { button.disabled = false; }
+  });
+})();
 </script>
 </body>
 </html>
