@@ -10,6 +10,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Revenue pipeline with stage values
 - Today's focus list with interactive task completion
 - Schedule view with job status, technician assignment, and customer context
+- Multi-day work orders remain visible on every covered local dispatch date
 - Recent activity stream
 - Responsive layout for desktop and mobile
 - Configuration-driven service verticals for plumbing, power washing, electrical, and mobile car wash
