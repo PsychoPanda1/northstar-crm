@@ -12,6 +12,7 @@
   button.className = 'ghost-btn';
   button.id = 'conversation-view';
   button.textContent = 'Conversations';
+  button.hidden = true;
   reportButton.after(button);
   let messages = [];
 
@@ -75,4 +76,8 @@
       catch { window.alert('Could not queue the message. Check the customer channel preference and provider configuration.'); }
     }
   });
+  Promise.resolve(repository.ready).then(() => {
+    if (['owner', 'dispatcher'].includes(repository.session?.owner?.role)) button.hidden = false;
+    else button.remove();
+  }).catch(() => button.remove());
 }());

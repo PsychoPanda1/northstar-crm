@@ -8,5 +8,6 @@ const assert = (condition, message) => { if (!condition) throw new Error(message
 assert(index.includes('/conversation-owner.js'), 'owner portal does not load the conversation workspace');
 assert(script.includes('id = \'conversation-view\'') && script.includes('threadGroups') && script.includes('data-conversation-open'), 'conversation workspace does not group or open customer threads');
 assert(script.includes('replyToMessage') && script.includes('sendMessage'), 'conversation workspace does not expose reply and outbound message actions');
+assert(script.includes('button.hidden = true') && script.includes("['owner', 'dispatcher'].includes(repository.session?.owner?.role)"), 'conversation workspace does not mirror server-side message permissions');
 assert(serviceWorker.includes('/conversation-owner.js'), 'offline owner shell does not cache the conversation workspace asset');
 console.log('Northstar conversation workspace checks passed');
