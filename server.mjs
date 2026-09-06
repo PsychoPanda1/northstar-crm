@@ -450,7 +450,9 @@ const dispatchAccountingRecords = async (saved, claims, limit = 20) => {
   for (const record of records) {
     const sourceId = record.paymentId || record.invoiceId || record.purchaseOrderId;
     const key = `${record.recordType}:${sourceId}`;
-    if (!byKey.has(key)) { const sync = { key, tenantId: claims.tenantId, recordType: record.recordType, sourceId, record, syncState: 'Pending' }; saved.accountingSync.push(sync); byKey.set(key, sync); }
+    const currentFingerprint = payloadFingerprint(record);
+    if (!byKey.has(key)) { const sync = { key, tenantId: claims.tenantId, recordType: record.recordType, sourceId, record, recordFingerprint: currentFingerprint, syncState: 'Pending' }; saved.accountingSync.push(sync); byKey.set(key, sync); }
+    else { const sync = byKey.get(key); if (sync.recordFingerprint !== currentFingerprint) { sync.record = record; sync.recordFingerprint = currentFingerprint; if (['Delivered', 'Failed'].includes(sync.syncState)) { sync.syncState = 'Pending'; delete sync.nextRetryAt; delete sync.providerReference; } } }
   }
   const pending = saved.accountingSync.filter((item) => !['Delivered', 'Failed'].includes(item.syncState) && (!item.nextRetryAt || !Number.isFinite(Date.parse(item.nextRetryAt)) || Date.parse(item.nextRetryAt) <= Date.now())).slice(0, Math.min(50, Math.max(1, Number(limit) || 20)));
   const result = { attempted: pending.length, delivered: 0, retrying: 0, failed: 0, records: [] };
@@ -458,7 +460,7 @@ const dispatchAccountingRecords = async (saved, claims, limit = 20) => {
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 10_000);
-      const response = await fetch(provider, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': sync.key, ...(ACCOUNTING_PROVIDER_API_KEY ? { authorization: `Bearer ${ACCOUNTING_PROVIDER_API_KEY}` } : {}) }, body: JSON.stringify({ recordId: sync.sourceId, recordType: sync.recordType, tenantId: claims.tenantId, record: sync.record }), signal: controller.signal });
+      const response = await fetch(provider, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': sync.key, ...(ACCOUNTING_PROVIDER_API_KEY ? { authorization: `Bearer ${ACCOUNTING_PROVIDER_API_KEY}` } : {}) }, body: JSON.stringify({ recordId: sync.sourceId, recordType: sync.recordType, tenantId: claims.tenantId, recordFingerprint: sync.recordFingerprint, record: sync.record }), signal: controller.signal });
       clearTimeout(timeout);
       const body = await response.json().catch(() => ({}));
       if (!response.ok) throw Object.assign(new Error(String(body.error || body.message || `provider_http_${response.status}`).slice(0, 240)), { retryable: response.status >= 500 || [408, 409, 425, 429].includes(response.status) });
