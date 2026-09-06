@@ -34,7 +34,7 @@
       const note = window.prompt(`${action[0].toUpperCase() + action.slice(1)} note (optional)`, '') ?? '';
       button.disabled = true;
       try {
-        const result = await repository.updatePlanStatus(button.dataset.planId, action, note.trim());
+        const result = await repository.updatePlanStatus(button.dataset.planId, action, note.trim(), crypto.randomUUID());
         const canceled = Number(result.canceledJobs || 0);
         const suffix = canceled ? ` · ${canceled} future visit${canceled === 1 ? '' : 's'} canceled` : '';
         const toast = document.querySelector('#toast');

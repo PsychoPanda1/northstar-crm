@@ -982,9 +982,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async updatePlanStatus(id, action, note = '') {
+  async updatePlanStatus(id, action, note = '', idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for service plan status updates');
-    const response = await fetch(`/api/plans/${encodeURIComponent(id)}/${action}`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ ...(note ? { note } : {}) }) });
+    const response = await fetch(`/api/plans/${encodeURIComponent(id)}/${action}`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ ...(note ? { note } : {}) }) });
     if (!response.ok) throw new Error('service plan status update failed');
     return response.json();
   }
