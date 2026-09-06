@@ -197,6 +197,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async dispatchLeads(limit = 20) {
+    if (!this.remote) throw new Error('API required for lead dispatch');
+    const response = await fetch('/api/integrations/leads/dispatch', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ limit }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'lead dispatch failed');
+    return response.json();
+  }
+
   async exportRecords(type, range = {}) {
     if (!this.remote) throw new Error('API required for exports');
     const query = new URLSearchParams({ type, ...(range.startDate ? { startDate: range.startDate } : {}), ...(range.endDate ? { endDate: range.endDate } : {}) });

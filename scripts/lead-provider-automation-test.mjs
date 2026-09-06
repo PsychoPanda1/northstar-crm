@@ -21,7 +21,7 @@ try {
   await new Promise((resolve) => provider.listen(providerPort, '127.0.0.1', resolve));
   child = spawn(process.execPath, ['server.mjs'], { cwd: root, env, stdio: 'ignore' });
   await waitFor(async () => (await fetch(`${base}/api/health`).catch(() => null))?.ok, 'lead automation server did not start');
-  await waitFor(() => providerCalls === 1, 'scheduled lead provider dispatch did not run');
+  await waitFor(() => { try { return providerCalls === 1 && JSON.parse(readFileSync(dataFile, 'utf8'))['clearwater-plumbing']?.leads?.[0]?.providerDeliveryState === 'Delivered'; } catch { return false; } }, 'scheduled lead provider dispatch did not persist');
   const persisted = JSON.parse(readFileSync(dataFile, 'utf8'))['clearwater-plumbing'];
   if (persisted.leads?.[0]?.providerDeliveryState !== 'Delivered' || persisted.leads?.[0]?.providerReference !== 'scheduled-provider-1') throw new Error('scheduled lead provider delivery did not persist');
   console.log('Northstar scheduled lead provider test passed');
