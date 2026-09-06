@@ -23,6 +23,32 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Build release verification image
+        run: docker build --tag northstar-crm:release-verify .
+
+      - name: Verify production readiness and healthcheck
+        shell: bash
+        run: |
+          container_id=$(docker run -d --publish 4173:4173 \
+            --env NORTHSTAR_SESSION_SECRET=release-ci-session-secret-32-character-key \
+            --env NORTHSTAR_OWNER_EMAIL=owner@example.test \
+            --env NORTHSTAR_OWNER_PASSWORD_DIGEST=0000000000000000000000000000000000000000000000000000000000000000 \
+            --env NORTHSTAR_OWNER_TENANT_ID=johnson-service-co \
+            --env NORTHSTAR_PAYMENT_WEBHOOK_SECRET=release-payment-secret-32-character-key \
+            --env NORTHSTAR_MESSAGE_WEBHOOK_SECRET=release-message-secret-32-character-key \
+            --env NORTHSTAR_CALL_WEBHOOK_SECRET=release-call-secret-32-character-key \
+            --env NORTHSTAR_FINANCING_WEBHOOK_SECRET=release-financing-secret-32-character-key \
+            northstar-crm:release-verify)
+          trap 'docker rm -f "$container_id" >/dev/null 2>&1 || true' EXIT
+          node -e "const deadline=Date.now()+30000; const poll=async()=>{try{const r=await fetch('http://127.0.0.1:4173/api/ready'); if(r.ok){const body=await r.json(); if(body.ok && Object.values(body.checks).every(Boolean)) process.exit(0);}}catch{} if(Date.now()>=deadline) process.exit(1); setTimeout(poll,250);}; poll();"
+          for attempt in {1..60}; do
+            health_status=$(docker inspect --format='{{.State.Health.Status}}' "$container_id")
+            if [ "$health_status" = healthy ]; then exit 0; fi
+            sleep 0.5
+          done
+          echo "Container healthcheck did not become healthy" >&2
+          exit 1
+
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
