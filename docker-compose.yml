@@ -4,6 +4,8 @@ services:
       context: .
     image: northstar-crm:local
     restart: unless-stopped
+    env_file:
+      - .env
     ports:
       - "${NORTHSTAR_PORT:-4173}:4173"
     environment:
