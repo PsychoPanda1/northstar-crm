@@ -193,6 +193,7 @@ syncTenantIds();
 const materializeDocumentDeliveries = () => {
   for (const [tenantId, saved] of state) {
     saved.documentDeliveries = Array.isArray(saved.documentDeliveries) ? saved.documentDeliveries : [];
+    for (const delivery of saved.documentDeliveries) if (delivery && !delivery.tenantId) delivery.tenantId = tenantId;
     for (const estimate of saved.estimates || []) {
       if (estimate.status !== 'Sent' || saved.documentDeliveries.some((item) => item.documentType === 'estimate' && item.documentId === estimate.id)) continue;
       const message = (saved.messages || []).find((item) => item.estimateId === estimate.id && item.template === 'estimate_sent');
