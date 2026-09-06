@@ -40,6 +40,8 @@ jobs:
         run: node scripts/lead-source-filter-test.mjs
       - name: Run lead contact test
         run: node scripts/lead-contact-test.mjs
+      - name: Run inbound lead message test
+        run: node scripts/inbound-lead-message-test.mjs
       - name: Check integration dispatch UI wiring
         run: node scripts/integration-dispatch-ui-test.mjs
       - name: Check integration dispatch permissions
