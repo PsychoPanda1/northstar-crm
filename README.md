@@ -127,7 +127,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Durable session revocation survives API restarts in the local adapter
 - Startup recovery loads the newest valid primary or interrupted temporary snapshot, preventing a malformed or stale primary JSON file from discarding recoverable tenant state
 - New landing-page leads appear in the owner action queue for immediate follow-up, and owner/dispatcher teams can atomically assign or advance up to 50 leads through the pipeline in one audited, idempotent batch
-- The owner lead inbox supports stage and assigned-owner filters that remain active while searching, so follow-up can be managed as a focused pipeline
+- The owner lead inbox supports stage, assigned-owner, and source/campaign filters that remain active while searching, so follow-up can be managed as a focused pipeline
 - Owners, dispatchers, and accountants can inspect integration health and dispatch eligible message or payment queue items from the owner workspace; provider credentials remain server-side
 - The owner navigation exposes live Schedule, Inbox, and open Customer Requests counts so unresolved work remains visible across service verticals
 - Customer Requests are visible only to owner and dispatcher sessions through the explicit `requests:read` permission; technicians and accountants remain excluded from that queue

@@ -103,13 +103,14 @@ class NorthstarDemoRepository {
     return items;
   }
 
-  async listPage(type, { search = '', status = '', priority = '', assignedTo = '', page = 1, pageSize = 50 } = {}) {
+  async listPage(type, { search = '', status = '', priority = '', assignedTo = '', source = '', page = 1, pageSize = 50 } = {}) {
     if (!this.remote) return { items: [], total: 0, page, pageSize, hasMore: false };
     const query = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
     if (search) query.set('search', search);
     if (status) query.set('status', status);
     if (priority) query.set('priority', priority);
     if (assignedTo) query.set('assignedTo', assignedTo);
+    if (source) query.set('source', source);
     const response = await fetch(`/api/${type}?${query}`, { headers: { authorization: `Bearer ${this.token}` } });
     if (!response.ok) throw new Error('records unavailable');
     return response.json();
