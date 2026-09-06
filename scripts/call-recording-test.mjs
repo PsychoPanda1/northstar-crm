@@ -28,9 +28,11 @@ try {
   const call = listed.body.items?.find((item) => item.id === created.body.call?.id);
   const recording = await request(`/api/calls/${encodeURIComponent(created.body.call?.id)}/recording`, { headers: ownerHeaders });
   const invalid = await signedWebhook({ eventId: randomUUID(), tenantId: 'clearwater-plumbing', from: '843-555-0198', durationSeconds: 1, recordingUrl: 'http://recordings.example.test/call/nope' });
+  const expiredCreated = await signedWebhook({ eventId: randomUUID(), tenantId: 'clearwater-plumbing', from: '843-555-0197', durationSeconds: 1, recordingUrl: 'https://recordings.example.test/call/expired', recordingExpiresAt: '2000-01-01T00:00:00.000Z' });
+  const expiredRecording = await request(`/api/calls/${encodeURIComponent(expiredCreated.body.call?.id)}/recording`, { headers: ownerHeaders });
   const accountantLogin = await post('/api/auth/demo-login?service=plumbing', { service: 'plumbing', role: 'accountant' });
   const accountantRecording = await request(`/api/calls/${encodeURIComponent(created.body.call?.id)}/recording`, { headers: { authorization: `Bearer ${accountantLogin.body.token}` } });
-  if (!created.response.ok || !call?.recordingAvailable || Object.prototype.hasOwnProperty.call(call, 'recordingUrl') || recording.response.status !== 200 || recording.body.recording?.url !== 'https://recordings.example.test/call/abc' || invalid.response.status !== 422 || accountantRecording.response.status !== 403) throw new Error('call recording metadata, protected access, URL validation, or list redaction failed');
+  if (!created.response.ok || !call?.recordingAvailable || Object.prototype.hasOwnProperty.call(call, 'recordingUrl') || recording.response.status !== 200 || recording.body.recording?.url !== 'https://recordings.example.test/call/abc' || invalid.response.status !== 422 || expiredCreated.response.status !== 201 || expiredRecording.response.status !== 410 || accountantRecording.response.status !== 403) throw new Error('call recording metadata, protected access, URL validation, expiry, or list redaction failed');
   console.log('Northstar call recording checks passed');
 } finally {
   if (child && !child.killed) child.kill();
