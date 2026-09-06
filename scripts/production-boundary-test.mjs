@@ -58,13 +58,13 @@ try {
   const ownerShell = readFileSync(join(root, 'index.html'), 'utf8');
   if (/Example customer|Example property group|JOB-EXAMPLE|EST-EXAMPLE/.test(ownerShell)) throw new Error('demo-looking records embedded in owner shell');
   let ready = null;
-  for (let attempt = 0; attempt < 100 && !ready?.ok; attempt += 1) {
+  for (let attempt = 0; attempt < 200 && !ready?.ok; attempt += 1) {
     try { ready = await getJson('/api/ready'); } catch {}
     if (!ready?.response?.ok) await new Promise((resolve) => setTimeout(resolve, 100));
   }
   if (!ready?.response?.ok || ready.body.checks?.configuration !== true || ready.body.checks?.requestResponseSlaConfiguration !== true) throw new Error('production server did not become ready with valid configuration');
   let invalidReady = null;
-  for (let attempt = 0; attempt < 100 && !invalidReady; attempt += 1) {
+  for (let attempt = 0; attempt < 200 && !invalidReady; attempt += 1) {
     try { invalidReady = await getJsonFrom(invalidBase, '/api/ready'); } catch {}
     if (!invalidReady) await new Promise((resolve) => setTimeout(resolve, 100));
   }

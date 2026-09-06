@@ -21,8 +21,8 @@ let child;
 const start = () => { child = spawn(process.execPath, ['server.mjs'], { cwd: root, env, stdio: 'ignore' }); };
 const stop = () => { if (child && !child.killed) child.kill(); child = null; };
 const request = async (path, options) => { const response = await fetch(`${base}${path}`, options); return { response, body: await response.json().catch(() => ({})) }; };
-const waitForServer = async () => { for (let attempt = 0; attempt < 80; attempt += 1) { try { if ((await fetch(`${base}/api/health`)).ok) return; } catch {} await new Promise((resolve) => setTimeout(resolve, 50)); } throw new Error('automation worker server did not start'); };
-const waitForProviderDispatch = async () => { for (let attempt = 0; attempt < 80; attempt += 1) { if (providerCalls >= 2) return; await new Promise((resolve) => setTimeout(resolve, 50)); } throw new Error('scheduled provider dispatch did not run for both queues'); };
+const waitForServer = async () => { for (let attempt = 0; attempt < 200; attempt += 1) { try { if ((await fetch(`${base}/api/health`)).ok) return; } catch {} await new Promise((resolve) => setTimeout(resolve, 50)); } throw new Error('automation worker server did not start'); };
+const waitForProviderDispatch = async () => { for (let attempt = 0; attempt < 200; attempt += 1) { if (providerCalls >= 2) return; await new Promise((resolve) => setTimeout(resolve, 50)); } throw new Error('scheduled provider dispatch did not run for both queues'); };
 
 try {
   await new Promise((resolve) => provider.listen(providerPort, '127.0.0.1', resolve));

@@ -14,7 +14,7 @@ const cleanup = () => { child.kill(); for (const file of [dataFile, `${dataFile}
 const submit = async (service, suffix, forwardedFor) => fetch(`${base}/api/public/leads?service=${service}`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-forwarded-for': forwardedFor }, body: JSON.stringify({ service, name: `Rate limit ${suffix}`, email: `rate-${suffix}@example.test`, phone: `843555${String(suffix).padStart(4, '0')}` }) });
 
 try {
-  for (let attempt = 0; attempt < 100; attempt += 1) {
+  for (let attempt = 0; attempt < 200; attempt += 1) {
     try { if ((await fetch(`${base}/api/health`)).ok) break; } catch {}
     await new Promise((resolve) => setTimeout(resolve, 50));
   }

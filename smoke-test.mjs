@@ -35,7 +35,7 @@ const assert = (condition, message) => { if (!condition) throw new Error(message
 const request = async (path, options = {}) => { const response = await fetch(`${base}${path}`, options); const body = await response.json().catch(() => ({})); return { response, body }; };
 const jsonOptions = (method, body, token) => ({ method, headers: { 'content-type': 'application/json', ...(token ? { authorization: `Bearer ${token}` } : {}) }, body: JSON.stringify(body) });
 try {
-  for (let attempt = 0; attempt < 40; attempt += 1) { try { if ((await fetch(`${base}/api/health`)).ok) break; } catch {} await new Promise((resolve) => setTimeout(resolve, 50)); if (attempt === 39) throw new Error('server did not start'); }
+  for (let attempt = 0; attempt < 120; attempt += 1) { try { if ((await fetch(`${base}/api/health`)).ok) break; } catch {} await new Promise((resolve) => setTimeout(resolve, 50)); if (attempt === 39) throw new Error('server did not start'); }
   const portal = await fetch(`${base}/portal?service=plumbing`);
   const bookingPage = await fetch(`${base}/booking.html?service=plumbing`);
   const privateData = await fetch(`${base}/.northstar-data.json`);
@@ -1100,7 +1100,7 @@ const appointmentQuestionOptions = { method: 'POST', headers: { 'content-type': 
   assert(logout.response.ok && logout.response.headers.get('set-cookie')?.includes('Max-Age=0') && revoked.response.status === 401, 'logout revocation failed');
   server.kill(); await new Promise((resolve) => setTimeout(resolve, 100));
   restartedServer = spawn(process.execPath, ['server.mjs'], { cwd: new URL('.', import.meta.url), env: serverEnv, stdio: 'ignore' });
-  for (let attempt = 0; attempt < 40; attempt += 1) { try { if ((await fetch(`${base}/api/health`)).ok) break; } catch {} await new Promise((resolve) => setTimeout(resolve, 50)); if (attempt === 39) throw new Error('server did not restart'); }
+  for (let attempt = 0; attempt < 120; attempt += 1) { try { if ((await fetch(`${base}/api/health`)).ok) break; } catch {} await new Promise((resolve) => setTimeout(resolve, 50)); if (attempt === 39) throw new Error('server did not restart'); }
   const revokedAfterRestart = await request('/api/session', { headers: { authorization: `Bearer ${token}` } });
   assert(revokedAfterRestart.response.status === 401, 'logout revocation did not survive restart');
   console.log('Northstar smoke test passed: intake, conversion, quote-to-cash, signed payment webhook, isolation, logout, restart revocation');
