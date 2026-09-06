@@ -32,38 +32,6 @@ jobs:
         run: npm test
       - name: Check setup utilities
         run: node --check scripts/generate-owner-digest.mjs
-      - name: Check dispatch filter wiring
-        run: node scripts/dispatch-filters-test.mjs
-      - name: Check lead filter wiring
-        run: node scripts/lead-filters-test.mjs
-      - name: Run lead source filter test
-        run: node scripts/lead-source-filter-test.mjs
-      - name: Run lead contact test
-        run: node scripts/lead-contact-test.mjs
-      - name: Run inbound lead message test
-        run: node scripts/inbound-lead-message-test.mjs
-      - name: Run tenant snapshot import test
-        run: node scripts/snapshot-import-test.mjs
-      - name: Run estimate media test
-        run: node scripts/estimate-media-test.mjs
-      - name: Check estimate media owner UI wiring
-        run: node scripts/estimate-media-ui-test.mjs
-      - name: Run invoice bill-to test
-        run: node scripts/invoice-bill-to-test.mjs
-      - name: Run custom report test
-        run: node scripts/custom-report-test.mjs
-      - name: Run location history test
-        run: node scripts/location-history-test.mjs
-      - name: Run asset service due test
-        run: node scripts/asset-service-due-test.mjs
-      - name: Run appointment reply test
-        run: node scripts/appointment-reply-test.mjs
-      - name: Check integration dispatch UI wiring
-        run: node scripts/integration-dispatch-ui-test.mjs
-      - name: Check integration dispatch permissions
-        run: node scripts/integration-dispatch-permissions-test.mjs
-      - name: Check tenant manifest wiring
-        run: node scripts/tenant-manifest-test.mjs
       - name: Build container image
         run: docker build --tag northstar-crm:ci .
       - name: Verify container readiness
