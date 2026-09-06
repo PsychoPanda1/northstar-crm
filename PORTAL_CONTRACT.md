@@ -121,6 +121,7 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 - Confirmed jobs with a normalized `startsAt` in the past and no en-route or in-progress transition create a tenant-scoped urgent `Late appointment needs attention` item linked by `jobId`
 - The owner lead-notification action can mark a lead `Contacted` directly, using the same authenticated status route and recording `firstResponseAt`
 - `GET /api/dashboard` → the metrics projection includes `leadSlaBreaches`, the current count of uncontacted `New` leads past the configured response SLA
+- The same dashboard metrics projection includes `lateAppointments`, the current count of confirmed jobs whose normalized `startsAt` has passed
 - Uncontacted leads with `receivedAt` older than `NORTHSTAR_LEAD_RESPONSE_SLA_HOURS` (default 2, valid 1–72) appear as `Lead response SLA breached` with urgent status; moving a lead out of `New` records `firstResponseAt`, and invalid production SLA configuration fails readiness
 - `POST /api/notifications/:id/read` → acknowledge a currently active tenant notification without deleting its source record
 - Notification source actions remain available after acknowledgment so owners can reopen the linked lead, job, invoice, message, or other source record from history

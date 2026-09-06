@@ -122,6 +122,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - New landing-page leads appear in the owner action queue for immediate follow-up, and owner/dispatcher teams can atomically assign or advance up to 50 leads through the pipeline in one audited, idempotent batch
 - The lead action queue flags uncontacted leads that breach the configurable response SLA (`NORTHSTAR_LEAD_RESPONSE_SLA_HOURS`) and records the first response timestamp when staff begin follow-up
 - The owner dashboard exposes a live `Leads at risk` KPI for uncontacted leads past that response SLA
+- The owner dashboard exposes a live `Late appointments` KPI for confirmed visits that have passed their normalized start time
 - Confirmed appointments that pass their normalized start time without an en-route or in-progress transition surface as urgent owner action items
 - Owner and dispatcher lead assignment preserves a named follow-up owner with idempotent, auditable changes
 - Lead pipeline statuses can be advanced or marked lost with an auditable note before conversion
