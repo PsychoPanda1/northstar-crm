@@ -431,6 +431,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async optimizeRoute(date, technician, startLatitude, startLongitude, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for route optimization');
+    const response = await fetch('/api/dispatch/route-optimize', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ date, technician, ...(startLatitude !== undefined ? { startLatitude, startLongitude } : {}) }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'route optimization failed');
+    return response.json();
+  }
+
   async getInvoiceReceipt(id) {
     if (!this.remote) throw new Error('API required for invoice receipt');
     const response = await fetch(`/api/invoices/${encodeURIComponent(id)}/receipt`, { headers: { authorization: `Bearer ${this.token}` } });

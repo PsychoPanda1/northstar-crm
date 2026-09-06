@@ -6,7 +6,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const port = 5000 + Math.floor(Math.random() * 100);
+const port = 5300 + Math.floor(Math.random() * 1000);
 const dataFile = join(tmpdir(), `northstar-inbound-lead-message-${process.pid}-${Date.now()}.json`);
 const secret = 'inbound-message-test-secret-32-characters';
 const tenantId = 'clearwater-plumbing';
