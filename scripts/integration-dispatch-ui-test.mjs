@@ -66,6 +66,8 @@ const required = [
   ,'data-approved-estimate-scope'
   ,'APPROVED LINE ITEMS'
   ,"Jobs: 'dispatch'"
+  ,'openGlobalSearch'
+  ,'event.key === \'/\''
 ];
 for (const snippet of required) {
   if (!source.includes(snippet)) throw new Error(`integration dispatch UI wiring missing: ${snippet}`);

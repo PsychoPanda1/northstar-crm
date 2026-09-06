@@ -80,7 +80,9 @@ document.querySelector('#sign-out').addEventListener('click', async () => { awai
 document.querySelectorAll('[data-action]').forEach((button) => {
   button.addEventListener('click', () => { repository.recordAction(button.dataset.action); const views = { 'Review estimates': 'estimates', 'Open invoices': 'invoices', 'View service plans': 'plans', 'View pipeline': 'leads', 'Review job costs': 'job-costs' }; if (views[button.dataset.action]) openRecords(views[button.dataset.action]); else showToast(`${button.dataset.action} workspace ready to configure.`); });
 });
-document.querySelector('.icon-btn[aria-label="Search"]')?.addEventListener('click', () => { const searchButton = document.querySelector('#global-search-view'); if (searchButton) searchButton.click(); else showToast('Global search is still loading.'); });
+const openGlobalSearch = () => { const searchButton = document.querySelector('#global-search-view'); if (searchButton) searchButton.click(); else showToast('Global search is still loading.'); };
+document.querySelector('.icon-btn[aria-label="Search"]')?.addEventListener('click', openGlobalSearch);
+document.addEventListener('keydown', (event) => { const target = event.target; if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement || target?.isContentEditable) return; if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k' || event.key === '/') { event.preventDefault(); openGlobalSearch(); } });
 const drawer = document.querySelector('#record-drawer');
 const drawerTitle = document.querySelector('#drawer-title');
 const recordList = document.querySelector('#record-list');
