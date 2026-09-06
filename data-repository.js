@@ -799,6 +799,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async mergeCustomer(targetCustomerId, mergeCustomerId, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for customer merge');
+    const response = await fetch(`/api/customers/${encodeURIComponent(targetCustomerId)}/merge`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ mergeCustomerId }) });
+    if (!response.ok) throw new Error('customer merge failed');
+    return response.json();
+  }
+
   async createLocation(customerId, label, address, idempotencyKey = '') {
     if (!this.remote) throw new Error('API required for locations');
     const response = await fetch(`/api/customers/${encodeURIComponent(customerId)}/locations`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', ...(idempotencyKey ? { 'idempotency-key': idempotencyKey } : {}) }, body: JSON.stringify({ label, address }) });
