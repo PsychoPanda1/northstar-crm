@@ -279,7 +279,7 @@ const dispatchPaymentIntents = async (saved, claims, limit = 20) => {
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 10_000);
-      const response = await fetch(provider, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': intent.id, ...(PAYMENT_PROVIDER_API_KEY ? { authorization: 'Bearer ' + PAYMENT_PROVIDER_API_KEY } : {}) }, body: JSON.stringify({ paymentIntentId: intent.id, tenantId: claims.tenantId, amount: intent.amount, method: intent.method, customer: { id: intent.customerId || null, name: intent.customer, email: customer?.email || null, phone: customer?.phone || null }, invoiceId: intent.invoiceId, metadata: { jobId: intent.jobId || null, invoiceStatus: invoice?.status || null } }), signal: controller.signal });
+      const response = await fetch(provider, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': intent.id, ...(PAYMENT_PROVIDER_API_KEY ? { authorization: 'Bearer ' + PAYMENT_PROVIDER_API_KEY } : {}) }, body: JSON.stringify({ paymentIntentId: intent.id, tenantId: claims.tenantId, amount: intent.amount, method: intent.method, customer: { id: intent.customerId || null, name: intent.customer, email: customer?.email || null, phone: customer?.phone || null }, invoiceId: intent.invoiceId, metadata: { jobId: intent.jobId || null, installmentId: intent.installmentId || null, invoiceStatus: invoice?.status || null } }), signal: controller.signal });
       clearTimeout(timeout);
       const body = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(String(body.error || body.message || 'provider_http_' + response.status).slice(0, 240));
