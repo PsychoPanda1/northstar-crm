@@ -141,6 +141,32 @@ paths:
         '409': { $ref: '#/components/responses/IdempotencyConflict' }
         '422': { $ref: '#/components/responses/ValidationError' }
         '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/job-status/cancel:
+    post:
+      summary: Cancel an appointment from a status link
+      parameters:
+        - $ref: '#/components/parameters/StatusToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CancelRequest' }
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/job-status/calendar:
+    get:
+      summary: Download an appointment calendar file from a status link
+      parameters:
+        - $ref: '#/components/parameters/StatusToken'
+      responses:
+        '200': { $ref: '#/components/responses/CalendarDownload' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
   /api/public/customer-portal:
     get:
       summary: Read a customer-safe service portal
@@ -193,6 +219,67 @@ paths:
         '409': { $ref: '#/components/responses/IdempotencyConflict' }
         '422': { $ref: '#/components/responses/ValidationError' }
         '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/customer-portal/reschedule:
+    post:
+      summary: Reschedule a customer-owned appointment
+      parameters:
+        - $ref: '#/components/parameters/CustomerToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/RescheduleRequest'
+                - type: object
+                  required: [jobId]
+                  properties:
+                    jobId: { type: string, maxLength: 120 }
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/customer-portal/cancel:
+    post:
+      summary: Cancel a customer-owned appointment
+      parameters:
+        - $ref: '#/components/parameters/CustomerToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/CancelRequest'
+                - type: object
+                  required: [jobId]
+                  properties:
+                    jobId: { type: string, maxLength: 120 }
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/customer-portal/calendar:
+    get:
+      summary: Download a customer-owned appointment calendar file
+      parameters:
+        - $ref: '#/components/parameters/CustomerToken'
+        - name: jobId
+          in: query
+          required: true
+          schema: { type: string, maxLength: 120 }
+      responses:
+        '200': { $ref: '#/components/responses/CalendarDownload' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
 components:
   parameters:
     Service:
@@ -315,6 +402,11 @@ components:
       required: [slotId]
       properties:
         slotId: { type: string, maxLength: 120 }
+    CancelRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason: { type: string, minLength: 3, maxLength: 300 }
     JobStatus:
       type: object
       required: [service, status, time, availableRescheduleSlots]
@@ -372,6 +464,16 @@ components:
         Retry-After:
           schema: { type: integer, example: 60 }
       content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    CalendarDownload:
+      description: iCalendar appointment download
+      headers:
+        Cache-Control:
+          schema: { type: string, example: no-store }
+        Content-Disposition:
+          schema: { type: string }
+      content:
+        text/calendar:
+          schema: { type: string, format: binary }
     LeadAccepted:
       description: Lead accepted
       content: { application/json: { schema: { type: object, required: [id, received], properties: { id: { type: string }, received: { type: boolean } } } } }
