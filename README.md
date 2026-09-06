@@ -133,6 +133,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - The same selection can apply one validated priority to up to 50 open requests for fast incident triage
 - The same selection can bulk-acknowledge up to 50 open requests as in progress with atomic validation and retry-safe audit history
 - The same selection can bulk-resolve up to 50 open or in-progress requests with a bounded resolution note and retry-safe audit history
+- Owners and dispatchers can convert a customer request into an unassigned job from the request queue, preserving the customer, priority, request link, and audit trail with idempotent retries
 - The request queue ranks open work by urgency and age so the oldest high-risk customer demand stays visible to dispatchers
 - Request queues can be filtered server-side by lifecycle status, priority, or assigned owner for focused dispatch handoff
 - The owner Requests drawer exposes those status, priority, and assigned-owner filters with a clear-filters control

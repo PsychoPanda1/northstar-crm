@@ -275,7 +275,8 @@ try {
   assert(idempotentJob.response.status === 201 && idempotentJobRetry.response.status === 200 && idempotentJobRetry.body.duplicate === true && idempotentJobRetry.body.id === idempotentJob.body.id, 'job creation idempotency failed');
   const jobCreationAudit = await request('/api/audit?search=Scheduled%20repair', { headers: { authorization: `Bearer ${token}` } });
   const structuredJob = await request('/api/jobs', jsonOptions('POST', { customerId: createdCustomer.body.id, service: 'Structured appointment', time: 'Saturday 9:00 AM', startsAt: '2026-09-12T13:00:00.000Z', endsAt: '2026-09-12T14:00:00.000Z', timeZone: 'America/New_York' }, token));
-  const manualSlot = extendedAvailability.body.slotOptions.find((slot) => slot.id.startsWith('date-'));
+  const freshExtendedAvailability = await request('/api/public/availability?service=plumbing&days=7');
+  const manualSlot = freshExtendedAvailability.body.slotOptions.find((slot) => slot.id.startsWith('date-'));
   const slotJob = await request('/api/jobs', jsonOptions('POST', { customerId: createdCustomer.body.id, service: 'Slot picker appointment', time: manualSlot.label, slotId: manualSlot.id, startsAt: manualSlot.startsAt, endsAt: manualSlot.endsAt, timeZone: manualSlot.timeZone }, token));
   const routeCustomer = await request('/api/customers', jsonOptions('POST', { name: 'Route Customer', phone: '843-555-0187' }, token));
   const routeJobA = await request('/api/jobs', jsonOptions('POST', { customerId: routeCustomer.body.id, service: 'Route stop A', time: 'Saturday 11:00 AM', startsAt: '2026-09-12T15:00:00.000Z', endsAt: '2026-09-12T16:00:00.000Z', timeZone: 'America/New_York' }, token));
@@ -629,7 +630,7 @@ try {
   const planReminderRetry = await request('/api/plans/reminders', jsonOptions('POST', { days: 7, channel: 'Email' }, token));
   const renewedPlan = await request(`/api/plans/${plan.body.id}/renew`, { ...jsonOptions('POST', { time: 'Next month 9:00 AM', locationId: planLocation.body.id }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-plan-renewal' } });
   const duplicateRenewedPlan = await request(`/api/plans/${plan.body.id}/renew`, { ...jsonOptions('POST', { time: 'Next month 9:00 AM' }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-plan-renewal' } });
-  const availabilityForPlan = await request('/api/public/availability?service=plumbing');
+  const availabilityForPlan = await request('/api/public/availability?service=plumbing&days=14');
   const recurringSlot = availabilityForPlan.body.slotOptions[0];
   const slotRenewedPlan = await request(`/api/plans/${plan.body.id}/renew`, jsonOptions('POST', { slotId: recurringSlot.id }, token));
   const seriesFirstStartsAt = new Date(Date.now() + 20 * 24 * 60 * 60 * 1000); seriesFirstStartsAt.setUTCHours(14, 0, 0, 0);
@@ -662,7 +663,7 @@ try {
   const techVisitInProgress = await request(`/api/public/technician-job/visit-status${techUrl.search}`, jsonOptions('POST', { visitId: technicianVisit.body.id, status: 'In progress' }));
   const techVisitCompleted = await request(`/api/public/technician-job/visit-status${techUrl.search}`, jsonOptions('POST', { visitId: technicianVisit.body.id, status: 'Completed' }));
   const openSecondVisit = await request(`/api/jobs/${fieldJob.body.id}/visits`, jsonOptions('POST', { slotId: extendedAvailability.body.slotOptions.at(-1).id, technician: 'Alex Rivera' }, token));
-  const parentReschedule = await request(`/api/jobs/${fieldJob.body.id}/reschedule`, jsonOptions('POST', { slotId: extendedAvailability.body.slotOptions.at(-1).id }, token));
+  const parentReschedule = await request(`/api/jobs/${fieldJob.body.id}/reschedule`, jsonOptions('POST', { slotId: freshExtendedAvailability.body.slotOptions.at(-1).id }, token));
   const visitConflictJob = await request('/api/jobs', jsonOptions('POST', { customerId: converted.body.customer.id, service: 'Visit conflict check', time: 'Saturday 10:00 AM' }, token));
   await request(`/api/jobs/${visitConflictJob.body.id}/assign`, jsonOptions('POST', { technician: 'Alex Rivera' }, token));
   const conflictingVisit = await request(`/api/jobs/${visitConflictJob.body.id}/visits`, jsonOptions('POST', { time: parentReschedule.body.job.time, technician: 'Alex Rivera' }, token));
