@@ -243,7 +243,7 @@ Build and run the server with a persistent data volume:
 
 ```sh
 docker build -t northstar-crm .
-copy .env.example .env
+cp .env.example .env
 # Replace every placeholder in .env before starting the container.
 docker run --rm --env-file .env -p 4173:4173 -v northstar-data:/app/data \
   northstar-crm
