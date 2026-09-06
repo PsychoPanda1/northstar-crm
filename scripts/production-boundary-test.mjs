@@ -44,7 +44,7 @@ const env = {
 };
 
 const child = spawn(process.execPath, ['server.mjs'], { cwd: root, env, stdio: 'ignore' });
-const invalidChild = spawn(process.execPath, ['server.mjs'], { cwd: root, env: { ...env, PORT: String(invalidPort), NORTHSTAR_DATA_FILE: invalidDataFile, NORTHSTAR_SESSION_FILE: invalidSessionFile, NORTHSTAR_REQUEST_RESPONSE_SLA_HOURS: '0', NORTHSTAR_OIDC_ISSUER: 'https://issuer.example.test', NORTHSTAR_SERVICE_ORIGINS_JSON: JSON.stringify({ plumbing: ['not a valid origin'] }) }, stdio: 'ignore' });
+const invalidChild = spawn(process.execPath, ['server.mjs'], { cwd: root, env: { ...env, PORT: String(invalidPort), NORTHSTAR_DATA_FILE: invalidDataFile, NORTHSTAR_SESSION_FILE: invalidSessionFile, NORTHSTAR_REQUEST_RESPONSE_SLA_HOURS: '0', NORTHSTAR_OIDC_ISSUER: 'https://issuer.example.test', NORTHSTAR_ALLOWED_ORIGINS: 'https://valid.example,not-an-origin', NORTHSTAR_SERVICE_ORIGINS_JSON: JSON.stringify({ plumbing: ['not a valid origin'] }) }, stdio: 'ignore' });
 const strictChild = spawn(process.execPath, ['server.mjs'], { cwd: root, env: { ...env, PORT: String(strictPort), NORTHSTAR_DATA_FILE: strictDataFile, NORTHSTAR_SESSION_FILE: strictSessionFile, NORTHSTAR_REQUIRE_LIVE_PROVIDERS: 'true' }, stdio: 'ignore' });
 const oidcOnlyChild = spawn(process.execPath, ['server.mjs'], { cwd: root, env: { ...env, PORT: String(oidcOnlyPort), NORTHSTAR_DATA_FILE: oidcOnlyDataFile, NORTHSTAR_SESSION_FILE: oidcOnlySessionFile, NORTHSTAR_OWNER_EMAIL: '', NORTHSTAR_OWNER_PASSWORD_DIGEST: '', NORTHSTAR_OWNERS_JSON: '[]', NORTHSTAR_STAFF_JSON: '[]', NORTHSTAR_OIDC_ISSUER: 'https://issuer.example.test', NORTHSTAR_OIDC_AUDIENCE: 'northstar-owner-portal', NORTHSTAR_OIDC_JWKS_URL: 'https://issuer.example.test/.well-known/jwks.json', NORTHSTAR_OIDC_ACCOUNTS_JSON: JSON.stringify([{ subject: 'oidc-owner', id: 'oidc-owner', name: 'OIDC Owner', role: 'owner', tenantId: 'johnson-service-co' }]) }, stdio: 'ignore' });
 const outboundUrlChild = spawn(process.execPath, ['server.mjs'], { cwd: root, env: { ...env, PORT: String(outboundUrlPort), NORTHSTAR_DATA_FILE: outboundUrlDataFile, NORTHSTAR_SESSION_FILE: outboundUrlSessionFile, NORTHSTAR_PUBLIC_URL: 'http://crm.example.test', NORTHSTAR_MESSAGE_PROVIDER_URL: 'https://provider.example.test/messages' }, stdio: 'ignore' });
@@ -89,7 +89,7 @@ try {
     try { invalidReady = await getJsonFrom(invalidBase, '/api/ready'); } catch {}
     if (!invalidReady) await new Promise((resolve) => setTimeout(resolve, 100));
   }
-  if (!invalidReady || invalidReady.response.status !== 503 || invalidReady.body.checks?.requestResponseSlaConfiguration !== false || invalidReady.body.checks?.identityProviderConfiguration !== false || invalidReady.body.checks?.serviceOriginConfiguration !== false) throw new Error('invalid production configuration did not fail readiness');
+  if (!invalidReady || invalidReady.response.status !== 503 || invalidReady.body.checks?.requestResponseSlaConfiguration !== false || invalidReady.body.checks?.identityProviderConfiguration !== false || invalidReady.body.checks?.allowedOriginsConfiguration !== false || invalidReady.body.checks?.serviceOriginConfiguration !== false) throw new Error('invalid production configuration did not fail readiness');
   let strictReady = null;
   for (let attempt = 0; attempt < 200 && !strictReady; attempt += 1) {
     try { strictReady = await getJsonFrom(strictBase, '/api/ready'); } catch {}
