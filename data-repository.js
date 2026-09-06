@@ -161,6 +161,17 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async compareCustomReport(metrics = [], currentRange = {}, previousRange = {}, filters = {}, groupBy = '') {
+    if (!this.remote) throw new Error('API required for custom report comparison');
+    const query = new URLSearchParams(); (Array.isArray(metrics) ? metrics : []).slice(0, 20).forEach((metric) => query.append('metric', metric));
+    if (currentRange?.startDate) query.set('startDate', String(currentRange.startDate)); if (currentRange?.endDate) query.set('endDate', String(currentRange.endDate));
+    if (previousRange?.startDate) query.set('previousStartDate', String(previousRange.startDate)); if (previousRange?.endDate) query.set('previousEndDate', String(previousRange.endDate));
+    Object.entries(filters || {}).slice(0, 4).forEach(([key, value]) => { if (value) query.set(key, String(value)); }); if (groupBy) query.set('groupBy', String(groupBy));
+    const response = await fetch(`/api/reports/custom/compare?${query}`, { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('custom report comparison unavailable');
+    return response.json();
+  }
+
   async getCustomReportPreferences() {
     if (!this.remote) throw new Error('API required for reporting preferences');
     const response = await fetch('/api/reports/custom/preferences', { headers: { authorization: `Bearer ${this.token}` } });
