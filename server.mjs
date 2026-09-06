@@ -1715,9 +1715,11 @@ if (pathname === '/api/dispatch/bulk-invoice' && req.method === 'POST') {
   if (jobs.some((job) => !job)) return json(res, 404, { error: 'job_not_found' });
   if (jobs.some((job) => job.status !== 'Completed')) return json(res, 409, { error: 'completed_jobs_required' });
   if (jobs.some((job) => !job.customerId)) return json(res, 409, { error: 'customer_required_for_invoice' });
-  const invoiceAmounts = jobs.map((job) => Number(amounts[job.id] ?? body.amount));
+  const estimatesByJob = Object.fromEntries(jobs.map((job) => [job.id, job.estimateId ? saved.estimates.find((estimate) => estimate.id === job.estimateId) : null]));
+  const invoiceAmounts = jobs.map((job) => Number(amounts[job.id] ?? (body.amount !== undefined ? body.amount : estimatesByJob[job.id]?.amount)));
+  const estimateDefaultsByJob = Object.fromEntries(jobs.map((job) => [job.id, !Object.prototype.hasOwnProperty.call(requestedLineItems, job.id) && body.amount === undefined && !Object.prototype.hasOwnProperty.call(amounts, job.id) && Boolean(estimatesByJob[job.id])]));
   const lineItemsByJob = Object.fromEntries(jobs.map((job) => {
-    const rawItems = Array.isArray(requestedLineItems[job.id]) ? requestedLineItems[job.id].slice(0, 20) : [];
+    const rawItems = Array.isArray(requestedLineItems[job.id]) ? requestedLineItems[job.id].slice(0, 20) : (estimateDefaultsByJob[job.id] && Array.isArray(estimatesByJob[job.id]?.lineItems) ? estimatesByJob[job.id].lineItems.slice(0, 20) : []);
     const items = rawItems.map((item) => {
       const description = String(item.description || '').trim().slice(0, 120);
       const quantity = Number(item.quantity);
@@ -1731,7 +1733,7 @@ if (pathname === '/api/dispatch/bulk-invoice' && req.method === 'POST') {
     if (supplied !== undefined && !Array.isArray(supplied)) return true;
     const items = lineItemsByJob[job.id];
     return items.some((item) => item.description.length < 2 || !Number.isFinite(item.quantity) || item.quantity <= 0 || item.quantity > 1000 || !Number.isFinite(item.unitPrice) || item.unitPrice <= 0 || !Number.isFinite(item.amount) || item.amount <= 0)
-      || (items.length > 0 && Math.round(items.reduce((sum, item) => sum + item.amount, 0) * 100) !== Math.round(invoiceAmounts[jobs.indexOf(job)] * 100));
+      || (items.length > 0 && !estimateDefaultsByJob[job.id] && Math.round(items.reduce((sum, item) => sum + item.amount, 0) * 100) !== Math.round(invoiceAmounts[jobs.indexOf(job)] * 100));
   });
   if (invoiceAmounts.some((amount) => !Number.isFinite(amount) || amount <= 0 || amount > 1000000) || hasInvalidLineItems) return json(res, 422, { error: 'valid_bulk_invoice_amounts_and_line_items_required' });
   const idempotencyKey = String(req.headers['idempotency-key'] || '').trim().slice(0, 100);
@@ -1745,7 +1747,8 @@ if (pathname === '/api/dispatch/bulk-invoice' && req.method === 'POST') {
   if (jobs.some((job) => invoiceForJob(saved, job))) return json(res, 409, { error: 'job_invoice_already_exists' });
   const invoices = jobs.map((job, index) => {
     const amount = invoiceAmounts[index];
-    const invoice = { id: `INV-${Date.now()}-${index + 1}`, tenantId: claims.tenantId, customerId: job.customerId, jobId: job.id, customer: job.customer, value: `$${amount.toFixed(2)}`, amount, ...(lineItemsByJob[job.id].length ? { lineItems: lineItemsByJob[job.id] } : {}), paidAmount: 0, balance: amount, status: 'Due', due, createdAt: new Date().toISOString(), ...(idempotencyKey ? { jobInvoiceIdempotencyKey: `${idempotencyKey}:${index + 1}` } : {}) };
+    const estimate = estimatesByJob[job.id];
+    const invoice = { id: `INV-${Date.now()}-${index + 1}`, tenantId: claims.tenantId, customerId: job.customerId, jobId: job.id, ...(estimate ? { estimateId: estimate.id } : {}), customer: job.customer, value: `$${amount.toFixed(2)}`, amount, ...(lineItemsByJob[job.id].length ? { lineItems: lineItemsByJob[job.id] } : {}), ...(estimate ? { subtotal: estimate.subtotal ?? null, discount: estimate.discount ?? 0, taxRate: estimate.taxRate ?? 0, tax: estimate.tax ?? 0 } : {}), paidAmount: 0, balance: amount, status: 'Due', due, createdAt: new Date().toISOString(), ...(idempotencyKey ? { jobInvoiceIdempotencyKey: `${idempotencyKey}:${index + 1}` } : {}) };
     saved.invoices.unshift(invoice);
     recordActivity(saved, job.customer, 'Invoice', `Invoice ${invoice.id} created for completed ${job.service}.`, invoice.status);
     recordAudit(saved, claims, 'invoice.created', 'invoice', invoice.id, `${job.id} · ${invoice.customer} · ${invoice.value}`);
