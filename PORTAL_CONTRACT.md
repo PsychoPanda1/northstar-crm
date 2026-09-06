@@ -122,6 +122,7 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 - `GET /api/dashboard` → the metrics projection includes `leadSlaBreaches`, the current count of uncontacted `New` leads past the configured response SLA
 - Uncontacted leads with `receivedAt` older than `NORTHSTAR_LEAD_RESPONSE_SLA_HOURS` (default 2, valid 1–72) appear as `Lead response SLA breached` with urgent status; moving a lead out of `New` records `firstResponseAt`, and invalid production SLA configuration fails readiness
 - `POST /api/notifications/:id/read` → acknowledge a currently active tenant notification without deleting its source record
+- Notification source actions remain available after acknowledgment so owners can reopen the linked lead, job, invoice, message, or other source record from history
 - `GET /api/reviews` → tenant-scoped completed-job ratings and comments
 - `GET /api/export?type=reviews` → tenant-scoped review history CSV for owner reporting
 - `GET /api/materials` and `POST /api/materials` → tenant-scoped inventory records with stock and reorder thresholds; creation accepts an optional `Idempotency-Key` for safe retries
