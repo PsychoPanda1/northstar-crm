@@ -158,6 +158,7 @@ assert(estimate.includes('pricing-breakdown') && estimate.includes('Subtotal') &
 assert(estimate.includes("['Draft','Sent'].includes(body.status)") && estimate.includes('id="approve"'), 'delivered estimates cannot be approved from the public estimate page');
 assert(customer.includes('sessionStorage') && customer.includes('retryKey') && customer.includes('idempotency-key'), 'customer portal actions do not preserve mobile retry identity');
 assert(customer.includes('data-action="job-request"') && customer.includes('/api/public/customer-portal/request'), 'customer portal does not expose appointment-scoped questions');
+assert(customer.includes("Priority: Low, Normal, High, or Urgent") && server.includes("const priorities = ['Low', 'Normal', 'High', 'Urgent']") && server.includes("item.priority === 'Urgent'"), 'customer request priority triage is not wired');
 assert(customer.includes("post('/api/public/customer-portal/confirm'") && customer.includes('retryKey =') && server.includes('confirmationIdempotencyFingerprint'), 'customer appointment confirmation does not preserve retry identity');
 assert(customer.includes('/api/public/customer-portal/calendar') && customer.includes('Add to calendar'), 'customer portal does not expose calendar handoff');
 assert(technician.includes('create-estimate') && technician.includes('estimate-catalog') && technician.includes('/api/public/technician-job/estimate'), 'technician field estimate workflow is not wired');

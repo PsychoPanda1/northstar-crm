@@ -218,6 +218,7 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 - Open customer requests become urgent after tenant `requestResponseSlaHours` (1–168 hours) when configured, otherwise `NORTHSTAR_REQUEST_RESPONSE_SLA_HOURS` (default 24); invalid values fail production readiness
 - Request alerts include elapsed age in hours while newer than one day and days once older, making the queue’s urgency explainable to the owner
 - The authenticated dashboard includes `metrics.openCustomerRequests`, matching the tenant-scoped open request queue
+- Customer portal requests accept `priority` values `Low`, `Normal`, `High`, or `Urgent`; urgent requests enter the owner queue as urgent immediately and the priority is included in the request fingerprint and owner detail
 - `POST /api/public/customer-portal/request?token=...` → accept a customer reschedule, cancellation, or question request and route it into the owner action queue; reused idempotency keys reject conflicting job/type/message payloads
 - `POST /api/public/customer-portal/confirm?token=...` → confirm a customer-owned appointment idempotently and append a customer timeline event
 - `POST /api/requests/:id/resolve` → owner/dispatcher-only resolution of a tenant-owned customer request with an optional owner note and `Idempotency-Key`; the key is bound to the resolution note, changed payloads return `409 idempotency_key_reused`, and safe retries return an idempotent duplicate without repeating activity/audit side effects
