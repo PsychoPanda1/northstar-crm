@@ -1047,6 +1047,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async updateEstimateOptionDetails(estimateId, options, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for estimate option details');
+    const response = await fetch(`/api/estimates/${encodeURIComponent(estimateId)}/options`, { method: 'PATCH', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ options }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'estimate option details failed');
+    return response.json();
+  }
+
   async updateCallOutcome(callId, outcome, note = '', idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for call outcomes');
     const response = await fetch(`/api/calls/${encodeURIComponent(callId)}/outcome`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ outcome, note }) });
