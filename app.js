@@ -5,7 +5,7 @@ const serviceKey = new URLSearchParams(window.location.search).get('service') ||
 const repository = new NorthstarDemoRepository(tenant);
 window.northstarRepository = repository;
 await repository.ready;
-const sessionPermissions = new Set(repository.session?.permissions || []);
+const sessionPermissions = new Set(repository.session?.permissions || (repository.previewOnly ? ['jobs:write', 'reports:read'] : []));
 document.querySelectorAll('[data-required-permission]').forEach((node) => { node.hidden = !sessionPermissions.has(node.dataset.requiredPermission); });
 const sessionRole = repository.session?.owner?.role || 'owner';
 const sessionRoleLabel = { owner: 'Owner', dispatcher: 'Dispatcher', technician: 'Technician', accountant: 'Accountant' }[sessionRole] || 'Staff';
