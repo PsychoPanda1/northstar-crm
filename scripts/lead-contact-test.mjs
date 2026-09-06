@@ -22,15 +22,20 @@ try {
   if (!lead.response.ok || !login.response.ok) throw new Error('lead contact test setup failed');
   const token = login.body.token;
   const manualHeaders = { authorization: `Bearer ${token}`, 'idempotency-key': 'manual-lead-contract-key' };
-  const manual = await postJson('/api/leads', { name: 'Manual Lead Contract', phone: '843-555-0174', email: 'manual@example.com', service: 'Water heater repair', source: 'Phone call', location: '2 Contract Way', note: 'Needs same-day callback', utm_campaign: 'manual-contract' }, manualHeaders);
-  const manualDuplicate = await postJson('/api/leads', { name: 'Manual Lead Contract', phone: '843-555-0174', email: 'manual@example.com', service: 'Water heater repair', source: 'Phone call', location: '2 Contract Way', note: 'Needs same-day callback', utm_campaign: 'manual-contract' }, manualHeaders);
+  const manualPayload = { name: 'Manual Lead Contract', phone: '843-555-0291', email: 'manual@example.com', service: 'Water heater repair', source: 'Phone call', location: '2 Contract Way', note: 'Needs same-day callback', utm_campaign: 'manual-contract' };
+  const manual = await postJson('/api/leads', manualPayload, manualHeaders);
+  const manualDuplicate = await postJson('/api/leads', manualPayload, manualHeaders);
   const headers = { authorization: `Bearer ${token}`, 'idempotency-key': 'lead-contact-test-key' };
   const contact = await postJson(`/api/leads/${lead.body.id}/contact`, { channel: 'SMS', message: 'A quick follow-up from the service team.' }, headers);
   const duplicate = await postJson(`/api/leads/${lead.body.id}/contact`, { channel: 'SMS', message: 'A quick follow-up from the service team.' }, headers);
+  const existingCustomer = await postJson('/api/customers', { name: 'Existing Customer Identity', phone: manualPayload.phone, email: 'existing@example.com', location: '3 Contract Way' }, { authorization: `Bearer ${token}` });
+  const availability = await request('/api/public/availability?service=plumbing&days=14');
+  const slot = availability.body.slotOptions?.[0];
+  const conversion = slot ? await postJson(`/api/leads/${manual.body.lead?.id}/convert`, { time: slot.label, slotId: slot.id, startsAt: slot.startsAt, endsAt: slot.endsAt }, { authorization: `Bearer ${token}`, 'idempotency-key': 'manual-lead-conversion-key' }) : { response: { status: 0 }, body: {} };
   const messages = await request('/api/messages', { headers: { authorization: `Bearer ${token}` } });
   const queued = (messages.body.items || []).find((item) => item.leadId === lead.body.id);
   const stageHistory = contact.body.lead?.stageHistory || [];
-  if (manual.response.status !== 201 || manual.body.lead?.phone !== '843-555-0174' || manual.body.lead?.location !== '2 Contract Way' || manual.body.lead?.attribution?.utm_campaign !== 'manual-contract' || manualDuplicate.response.status !== 200 || !manualDuplicate.body.duplicate || contact.response.status !== 201 || contact.body.lead?.status !== 'Contacted' || stageHistory.length < 2 || stageHistory.at(-2)?.to !== 'New' || stageHistory.at(-1)?.to !== 'Contacted' || stageHistory.at(-1)?.actor !== 'workflow' || duplicate.response.status !== 200 || !duplicate.body.duplicate || queued?.status !== 'Queued (provider pending)') throw new Error('manual lead enrichment, contact queue, stage history, or idempotency failed');
+  if (manual.response.status !== 201 || manual.body.lead?.phone !== manualPayload.phone || manual.body.lead?.location !== '2 Contract Way' || manual.body.lead?.attribution?.utm_campaign !== 'manual-contract' || manualDuplicate.response.status !== 200 || !manualDuplicate.body.duplicate || contact.response.status !== 201 || contact.body.lead?.status !== 'Contacted' || stageHistory.length < 2 || stageHistory.at(-2)?.to !== 'New' || stageHistory.at(-1)?.to !== 'Contacted' || stageHistory.at(-1)?.actor !== 'workflow' || duplicate.response.status !== 200 || !duplicate.body.duplicate || queued?.status !== 'Queued (provider pending)' || existingCustomer.response.status !== 201 || conversion.response.status !== 201 || conversion.body.customer?.id !== existingCustomer.body.id || conversion.body.job?.customerId !== existingCustomer.body.id) throw new Error('manual lead enrichment, contact queue, stage history, idempotency, or conversion identity failed');
   console.log('Northstar lead contact test passed');
 } finally {
   if (child && !child.killed) child.kill();
