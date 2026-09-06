@@ -682,6 +682,14 @@ components:
         jobs:
           type: array
           items: { type: object }
+        invoices:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              invoicePdfUrl: { type: string, format: uri }
+              invoicePdfLinkExpiresInHours: { type: integer, example: 72 }
     Error:
       type: object
       required: [error]
