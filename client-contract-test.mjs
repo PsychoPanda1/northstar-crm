@@ -35,6 +35,7 @@ const searchPagination = readFileSync(`${root}search-pagination.js`, 'utf8');
 const deploymentVerifier = readFileSync(`${root}scripts/verify-deployment.mjs`, 'utf8');
 const callRecordingsOwner = readFileSync(`${root}call-recordings-owner.js`, 'utf8');
 const servicePlanRequestOwner = readFileSync(`${root}service-plan-request-owner.js`, 'utf8');
+const inventoryProviderRetryOwner = readFileSync(`${root}inventory-provider-retry-owner.js`, 'utf8');
 const deploymentWorkflow = readFileSync(`${root}.github/workflows/verify-deployment.yml`, 'utf8');
 const packageJson = JSON.parse(readFileSync(`${root}package.json`, 'utf8'));
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
@@ -325,4 +326,5 @@ assert(server.includes('normalizeIntakeFields') && server.includes('intakeAnswer
 assert(app.includes("sessionPermissions.has('tasks:write') ? repository.list('tasks') : Promise.resolve([])"), 'dashboard focus must not request owner tasks for roles without task permission');
 assert(server.includes("/api/public/customer-portal/service-plan-request") && openapi.includes('/api/public/customer-portal/service-plan-request:') && openapi.includes('ServicePlanRequest') && customer.includes('data-plan-request'), 'customer portal service-plan change request workflow is not covered');
 assert(server.includes('fulfill-plan') && repository.includes('fulfillServicePlanRequest') && index.includes('/service-plan-request-owner.js') && northstarServiceWorker.includes("'/service-plan-request-owner.js'") && servicePlanRequestOwner.includes('data-plan-request-fulfill'), 'owner service-plan request fulfillment workflow is not covered');
+assert(repository.includes('async retryInventory') && index.includes('/inventory-provider-retry-owner.js') && northstarServiceWorker.includes("'/inventory-provider-retry-owner.js'") && inventoryProviderRetryOwner.includes('data-inventory-provider-retry'), 'inventory provider retry control is not covered');
 console.log('Northstar client contract checks passed');
