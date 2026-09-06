@@ -32,6 +32,8 @@ jobs:
         run: npm test
       - name: Check setup utilities
         run: node --check scripts/generate-owner-digest.mjs
+      - name: Check dispatch filter wiring
+        run: node scripts/dispatch-filters-test.mjs
       - name: Build container image
         run: docker build --tag northstar-crm:ci .
       - name: Verify container readiness
