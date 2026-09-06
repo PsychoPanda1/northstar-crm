@@ -25,6 +25,7 @@ const ci = readFileSync(`${root}.github/workflows/ci.yml`, 'utf8');
 const compose = readFileSync(`${root}docker-compose.yml`, 'utf8');
 const robots = readFileSync(`${root}robots.txt`, 'utf8');
 const openapi = readFileSync(`${root}openapi.yaml`, 'utf8');
+const smoke = readFileSync(`${root}smoke-test.mjs`, 'utf8');
 const locationPicker = readFileSync(`${root}location-picker.js`, 'utf8');
 const settings = readFileSync(`${root}settings.js`, 'utf8');
 const customReportOwner = readFileSync(`${root}custom-report-owner.js`, 'utf8');
@@ -78,6 +79,7 @@ assert(server.includes('const configuredCatalog = (() =>') && server.includes('c
 assert(server.includes("catalogUpdateMatch && req.method === 'PATCH'") && server.includes("item.active !== false") && repository.includes('updateCatalogItem'), 'catalog lifecycle controls are not wired');
 assert(server.includes('const configuredEnvironmentValid = (() =>') && server.includes("configuration: process.env.NODE_ENV !== 'production' || configuredEnvironmentValid"), 'production readiness must validate deployment configuration');
 assert(server.includes('publicUrlConfigurationValid') && server.includes('publicUrlConfiguration:') && envExample.includes('NORTHSTAR_PUBLIC_URL=https://crm.example.com'), 'provider-backed production links must require an explicit HTTPS public origin');
+assert(server.includes('publicUrlConfiguration: publicUrlConfigurationValid') && smoke.includes('publicUrlConfiguration ==='), 'integration health must surface public URL configuration state');
 assert(productionBoundary.includes('outboundUrlPort') && productionBoundary.includes('publicUrlConfiguration !== false'), 'production boundary must verify provider-backed public URL readiness failure');
 assert(readFileSync(`${root}smoke-test.mjs`, 'utf8').includes("NORTHSTAR_PUBLIC_URL: 'https://crm.example.test'"), 'production smoke fixture must model an HTTPS public origin when payment delivery is enabled');
 assert(server.includes('auditLedger: Object.keys(tenants).every(auditLedgerHealthyFor)') && server.includes('auditLedgerHealthyFor'), 'production readiness must fail closed on a tampered audit ledger');
