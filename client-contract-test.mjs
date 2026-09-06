@@ -134,6 +134,7 @@ assert(repository.includes('if (!this.previewOnly) localStorage.removeItem(this.
 assert(repository.includes('this.session = null;') && repository.includes('this.state = {};') && repository.includes('sessionStorage.removeItem(this.tokenKey)'), 'repository logout must clear authenticated session state');
 assert(app.includes("if (window.location.protocol !== 'file:') demoLogin.hidden = true") && app.includes("showToast('Session signed out.')"), 'hosted owner dialog must hide preview-only demo access');
 assert(app.includes('repository.authRequired') && app.includes('Owner sign-in required'), 'HTTP authentication failure does not fail closed');
+assert(repository.includes('loginWithOidcToken') && repository.includes("fetch('/api/auth/oidc'"), 'owner repository does not expose the production OIDC exchange seam');
 assert(app.includes('decorateDispatchNoShows(); decorateDispatchRebooks();'), 'dispatch recovery actions are not reapplied after search');
 assert(app.includes("!['Canceled', 'No-show'].includes(status)"), 'dispatch rebooking does not include no-show jobs');
 assert(app.includes('data-job-invoice') && repository.includes('createJobInvoice'), 'completed-job invoicing action is not wired through the client repository');

@@ -63,6 +63,13 @@ class NorthstarDemoRepository {
     const result = await response.json(); this.token = result.token; sessionStorage.setItem(this.tokenKey, this.token); return result;
   }
 
+  async loginWithOidcToken(idToken) {
+    if (!this.apiAvailable) throw new Error('api unavailable');
+    const response = await fetch('/api/auth/oidc', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ idToken }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'identity login failed');
+    const result = await response.json(); this.token = result.token; sessionStorage.setItem(this.tokenKey, this.token); return result;
+  }
+
   async refreshSession() {
     if (!this.apiAvailable || !this.token) throw new Error('session unavailable');
     const response = await fetch('/api/auth/refresh', { method: 'POST', headers: { authorization: `Bearer ${this.token}` }, __northstarRefresh: true });
