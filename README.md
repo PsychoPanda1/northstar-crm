@@ -137,7 +137,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Structured SMS/email message queue with explicit provider-pending status, server-side provider dispatch, and timeline capture
 - Tenant-scoped lead-provider dispatch preserves landing-page contact and campaign attribution context, uses stable idempotency keys, and records delivery state for marketing or call-center handoff
 - Tenant-scoped inventory and accounting provider dispatch preserves material, invoice, payment, and purchase-order context with stable idempotency keys and durable delivery state for warehouse/ERP handoff
-- Optional server-side automation worker runs appointment, estimate, receivables, renewal, and configured lead-, inventory-, and accounting-provider delivery work on a bounded cadence with deduplication, retry limits, opt-out enforcement, and audit evidence
+- Optional server-side automation worker runs appointment, estimate, receivables, renewal, and configured lead-, inventory-, accounting-, and document-provider delivery work on a bounded cadence with deduplication, retry limits, opt-out enforcement, and audit evidence
 - When providers are configured, the worker also submits queued messages and payment intents automatically; invoice settlement still requires a signed provider webhook
 - The same opt-in worker can create tenant-local recurring-plan invoices after `NORTHSTAR_PLAN_BILLING_DAY` (1–28), with durable period guards; leave it at `0` for manual billing
 - Signed inbound SMS/email replies can be matched to customers and optional jobs for two-way communication history
