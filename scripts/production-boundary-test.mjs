@@ -1,5 +1,5 @@
 import { createHmac } from 'node:crypto';
-import { existsSync, readFileSync, unlinkSync } from 'node:fs';
+import { existsSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawn } from 'node:child_process';
@@ -43,6 +43,7 @@ const env = {
   NORTHSTAR_FINANCING_WEBHOOK_SECRET: 'financing-secret-32-characters-for-test',
   NORTHSTAR_FLEET_WEBHOOK_SECRET: 'fleet-secret-32-characters-for-test'
 };
+writeFileSync(invalidDataFile, JSON.stringify({ 'johnson-service-co': { customers: [{ id: 'cross-tenant-record', tenantId: 'other-tenant', name: 'Invalid record' }] } }));
 
 const child = spawn(process.execPath, ['server.mjs'], { cwd: root, env, stdio: 'ignore' });
 const invalidChild = spawn(process.execPath, ['server.mjs'], { cwd: root, env: { ...env, PORT: String(invalidPort), NORTHSTAR_DATA_FILE: invalidDataFile, NORTHSTAR_SESSION_FILE: invalidSessionFile, NORTHSTAR_REQUEST_RESPONSE_SLA_HOURS: '0', NORTHSTAR_OIDC_ISSUER: 'https://issuer.example.test', NORTHSTAR_ALLOWED_ORIGINS: 'https://valid.example,not-an-origin', NORTHSTAR_SERVICE_ORIGINS_JSON: JSON.stringify({ plumbing: ['not a valid origin'] }) }, stdio: 'ignore' });
@@ -90,7 +91,7 @@ try {
     try { invalidReady = await getJsonFrom(invalidBase, '/api/ready'); } catch {}
     if (!invalidReady) await new Promise((resolve) => setTimeout(resolve, 100));
   }
-  if (!invalidReady || invalidReady.response.status !== 503 || invalidReady.body.checks?.requestResponseSlaConfiguration !== false || invalidReady.body.checks?.identityProviderConfiguration !== false || invalidReady.body.checks?.allowedOriginsConfiguration !== false || invalidReady.body.checks?.serviceOriginConfiguration !== false) throw new Error('invalid production configuration did not fail readiness');
+  if (!invalidReady || invalidReady.response.status !== 503 || invalidReady.body.checks?.requestResponseSlaConfiguration !== false || invalidReady.body.checks?.identityProviderConfiguration !== false || invalidReady.body.checks?.allowedOriginsConfiguration !== false || invalidReady.body.checks?.serviceOriginConfiguration !== false || invalidReady.body.checks?.tenantDataIntegrity !== false) throw new Error('invalid production configuration did not fail readiness');
   let strictReady = null;
   for (let attempt = 0; attempt < 200 && !strictReady; attempt += 1) {
     try { strictReady = await getJsonFrom(strictBase, '/api/ready'); } catch {}
