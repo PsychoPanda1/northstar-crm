@@ -652,6 +652,20 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async createTask(title, detail = '', dueAt = '', idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) { const task = { id: `TASK-${Date.now()}`, title: String(title).trim(), detail: String(detail || '').trim(), ...(dueAt ? { dueAt } : {}), status: 'Open', createdAt: new Date().toISOString() }; this.state.customTasks = [task, ...(this.state.customTasks || [])]; localStorage.setItem(this.key, JSON.stringify(this.state)); return { task, duplicate: false }; }
+    const response = await fetch('/api/tasks', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ title, detail, ...(dueAt ? { dueAt } : {}) }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'task creation failed');
+    return response.json();
+  }
+
+  async updateCustomTask(id, status) {
+    if (!this.remote) { const task = (this.state.customTasks || []).find((item) => item.id === id); if (!task) throw new Error('task not found'); task.status = status; localStorage.setItem(this.key, JSON.stringify(this.state)); return { task, duplicate: false }; }
+    const response = await fetch(`/api/tasks/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ status }) });
+    if (!response.ok) throw new Error('task update failed');
+    return response.json();
+  }
+
   async getPaymentReconciliation() {
     if (!this.remote) throw new Error('API required for payment reconciliation');
     const response = await fetch('/api/payments/reconciliation', { headers: { authorization: `Bearer ${this.token}` } });
