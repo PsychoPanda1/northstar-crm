@@ -72,6 +72,7 @@ assert(server.includes('LEAD_RESPONSE_SLA_HOURS') && server.includes('leadRespon
 assert(server.includes('Late appointment needs attention') && server.includes('N-late-'), 'late appointment alert workflow is not wired');
 assert(server.includes('lateAppointments') && index.includes('data-metric="lateAppointments"'), 'late appointment risk is not exposed in the dashboard');
 assert(server.includes('ESTIMATE_FOLLOWUP_DAYS') && server.includes('estimateFollowupConfigurationValid') && server.includes('Estimate follow-up due') && server.includes('estimatesAtRisk'), 'estimate follow-up workflow is not wired');
+assert(app.includes('data-estimate-reminder-action="remind"') && app.includes('data-notification-open="estimates"') && app.includes('repository.remindEstimate'), 'estimate alerts do not expose a direct follow-up action');
 assert(app.includes('data-lead-quick-contact') && app.includes("repository.updateLeadStatus(quickContactButton.dataset.leadQuickContact, 'Contacted'"), 'lead notifications do not expose a direct contact action');
 assert(app.includes("type === 'notifications' ? `<div class=\"record-actions\">") && app.includes("!item.read ? `<button class=\"ghost-btn\" data-notification-action=\"read\""), 'read notifications do not retain source actions');
 assert(server.includes('leadSlaBreaches') && index.includes('data-metric="leadSlaBreaches"') && app.includes('Object.entries(dashboard.metrics)'), 'dashboard does not expose lead response risk');

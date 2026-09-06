@@ -123,6 +123,7 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 - `GET /api/dashboard` → the metrics projection includes `leadSlaBreaches`, the current count of uncontacted `New` leads past the configured response SLA
 - The same dashboard metrics projection includes `lateAppointments`, the current count of confirmed jobs whose normalized `startsAt` has passed
 - The dashboard metrics projection also includes `estimatesAtRisk`, the current count of open estimates past `NORTHSTAR_ESTIMATE_FOLLOWUP_DAYS` (default 3, valid 1–90)
+- Estimate follow-up alerts retain direct estimate navigation and can queue the existing deduplicated SMS/email reminder workflow from the owner notification drawer
 - Uncontacted leads with `receivedAt` older than `NORTHSTAR_LEAD_RESPONSE_SLA_HOURS` (default 2, valid 1–72) appear as `Lead response SLA breached` with urgent status; moving a lead out of `New` records `firstResponseAt`, and invalid production SLA configuration fails readiness
 - `POST /api/notifications/:id/read` → acknowledge a currently active tenant notification without deleting its source record
 - Notification source actions remain available after acknowledgment so owners can reopen the linked lead, job, invoice, message, or other source record from history
