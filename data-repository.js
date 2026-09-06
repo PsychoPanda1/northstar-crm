@@ -653,6 +653,14 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async listAccountingSync(status = '') {
+    if (!this.remote) throw new Error('API required for accounting queue');
+    const query = status ? `?status=${encodeURIComponent(status)}` : '';
+    const response = await fetch(`/api/integrations/accounting${query}`, { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('accounting queue unavailable');
+    return response.json();
+  }
+
   async fulfillServicePlanRequest(id, note, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for service plan request fulfillment');
     const response = await fetch(`/api/requests/${encodeURIComponent(id)}/fulfill-plan`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ note }) });

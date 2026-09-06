@@ -1,6 +1,6 @@
 const NORTHSTAR_SHELL_CACHE = 'northstar-shell-v3';
 const NORTHSTAR_SHELLS = ['/index.html', '/technician.html'];
-const NORTHSTAR_ASSETS = ['/styles.css', '/portal.css', '/northstar.webmanifest', '/tenant-config.js', '/data-repository.js', '/app.js', '/release-readiness-owner.js', '/plan-status-owner.js', '/search-pagination.js', '/estimate-media-owner.js', '/invoice-bill-to-owner.js', '/custom-report-owner.js', '/inventory-adjustment-owner.js', '/fleet-location-owner.js', '/fleet-maintenance-owner.js', '/location-picker.js', '/settings.js', '/conversation-owner.js', '/call-recordings-owner.js', '/service-plan-request-owner.js', '/inventory-provider-retry-owner.js'];
+const NORTHSTAR_ASSETS = ['/styles.css', '/portal.css', '/northstar.webmanifest', '/tenant-config.js', '/data-repository.js', '/app.js', '/release-readiness-owner.js', '/plan-status-owner.js', '/search-pagination.js', '/estimate-media-owner.js', '/invoice-bill-to-owner.js', '/custom-report-owner.js', '/inventory-adjustment-owner.js', '/fleet-location-owner.js', '/fleet-maintenance-owner.js', '/location-picker.js', '/settings.js', '/conversation-owner.js', '/call-recordings-owner.js', '/service-plan-request-owner.js', '/inventory-provider-retry-owner.js', '/accounting-provider-retry-owner.js'];
 const NORTHSTAR_OWNER_PATHS = ['/portal', '/portal/', '/index.html'];
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(NORTHSTAR_SHELL_CACHE).then((cache) => cache.addAll([...NORTHSTAR_SHELLS, ...NORTHSTAR_ASSETS])).then(() => self.skipWaiting()));

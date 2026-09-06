@@ -36,6 +36,7 @@ const deploymentVerifier = readFileSync(`${root}scripts/verify-deployment.mjs`, 
 const callRecordingsOwner = readFileSync(`${root}call-recordings-owner.js`, 'utf8');
 const servicePlanRequestOwner = readFileSync(`${root}service-plan-request-owner.js`, 'utf8');
 const inventoryProviderRetryOwner = readFileSync(`${root}inventory-provider-retry-owner.js`, 'utf8');
+const accountingProviderRetryOwner = readFileSync(`${root}accounting-provider-retry-owner.js`, 'utf8');
 const deploymentWorkflow = readFileSync(`${root}.github/workflows/verify-deployment.yml`, 'utf8');
 const packageJson = JSON.parse(readFileSync(`${root}package.json`, 'utf8'));
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
@@ -327,4 +328,5 @@ assert(app.includes("sessionPermissions.has('tasks:write') ? repository.list('ta
 assert(server.includes("/api/public/customer-portal/service-plan-request") && openapi.includes('/api/public/customer-portal/service-plan-request:') && openapi.includes('ServicePlanRequest') && customer.includes('data-plan-request'), 'customer portal service-plan change request workflow is not covered');
 assert(server.includes('fulfill-plan') && repository.includes('fulfillServicePlanRequest') && index.includes('/service-plan-request-owner.js') && northstarServiceWorker.includes("'/service-plan-request-owner.js'") && servicePlanRequestOwner.includes('data-plan-request-fulfill'), 'owner service-plan request fulfillment workflow is not covered');
 assert(repository.includes('async retryInventory') && index.includes('/inventory-provider-retry-owner.js') && northstarServiceWorker.includes("'/inventory-provider-retry-owner.js'") && inventoryProviderRetryOwner.includes('data-inventory-provider-retry'), 'inventory provider retry control is not covered');
+assert(server.includes("pathname === '/api/integrations/accounting' && req.method === 'GET'") && repository.includes('listAccountingSync') && index.includes('/accounting-provider-retry-owner.js') && northstarServiceWorker.includes("'/accounting-provider-retry-owner.js'") && accountingProviderRetryOwner.includes('data-accounting-retry'), 'accounting provider retry queue is not covered');
 console.log('Northstar client contract checks passed');
