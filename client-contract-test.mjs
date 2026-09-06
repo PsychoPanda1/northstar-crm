@@ -71,6 +71,7 @@ assert(server.includes("pathname === '/api/leads/bulk-assign'") && server.includ
 assert(server.includes('LEAD_RESPONSE_SLA_HOURS') && server.includes('leadResponseSlaConfigurationValid') && server.includes('firstResponseAt') && server.includes('Lead response SLA breached') && server.includes("saved.leads.filter((item) => item.status === 'New')"), 'lead response SLA workflow is not wired');
 assert(server.includes('Late appointment needs attention') && server.includes('N-late-'), 'late appointment alert workflow is not wired');
 assert(server.includes('lateAppointments') && index.includes('data-metric="lateAppointments"'), 'late appointment risk is not exposed in the dashboard');
+assert(server.includes('openCustomerRequests') && index.includes('data-metric="openCustomerRequests"'), 'open customer request risk is not exposed in the dashboard');
 assert(server.includes('ESTIMATE_FOLLOWUP_DAYS') && server.includes('estimateFollowupConfigurationValid') && server.includes('Estimate follow-up due') && server.includes('estimatesAtRisk'), 'estimate follow-up workflow is not wired');
 assert(server.includes('Invoice overdue') && server.includes('days}d past due'), 'overdue invoice alert workflow is not wired');
 assert(server.includes('Customer request overdue') && server.includes('days}d open'), 'overdue customer request alert workflow is not wired');
