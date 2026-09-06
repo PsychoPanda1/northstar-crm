@@ -528,6 +528,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async getJobLocationHistory(id) {
+    if (!this.remote) throw new Error('API required for location history');
+    const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/location-history`, { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('job location history unavailable');
+    return response.json();
+  }
+
   async addJobNote(id, note, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for job notes');
     const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/notes`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ note }) });
