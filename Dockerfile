@@ -10,6 +10,7 @@ ENV PORT=4173
 ENV NODE_ENV=production
 ENV NORTHSTAR_DATA_FILE=/app/data/state.json
 ENV NORTHSTAR_SESSION_FILE=/app/data/state.json.sessions
+ENV NORTHSTAR_SQLITE_FILE=/app/data/northstar.sqlite
 
 USER node
 EXPOSE 4173
