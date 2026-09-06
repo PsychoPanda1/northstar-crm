@@ -12,6 +12,7 @@ Reviewed September 2026 against official product pages for [ServiceTitan](https:
 | Customer self-service | Jobber and Housecall Pro provide portals for requests, approvals, appointments, invoices, and payments. | Give each landing-page customer a secure status/approval/payments experience without exposing other tenants. |
 | Retention and recurring work | ServiceTitan includes memberships; Jobber supports recurring visits and payment schedules. | Add service plans, recurring jobs, renewal dates, and reactivation campaigns. |
 | Visibility and integrations | ServiceTitan and Jobber call out reporting, accounting sync, notifications, and APIs. | Keep a tenant-scoped event ledger and documented API boundary so future agents can integrate safely. |
+| Assisted intake and live coordination | Jobber highlights an AI receptionist for calls/texts and real-time crew availability; ServiceTitan emphasizes dispatch adjustments and technician access to customer/job context. | Keep intake provider-neutral and auditable, then add optional assisted triage only behind explicit provider configuration; preserve human owner control over booking, assignment, and customer communication. |
 
 ## Product thesis
 
@@ -25,5 +26,9 @@ Northstar should compete on clarity and speed for multi-service operators: one o
 4. Dispatch board + technician mobile job completion.
 5. Customer portal, recurring plans, review requests, and reactivation.
 6. Reporting, accounting exports, and carefully scoped integrations.
+
+## Current benchmark implication
+
+The next product advantage should be explainable automation: detect urgency, suggest the next action, and preserve an auditable human approval point for consequential changes. Provider-backed AI or telephony must remain optional and server-side; the local CRM should never imply that a queued or simulated action was completed externally.
 
 This benchmark is a product-design reference, not an endorsement of third-party pricing or an instruction to depend on any vendor.
