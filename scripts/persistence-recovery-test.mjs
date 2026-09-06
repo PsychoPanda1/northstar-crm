@@ -33,6 +33,18 @@ try {
   const recoveredLogin = await request('/api/auth/demo-login?service=plumbing', jsonOptions({ service: 'plumbing' }));
   const recovered = await request('/api/customers', { headers: { authorization: `Bearer ${recoveredLogin.body.token}` } });
   if (!recovered.response.ok || !recovered.body.items?.some((item) => item.name === 'Recovered Customer')) throw new Error('last-known-good backup was not recovered');
+  const repaired = await request('/api/customers', jsonOptions({ name: 'Integrity Check Customer', phone: '843-555-0143' }, recoveredLogin.body.token, 'recovery-integrity-check'));
+  if (repaired.response.status !== 201) throw new Error('recovered state could not be persisted before integrity check');
+  const persistedState = JSON.parse(readFileSync(dataFile, 'utf8'));
+  const auditTenant = Object.values(persistedState).find((item) => item.auditEvents?.length);
+  if (!auditTenant) throw new Error('recovery test did not persist an audit event');
+  auditTenant.auditEvents[0].detail = `${auditTenant.auditEvents[0].detail} tampered`;
+  stop();
+  writeFileSync(dataFile, JSON.stringify(persistedState));
+  start();
+  await waitForServer();
+  const tamperedReady = await request('/api/ready');
+  if (tamperedReady.response.status !== 503 || tamperedReady.body.checks?.auditLedger !== false) throw new Error('tampered audit ledger did not fail readiness closed');
   console.log('Northstar persistence recovery test passed');
 } finally {
   stop();
