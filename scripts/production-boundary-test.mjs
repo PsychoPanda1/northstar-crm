@@ -89,7 +89,7 @@ try {
     try { strictReady = await getJsonFrom(strictBase, '/api/ready'); } catch {}
     if (!strictReady) await new Promise((resolve) => setTimeout(resolve, 100));
   }
-  if (!strictReady || strictReady.response.status !== 503 || strictReady.body.checks?.liveMessageProvider !== false || strictReady.body.checks?.livePaymentProvider !== false) throw new Error('live provider requirement did not fail production readiness');
+  if (!strictReady || strictReady.response.status !== 503 || strictReady.body.checks?.liveLeadProvider !== false || strictReady.body.checks?.liveMessageProvider !== false || strictReady.body.checks?.livePaymentProvider !== false) throw new Error('live provider requirement did not fail production readiness');
   let oidcOnlyReady = null;
   for (let attempt = 0; attempt < 200 && !oidcOnlyReady; attempt += 1) {
     try { oidcOnlyReady = await getJsonFrom(oidcOnlyBase, '/api/ready'); } catch {}
