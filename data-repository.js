@@ -949,6 +949,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async updateVehicleMaintenance(vehicleId, nextServiceDue, odometer = null, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for fleet maintenance');
+    const response = await fetch(`/api/vehicles/${encodeURIComponent(vehicleId)}`, { method: 'PATCH', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ nextServiceDue, ...(odometer === null ? {} : { odometer }) }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'vehicle maintenance update failed');
+    return response.json();
+  }
+
   async createTeamMember(name, role, skills = [], idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for team management');
     const response = await fetch('/api/team', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ name, role, skills }) });
