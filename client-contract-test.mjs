@@ -89,6 +89,7 @@ assert(app.includes('bulk-request-priority') && app.includes('repository.bulkUpd
 assert(server.includes("pathname === '/api/requests/bulk-priority'") && server.includes('valid_bulk_request_priority_required') && server.includes('requestBulkPriorityRequests'), 'bulk request priority route is not wired');
 assert(server.includes("pathname === '/api/requests/bulk-status'") && server.includes('valid_bulk_request_status_required') && server.includes('requestBulkStatusRequests') && repository.includes('bulkUpdateRequestStatus'), 'bulk request acknowledgement route is not wired');
 assert(app.includes('bulk-request-status') && app.includes('Bulk acknowledge') && app.includes('repository.bulkUpdateRequestStatus'), 'bulk request acknowledgement UI is not wired');
+assert(server.includes('N-low-stock-') && server.includes('Material low stock') && app.includes('data-notification-open="materials"'), 'low-stock inventory alerts are not wired');
 assert(server.includes("if (recordType === 'requests')") && server.includes('priorityRank') && server.includes('statusRank'), 'request queue triage ordering is not wired');
 assert(server.includes('invalid_request_queue_filter') && server.includes('assignedTo') && server.includes('priorityFilter'), 'request queue filters are not wired');
 assert(app.includes('request-queue-filters') && app.includes('Filter request status') && app.includes('Filter request priority') && app.includes('Filter requests by assigned owner') && app.includes('requestQueueFilters'), 'request queue filters are not exposed in the owner workspace');

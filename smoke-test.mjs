@@ -412,7 +412,10 @@ try {
   const material = await request('/api/materials', inventoryMaterialOptions);
   const duplicateMaterial = await request('/api/materials', inventoryMaterialOptions);
   const materials = await request('/api/materials?search=copper', { headers: { authorization: `Bearer ${token}` } });
-  assert(material.response.status === 201 && material.body.duplicate === false && duplicateMaterial.response.status === 200 && duplicateMaterial.body.duplicate === true && duplicateMaterial.body.id === material.body.id && materials.body.items[0].status === 'In stock' && materials.body.items[0].onHand === 4, 'inventory receipt failed');
+   assert(material.response.status === 201 && material.body.duplicate === false && duplicateMaterial.response.status === 200 && duplicateMaterial.body.duplicate === true && duplicateMaterial.body.id === material.body.id && materials.body.items[0].status === 'In stock' && materials.body.items[0].onHand === 4, 'inventory receipt failed');
+   const lowStock = await request('/api/materials', { ...jsonOptions('POST', { name: 'Emergency valve gasket', sku: 'VALVE-GASKET-01', unit: 'each', unitCost: 12, onHand: 0, reorderPoint: 2 }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-low-stock-material' } });
+   const lowStockNotifications = await request('/api/notifications?search=Emergency%20valve%20gasket', { headers: { authorization: `Bearer ${token}` } });
+   assert(lowStock.response.status === 201 && lowStock.body.status === 'Low stock' && lowStockNotifications.body.items.some((item) => item.materialId === lowStock.body.id && item.title === 'Material low stock' && item.status === 'Urgent'), 'low-stock owner alert failed');
   const locations = await request('/api/inventory-locations', { headers: { authorization: `Bearer ${token}` } });
   const truck = await request('/api/inventory-locations', { ...jsonOptions('POST', { name: 'Alex Rivera truck', type: 'Truck' }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-inventory-location' } });
   const duplicateTruck = await request('/api/inventory-locations', { ...jsonOptions('POST', { name: 'Alex Rivera truck', type: 'Truck' }, token), headers: { ...jsonOptions('POST', {}, token).headers, 'idempotency-key': 'smoke-inventory-location' } });
