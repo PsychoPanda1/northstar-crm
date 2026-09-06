@@ -338,6 +338,7 @@ components:
             ownerPortalPath: { type: string }
             ownerAuthEndpoint: { type: string }
             ownerAuthRefreshEndpoint: { type: string }
+            ownerAuthLogoutEndpoint: { type: string }
             ownerAuthMethods:
               type: array
               description: Available owner authentication methods for this tenant. OIDC is present only when a verified tenant-bound OIDC owner is provisioned.

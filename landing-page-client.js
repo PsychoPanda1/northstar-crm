@@ -116,6 +116,18 @@
       return this.request(endpoint, { method: 'POST', headers: { authorization: `Bearer ${token.trim()}` } });
     }
 
+    async logoutOwnerSession(token) {
+      const manifest = await this.manifest();
+      const endpoint = manifest.integration?.ownerAuthLogoutEndpoint;
+      if (!endpoint) {
+        const error = new Error('owner_session_logout_unavailable');
+        error.status = 404;
+        throw error;
+      }
+      if (typeof token !== 'string' || !token.trim() || token.length > 20_000) throw new Error('owner_session_token_required');
+      return this.request(endpoint, { method: 'POST', headers: { authorization: `Bearer ${token.trim()}` } });
+    }
+
     async submitLead(payload, { idempotencyKey } = {}) {
       const manifest = await this.manifest();
       const key = idempotencyKey || makeKey(this.service, 'lead', payload);
