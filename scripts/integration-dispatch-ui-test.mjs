@@ -15,6 +15,8 @@ const required = [
   'data-record-pagination',
   'Load more records',
   'repository.listPage(state.type',
+  'Load more requests',
+  "repository.listPage('requests'",
   'Integration health is unavailable',
   'data-job-tracking-history',
   'repository.getJobLocationHistory',
