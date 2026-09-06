@@ -471,6 +471,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async refundPayment(id, amount, reason = '', idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for payment refunds');
+    const response = await fetch(`/api/payments/${encodeURIComponent(id)}/refund`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ ...(amount !== undefined ? { amount } : {}), ...(reason ? { reason } : {}) }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'payment refund failed');
+    return response.json();
+  }
+
   async retryMessage(id, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for message retry');
     const response = await fetch(`/api/messages/${encodeURIComponent(id)}/retry`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'idempotency-key': idempotencyKey } });
