@@ -250,6 +250,8 @@ Set `NORTHSTAR_INVENTORY_PROVIDER_URL` and optional `NORTHSTAR_INVENTORY_PROVIDE
 
 Set `NORTHSTAR_ACCOUNTING_PROVIDER_URL` and optional `NORTHSTAR_ACCOUNTING_PROVIDER_API_KEY` to enable the authenticated owner/accountant ERP handoff at `POST /api/integrations/accounting/dispatch`. The provider receives the same tenant-scoped invoice, settled payment, and purchase-order records available in the accounting export, with a stable record-type/source-ID idempotency key and durable `Delivered`, `Retry scheduled`, or `Failed` state. `NORTHSTAR_ACCOUNTING_RETRY_LIMIT` accepts `0`–`5` bounded retries.
 
+Failed warehouse and accounting handoffs can be recovered by authorized operators through the documented retry endpoints; retries preserve the original transaction or record key and are audit logged.
+
 Set `NORTHSTAR_MESSAGE_RETRY_LIMIT` from `0` to `5` to enable bounded automatic retries for transient message-provider timeouts and 408/409/425/429/5xx responses. Retries use a one-minute, five-minute, fifteen-minute, then thirty-minute backoff; missing recipients and other permanent 4xx failures remain visible as `Failed`, and each attempt uses the stable message ID as the provider idempotency key.
 
 For an additional JSON-adapter recovery layer, set `NORTHSTAR_BACKUP_FILE` to a separate path on the same persistent volume. Northstar copies the previous valid snapshot there before each write and uses it if the primary snapshot cannot be parsed at startup. The container's SQLite mode uses WAL, normal synchronous durability, a bounded busy timeout, and a readiness-time integrity check for safer single-host concurrent readers/writers; horizontally scaled production deployments still require a managed shared database and coordinated session strategy.

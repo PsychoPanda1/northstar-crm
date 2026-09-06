@@ -218,6 +218,20 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async retryInventory(transactionId) {
+    if (!this.remote) throw new Error('API required for inventory retry');
+    const response = await fetch('/api/integrations/inventory/retry', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ transactionId }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'inventory retry failed');
+    return response.json();
+  }
+
+  async retryAccounting(key) {
+    if (!this.remote) throw new Error('API required for accounting retry');
+    const response = await fetch('/api/integrations/accounting/retry', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ key }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'accounting retry failed');
+    return response.json();
+  }
+
   async retryLeadProvider(id, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for lead provider retry');
     const response = await fetch(`/api/leads/${encodeURIComponent(id)}/provider-retry`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'idempotency-key': idempotencyKey } });

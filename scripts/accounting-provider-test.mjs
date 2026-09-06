@@ -11,7 +11,8 @@ const providerPort = 5700 + Math.floor(Math.random() * 100);
 const dataFile = join(tmpdir(), `northstar-accounting-provider-${process.pid}-${Date.now()}.json`);
 const tenantId = 'clearwater-plumbing';
 const received = [];
-const provider = createServer((req, res) => { let raw = ''; req.on('data', (chunk) => { raw += chunk; }); req.on('end', () => { received.push({ headers: req.headers, body: JSON.parse(raw || '{}') }); res.writeHead(200, { 'content-type': 'application/json' }); res.end(JSON.stringify({ id: `erp-${received.length}`, status: 'accepted' })); }); });
+let purchaseOrderAttempts = 0;
+const provider = createServer((req, res) => { let raw = ''; req.on('data', (chunk) => { raw += chunk; }); req.on('end', () => { if (req.headers['idempotency-key'] === 'purchase_order:po-erp-1' && purchaseOrderAttempts++ === 0) { res.writeHead(503, { 'content-type': 'application/json' }); res.end(JSON.stringify({ error: 'temporary ERP outage' })); return; } received.push({ headers: req.headers, body: JSON.parse(raw || '{}') }); res.writeHead(200, { 'content-type': 'application/json' }); res.end(JSON.stringify({ id: `erp-${received.length}`, status: 'accepted' })); }); });
 const listen = (server, portNumber) => new Promise((resolve, reject) => { server.once('error', reject); server.listen(portNumber, '127.0.0.1', resolve); });
 const env = { ...process.env, NODE_ENV: 'development', NORTHSTAR_ALLOW_DEMO_LOGIN: 'true', NORTHSTAR_ACCOUNTING_PROVIDER_URL: `http://127.0.0.1:${providerPort}/erp`, NORTHSTAR_ACCOUNTING_PROVIDER_API_KEY: 'accounting-test-key', NORTHSTAR_ACCOUNTING_RETRY_LIMIT: '1', PORT: String(port), NORTHSTAR_DATA_FILE: dataFile, NORTHSTAR_SESSION_FILE: `${dataFile}.sessions` };
 const base = `http://127.0.0.1:${port}`;
@@ -30,12 +31,14 @@ try {
   if (!login.response.ok) throw new Error('accounting provider test login failed');
   const headers = { authorization: `Bearer ${login.body.token}` };
   const dispatch = await post('/api/integrations/accounting/dispatch', { limit: 10 }, headers);
+  const retry = await post('/api/integrations/accounting/retry', { key: 'purchase_order:po-erp-1' }, headers);
+  const retryDispatch = await post('/api/integrations/accounting/dispatch', { limit: 10 }, headers);
   const duplicate = await post('/api/integrations/accounting/dispatch', { limit: 10 }, headers);
   const health = await request('/api/integrations/health', { headers });
   const saved = JSON.parse(readFileSync(dataFile, 'utf8'))[tenantId];
   const sync = saved.accountingSync || [];
   const keys = sync.map((item) => item.key).sort();
-  if (dispatch.response.status !== 200 || dispatch.body.delivered !== 3 || duplicate.body.attempted !== 0 || received.length !== 3 || received.some((item) => item.headers.authorization !== 'Bearer accounting-test-key') || !keys.includes('invoice:invoice-erp-1') || !keys.includes('payment:payment-erp-1') || !keys.includes('purchase_order:po-erp-1') || sync.some((item) => item.syncState !== 'Delivered') || health.body.checks?.accountingProvider !== true || health.body.accounting?.pending !== 0) throw new Error('accounting provider delivery or health contract failed');
+  if (dispatch.response.status !== 200 || dispatch.body.delivered !== 2 || dispatch.body.retrying !== 1 || retry.response.status !== 200 || retry.body.sync?.syncState !== 'Pending' || retryDispatch.body.delivered !== 1 || duplicate.body.attempted !== 0 || received.length !== 3 || received.some((item) => item.headers.authorization !== 'Bearer accounting-test-key') || !keys.includes('invoice:invoice-erp-1') || !keys.includes('payment:payment-erp-1') || !keys.includes('purchase_order:po-erp-1') || sync.some((item) => item.syncState !== 'Delivered') || health.body.checks?.accountingProvider !== true || health.body.accounting?.pending !== 0) throw new Error('accounting provider delivery or health contract failed');
   console.log('Northstar accounting provider test passed');
 } finally {
   if (child && !child.killed) child.kill();
