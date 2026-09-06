@@ -160,7 +160,7 @@ const assetServiceNotificationsFor = (tenantId) => { const saved = state.get(ten
 const fleetTelemetryNotificationsFor = (tenantId) => { const saved = state.get(tenantId); const now = Date.now(); const activeJobsByVehicle = new Map((saved.jobs || []).filter((job) => job.vehicleId && !['Completed', 'Canceled', 'No-show'].includes(job.status)).map((job) => [job.vehicleId, job])); return (saved.vehicles || []).filter((vehicle) => vehicle.status !== 'Retired' && activeJobsByVehicle.has(vehicle.id) && vehicle.locationPing && (!Number.isFinite(Date.parse(vehicle.locationPing.recordedAt)) || now - Date.parse(vehicle.locationPing.recordedAt) > 15 * 60 * 1000)).map((vehicle) => { const job = activeJobsByVehicle.get(vehicle.id); const id = `N-fleet-stale-${vehicle.id}`; return { id, tenantId, title: 'Fleet location stale', detail: `${vehicle.name} · ${job.service || 'Active job'} · last update ${vehicle.locationPing.recordedAt}`, status: 'Urgent', vehicleId: vehicle.id, jobId: job.id, read: saved.notificationReads.includes(id) }; }); };
 const fleetMaintenanceNotificationsFor = (tenantId) => { const saved = state.get(tenantId); const now = Date.now(); return (saved.vehicles || []).filter((vehicle) => vehicle.status !== 'Retired' && Number.isFinite(Date.parse(vehicle.nextServiceDue || '')) && Date.parse(vehicle.nextServiceDue) <= now + 30 * 24 * 60 * 60 * 1000).map((vehicle) => { const overdue = Date.parse(vehicle.nextServiceDue) < now; const id = `N-fleet-maintenance-${vehicle.id}`; return { id, tenantId, title: overdue ? 'Fleet maintenance overdue' : 'Fleet maintenance due soon', detail: `${vehicle.name} · service due ${vehicle.nextServiceDue}`, status: overdue ? 'Urgent' : 'Follow up', vehicleId: vehicle.id, read: saved.notificationReads.includes(id) }; }); };
 const actionableNotificationsFor = (tenantId) => { const saved = state.get(tenantId); return [...notificationsFor(tenantId), ...assetServiceNotificationsFor(tenantId), ...customerCancellationNotificationsFor(tenantId), ...customerRescheduleNotificationsFor(tenantId), ...noShowNotificationsFor(tenantId)].filter((item) => { if (item.title === 'New lead needs follow-up') { const lead = saved.leads.find((candidate) => `N-${candidate.id}` === item.id); if (['Converted', 'Lost'].includes(lead?.status)) return false; } if (item.title === 'Customer message needs response') { const message = saved.messages.find((candidate) => `N-${candidate.id}` === item.id); if (message && saved.messages.some((candidate) => candidate.replyTo === message.id)) return false; } return true; }); };
-const blankState = () => ({ completedTasks: [], lastAction: null, leads: [], jobs: [], estimates: [], estimateRevisions: [], estimateChangeNotifications: [], invoices: [], payments: [], paymentIntents: [], paymentEvents: [], paymentSchedules: [], financingApplications: [], financingEvents: [], teamMembers: [], commissionRates: {}, teamTimeOff: [], vehicles: [], plans: [], planBillingCycles: [], activities: [], customers: [], assets: [], locations: [], reviews: [], requests: [], materials: [], inventoryLocations: [], inventoryTransactions: [], purchaseOrders: [], purchaseApprovalRequests: [], laborEntries: [], messages: [], messageEvents: [], calls: [], callEvents: [], catalogItems: [], auditEvents: [], notificationReads: [], routeOrderRequests: [], capacityTargets: [], automationRuns: [], accountingSync: [] });
+const blankState = () => ({ completedTasks: [], lastAction: null, leads: [], jobs: [], estimates: [], estimateRevisions: [], estimateChangeNotifications: [], invoices: [], payments: [], paymentIntents: [], paymentEvents: [], paymentSchedules: [], financingApplications: [], financingEvents: [], teamMembers: [], commissionRates: {}, teamTimeOff: [], vehicles: [], plans: [], planBillingCycles: [], activities: [], customers: [], assets: [], locations: [], reviews: [], requests: [], materials: [], inventoryLocations: [], inventoryTransactions: [], purchaseOrders: [], purchaseApprovalRequests: [], laborEntries: [], messages: [], messageEvents: [], calls: [], callEvents: [], catalogItems: [], auditEvents: [], notificationReads: [], routeOrderRequests: [], capacityTargets: [], automationRuns: [], accountingSync: [], userAccounts: [], userInvites: [] });
 const readPersistedJson = (file, fallback) => { const candidates = [file, `${file}.tmp`].filter((candidate) => existsSync(candidate)).sort((a, b) => { try { return statSync(b).mtimeMs - statSync(a).mtimeMs; } catch { return 0; } }); for (const candidate of candidates) { try { return JSON.parse(readFileSync(candidate, 'utf8')); } catch {} } return fallback; };
 const primaryPersisted = sqliteStore ? sqliteStore.readState(null) : readPersistedJson(DATA_FILE, null);
 const persisted = primaryPersisted && Object.keys(primaryPersisted).length ? primaryPersisted : BACKUP_FILE ? readPersistedJson(BACKUP_FILE, {}) : {};
@@ -296,6 +296,7 @@ const isPasswordDigest = (value) => /^[0-9a-f]{64}$/i.test(String(value || '').t
 const allowOwnerLogin = (req, identity = '') => { const key = `${clientAddress(req)}|${String(identity || '').trim().toLowerCase().slice(0, 120)}`; const now = Date.now(); pruneRateLimitWindows(ownerLoginWindows, now); const window = ownerLoginWindows.get(key); if (!window || now - window.startedAt >= 15 * 60_000) { ownerLoginWindows.set(key, { startedAt: now, count: 1 }); return true; } if (window.count >= 12) return false; window.count += 1; return true; };
 const secureTextEqual = (left, right) => { const a = Buffer.from(String(left)); const b = Buffer.from(String(right)); return a.length === b.length && timingSafeEqual(a, b); };
 const hashRuntimePassword = (password) => { const salt = randomBytes(16).toString('hex'); const digest = scryptSync(String(password), salt, 64).toString('hex'); return `scrypt$${salt}$${digest}`; };
+const inviteTokenHash = (token) => createHash('sha256').update(String(token || '')).digest('hex');
 const verifyRuntimePassword = (password, encoded) => { const parts = String(encoded || '').split('$'); if (parts.length === 3 && parts[0] === 'scrypt' && /^[0-9a-f]{32}$/i.test(parts[1]) && /^[0-9a-f]{128}$/i.test(parts[2])) return secureTextEqual(scryptSync(String(password), parts[1], 64).toString('hex'), parts[2]); return secureTextEqual(createHmac('sha256', SECRET).update(String(password)).digest('hex'), encoded); };
 const verifyConfiguredPassword = (password, encoded) => verifyRuntimePassword(password, encoded);
 const sign = (value) => createHmac('sha256', SECRET).update(value).digest('base64url');
@@ -1111,6 +1112,32 @@ if (pathname === '/api/ready' && req.method === 'GET') { const checks = { config
       if (!ALLOW_DEMO_LOGIN) return json(res, 404, { error: 'demo_login_disabled' });
       const body = await readBody(req); const service = body.service || requestUrl.searchParams.get('service') || 'default'; const role = String(body.role || requestUrl.searchParams.get('role') || 'owner').toLowerCase(); if (!demoStaff[role]) return json(res, 422, { error: 'invalid_demo_role' }); if (!Object.prototype.hasOwnProperty.call(serviceTenant, service)) return json(res, 404, { error: 'unknown_service' }); const tenantId = serviceTenant[service]; const owner = { ...demoStaff[role], tenantId }; return json(res, 200, { token: issueToken(owner), owner: { id: owner.id, name: owner.name, role: owner.role }, tenant: tenants[tenantId], permissions: rolePermissions[role] });
     }
+    if (pathname === '/api/auth/invites/accept' && req.method === 'POST') {
+      const body = await readBody(req);
+      const token = String(body.token || '').trim();
+      const password = String(body.password || '');
+      if (!token || token.length > 200 || password.length < 10) return json(res, 422, { error: 'invite_token_and_password_required' });
+      const inviteHash = inviteTokenHash(token);
+      let match = null;
+      for (const [tenantId, saved] of state.entries()) {
+        const candidate = (saved.userInvites || []).find((item) => item.tokenHash === inviteHash && item.status === 'Pending');
+        if (candidate) { match = { tenantId, saved, invite: candidate }; break; }
+      }
+      if (!match || !match.invite.expiresAt || Date.parse(match.invite.expiresAt) <= Date.now()) return json(res, 410, { error: 'invite_expired_or_invalid' });
+      const { tenantId, saved, invite } = match;
+      if (runtimeAccountsFor(tenantId).some((item) => item.email === invite.email) || configuredStaff.some((item) => item.tenantId === tenantId && item.email === invite.email) || configuredOwners.some((item) => item.tenantId === tenantId && item.email === invite.email)) return json(res, 409, { error: 'user_email_already_exists' });
+      const now = new Date().toISOString();
+      const account = { id: `USER-${Date.now()}`, tenantId, name: invite.name, email: invite.email, role: invite.role, passwordDigest: hashRuntimePassword(password), passwordUpdatedAt: now, status: 'Active', createdAt: now, invitedAt: invite.createdAt, inviteId: invite.id };
+      saved.userAccounts = saved.userAccounts || [];
+      saved.userAccounts.unshift(account);
+      invite.status = 'Accepted';
+      invite.acceptedAt = now;
+      delete invite.tokenHash;
+      recordAudit(saved, { name: invite.email, role: 'system' }, 'user.invite.accepted', 'user', account.id, `${account.email} · ${account.role}`);
+      persist();
+      const sessionAccount = { id: account.id, name: account.name, role: account.role, tenantId: account.tenantId, authVersion: account.passwordUpdatedAt };
+      return json(res, 201, { token: issueToken(sessionAccount), owner: { id: account.id, name: account.name, role: account.role }, tenant: tenants[tenantId], permissions: rolePermissions[account.role] });
+    }
     if (pathname === '/api/auth/login' && req.method === 'POST') {
       if ((!OWNER_LOGIN_EMAIL || !OWNER_PASSWORD_DIGEST) && !configuredOwners.length && !configuredStaff.length && !Object.keys(tenants).some((tenantId) => runtimeAccountsFor(tenantId).length)) return json(res, 503, { error: 'auth_not_configured' });
       const body = await readBody(req);
@@ -1127,6 +1154,34 @@ if (pathname === '/api/ready' && req.method === 'GET') { const checks = { config
     }
      if (pathname === '/api/auth/refresh' && req.method === 'POST') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); const oldToken = (req.headers.authorization || '').slice(7); revokedTokens.add(oldToken); revokedSessionIds.add(claims.sid); const account = { id: claims.sub, name: claims.name, role: claims.role, tenantId: claims.tenantId }; const token = issueToken(account); persistSessionRevocations(); return json(res, 200, { token, expiresAt: tokenExpiresAt(token), owner: { id: account.id, name: account.name, role: account.role }, tenant: tenants[account.tenantId], permissions: rolePermissions[account.role] }); }
      if (pathname === '/api/auth/logout' && req.method === 'POST') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); const token = (req.headers.authorization || '').slice(7); revokedTokens.add(token); revokedSessionIds.add(claims.sid); persistSessionRevocations(); res.setHeader('set-cookie', 'northstar_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0'); return json(res, 200, { ok: true }); }
+    if (pathname === '/api/users/invites' && req.method === 'POST') {
+      const claims = authenticate(req);
+      if (!claims) return json(res, 401, { error: 'unauthorized' });
+      if (claims.role !== 'owner') return json(res, 403, { error: 'owner_required' });
+      const body = await readBody(req);
+      const name = String(body.name || '').trim().slice(0, 100);
+      const email = String(body.email || '').trim().toLowerCase().slice(0, 120);
+      const role = String(body.role || '').trim().toLowerCase();
+      const idempotencyKey = String(req.headers['idempotency-key'] || '').trim().slice(0, 100);
+      if (name.length < 2 || !validEmail(email) || !['dispatcher', 'technician', 'accountant'].includes(role)) return json(res, 422, { error: 'valid_invite_name_email_and_role_required' });
+      const saved = state.get(claims.tenantId);
+      saved.userAccounts = saved.userAccounts || [];
+      saved.userInvites = saved.userInvites || [];
+      if (idempotencyKey) { const existing = saved.userInvites.find((item) => item.idempotencyKey === idempotencyKey); if (existing) return json(res, 409, { error: 'invite_already_created', inviteId: existing.id, expiresAt: existing.expiresAt }); }
+      if (saved.userAccounts.some((item) => item.email === email) || configuredStaff.some((item) => item.tenantId === claims.tenantId && item.email === email) || configuredOwners.some((item) => item.tenantId === claims.tenantId && item.email === email)) return json(res, 409, { error: 'user_email_already_exists' });
+      const pending = saved.userInvites.find((item) => item.email === email && item.status === 'Pending' && Date.parse(item.expiresAt) > Date.now());
+      if (pending) return json(res, 409, { error: 'pending_invite_already_exists' });
+      const rawToken = randomBytes(32).toString('base64url');
+      const createdAt = new Date().toISOString();
+      const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+      const service = Object.entries(serviceTenant).find(([, tenantId]) => tenantId === claims.tenantId)?.[0] || 'default';
+      const inviteUrl = publicUrlFor(req, `/accept-invite.html?service=${encodeURIComponent(service)}&token=${encodeURIComponent(rawToken)}`);
+      const invite = { id: `INVITE-${Date.now()}`, tenantId: claims.tenantId, name, email, role, tokenHash: inviteTokenHash(rawToken), status: 'Pending', createdAt, expiresAt, ...(idempotencyKey ? { idempotencyKey } : {}) };
+      saved.userInvites.unshift(invite);
+      recordAudit(saved, claims, 'user.invite.created', 'user_invite', invite.id, `${email} · ${role} · expires ${expiresAt}`);
+      persist();
+      return json(res, 201, { invite: { id: invite.id, email, role, expiresAt, status: invite.status }, inviteUrl, duplicate: false });
+    }
     if (pathname === '/api/users' && (req.method === 'GET' || req.method === 'POST')) {
       const claims = authenticate(req);
       if (!claims) return json(res, 401, { error: 'unauthorized' });

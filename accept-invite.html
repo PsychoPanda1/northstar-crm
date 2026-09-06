@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Join your Northstar workspace</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="portal-page">
+  <main class="login-shell">
+    <div class="dialog-kicker">NORTHSTAR CRM</div>
+    <h1>Set up your workspace access</h1>
+    <p class="muted-copy">Create your password to securely join your service team. This invitation can only be used once.</p>
+    <form id="invite-form" class="stack-form">
+      <label>Password<input name="password" type="password" minlength="10" autocomplete="new-password" required /></label>
+      <label>Confirm password<input name="confirmPassword" type="password" minlength="10" autocomplete="new-password" required /></label>
+      <button class="primary-btn" type="submit">Join workspace</button>
+      <p id="invite-message" role="status" aria-live="polite"></p>
+    </form>
+  </main>
+  <script src="invite.js" defer></script>
+</body>
+</html>
