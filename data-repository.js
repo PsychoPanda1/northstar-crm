@@ -187,7 +187,7 @@ class NorthstarDemoRepository {
     if (!response.ok) throw new Error('export unavailable');
     const blob = await response.blob();
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a'); link.href = url; link.download = `northstar-${type}.csv`; link.click();
+    const link = document.createElement('a'); link.href = url; link.download = type === 'tenant-snapshot' ? 'northstar-tenant-snapshot.json' : `northstar-${type}.csv`; link.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
