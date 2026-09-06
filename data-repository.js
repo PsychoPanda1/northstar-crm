@@ -660,6 +660,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async contactLead(id, channel = 'SMS', message = '', idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for lead contact');
+    const response = await fetch(`/api/leads/${encodeURIComponent(id)}/contact`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ channel, message }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'lead contact failed');
+    return response.json();
+  }
+
   async createMaterial(name, sku, unit, unitCost, onHand, reorderPoint, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for material creation');
     const response = await fetch('/api/materials', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ name, sku, unit, unitCost, onHand, reorderPoint }) });

@@ -20,4 +20,7 @@ for (const snippet of required) {
 for (const snippet of ["requestUrl.searchParams.get('source')", 'sourceFilter', 'invalid_lead_queue_status_filter']) {
   if (!server.includes(snippet)) throw new Error(`lead server filter wiring missing: ${snippet}`);
 }
+for (const snippet of ['contactLead(', 'data-lead-contact', "leadContactMatch", 'lead.contact.queued']) {
+  if (!source.includes(snippet) && !server.includes(snippet)) throw new Error(`lead contact wiring missing: ${snippet}`);
+}
 console.log('Northstar lead filter checks passed');
