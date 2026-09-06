@@ -687,6 +687,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async retryDocumentDelivery(id) {
+    if (!this.remote) throw new Error('API required for document retry');
+    const response = await fetch('/api/integrations/documents/retry', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ documentId: id }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'document retry failed');
+    return response.json();
+  }
+
   async getJobDetail(id) {
     if (!this.remote) throw new Error('API required for job detail');
     const response = await fetch(`/api/jobs/${encodeURIComponent(id)}`, { headers: { authorization: `Bearer ${this.token}` } });
