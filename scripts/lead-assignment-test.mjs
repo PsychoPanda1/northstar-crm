@@ -23,7 +23,9 @@ try {
   const token = login.body.token;
   const valid = await postJson(`/api/leads/${lead.body.id}/assign`, { assignedTo: 'Taylor Brooks' }, token, 'lead-assignment-test-valid');
   const invalid = await postJson(`/api/leads/${lead.body.id}/assign`, { assignedTo: 'Unlisted Follow-up Name' }, token, 'lead-assignment-test-invalid');
-  if (valid.response.status !== 200 || valid.body.lead.assignedTo !== 'Taylor Brooks' || invalid.response.status !== 422 || invalid.body.error !== 'lead_assignee_not_found') throw new Error('lead ownership was not restricted to tenant assignees');
+  const lost = await postJson(`/api/leads/${lead.body.id}/status`, { status: 'Lost', note: 'No longer pursuing this request.' }, token, 'lead-assignment-test-lost');
+  const notifications = await request('/api/notifications', { headers: { authorization: `Bearer ${token}` } });
+  if (valid.response.status !== 200 || valid.body.lead.assignedTo !== 'Taylor Brooks' || invalid.response.status !== 422 || invalid.body.error !== 'lead_assignee_not_found' || lost.response.status !== 200 || notifications.body.items?.some((item) => item.leadId === lead.body.id)) throw new Error('lead ownership or lifecycle attention rules failed');
   console.log('Northstar lead assignment test passed');
 } finally {
   if (child && !child.killed) child.kill();
