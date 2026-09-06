@@ -22,6 +22,8 @@ try {
   const headers = { authorization: `Bearer ${login.body.token}` };
   const available = await request('/api/reports/custom', { headers });
   const selected = await request('/api/reports/custom?metric=Cash%20collected&metric=No-shows', { headers });
+  const ranged = await request('/api/reports/custom?metric=Cash%20collected&startDate=2026-01-01&endDate=2026-01-31', { headers });
+  const invalidRange = await request('/api/reports/custom?startDate=2026-02-01&endDate=2026-01-31', { headers });
   const unknown = await request('/api/reports/custom?metric=Secret%20metric', { headers });
   const preferences = await request('/api/reports/custom/preferences', { headers });
   const saved = await request('/api/reports/custom/preferences', { method: 'PATCH', headers: { ...headers, 'content-type': 'application/json', 'idempotency-key': 'custom-report-preferences-test' }, body: JSON.stringify({ metrics: ['Cash collected', 'Gross margin'] }) });
@@ -29,7 +31,7 @@ try {
   const duplicate = await request('/api/reports/custom/preferences', { method: 'PATCH', headers: { ...headers, 'content-type': 'application/json', 'idempotency-key': 'custom-report-preferences-test' }, body: JSON.stringify({ metrics: ['Cash collected', 'Gross margin'] }) });
   const dispatcherLogin = await post('/api/auth/demo-login?service=plumbing', { service: 'plumbing', role: 'dispatcher' });
   const dispatcherWrite = await request('/api/reports/custom/preferences', { method: 'PATCH', headers: { authorization: `Bearer ${dispatcherLogin.body.token}`, 'content-type': 'application/json', 'idempotency-key': 'dispatcher-report-preferences-test' }, body: JSON.stringify({ metrics: ['Cash collected'] }) });
-  if (!login.response.ok || available.response.status !== 200 || available.body.metrics?.length !== 8 || !available.body.availableMetrics?.includes('Gross margin') || selected.response.status !== 200 || selected.body.metrics?.length !== 2 || selected.body.metrics[0]?.label !== 'No-shows' || selected.body.metrics[1]?.label !== 'Cash collected' || unknown.response.status !== 422 || preferences.response.status !== 200 || saved.response.status !== 200 || persisted.body.metrics?.join('|') !== 'Cash collected|Gross margin' || duplicate.body.duplicate !== true || !dispatcherLogin.response.ok || dispatcherWrite.response.status !== 403) throw new Error('custom report metric selection, persistence, or role enforcement failed');
+  if (!login.response.ok || available.response.status !== 200 || available.body.metrics?.length !== 8 || !available.body.availableMetrics?.includes('Gross margin') || selected.response.status !== 200 || selected.body.metrics?.length !== 2 || selected.body.metrics[0]?.label !== 'No-shows' || selected.body.metrics[1]?.label !== 'Cash collected' || ranged.response.status !== 200 || ranged.body.period !== '2026-01-01 to 2026-01-31' || ranged.body.metrics?.length !== 1 || invalidRange.response.status !== 422 || invalidRange.body.error !== 'valid_report_date_range_required' || unknown.response.status !== 422 || preferences.response.status !== 200 || saved.response.status !== 200 || persisted.body.metrics?.join('|') !== 'Cash collected|Gross margin' || duplicate.body.duplicate !== true || !dispatcherLogin.response.ok || dispatcherWrite.response.status !== 403) throw new Error('custom report metric selection, date range, persistence, or role enforcement failed');
   console.log('Northstar custom report test passed');
 } finally {
   if (child && !child.killed) child.kill();
