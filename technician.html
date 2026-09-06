@@ -25,6 +25,7 @@
     <small id="location-summary" style="display:block;color:#78908b;margin-top:8px"></small>
     <div id="customer-context" aria-live="polite"></div>
     <div id="pre-job-brief" aria-live="polite"></div>
+    <div id="field-guide" aria-live="polite"></div>
     <div id="checklist"></div>
     <div id="notes"></div>
     <div style="margin-top:18px;font-weight:800;font-size:13px">Photo evidence</div><input id="photo-url" type="url" placeholder="https://... photo URL" style="width:100%;box-sizing:border-box;border:1px solid #d8e4e0;border-radius:10px;padding:12px;margin-top:8px;font:inherit" /><input id="photo-caption" type="text" placeholder="Caption" style="width:100%;box-sizing:border-box;border:1px solid #d8e4e0;border-radius:10px;padding:12px;margin-top:8px;font:inherit" /><button class="secondary" id="add-photo">Attach photo evidence</button><div id="photos"></div>
@@ -128,6 +129,9 @@ const send = (silent = false) => { if (!active()) { if (!silent) summary.textCon
       document.addEventListener('visibilitychange', () => { if (!document.hidden && timer && enabled) send(true); });
       window.addEventListener('beforeunload', () => stop());
     })();
+  </script>
+  <script>
+    (() => { const token = new URLSearchParams(location.search).get('token'); const escape = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character])); const loadGuide = async () => { if (!token) return; try { const response = await fetch(`/api/public/technician-job/field-guide?token=${encodeURIComponent(token)}`, { headers: { 'x-request-id': crypto.randomUUID() } }); if (!response.ok) return; const guide = await response.json(); const target = document.querySelector('#field-guide'); if (!target) return; target.innerHTML = `<section style="margin:18px 0 4px;padding:14px;background:#eef7ff;border:1px solid #cfe1f2;border-radius:10px"><div style="font-weight:800;font-size:13px">${escape(guide.title || 'Field guide')}</div><div style="color:#2f5f7d;font-size:12px;margin-top:7px">Safety: ${escape(guide.safety)}</div><ul style="margin:8px 0 0;padding-left:18px">${(guide.steps || []).map((step) => `<li style="margin:4px 0">${escape(step)}</li>`).join('')}</ul></section>`; } catch {} }; loadGuide(); })();
   </script>
 </body>
 </html>
