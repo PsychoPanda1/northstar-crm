@@ -30,6 +30,7 @@ try {
   const login = await post('/api/auth/demo-login?service=plumbing', { service: 'plumbing', role: 'owner' });
   if (!login.response.ok) throw new Error('accounting provider test login failed');
   const headers = { authorization: `Bearer ${login.body.token}` };
+  const preflightHealth = await request('/api/integrations/health', { headers });
   const dispatch = await post('/api/integrations/accounting/dispatch', { limit: 10 }, headers);
   const retry = await post('/api/integrations/accounting/retry', { key: 'purchase_order:po-erp-1' }, headers);
   const retryDispatch = await post('/api/integrations/accounting/dispatch', { limit: 10 }, headers);
@@ -38,7 +39,7 @@ try {
   const saved = JSON.parse(readFileSync(dataFile, 'utf8'))[tenantId];
   const sync = saved.accountingSync || [];
   const keys = sync.map((item) => item.key).sort();
-  if (dispatch.response.status !== 200 || dispatch.body.delivered !== 2 || dispatch.body.retrying !== 1 || retry.response.status !== 200 || retry.body.sync?.syncState !== 'Pending' || retryDispatch.body.delivered !== 1 || duplicate.body.attempted !== 0 || received.length !== 3 || received.some((item) => item.headers.authorization !== 'Bearer accounting-test-key') || !keys.includes('invoice:invoice-erp-1') || !keys.includes('payment:payment-erp-1') || !keys.includes('purchase_order:po-erp-1') || sync.some((item) => item.syncState !== 'Delivered') || health.body.checks?.accountingProvider !== true || health.body.accounting?.pending !== 0) throw new Error('accounting provider delivery or health contract failed');
+  if (preflightHealth.body.accounting?.pending !== 3 || dispatch.response.status !== 200 || dispatch.body.delivered !== 2 || dispatch.body.retrying !== 1 || retry.response.status !== 200 || retry.body.sync?.syncState !== 'Pending' || retryDispatch.body.delivered !== 1 || duplicate.body.attempted !== 0 || received.length !== 3 || received.some((item) => item.headers.authorization !== 'Bearer accounting-test-key') || !keys.includes('invoice:invoice-erp-1') || !keys.includes('payment:payment-erp-1') || !keys.includes('purchase_order:po-erp-1') || sync.some((item) => item.syncState !== 'Delivered') || health.body.checks?.accountingProvider !== true || health.body.accounting?.pending !== 0) throw new Error('accounting provider delivery or health contract failed');
   console.log('Northstar accounting provider test passed');
 } finally {
   if (child && !child.killed) child.kill();
