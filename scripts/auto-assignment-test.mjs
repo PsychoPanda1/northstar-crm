@@ -19,8 +19,10 @@ try {
   const availability = await request('/api/public/availability?service=plumbing&days=14');
   const slot = availability.body.slotOptions?.[0];
   const booking = await request('/api/public/bookings?service=plumbing', { method: 'POST', headers: { 'content-type': 'application/json', origin: `${base}` }, body: JSON.stringify({ service: 'plumbing', name: 'Auto Assignment Customer', phone: '843-555-0188', location: '10 Auto Way', requestedService: 'Pipe repair', slotId: slot?.id, idempotencyKey: 'auto-assignment-booking' }) });
-  const savedJob = JSON.parse(readFileSync(dataFile, 'utf8'))['auto-plumbing']?.jobs?.find((item) => item.id === booking.body.id);
-  if (!availability.response.ok || !slot || booking.response.status !== 201 || savedJob?.technician !== 'Alex Rivera' || savedJob?.status !== 'Confirmed' || savedJob?.assignmentSource !== 'online_booking_auto_assign') throw new Error('configured online booking was not safely auto-assigned');
+  const persisted = JSON.parse(readFileSync(dataFile, 'utf8'))['auto-plumbing'];
+  const savedJob = persisted?.jobs?.find((item) => item.id === booking.body.id);
+  const confirmations = persisted?.messages?.filter((item) => item.jobId === booking.body.id && item.template === 'confirmation') || [];
+  if (!availability.response.ok || !slot || booking.response.status !== 201 || savedJob?.technician !== 'Alex Rivera' || savedJob?.status !== 'Confirmed' || savedJob?.assignmentSource !== 'online_booking_auto_assign' || confirmations.length !== 1 || confirmations[0].status !== 'Queued (provider pending)') throw new Error('configured online booking was not safely auto-assigned and notified');
   console.log('Northstar online auto-assignment test passed');
 } finally {
   child.kill();
