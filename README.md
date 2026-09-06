@@ -240,7 +240,7 @@ The image runs as the unprivileged `node` user in production mode, stores transa
 
 Set `NORTHSTAR_REQUIRE_LIVE_PROVIDERS=true` for a production deployment that must not become ready until both the server-side message provider and payment provider URLs are configured. Leave it `false` only for an intentional preview or a deployment that does not yet accept provider-backed communications or payments; `/api/integrations/health` still reports each provider's live configuration status to authenticated staff.
 
-Set `NORTHSTAR_PUBLIC_URL` to the deployed HTTPS origin so provider-delivered review and payment links are clickable outside the CRM host.
+Set `NORTHSTAR_PUBLIC_URL` to the deployed HTTPS origin so provider-delivered review, estimate, estimate-PDF, and payment links are clickable outside the CRM host. Estimate delivery keeps relative `estimateUrl` and `estimatePdfUrl` fields for browser routing and includes resolved `publicEstimateUrl` and `publicEstimatePdfUrl` fields for outbound providers.
 
 Set `NORTHSTAR_MESSAGE_RETRY_LIMIT` from `0` to `5` to enable bounded automatic retries for transient message-provider timeouts and 408/409/425/429/5xx responses. Retries use a one-minute, five-minute, fifteen-minute, then thirty-minute backoff; missing recipients and other permanent 4xx failures remain visible as `Failed`, and each attempt uses the stable message ID as the provider idempotency key.
 
