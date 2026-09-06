@@ -27,7 +27,9 @@ try {
   const filteredBody = await filteredResponse.json();
   const campaignFilterResponse = await fetch(`${base}/api/leads?source=${encodeURIComponent('spring-repair')}`, { headers: { authorization: `Bearer ${loginBody.token}` } });
   const campaignFilterBody = await campaignFilterResponse.json();
-  assert(leadResponse.status === 201 && campaignLeadResponse.status === 201 && loginResponse.ok && statusResponse.status === 200 && statusBody.lead?.status === 'Site visit' && statusBody.lead.stageHistory?.at(-1)?.to === 'Site visit' && filteredResponse.status === 200 && filteredBody.items?.some((item) => item.id === leadBody.id) && campaignFilterResponse.status === 200 && campaignFilterBody.items?.some((item) => item.id === campaignLeadBody.id), 'custom lead stage or campaign attribution was not accepted and filterable by the owner pipeline');
+  const globalSearchResponse = await fetch(`${base}/api/search?q=${encodeURIComponent('spring-repair')}`, { headers: { authorization: `Bearer ${loginBody.token}` } });
+  const globalSearchBody = await globalSearchResponse.json();
+  assert(leadResponse.status === 201 && campaignLeadResponse.status === 201 && loginResponse.ok && statusResponse.status === 200 && statusBody.lead?.status === 'Site visit' && statusBody.lead.stageHistory?.at(-1)?.to === 'Site visit' && filteredResponse.status === 200 && filteredBody.items?.some((item) => item.id === leadBody.id) && campaignFilterResponse.status === 200 && campaignFilterBody.items?.some((item) => item.id === campaignLeadBody.id) && globalSearchResponse.status === 200 && globalSearchBody.results?.leads?.some((item) => item.id === campaignLeadBody.id && item.attribution?.utm_campaign === 'spring-repair'), 'custom lead stage or campaign attribution was not accepted and searchable by the owner pipeline');
   assert(!JSON.stringify(body).includes('passwordDigest') && !JSON.stringify(body).includes('ownerEmail'), 'public tenant manifest exposed private account fields');
   console.log('Northstar tenant manifest checks passed');
 } finally {
