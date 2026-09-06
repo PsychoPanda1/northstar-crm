@@ -88,6 +88,7 @@ When a configured tenant sets `autoAssignOnlineBookings: true` in `NORTHSTAR_TEN
 - `POST /api/customers/:id/preferences` → owner/dispatcher-only update of tenant-scoped SMS/email opt-out flags; direct messages, appointment notifications, estimate/invoice reminders, and reactivation campaigns reject or skip opted-out channels, while customer tokens never expose preference metadata
 - `GET /api/dashboard?range=week` → `{ metrics, pipeline, tasks, schedule, activity }`
 - The owner lead inbox exposes stage and assigned-owner filters; lead search preserves those filters so operators can work one pipeline slice at a time
+- The integration-health workspace exposes bounded message and payment queue dispatch actions for roles authorized by the corresponding provider endpoint; credentials never reach the browser
 - `GET /api/reports/overview` → tenant-scoped funnel, scheduling, cash, recurring-revenue, and touchpoint metrics
 - `GET /api/reports/receivables` → owner/dispatcher/accountant-only open-invoice aging with current, 1–30, 31–60, 61–90, and 90+ day buckets, customer-level balances, and invoice-level detail
 - `GET /api/export?type=receivables` → owner/dispatcher/accountant-only CSV of open invoice balances with due date, aging bucket, and days-past-due fields
