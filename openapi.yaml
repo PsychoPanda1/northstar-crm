@@ -329,13 +329,21 @@ components:
               items: { $ref: '#/components/schemas/IntakeField' }
         integration:
           type: object
-          required: [version, leadEndpoint, bookingEndpoint, availabilityEndpoint]
+            required: [version, leadEndpoint, bookingEndpoint, availabilityEndpoint, ownerAuthMethods]
           properties:
             version: { type: integer, example: 2 }
             leadEndpoint: { type: string }
             bookingEndpoint: { type: string }
             availabilityEndpoint: { type: string }
             ownerPortalPath: { type: string }
+            ownerAuthEndpoint: { type: string }
+            ownerAuthMethods:
+              type: array
+              description: Available owner authentication methods for this tenant. OIDC is present only when a verified tenant-bound OIDC owner is provisioned.
+              items: { type: string, enum: [password, oidc] }
+              minItems: 1
+              uniqueItems: true
+            ownerOidcAuthEndpoint: { type: string, nullable: true }
     CatalogItem:
       type: object
       required: [id, name, description, priceFrom, durationMinutes]
