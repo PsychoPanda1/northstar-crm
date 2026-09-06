@@ -1,10 +1,14 @@
 import { spawn } from 'node:child_process';
+import { existsSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const port = 4396;
 const base = `http://127.0.0.1:${port}`;
+const dataFile = join(tmpdir(), `northstar-tenant-manifest-${process.pid}-${Date.now()}.json`);
 const tenant = { slug: 'manifest-service', businessName: 'Manifest Service Co.', serviceLabel: 'Service', timeZone: 'America/New_York', leadStages: ['New', 'Site visit', 'Estimate sent', 'Won'], contactPhone: '(843) 555-0100', contactEmail: 'hello@manifest-service.example', serviceArea: 'Charleston area' };
-const server = spawn(process.execPath, [fileURLToPath(new URL('../server.mjs', import.meta.url))], { cwd: fileURLToPath(new URL('..', import.meta.url)), env: { ...process.env, NODE_ENV: 'test', PORT: String(port), NORTHSTAR_DATA_FILE: `${process.cwd()}/.tenant-manifest-test.json`, NORTHSTAR_SESSION_SECRET: 'tenant-manifest-test-secret-32', NORTHSTAR_TENANTS_JSON: JSON.stringify([tenant]), NORTHSTAR_SERVICE_TENANTS_JSON: JSON.stringify({ manifest: tenant.slug }) }, stdio: 'ignore' });
+const server = spawn(process.execPath, [fileURLToPath(new URL('../server.mjs', import.meta.url))], { cwd: fileURLToPath(new URL('..', import.meta.url)), env: { ...process.env, NODE_ENV: 'test', PORT: String(port), NORTHSTAR_DATA_FILE: dataFile, NORTHSTAR_SESSION_SECRET: 'tenant-manifest-test-secret-32', NORTHSTAR_TENANTS_JSON: JSON.stringify([tenant]), NORTHSTAR_SERVICE_TENANTS_JSON: JSON.stringify({ manifest: tenant.slug }) }, stdio: 'ignore' });
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 try {
   for (let attempt = 0; attempt < 100; attempt += 1) { try { if ((await fetch(`${base}/api/health`)).ok) break; } catch {} await new Promise((resolve) => setTimeout(resolve, 50)); if (attempt === 99) throw new Error('server did not start'); }
@@ -21,4 +25,5 @@ try {
   console.log('Northstar tenant manifest checks passed');
 } finally {
   server.kill();
+  for (const file of [dataFile, `${dataFile}.tmp`, `${dataFile}.backup`]) if (existsSync(file)) rmSync(file, { force: true });
 }
