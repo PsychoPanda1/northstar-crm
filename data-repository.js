@@ -874,8 +874,13 @@ class NorthstarDemoRepository {
   }
 
   async globalSearch(query) {
+    return this.globalSearchPage(query);
+  }
+
+  async globalSearchPage(query, { page = 1, pageSize = 20 } = {}) {
     if (!this.remote) throw new Error('API required for global search');
-    const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`, { headers: { authorization: `Bearer ${this.token}` } });
+    const params = new URLSearchParams({ q: String(query), page: String(page), pageSize: String(pageSize) });
+    const response = await fetch(`/api/search?${params}`, { headers: { authorization: `Bearer ${this.token}` } });
     if (!response.ok) throw new Error('global search failed');
     return response.json();
   }
