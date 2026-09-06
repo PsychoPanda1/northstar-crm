@@ -25,7 +25,27 @@ const required = [
   'Integration health is unavailable',
   'data-job-tracking-history',
   'repository.getJobLocationHistory',
-  'Could not load technician tracking history'
+  'Could not load technician tracking history',
+  'data-bulk-assign',
+  'data-bulk-status',
+  'data-bulk-invoice',
+  'repository.bulkAssignJobs(jobIds, technician.trim())',
+  'repository.bulkUpdateJobStatus(jobIds, status, note || \'\')',
+  'repository.bulkInvoiceJobs(completed.map((job) => job.dataset.dispatchJob)',
+  'data-route-order',
+  'data-route-optimize',
+  'repository.updateRouteOrder(date.trim(), technician.trim()',
+  'repository.optimizeRoute(date.trim(), technician.trim()',
+  'data-estimate-revisions',
+  'repository.getEstimateRevisions(button.dataset.estimateRevisions)',
+  'data-estimate-option-details',
+  'repository.updateEstimateOptionDetails(estimate.id, options)',
+  'data-invoice-action="schedule"',
+  'data-invoice-action="view-schedule"',
+  'repository.createPaymentSchedule(button.dataset.invoiceId',
+  'repository.getPaymentSchedule(button.dataset.invoiceId)',
+  'data-invoice-link-action',
+  'repository.invoicePaymentLink(button.dataset.invoiceId)'
 ];
 for (const snippet of required) {
   if (!source.includes(snippet)) throw new Error(`integration dispatch UI wiring missing: ${snippet}`);
