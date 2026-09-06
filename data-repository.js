@@ -654,9 +654,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async createAsset(customer, name, serial, installed, warrantyThrough, customerId = '') {
+  async createAsset(customer, name, serial, installed, warrantyThrough, customerId = '', nextServiceDue = '') {
     if (!this.remote) throw new Error('API required for asset creation');
-    const response = await fetch('/api/assets', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({ ...(customerId ? { customerId } : { customer }), name, serial, installed, warrantyThrough }) });
+    const response = await fetch('/api/assets', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({ ...(customerId ? { customerId } : { customer }), name, serial, installed, warrantyThrough, ...(nextServiceDue ? { nextServiceDue } : {}) }) });
     if (!response.ok) throw new Error('asset creation failed');
     return response.json();
   }

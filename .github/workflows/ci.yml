@@ -54,6 +54,8 @@ jobs:
         run: node scripts/custom-report-test.mjs
       - name: Run location history test
         run: node scripts/location-history-test.mjs
+      - name: Run asset service due test
+        run: node scripts/asset-service-due-test.mjs
       - name: Run appointment reply test
         run: node scripts/appointment-reply-test.mjs
       - name: Check integration dispatch UI wiring
