@@ -148,6 +148,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - The owner dashboard exposes a live `Leads at risk` KPI for uncontacted leads past that response SLA
 - The owner dashboard exposes a live `Late appointments` KPI for confirmed visits that have passed their normalized start time
 - Open estimates past `NORTHSTAR_ESTIMATE_FOLLOWUP_DAYS` (default 3) surface as owner follow-up items and the `estimatesAtRisk` dashboard metric
+- Completed customer-linked jobs without an invoice surface as the `unbilledCompletedJobs` dashboard metric and link directly to Job profitability so closed work does not silently become missed revenue
 - Receivables alerts distinguish overdue invoices and show days past due to focus collection work
 - Customer request alerts distinguish open requests older than 24 hours so unanswered customer communication is prioritized
 - Confirmed appointments that pass their normalized start time without an en-route or in-progress transition surface as urgent owner action items

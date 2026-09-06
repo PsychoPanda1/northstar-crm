@@ -77,6 +77,7 @@ assert(server.includes('LEAD_RESPONSE_SLA_HOURS') && server.includes('leadRespon
 assert(server.includes('Late appointment needs attention') && server.includes('N-late-'), 'late appointment alert workflow is not wired');
 assert(server.includes('lateAppointments') && index.includes('data-metric="lateAppointments"'), 'late appointment risk is not exposed in the dashboard');
 assert(server.includes('openCustomerRequests') && index.includes('data-metric="openCustomerRequests"'), 'open customer request risk is not exposed in the dashboard');
+assert(server.includes('unbilledCompletedJobs') && index.includes('data-metric="unbilledCompletedJobs"') && app.includes("'Review job costs': 'job-costs'"), 'unbilled completed job risk is not exposed in the dashboard');
 assert(server.includes('ESTIMATE_FOLLOWUP_DAYS') && server.includes('estimateFollowupConfigurationValid') && server.includes('Estimate follow-up due') && server.includes('estimatesAtRisk'), 'estimate follow-up workflow is not wired');
 assert(server.includes('Invoice overdue') && server.includes('days}d past due'), 'overdue invoice alert workflow is not wired');
 assert(server.includes('Customer request overdue') && server.includes('days}d open'), 'overdue customer request alert workflow is not wired');

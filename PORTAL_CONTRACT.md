@@ -126,6 +126,7 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 - `GET /api/dashboard` → the metrics projection includes `leadSlaBreaches`, the current count of uncontacted `New` leads past the configured response SLA
 - The same dashboard metrics projection includes `lateAppointments`, the current count of confirmed jobs whose normalized `startsAt` has passed
 - The dashboard metrics projection also includes `estimatesAtRisk`, the current count of open estimates past `NORTHSTAR_ESTIMATE_FOLLOWUP_DAYS` (default 3, valid 1–90)
+- The dashboard metrics projection also includes `unbilledCompletedJobs`, the current count of completed customer-linked jobs without a related invoice; the owner dashboard links this KPI to the Job profitability workspace for immediate billing follow-up
 - Estimate follow-up alerts retain direct estimate navigation and can queue the existing deduplicated SMS/email reminder workflow from the owner notification drawer
 - Unpaid invoices with a normalized `dueAt` or parseable due date in the past appear as urgent `Invoice overdue` items with elapsed days past due; otherwise they remain review items
 - Overdue invoice alerts retain direct invoice navigation and can queue the existing deduplicated SMS/email reminder workflow from the owner notification drawer
