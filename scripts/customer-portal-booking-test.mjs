@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 const port = 4395;
 const base = `http://127.0.0.1:${port}`;
 const tempDir = mkdtempSync(join(tmpdir(), 'northstar-portal-booking-'));
-const server = spawn(process.execPath, [fileURLToPath(new URL('../server.mjs', import.meta.url))], { cwd: fileURLToPath(new URL('..', import.meta.url)), env: { ...process.env, NODE_ENV: 'test', PORT: String(port), NORTHSTAR_DATA_FILE: join(tempDir, 'state.json'), NORTHSTAR_SESSION_SECRET: 'customer-portal-booking-test-secret-32' }, stdio: 'ignore' });
+const server = spawn(process.execPath, [fileURLToPath(new URL('../server.mjs', import.meta.url))], { cwd: fileURLToPath(new URL('..', import.meta.url)), env: { ...process.env, NODE_ENV: 'test', PORT: String(port), NORTHSTAR_DATA_FILE: join(tempDir, 'state.json'), NORTHSTAR_SESSION_SECRET: 'customer-portal-booking-test-secret-32', NORTHSTAR_ALLOW_DEMO_LOGIN: 'true', NORTHSTAR_CATALOG_JSON: JSON.stringify([{ id: 'CAT-PORTAL', tenantId: 'clearwater-plumbing', name: 'Drain cleaning', description: 'Drain cleaning service', priceFrom: '$149', durationMinutes: 90 }]) }, stdio: 'ignore' });
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 try {
   for (let attempt = 0; attempt < 100; attempt += 1) { try { if ((await fetch(`${base}/api/health`)).ok) break; } catch {} await new Promise((resolve) => setTimeout(resolve, 50)); if (attempt === 99) throw new Error('server did not start'); }
@@ -21,12 +21,15 @@ try {
   const nextSlot = nextAvailability.slotOptions?.[0];
   assert(nextSlot, 'second booking slot unavailable');
   const token = bookingBody.customerPortalAccessToken;
+  const portal = await (await fetch(`${base}/api/public/customer-portal?token=${encodeURIComponent(token)}`)).json();
+  assert(portal.availableBookingSlots?.length, 'customer portal booking slots unavailable');
   const book = () => fetch(`${base}/api/public/customer-portal/book?token=${encodeURIComponent(token)}`, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': 'portal-booking-repeatable' }, body: JSON.stringify({ service: 'Drain cleaning', slotId: nextSlot.id }) });
   const response = await book();
   const body = await response.json();
   const duplicate = await book();
   const duplicateBody = await duplicate.json();
-  assert(response.status === 201 && body.booked && duplicate.status === 200 && duplicateBody.duplicate && duplicateBody.id === body.id, 'customer portal booking idempotency failed');
+  const refreshedPortal = await (await fetch(`${base}/api/public/customer-portal?token=${encodeURIComponent(token)}`)).json();
+  assert(response.status === 201 && body.booked && duplicate.status === 200 && duplicateBody.duplicate && duplicateBody.id === body.id && refreshedPortal.jobs?.some((job) => job.id === body.id && job.service === 'Drain cleaning'), 'customer portal booking idempotency failed');
   console.log('Northstar customer portal booking test passed');
 } finally {
   server.kill();
