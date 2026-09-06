@@ -203,6 +203,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async updateCustomReportView(id, updates, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for report views');
+    const response = await fetch(`/api/reports/custom/views/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify(updates) });
+    if (!response.ok) throw new Error('report view update failed');
+    return response.json();
+  }
+
   async getMarketingReport(range = {}) {
     if (!this.remote) throw new Error('API required for marketing reporting');
     const query = new URLSearchParams(); if (range?.startDate) query.set('startDate', String(range.startDate)); if (range?.endDate) query.set('endDate', String(range.endDate)); const response = await fetch(`/api/reports/marketing${query.toString() ? `?${query}` : ''}`, { headers: { authorization: `Bearer ${this.token}` } });
