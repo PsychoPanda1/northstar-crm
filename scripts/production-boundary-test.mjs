@@ -38,7 +38,7 @@ const env = {
 };
 
 const child = spawn(process.execPath, ['server.mjs'], { cwd: root, env, stdio: 'ignore' });
-const invalidChild = spawn(process.execPath, ['server.mjs'], { cwd: root, env: { ...env, PORT: String(invalidPort), NORTHSTAR_DATA_FILE: invalidDataFile, NORTHSTAR_SESSION_FILE: invalidSessionFile, NORTHSTAR_REQUEST_RESPONSE_SLA_HOURS: '0' }, stdio: 'ignore' });
+const invalidChild = spawn(process.execPath, ['server.mjs'], { cwd: root, env: { ...env, PORT: String(invalidPort), NORTHSTAR_DATA_FILE: invalidDataFile, NORTHSTAR_SESSION_FILE: invalidSessionFile, NORTHSTAR_REQUEST_RESPONSE_SLA_HOURS: '0', NORTHSTAR_OIDC_ISSUER: 'https://issuer.example.test' }, stdio: 'ignore' });
 const strictChild = spawn(process.execPath, ['server.mjs'], { cwd: root, env: { ...env, PORT: String(strictPort), NORTHSTAR_DATA_FILE: strictDataFile, NORTHSTAR_SESSION_FILE: strictSessionFile, NORTHSTAR_REQUIRE_LIVE_PROVIDERS: 'true' }, stdio: 'ignore' });
 const base = `http://127.0.0.1:${port}`;
 const invalidBase = `http://127.0.0.1:${invalidPort}`;
@@ -77,7 +77,7 @@ try {
     try { invalidReady = await getJsonFrom(invalidBase, '/api/ready'); } catch {}
     if (!invalidReady) await new Promise((resolve) => setTimeout(resolve, 100));
   }
-  if (!invalidReady || invalidReady.response.status !== 503 || invalidReady.body.checks?.requestResponseSlaConfiguration !== false) throw new Error('invalid request SLA configuration did not fail production readiness');
+  if (!invalidReady || invalidReady.response.status !== 503 || invalidReady.body.checks?.requestResponseSlaConfiguration !== false || invalidReady.body.checks?.identityProviderConfiguration !== false) throw new Error('invalid production configuration did not fail readiness');
   let strictReady = null;
   for (let attempt = 0; attempt < 200 && !strictReady; attempt += 1) {
     try { strictReady = await getJsonFrom(strictBase, '/api/ready'); } catch {}
