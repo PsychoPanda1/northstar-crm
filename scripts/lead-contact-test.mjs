@@ -21,13 +21,16 @@ try {
   const login = await postJson('/api/auth/demo-login?service=plumbing', { service: 'plumbing', role: 'owner' });
   if (!lead.response.ok || !login.response.ok) throw new Error('lead contact test setup failed');
   const token = login.body.token;
+  const manualHeaders = { authorization: `Bearer ${token}`, 'idempotency-key': 'manual-lead-contract-key' };
+  const manual = await postJson('/api/leads', { name: 'Manual Lead Contract', phone: '843-555-0174', email: 'manual@example.com', service: 'Water heater repair', source: 'Phone call', location: '2 Contract Way', note: 'Needs same-day callback', utm_campaign: 'manual-contract' }, manualHeaders);
+  const manualDuplicate = await postJson('/api/leads', { name: 'Manual Lead Contract', phone: '843-555-0174', email: 'manual@example.com', service: 'Water heater repair', source: 'Phone call', location: '2 Contract Way', note: 'Needs same-day callback', utm_campaign: 'manual-contract' }, manualHeaders);
   const headers = { authorization: `Bearer ${token}`, 'idempotency-key': 'lead-contact-test-key' };
   const contact = await postJson(`/api/leads/${lead.body.id}/contact`, { channel: 'SMS', message: 'A quick follow-up from the service team.' }, headers);
   const duplicate = await postJson(`/api/leads/${lead.body.id}/contact`, { channel: 'SMS', message: 'A quick follow-up from the service team.' }, headers);
   const messages = await request('/api/messages', { headers: { authorization: `Bearer ${token}` } });
   const queued = (messages.body.items || []).find((item) => item.leadId === lead.body.id);
   const stageHistory = contact.body.lead?.stageHistory || [];
-  if (contact.response.status !== 201 || contact.body.lead?.status !== 'Contacted' || stageHistory.length < 2 || stageHistory.at(-2)?.to !== 'New' || stageHistory.at(-1)?.to !== 'Contacted' || stageHistory.at(-1)?.actor !== 'workflow' || duplicate.response.status !== 200 || !duplicate.body.duplicate || queued?.status !== 'Queued (provider pending)') throw new Error('lead contact queue, stage history, or idempotency failed');
+  if (manual.response.status !== 201 || manual.body.lead?.phone !== '843-555-0174' || manual.body.lead?.location !== '2 Contract Way' || manual.body.lead?.attribution?.utm_campaign !== 'manual-contract' || manualDuplicate.response.status !== 200 || !manualDuplicate.body.duplicate || contact.response.status !== 201 || contact.body.lead?.status !== 'Contacted' || stageHistory.length < 2 || stageHistory.at(-2)?.to !== 'New' || stageHistory.at(-1)?.to !== 'Contacted' || stageHistory.at(-1)?.actor !== 'workflow' || duplicate.response.status !== 200 || !duplicate.body.duplicate || queued?.status !== 'Queued (provider pending)') throw new Error('manual lead enrichment, contact queue, stage history, or idempotency failed');
   console.log('Northstar lead contact test passed');
 } finally {
   if (child && !child.killed) child.kill();
