@@ -81,14 +81,14 @@ class NorthstarDemoRepository {
     return { ...seed, completedTasks: this.state.completedTasks || [] };
   }
 
-  async list(type, search = '') {
+  async list(type, search = '', filters = {}) {
     if (!this.remote) return [];
     const pageSize = 200;
     const items = [];
     let page = 1;
     let hasMore = true;
     while (hasMore && page <= 500) {
-      const result = await this.listPage(type, { search, page, pageSize });
+      const result = await this.listPage(type, { search, ...filters, page, pageSize });
       items.push(...(Array.isArray(result.items) ? result.items : []));
       hasMore = result.hasMore === true;
       page += 1;
@@ -96,10 +96,13 @@ class NorthstarDemoRepository {
     return items;
   }
 
-  async listPage(type, { search = '', page = 1, pageSize = 50 } = {}) {
+  async listPage(type, { search = '', status = '', priority = '', assignedTo = '', page = 1, pageSize = 50 } = {}) {
     if (!this.remote) return { items: [], total: 0, page, pageSize, hasMore: false };
     const query = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
     if (search) query.set('search', search);
+    if (status) query.set('status', status);
+    if (priority) query.set('priority', priority);
+    if (assignedTo) query.set('assignedTo', assignedTo);
     const response = await fetch(`/api/${type}?${query}`, { headers: { authorization: `Bearer ${this.token}` } });
     if (!response.ok) throw new Error('records unavailable');
     return response.json();

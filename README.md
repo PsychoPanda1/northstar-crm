@@ -133,6 +133,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - The same selection can apply one validated priority to up to 50 open requests for fast incident triage
 - The request queue ranks open work by urgency and age so the oldest high-risk customer demand stays visible to dispatchers
 - Request queues can be filtered server-side by lifecycle status, priority, or assigned owner for focused dispatch handoff
+- The owner Requests drawer exposes those status, priority, and assigned-owner filters with a clear-filters control
 - Customer request triage supports Low, Normal, High, and Urgent priority so safety-sensitive service issues reach owners immediately
 - The Requests workspace keeps that priority visible beside the customer message for dispatcher handoff
 - Global search also indexes and displays request priority so urgent customer work is discoverable from anywhere in the owner portal
