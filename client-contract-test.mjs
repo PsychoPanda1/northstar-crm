@@ -192,4 +192,5 @@ assert(repository.includes('activeRepository.refreshPromise') && repository.incl
 assert(server.includes('verifyConfiguredPassword') && server.includes('scrypt\\$') && readFileSync(`${root}scripts/generate-owner-digest.mjs`, 'utf8').includes('scryptSync'), 'configured authentication does not support salted scrypt password digests');
 assert(server.includes('PUBLIC_LEAD_RATE_LIMIT') && server.includes('PUBLIC_MUTATION_RATE_LIMIT') && server.includes('rateLimitConfigurationValid') && server.includes('publicRateLimitKey') && server.includes('TRUST_PROXY') && server.includes('clientAddress'), 'public intake rate limiting is not configurable, service-scoped, and proxy-aware');
 assert((server.match(/pathname === '\/api\/public\/leads' && req\.method === 'OPTIONS'/g) || []).length === 0, 'public lead CORS preflight must not have a duplicate route');
+assert(openapi.includes("'429': { $ref: '#/components/responses/RateLimited' }") && openapi.includes('Retry-After:') && openapi.includes('RateLimited:'), 'public OpenAPI contract must document throttling and Retry-After');
 console.log('Northstar client contract checks passed');

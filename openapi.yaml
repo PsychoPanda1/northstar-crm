@@ -82,6 +82,7 @@ paths:
         '200': { $ref: '#/components/responses/Duplicate' }
         '409': { $ref: '#/components/responses/IdempotencyConflict' }
         '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
   /api/public/bookings:
     post:
       summary: Create a customer booking
@@ -110,6 +111,7 @@ paths:
         '200': { $ref: '#/components/responses/Duplicate' }
         '409': { $ref: '#/components/responses/IdempotencyConflict' }
         '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
 components:
   parameters:
     Service:
@@ -207,6 +209,12 @@ components:
       content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
     IdempotencyConflict:
       description: Idempotency key was reused with a different payload
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    RateLimited:
+      description: Client/service mutation rate limit exceeded; retry after the advertised delay.
+      headers:
+        Retry-After:
+          schema: { type: integer, example: 60 }
       content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
     LeadAccepted:
       description: Lead accepted
