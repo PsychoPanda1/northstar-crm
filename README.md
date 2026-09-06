@@ -135,6 +135,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Owners can save a tenant-scoped custom KPI profile for reuse across reporting sessions; changes are idempotent and audit-recorded
 - Labor entries feed customer timelines and job-cost reporting
 - Structured SMS/email message queue with explicit provider-pending status, server-side provider dispatch, and timeline capture
+- Owner conversation workspace groups inbound and outbound SMS/email by customer, preserves chronological history, and supports direct replies plus new provider-pending messages
 - Tenant-scoped lead-provider dispatch preserves landing-page contact and campaign attribution context, uses stable idempotency keys, and records delivery state for marketing or call-center handoff
 - Tenant-scoped inventory and accounting provider dispatch preserves material, invoice, payment, and purchase-order context with stable idempotency keys and durable delivery state for warehouse/ERP handoff
 - Optional server-side automation worker runs appointment, estimate, receivables, renewal, and configured lead-, inventory-, accounting-, and document-provider delivery work on a bounded cadence with deduplication, retry limits, opt-out enforcement, and audit evidence
