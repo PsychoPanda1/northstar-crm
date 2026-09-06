@@ -598,9 +598,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async optimizeRoute(date, technician, startLatitude, startLongitude, idempotencyKey = crypto.randomUUID()) {
+  async optimizeRoute(date, technician, startLatitude, startLongitude, idempotencyKey = crypto.randomUUID(), travelSpeedKph) {
     if (!this.remote) throw new Error('API required for route optimization');
-    const response = await fetch('/api/dispatch/route-optimize', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ date, technician, ...(startLatitude !== undefined ? { startLatitude, startLongitude } : {}) }) });
+    const response = await fetch('/api/dispatch/route-optimize', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ date, technician, ...(startLatitude !== undefined ? { startLatitude, startLongitude } : {}), ...(travelSpeedKph !== undefined ? { travelSpeedKph } : {}) }) });
     if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'route optimization failed');
     return response.json();
   }
