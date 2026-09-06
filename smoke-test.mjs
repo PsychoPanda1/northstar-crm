@@ -665,6 +665,7 @@ try {
   const techLink = await request(`/api/jobs/${fieldJob.body.id}/technician-link`, jsonOptions('POST', {}, token));
   const techUrl = new URL(techLink.body.url, base);
   const techView = await request(`/api/public/technician-job${techUrl.search}`);
+  const technicianCustomerContext = await request(`/api/public/technician-job/customer-context${techUrl.search}`);
   const techVisitEnRoute = await request(`/api/public/technician-job/visit-status${techUrl.search}`, jsonOptions('POST', { visitId: technicianVisit.body.id, status: 'En route' }));
   const duplicateTechVisitEnRoute = await request(`/api/public/technician-job/visit-status${techUrl.search}`, jsonOptions('POST', { visitId: technicianVisit.body.id, status: 'En route' }));
   const techVisitInProgress = await request(`/api/public/technician-job/visit-status${techUrl.search}`, jsonOptions('POST', { visitId: technicianVisit.body.id, status: 'In progress' }));
@@ -690,7 +691,7 @@ const techViewWithAsset = await request(`/api/public/technician-job${techUrl.sea
  const techViewWithForm = await request(`/api/public/technician-job${techUrl.search}`);
   const fieldFormNotifications = await request('/api/notifications?search=Job%20form', { headers: { authorization: `Bearer ${token}` } });
   const fieldJobDetail = await request(`/api/jobs/${fieldJob.body.id}`, { headers: { authorization: `Bearer ${token}` } });
-  assert(techView.body.requiredForms?.some((item) => item.formName === 'Safety inspection' && item.completed === false) && fieldForm.response.status === 201 && techViewWithForm.body.requiredForms?.some((item) => item.formName === 'Safety inspection' && item.completed === true) && fieldJobDetail.body.job.requiredForms?.some((item) => item.formName === 'Safety inspection' && item.completed === true), 'required job form lifecycle failed');
+  assert(technicianCustomerContext.response.status === 200 && Array.isArray(technicianCustomerContext.body.recentJobs) && technicianCustomerContext.body.recentJobs.length >= 1 && Array.isArray(technicianCustomerContext.body.openInvoices) && Array.isArray(technicianCustomerContext.body.activePlans) && technicianCustomerContext.body.tenantId === undefined && techView.body.requiredForms?.some((item) => item.formName === 'Safety inspection' && item.completed === false) && fieldForm.response.status === 201 && techViewWithForm.body.requiredForms?.some((item) => item.formName === 'Safety inspection' && item.completed === true) && fieldJobDetail.body.job.requiredForms?.some((item) => item.formName === 'Safety inspection' && item.completed === true), 'technician customer context or required job form lifecycle failed');
   const fieldEstimateOptions = { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': 'smoke-field-estimate' }, body: JSON.stringify({ service: 'Water heater replacement', amount: 1850, note: 'Existing unit is beyond economical repair.' }) };
   const fieldPricebookEstimateOptions = { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': 'smoke-field-pricebook-estimate' }, body: JSON.stringify({ catalogItemId: catalogItem.body.id, amount: 389, note: 'Pricebook-selected field finding.' }) };
   const fieldPricebookEstimate = await request(`/api/public/technician-job/estimate${techUrl.search}`, fieldPricebookEstimateOptions);

@@ -153,6 +153,7 @@ assert(status.includes('/api/public/job-status/calendar') && status.includes('Ad
 assert(app.includes("(type === 'estimates' && item.note)"), 'owner estimate cards hide field findings');
 assert(customer.includes("job.status === 'No-show' ? 'Book a new visit'"), 'customer portal does not expose no-show recovery');
 assert(technician.includes("r.status !== 202") && technician.includes("api('/api/public/technician-job/visit-status'"), 'technician offline actions do not preserve queued success or visit replay');
+assert(server.includes("/api/public/technician-job/customer-context") && technician.includes('customer-context') && technician.includes('Recent work:') && technician.includes('Open balance:'), 'technician mobile context does not expose bounded customer history');
 assert(status.includes('body.visits') && status.includes('Visit progress') && status.includes('/api/public/job-status/cancel'), 'customer status page does not expose multi-visit progress and cancellation');
 assert(customer.includes('Tracking live') && customer.includes('toLocaleTimeString') && app.includes('Live location'), 'live technician location freshness is not visible to customers and dispatch');
 assert(technician.includes('Start live location') && technician.includes('Stop live location') && technician.includes('setInterval') && technician.includes('document.hidden'), 'technician live location must be explicit, periodic, and visibility-aware');
