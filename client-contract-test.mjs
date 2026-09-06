@@ -79,6 +79,8 @@ assert(app.includes('data-notification-open="requests"') && app.includes('data-r
 assert(app.includes('data-request-action="resolve"') && app.includes('repository.resolveRequest'), 'request alerts do not expose a direct resolve action');
 assert(app.includes('data-request-action="priority"') && app.includes('repository.updateRequestPriority') && repository.includes('updateRequestPriority'), 'request priority triage control is not wired');
 assert(server.includes('requestPriorityMatch') && server.includes('invalid_request_priority') && server.includes('customer.request.priority.updated'), 'request priority update route is not wired');
+assert(app.includes('data-request-action="assign"') && app.includes('repository.assignRequest') && repository.includes('assignRequest'), 'request assignment workflow is not wired');
+assert(server.includes('requestAssignMatch') && server.includes('request_assignee_not_found') && server.includes('customer.request.assigned'), 'request assignment route is not wired');
 assert(index.includes('data-nav-count="requests"') && app.includes("repository.list('requests')"), 'navigation should expose live request counts');
 assert(index.includes('data-view="requests" data-required-permission="requests:read"') && server.includes("rolePermissions.owner.push('requests:read')") && server.includes("rolePermissions.dispatcher.push('requests:read')"), 'request navigation must follow role permissions');
 assert(app.includes("sessionPermissions.has('requests:read') ? repository.list('requests') : Promise.resolve([])"), 'restricted roles must not block other live navigation counts');
@@ -161,7 +163,7 @@ assert(estimate.includes("['Draft','Sent'].includes(body.status)") && estimate.i
 assert(customer.includes('sessionStorage') && customer.includes('retryKey') && customer.includes('idempotency-key'), 'customer portal actions do not preserve mobile retry identity');
 assert(customer.includes('data-action="job-request"') && customer.includes('/api/public/customer-portal/request'), 'customer portal does not expose appointment-scoped questions');
 assert(customer.includes("Priority: Low, Normal, High, or Urgent") && server.includes("const priorities = ['Low', 'Normal', 'High', 'Urgent']") && server.includes("item.priority === 'Urgent'"), 'customer request priority triage is not wired');
-assert(app.includes("type === 'requests' ? [item.priority || 'Normal', item.message].filter(Boolean).join(' · ')"), 'request priority must remain visible in the owner queue');
+assert(app.includes("type === 'requests' ? [item.priority || 'Normal', item.assignedTo ? 'Assigned: ' + item.assignedTo : 'Unassigned', item.message].filter(Boolean).join(' · ')"), 'request priority and assignment must remain visible in the owner queue');
 assert(server.includes("'priority', 'message', 'status'") && server.includes("priority: item.priority || 'Normal'") && app.includes("item.priority || 'Normal'} · ${item.message}"), 'global search must preserve request priority context');
 assert(customer.includes("post('/api/public/customer-portal/confirm'") && customer.includes('retryKey =') && server.includes('confirmationIdempotencyFingerprint'), 'customer appointment confirmation does not preserve retry identity');
 assert(customer.includes('/api/public/customer-portal/calendar') && customer.includes('Add to calendar'), 'customer portal does not expose calendar handoff');
