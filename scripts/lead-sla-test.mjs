@@ -24,11 +24,12 @@ try {
   const token = login.body.token;
   const headers = { authorization: `Bearer ${token}` };
   const before = await request('/api/notifications', { headers });
+  const dashboard = await request('/api/dashboard', { headers });
   const breached = (before.body.items || []).find((item) => item.leadId === 'sla-lead-1');
   const status = await postJson('/api/leads/sla-lead-1/status', { status: 'Contacted', note: 'Called within the response workflow.' }, token);
   const after = await request('/api/notifications', { headers });
   const stillBreached = (after.body.items || []).some((item) => item.leadId === 'sla-lead-1' && item.title === 'Lead response SLA breached');
-  if (before.response.status !== 200 || breached?.title !== 'Lead response SLA breached' || breached?.status !== 'Urgent' || status.response.status !== 200 || !status.body.lead?.firstResponseAt || stillBreached) throw new Error('lead response SLA behavior failed');
+  if (before.response.status !== 200 || dashboard.response.status !== 200 || dashboard.body.metrics?.leadSlaBreaches !== '1' || breached?.title !== 'Lead response SLA breached' || breached?.status !== 'Urgent' || status.response.status !== 200 || !status.body.lead?.firstResponseAt || stillBreached) throw new Error('lead response SLA behavior failed');
   console.log('Northstar lead SLA test passed');
 } finally {
   if (child && !child.killed) child.kill();
