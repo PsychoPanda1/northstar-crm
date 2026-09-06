@@ -27,6 +27,8 @@ const required = [
   'repository.getJobLocationHistory',
   'Could not load technician tracking history',
   'data-bulk-assign',
+  'data-bulk-select-visible',
+  'Select visible jobs',
   'data-bulk-status',
   'data-bulk-invoice',
   'repository.bulkAssignJobs(jobIds, technician.trim())',
