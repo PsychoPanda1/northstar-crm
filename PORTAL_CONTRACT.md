@@ -6,6 +6,8 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 
 ## Current demo seam
 
+When a configured tenant sets `autoAssignOnlineBookings: true` in `NORTHSTAR_TENANTS_JSON`, normalized online bookings are assigned to the highest-scoring available qualified technician during persistence, confirmed, and notified. If no safe match exists, the booking remains unassigned for dispatch review.
+
 - `tenant-config.js` contains presentation-only configurations for plumbing, power washing, electrical, mobile car wash, and a home-services default.
 - `app.js` applies the selected tenant name, service label, accent, and dashboard focus line.
 - The owner sign-in dialog is intentionally a demo boundary. It does not collect, transmit, or validate credentials.
