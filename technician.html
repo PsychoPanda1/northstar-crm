@@ -35,27 +35,31 @@
     <button class="secondary" id="collect-payment">Collect payment</button>
     <button class="secondary" id="log-time">Log time</button>
     <button class="secondary" id="use-material">Record material used</button>
-    <div id="message"></div>
+    <div id="message"></div><div id="queue-review" aria-live="polite" style="margin-top:12px"></div>
   </main>
   <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/northstar-sw.js', { scope: '/' }).catch(() => {});</script>
   <script>
     const token = new URLSearchParams(location.search).get('token');
     const queueKey = `northstar-field-queue:${(token || 'missing').slice(-24)}`;
+    const reviewKey = `${queueKey}:review`;
     const readQueue = () => { try { return JSON.parse(localStorage.getItem(queueKey) || '[]'); } catch { return []; } };
     const writeQueue = (items) => localStorage.setItem(queueKey, JSON.stringify(items.slice(-50)));
+    const readReview = () => { try { return JSON.parse(localStorage.getItem(reviewKey) || '[]'); } catch { return []; } };
+    const writeReview = (items) => localStorage.setItem(reviewKey, JSON.stringify(items.slice(-20)));
+    const renderQueueState = () => { const queueEscape = (value) => String(value ?? '').replace(/[&<>'\"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '\"': '&quot;' }[character])); const pending = readQueue(); const review = readReview(); const target = document.querySelector('#queue-review'); if (!target) return; target.innerHTML = pending.length || review.length ? `<div style="padding:10px;background:#fffbea;border:1px solid #f2e7b5;border-radius:10px;font-size:12px"><strong>${pending.length} update${pending.length === 1 ? '' : 's'} pending${review.length ? ` · ${review.length} need review` : ''}</strong>${review.length ? `<div style="margin-top:8px">${review.map((item, index) => `<div style="display:flex;gap:8px;align-items:center;margin-top:6px"><span style="flex:1">${queueEscape(item.path.split('?')[0])} · ${queueEscape(new Date(item.queuedAt).toLocaleString())}</span><button type="button" data-queue-retry="${index}" style="width:auto;margin:0;padding:6px 9px">Retry</button><button type="button" data-queue-discard="${index}" style="width:auto;margin:0;padding:6px 9px;background:#eaf2ef;color:#237b5b">Discard</button></div>`).join('')}</div>` : ''}</div>` : ''; };
     const message = (value) => { document.querySelector('#message').textContent = value; };
     const rawApi = (path, options = {}) => fetch(`${path}?token=${encodeURIComponent(token || '')}`, { ...options, headers: { 'content-type': 'application/json', ...(options.headers || {}) } });
     const queueSafeOptions = (options = {}) => { if (options.method !== 'POST') return options; const headers = { ...(options.headers || {}) }; if (!headers['idempotency-key']) headers['idempotency-key'] = crypto.randomUUID(); return { ...options, headers }; };
     const flushQueue = async () => {
       const pending = readQueue();
-      if (!pending.length || !navigator.onLine) return;
+      if (!pending.length || !navigator.onLine) { renderQueueState(); return; }
       const remaining = [];
       const conflicts = [];
       for (const item of pending) {
         try { const response = await rawApi(item.path, item.options); if (!response.ok) { if ([400, 401, 403, 409, 422].includes(response.status)) conflicts.push(item); else remaining.push(item); } }
         catch { remaining.push(item); }
       }
-      writeQueue(remaining);
+      writeQueue(remaining); if (conflicts.length) writeReview([...readReview(), ...conflicts]); renderQueueState();
       if (conflicts.length) message(`${conflicts.length} offline update${conflicts.length === 1 ? '' : 's'} need review after a conflict or expired link.`);
       else if (!remaining.length) message('Offline field updates synchronized.');
     };
@@ -64,12 +68,14 @@
       try { return await rawApi(path, safeOptions); }
       catch (error) {
         if (safeOptions.method !== 'POST') throw error;
-        writeQueue([...readQueue(), { path, options: safeOptions, queuedAt: new Date().toISOString() }]);
+        writeQueue([...readQueue(), { path, options: safeOptions, queuedAt: new Date().toISOString() }]); renderQueueState();
         message('Connection unavailable. Field update saved on this device.');
         return new Response(JSON.stringify({ offline: true }), { status: 202, headers: { 'content-type': 'application/json' } });
       }
     };
     window.addEventListener('online', flushQueue);
+    document.querySelector('#queue-review')?.addEventListener('click', async (event) => { const retry = event.target.closest('[data-queue-retry]'); const discard = event.target.closest('[data-queue-discard]'); if (!retry && !discard) return; const review = readReview(); const index = Number((retry || discard).dataset.queueRetry ?? (retry || discard).dataset.queueDiscard); const item = review[index]; if (!item) return; if (discard) { review.splice(index, 1); writeReview(review); renderQueueState(); return; } retry.disabled = true; try { const response = await rawApi(item.path, item.options); if (response.ok || [400, 401, 403, 409, 422].includes(response.status)) { review.splice(index, 1); writeReview(review); renderQueueState(); message(response.ok ? 'Offline update synchronized.' : 'Update reviewed and removed from the queue.'); } } catch {} finally { retry.disabled = false; } });
+    renderQueueState();
     const set = (id, value) => { document.querySelector(`#${id}`).textContent = value || '—'; };
    const renderChecklist = (items) => { document.querySelector('#checklist').innerHTML = items.length ? `<div style="margin:18px 0 4px;font-weight:800;font-size:13px">Required work steps</div>${items.map((item,index)=>`<label style="display:block;padding:9px 0;font-size:13px"><input type="checkbox" data-check-index="${index}" ${item.completed?'checked':''} /> ${item.label}</label>`).join('')}` : ''; document.querySelectorAll('[data-check-index]').forEach((box)=>box.onchange=async()=>{box.disabled=true;const r=await api('/api/public/technician-job/checklist',{method:'POST',body:JSON.stringify({index:Number(box.dataset.checkIndex),completed:box.checked})});if(!r.ok){box.checked=!box.checked;message('Could not update checklist.')}box.disabled=false;}); };
     const escapeHtml = (value) => String(value ?? '').replace(/[&<>'\"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '\"': '&quot;' }[character]));
