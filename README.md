@@ -124,7 +124,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Technician performance reporting compares completion, no-shows, field hours, revenue, cost, and gross margin by technician
 - Payroll-ready technician commission reporting with owner-controlled commission rates, date-bounded reports, and CSV handoff
 - Marketing and technician performance reports are exportable as owner-scoped CSVs
-- Reports summarize estimate close rate, memberships sold, no-shows, tracked field hours, material spend, logged labor cost, and gross margin, with CSV export for owner handoff
+- Reports summarize estimate close rate, memberships sold, no-shows, tracked field hours, material spend, logged labor cost, and gross margin, with dimension-aware grouped CSV export for owner handoff
 - Owners can save a tenant-scoped custom KPI profile for reuse across reporting sessions; changes are idempotent and audit-recorded
 - Labor entries feed customer timelines and job-cost reporting
 - Structured SMS/email message queue with explicit provider-pending status, server-side provider dispatch, and timeline capture

@@ -301,9 +301,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async exportRecords(type, range = {}) {
+  async exportRecords(type, range = {}, filters = {}, groupBy = '') {
     if (!this.remote) throw new Error('API required for exports');
-    const query = new URLSearchParams({ type, ...(range.startDate ? { startDate: range.startDate } : {}), ...(range.endDate ? { endDate: range.endDate } : {}) });
+    const query = new URLSearchParams({ type, ...(range.startDate ? { startDate: range.startDate } : {}), ...(range.endDate ? { endDate: range.endDate } : {}), ...Object.fromEntries(Object.entries(filters || {}).slice(0, 4).filter(([, value]) => value)), ...(groupBy ? { groupBy } : {}) });
     const response = await fetch(`/api/export?${query}`, { headers: { authorization: `Bearer ${this.token}` } });
     if (!response.ok) throw new Error('export unavailable');
     const blob = await response.blob();
