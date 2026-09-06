@@ -21,9 +21,10 @@ try {
   await waitForServer();
   const login = await request('/api/auth/demo-login?service=plumbing', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ service: 'plumbing', role: 'owner' }) });
   const headers = { authorization: `Bearer ${login.body.token}`, 'content-type': 'application/json' };
+  const detail = await request('/api/jobs/job-q2c-1', { headers });
   const result = await request('/api/jobs/job-q2c-1/invoice', { method: 'POST', headers, body: JSON.stringify({ due: 'Net 30' }) });
   const invoice = result.body.invoice;
-  if (!login.response.ok || result.response.status !== 201 || invoice?.estimateId !== estimate.id || invoice.amount !== estimate.amount || invoice.lineItems?.length !== estimate.lineItems.length || invoice.lineItems?.[1]?.description !== 'Installation labor' || invoice.subtotal !== estimate.subtotal || invoice.discount !== estimate.discount) throw new Error('accepted estimate pricing did not carry into completed job invoice');
+  if (!login.response.ok || detail.response.status !== 200 || detail.body.estimate?.lineItems?.[1]?.description !== 'Installation labor' || result.response.status !== 201 || invoice?.estimateId !== estimate.id || invoice.amount !== estimate.amount || invoice.lineItems?.length !== estimate.lineItems.length || invoice.lineItems?.[1]?.description !== 'Installation labor' || invoice.subtotal !== estimate.subtotal || invoice.discount !== estimate.discount) throw new Error('accepted estimate pricing did not carry into completed job invoice');
   console.log('Northstar quote-to-cash test passed');
 } finally {
   if (child && !child.killed) child.kill();

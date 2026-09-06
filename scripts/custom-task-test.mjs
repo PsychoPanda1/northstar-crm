@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const port = 5000 + Math.floor(Math.random() * 100);
+const port = 5100 + Math.floor(Math.random() * 100);
 const dataFile = join(tmpdir(), `northstar-custom-task-${process.pid}-${Date.now()}.json`);
 const env = { ...process.env, NODE_ENV: 'development', NORTHSTAR_ALLOW_DEMO_LOGIN: 'true', PORT: String(port), NORTHSTAR_DATA_FILE: dataFile, NORTHSTAR_SESSION_FILE: `${dataFile}.sessions` };
 const base = `http://127.0.0.1:${port}`;
