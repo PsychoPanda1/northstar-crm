@@ -2,7 +2,7 @@
 
 The tenant manifest may include optional public `contactPhone`, `contactEmail`, and `serviceArea` values for call-to-action and coverage copy. Treat them as display metadata only; owner authentication and customer records remain protected by their respective server-side boundaries.
 
-The reusable booking page consumes `contactPhone` and `serviceArea` when present, rendering a click-to-call link and coverage label without requiring service-specific page edits.
+The reusable booking page consumes `contactPhone`, `contactEmail`, and `serviceArea` when present, rendering click-to-call, email, and coverage details without requiring service-specific page edits.
 
 Use the public lead endpoint from a service landing page. The service key can be sent in the JSON body or in the page URL, for example `/api/public/leads?service=plumbing`.
 
