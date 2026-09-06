@@ -88,6 +88,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - No-show recovery from the dispatch board and owner action queue with available-slot and technician-conflict checks
 - Rescheduling an appointment queues a customer-facing reschedule notification and timeline event
 - Customers can self-service a new appointment after a no-show through their signed status or portal link
+- Customer service-plan pause, cancellation, and change requests route through an owner-reviewed, idempotent, audited queue; fulfillment updates the plan and cancels future plan jobs when required
 - Owners and dispatchers can queue deduplicated appointment reminders before a visit
 - Automatic customer notifications when jobs are assigned, en route, or completed, with deduplication before provider delivery
 - Owner/dispatcher review requests can be queued by SMS or email after completion, honoring channel opt-outs and deduplicating signed 72-hour review links
