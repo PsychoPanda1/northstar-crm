@@ -122,7 +122,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - New landing-page leads appear in the owner action queue for immediate follow-up, and owner/dispatcher teams can atomically assign or advance up to 50 leads through the pipeline in one audited, idempotent batch
 - The owner navigation exposes live Schedule, Inbox, and open Customer Requests counts so unresolved work remains visible across service verticals
 - Customer Requests are visible only to owner and dispatcher sessions through the explicit `requests:read` permission; technicians and accountants remain excluded from that queue
-- Customer request urgency uses the configurable `NORTHSTAR_REQUEST_RESPONSE_SLA_HOURS` deployment setting (1–168 hours, default 24)
+- Customer request urgency uses optional tenant-level `requestResponseSlaHours` in `NORTHSTAR_TENANTS_JSON` (1–168 hours), falling back to the deployment-wide `NORTHSTAR_REQUEST_RESPONSE_SLA_HOURS` setting (default 24)
 - The lead action queue flags uncontacted leads that breach the configurable response SLA (`NORTHSTAR_LEAD_RESPONSE_SLA_HOURS`) and records the first response timestamp when staff begin follow-up
 - The owner dashboard exposes a live `Leads at risk` KPI for uncontacted leads past that response SLA
 - The owner dashboard exposes a live `Late appointments` KPI for confirmed visits that have passed their normalized start time

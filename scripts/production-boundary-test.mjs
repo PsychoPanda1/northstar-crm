@@ -22,6 +22,7 @@ const env = {
   NORTHSTAR_OWNER_EMAIL: 'owner@example.test',
   NORTHSTAR_OWNER_PASSWORD_DIGEST: createHmac('sha256', secret).update(password).digest('hex'),
   NORTHSTAR_OWNER_TENANT_ID: 'johnson-service-co',
+  NORTHSTAR_TENANTS_JSON: JSON.stringify([{ slug: 'johnson-service-co', businessName: 'Johnson Service Co.', serviceLabel: 'Home services', timeZone: 'America/New_York', requestResponseSlaHours: 48 }]),
   NORTHSTAR_REQUEST_RESPONSE_SLA_HOURS: '48',
   NORTHSTAR_CATALOG_JSON: JSON.stringify([{ tenantId: 'johnson-service-co', id: 'configured-inspection', name: 'Configured inspection', description: 'A configured production service', priceFrom: '$199', category: 'Inspection', durationMinutes: 90, taxable: true }]),
   NORTHSTAR_PAYMENT_WEBHOOK_SECRET: 'payment-secret-32-characters-for-test',
@@ -66,7 +67,7 @@ try {
   const zero = String.fromCharCode(36) + '0';
   if (dashboard.body.metrics?.jobs !== '0' || dashboard.body.metrics?.estimates !== '0' || dashboard.body.metrics?.revenue !== zero) throw new Error('synthetic dashboard baseline exposed');
   const catalog = await getJson('/api/public/catalog?service=default');
-  if (!catalog.response.ok || catalog.body.items?.length !== 1 || catalog.body.items[0].id !== 'configured-inspection') throw new Error('configured production catalog was not exposed safely');
+  if (!catalog.response.ok || catalog.body.items?.length !== 1 || catalog.body.items[0].id !== 'configured-inspection' || catalog.body.tenant?.requestResponseSlaHours !== 48) throw new Error('configured production catalog was not exposed safely');
   const unknowns = await Promise.all(['/api/public/tenant?service=unknown', '/api/public/catalog?service=unknown', '/api/public/availability?service=unknown'].map((path) => getJson(path)));
   if (unknowns.some(({ response, body }) => response.status !== 404 || body.error !== 'unknown_service')) throw new Error('unknown service did not fail closed');
   const demoLogin = await getJson('/api/auth/demo-login?service=plumbing', { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
