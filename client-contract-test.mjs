@@ -128,6 +128,7 @@ assert(tenantConfig.includes('const unavailable =') && tenantConfig.includes('if
 assert(invoice.includes('id="breakdown"') && invoice.includes('Remaining $'), 'invoice payment page does not expose total, paid, and remaining balance');
 assert(invoice.includes('sessionStorage') && invoice.includes('idempotency-key') && invoice.includes('paymentKey'), 'invoice payment page does not preserve mobile retry identity');
 assert(estimate.includes('pricing-breakdown') && estimate.includes('Subtotal') && estimate.includes('Discount') && estimate.includes('Tax'), 'public estimate page does not expose transparent pricing components');
+assert(estimate.includes("['Draft','Sent'].includes(body.status)") && estimate.includes('id="approve"'), 'delivered estimates cannot be approved from the public estimate page');
 assert(customer.includes('sessionStorage') && customer.includes('retryKey') && customer.includes('idempotency-key'), 'customer portal actions do not preserve mobile retry identity');
 assert(customer.includes('data-action="job-request"') && customer.includes('/api/public/customer-portal/request'), 'customer portal does not expose appointment-scoped questions');
 assert(customer.includes("post('/api/public/customer-portal/confirm'") && customer.includes('retryKey =') && server.includes('confirmationIdempotencyFingerprint'), 'customer appointment confirmation does not preserve retry identity');
