@@ -126,6 +126,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Labor entries feed customer timelines and job-cost reporting
 - Structured SMS/email message queue with explicit provider-pending status, server-side provider dispatch, and timeline capture
 - Tenant-scoped lead-provider dispatch preserves landing-page contact and campaign attribution context, uses stable idempotency keys, and records delivery state for marketing or call-center handoff
+- Tenant-scoped inventory and accounting provider dispatch preserves material, invoice, payment, and purchase-order context with stable idempotency keys and durable delivery state for warehouse/ERP handoff
 - Optional server-side automation worker runs appointment, estimate, receivables, renewal, and configured lead-provider delivery work on a bounded cadence with deduplication, retry limits, opt-out enforcement, and audit evidence
 - When providers are configured, the worker also submits queued messages and payment intents automatically; invoice settlement still requires a signed provider webhook
 - The same opt-in worker can create tenant-local recurring-plan invoices after `NORTHSTAR_PLAN_BILLING_DAY` (1–28), with durable period guards; leave it at `0` for manual billing
@@ -246,6 +247,8 @@ Set `NORTHSTAR_PUBLIC_URL` to the deployed HTTPS origin so provider-delivered re
 Set `NORTHSTAR_LEAD_PROVIDER_URL` and optional `NORTHSTAR_LEAD_PROVIDER_API_KEY` to enable the authenticated owner/dispatcher lead handoff at `POST /api/integrations/leads/dispatch`. The provider receives a stable `leadId` idempotency key and attribution context; delivery remains explicitly `Delivered`, `Retry scheduled`, or `Failed` in the tenant record. `NORTHSTAR_LEAD_RETRY_LIMIT` accepts `0`–`5` bounded retries using the same 1/5/15/30-minute backoff as message delivery.
 
 Set `NORTHSTAR_INVENTORY_PROVIDER_URL` and optional `NORTHSTAR_INVENTORY_PROVIDER_API_KEY` to enable the authenticated owner/dispatcher/accountant warehouse transaction handoff at `POST /api/integrations/inventory/dispatch`. Receipts, transfers, counts, and job consumption are sent with tenant, material, location, and source context using the stable transaction ID as the idempotency key; delivery remains `Delivered`, `Retry scheduled`, or `Failed`. `NORTHSTAR_INVENTORY_RETRY_LIMIT` accepts `0`–`5` bounded retries.
+
+Set `NORTHSTAR_ACCOUNTING_PROVIDER_URL` and optional `NORTHSTAR_ACCOUNTING_PROVIDER_API_KEY` to enable the authenticated owner/accountant ERP handoff at `POST /api/integrations/accounting/dispatch`. The provider receives the same tenant-scoped invoice, settled payment, and purchase-order records available in the accounting export, with a stable record-type/source-ID idempotency key and durable `Delivered`, `Retry scheduled`, or `Failed` state. `NORTHSTAR_ACCOUNTING_RETRY_LIMIT` accepts `0`–`5` bounded retries.
 
 Set `NORTHSTAR_MESSAGE_RETRY_LIMIT` from `0` to `5` to enable bounded automatic retries for transient message-provider timeouts and 408/409/425/429/5xx responses. Retries use a one-minute, five-minute, fifteen-minute, then thirty-minute backoff; missing recipients and other permanent 4xx failures remain visible as `Failed`, and each attempt uses the stable message ID as the provider idempotency key.
 
