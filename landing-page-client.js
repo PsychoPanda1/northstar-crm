@@ -70,6 +70,22 @@
       return this.url(manifest.integration.ownerPortalPath);
     }
 
+    async ownerOidcLogin(idToken) {
+      const manifest = await this.manifest();
+      const integration = manifest.integration || {};
+      if (!Array.isArray(integration.ownerAuthMethods) || !integration.ownerAuthMethods.includes('oidc') || !integration.ownerOidcAuthEndpoint) {
+        const error = new Error('oidc_owner_auth_unavailable');
+        error.status = 404;
+        throw error;
+      }
+      if (typeof idToken !== 'string' || !idToken.trim() || idToken.length > 20_000) throw new Error('identity_token_required');
+      return this.request(integration.ownerOidcAuthEndpoint, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ idToken: idToken.trim() })
+      });
+    }
+
     async submitLead(payload, { idempotencyKey } = {}) {
       const manifest = await this.manifest();
       const key = idempotencyKey || makeKey(this.service, 'lead', payload);

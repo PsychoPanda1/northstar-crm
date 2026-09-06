@@ -11,7 +11,7 @@ const sandbox = {
   crypto: { randomUUID: () => 'landing-test-key' },
   fetch: async (url, options) => {
     calls.push({ url, options });
-    return { ok: true, status: 200, headers: { get: () => 'landing-request-1' }, json: async () => ({ tenant: { contactPhone: '(843) 555-0100', contactEmail: 'hello@example.test', serviceArea: 'Charleston area' }, integration: { ownerPortalPath: '/portal?service=plumbing', leadEndpoint: '/api/public/leads?service=plumbing', bookingEndpoint: '/api/public/bookings?service=plumbing' } }) };
+    return { ok: true, status: 200, headers: { get: () => 'landing-request-1' }, json: async () => ({ tenant: { contactPhone: '(843) 555-0100', contactEmail: 'hello@example.test', serviceArea: 'Charleston area' }, integration: { ownerPortalPath: '/portal?service=plumbing', ownerAuthMethods: ['password', 'oidc'], ownerOidcAuthEndpoint: '/api/auth/oidc', leadEndpoint: '/api/public/leads?service=plumbing', bookingEndpoint: '/api/public/bookings?service=plumbing' } }) };
   }
 };
 sandbox.globalThis = sandbox;
@@ -21,6 +21,8 @@ const ownerUrl = await client.ownerPortalUrl();
 if (ownerUrl !== 'https://crm.example.test/portal?service=plumbing') throw new Error(`owner URL resolution failed: ${ownerUrl}`);
 const contact = await client.publicContact();
 if (contact.phone !== '(843) 555-0100' || contact.email !== 'hello@example.test' || contact.serviceArea !== 'Charleston area') throw new Error('public contact helper failed');
+await client.ownerOidcLogin('signed-id-token');
+if (calls[1].url !== 'https://crm.example.test/api/auth/oidc' || calls[1].options.method !== 'POST' || JSON.parse(calls[1].options.body).idToken !== 'signed-id-token') throw new Error('landing OIDC owner login helper failed');
 await client.submitLead({ name: 'Landing Test', phone: '8435550100' });
-if (calls.length !== 2 || calls[1].options.headers['idempotency-key'] !== 'landing-test-key') throw new Error('landing lead retry contract failed');
+if (calls.length !== 3 || calls[2].options.headers['idempotency-key'] !== 'landing-test-key') throw new Error('landing lead retry contract failed');
 console.log('Northstar landing client test passed');
