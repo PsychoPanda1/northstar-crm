@@ -20,6 +20,7 @@ const required = [
   "new Set(['messages', 'calls'])",
   'Load more ${type}',
   "new Set(['materials', 'purchase-orders', 'inventory-transactions', 'assets', 'plans'])",
+  "new Set(['payments', 'vehicles', 'financing-applications', 'job-costs', 'inventory-locations'])",
   'repository.listPage(type, { search, page, pageSize: 50 })',
   'Integration health is unavailable',
   'data-job-tracking-history',
