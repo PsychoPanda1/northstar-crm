@@ -153,6 +153,16 @@
   });
 })();
 </script>
+<script>
+(() => {
+  const token = new URLSearchParams(location.search).get('token');
+  const addPlanActions = () => {
+    const portal = window.__northstarPortal; if (!portal?.plans?.length) return;
+    const section = [...document.querySelectorAll('.section')].find((node) => node.querySelector('h2')?.textContent === 'Service plans'); if (!section) return;
+    section.querySelectorAll('.row').forEach((row, index) => { const plan = portal.plans[index]; if (!plan || row.querySelector('[data-plan-request]')) return; const button = document.createElement('button'); button.type = 'button'; button.dataset.planRequest = 'true'; button.dataset.service = plan.service; button.textContent = 'Request plan change'; button.addEventListener('click', async () => { const action = window.prompt('Request: pause, cancel, or change', 'pause'); if (!['pause', 'cancel', 'change'].includes(action)) return; const note = window.prompt('Tell the service office what you need'); if (!note?.trim()) return; button.disabled = true; try { const response = await fetch('/api/public/customer-portal/service-plan-request?token=' + encodeURIComponent(token), { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({ service: plan.service, action, note: note.trim() }) }); document.querySelector('#message').textContent = response.ok ? 'Plan request sent. Your service office will follow up.' : 'That plan request could not be sent.'; if (response.ok) window.location.reload(); } catch { document.querySelector('#message').textContent = 'That plan request could not be sent. Please try again.'; } finally { button.disabled = false; } }); row.querySelector('div')?.append(button); });
+  }; const timer = setInterval(() => { addPlanActions(); if (window.__northstarPortal?.plans) clearInterval(timer); }, 150);
+})();
+</script>
 </body>
 </html>
 <script>(()=>{const add=()=>{const portal=window.__northstarPortal;if(!portal?.invoices?.length)return;const section=[...document.querySelectorAll('.section')].find((node)=>node.querySelector('h2')?.textContent==='Invoices');if(!section)return;section.querySelectorAll('.row').forEach((row,index)=>{const invoice=portal.invoices[index];if(!invoice?.invoicePdfUrl||row.querySelector('[data-invoice-pdf]'))return;const link=document.createElement('a');link.className='link';link.dataset.invoicePdf='true';link.target='_blank';link.rel='noopener';link.href=invoice.invoicePdfUrl;link.textContent='Download invoice PDF';row.querySelector('.actions')?.append(link)});};const timer=setInterval(()=>{add();if(window.__northstarPortal?.invoices)clearInterval(timer)},150);})();</script>

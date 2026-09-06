@@ -369,6 +369,25 @@ paths:
         '409': { $ref: '#/components/responses/IdempotencyConflict' }
         '422': { $ref: '#/components/responses/ValidationError' }
         '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/customer-portal/service-plan-request:
+    post:
+      summary: Request a customer service-plan change for owner review
+      parameters:
+        - $ref: '#/components/parameters/CustomerToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ServicePlanRequest' }
+      responses:
+        '201': { $ref: '#/components/responses/MutationAccepted' }
+        '200': { $ref: '#/components/responses/Duplicate' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
   /api/public/customer-portal/confirm:
     post:
       summary: Confirm a customer-owned appointment
@@ -652,6 +671,13 @@ components:
         type: { type: string, enum: [Reschedule request, Cancellation request, Question] }
         priority: { type: string, enum: [Low, Normal, High, Urgent], default: Normal }
         message: { type: string, minLength: 3, maxLength: 500 }
+    ServicePlanRequest:
+      type: object
+      required: [service, action, note]
+      properties:
+        service: { type: string, maxLength: 120 }
+        action: { type: string, enum: [pause, cancel, change] }
+        note: { type: string, minLength: 3, maxLength: 500 }
     PaymentIntentRequest:
       type: object
       required: [invoiceId, amount, method]

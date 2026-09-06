@@ -22,6 +22,11 @@ try {
   await waitForServer();
   const login = await post('/api/auth/demo-login?service=plumbing', { service: 'plumbing', role: 'owner' });
   const authorization = `Bearer ${login.body.token}`;
+  const customerLink = await request('/api/jobs/plan-status-job/customer-link', { method: 'POST', headers: { authorization } });
+  const customerToken = new URL(customerLink.body.url, base).searchParams.get('token');
+  const planRequest = () => post(`/api/public/customer-portal/service-plan-request?token=${encodeURIComponent(customerToken)}`, { service: 'Annual plumbing care', action: 'pause', note: 'Please pause this plan for the summer.' }, { 'idempotency-key': 'plan-customer-request-1' });
+  const requested = await planRequest();
+  const duplicateRequest = await planRequest();
   const pauseHeaders = { authorization, 'idempotency-key': 'plan-status-pause-1' };
   const paused = await post(`/api/plans/${planId}/pause`, { note: 'Seasonal pause' }, pauseHeaders);
   const duplicatePause = await post(`/api/plans/${planId}/pause`, { note: 'Seasonal pause' }, pauseHeaders);
@@ -30,7 +35,7 @@ try {
   const canceled = await post(`/api/plans/${planId}/cancel`, { note: 'Customer ended membership' }, { authorization, 'idempotency-key': 'plan-status-cancel-1' });
   const duplicateCancel = await post(`/api/plans/${planId}/cancel`, { note: 'Customer ended membership' }, { authorization, 'idempotency-key': 'plan-status-cancel-1' });
   const saved = JSON.parse(readFileSync(dataFile, 'utf8'))[tenantId];
-  if (!login.response.ok || paused.response.status !== 200 || paused.body.plan?.status !== 'Paused' || duplicatePause.response.status !== 200 || !duplicatePause.body.duplicate || conflict.response.status !== 409 || resumed.response.status !== 200 || resumed.body.plan?.status !== 'Active' || canceled.response.status !== 200 || canceled.body.plan?.status !== 'Canceled' || canceled.body.canceledJobs !== 1 || duplicateCancel.response.status !== 200 || !duplicateCancel.body.duplicate || saved.jobs[0].status !== 'Canceled' || !saved.auditEvents?.some((entry) => entry.action === 'plan.pause') || !saved.auditEvents?.some((entry) => entry.action === 'plan.resume') || !saved.auditEvents?.some((entry) => entry.action === 'plan.cancel')) throw new Error('plan lifecycle did not transition, deduplicate, cancel future work, or audit safely');
+  if (!login.response.ok || !customerLink.response.ok || requested.response.status !== 201 || duplicateRequest.response.status !== 200 || !duplicateRequest.body.duplicate || saved.requests?.[0]?.planId !== planId || saved.plans?.[0]?.status !== 'Canceled' || paused.response.status !== 200 || paused.body.plan?.status !== 'Paused' || duplicatePause.response.status !== 200 || !duplicatePause.body.duplicate || conflict.response.status !== 409 || resumed.response.status !== 200 || resumed.body.plan?.status !== 'Active' || canceled.response.status !== 200 || canceled.body.plan?.status !== 'Canceled' || canceled.body.canceledJobs !== 1 || duplicateCancel.response.status !== 200 || !duplicateCancel.body.duplicate || saved.jobs[0].status !== 'Canceled' || !saved.auditEvents?.some((entry) => entry.action === 'customer.service_plan.requested') || !saved.auditEvents?.some((entry) => entry.action === 'plan.pause') || !saved.auditEvents?.some((entry) => entry.action === 'plan.resume') || !saved.auditEvents?.some((entry) => entry.action === 'plan.cancel')) throw new Error('plan lifecycle did not transition, customer request, deduplicate, cancel future work, or audit safely');
   console.log('Northstar service plan lifecycle test passed');
 } finally {
   if (child && !child.killed) child.kill();
