@@ -10,8 +10,11 @@ const port = 4300 + Math.floor(Math.random() * 200);
 const dataFile = join(tmpdir(), `northstar-production-boundary-${process.pid}-${Date.now()}.json`);
 const sessionFile = `${dataFile}.sessions`;
 const invalidPort = port + 1;
+const strictPort = port + 2;
 const invalidDataFile = join(tmpdir(), `northstar-production-boundary-invalid-${process.pid}-${Date.now()}.json`);
 const invalidSessionFile = `${invalidDataFile}.sessions`;
+const strictDataFile = join(tmpdir(), `northstar-production-boundary-strict-${process.pid}-${Date.now()}.json`);
+const strictSessionFile = `${strictDataFile}.sessions`;
 const secret = 'northstar-production-boundary-secret-32';
 const password = 'boundary-test-password';
 const env = {
@@ -36,12 +39,15 @@ const env = {
 
 const child = spawn(process.execPath, ['server.mjs'], { cwd: root, env, stdio: 'ignore' });
 const invalidChild = spawn(process.execPath, ['server.mjs'], { cwd: root, env: { ...env, PORT: String(invalidPort), NORTHSTAR_DATA_FILE: invalidDataFile, NORTHSTAR_SESSION_FILE: invalidSessionFile, NORTHSTAR_REQUEST_RESPONSE_SLA_HOURS: '0' }, stdio: 'ignore' });
+const strictChild = spawn(process.execPath, ['server.mjs'], { cwd: root, env: { ...env, PORT: String(strictPort), NORTHSTAR_DATA_FILE: strictDataFile, NORTHSTAR_SESSION_FILE: strictSessionFile, NORTHSTAR_REQUIRE_LIVE_PROVIDERS: 'true' }, stdio: 'ignore' });
 const base = `http://127.0.0.1:${port}`;
 const invalidBase = `http://127.0.0.1:${invalidPort}`;
+const strictBase = `http://127.0.0.1:${strictPort}`;
 const cleanup = () => {
   child.kill();
   invalidChild.kill();
-  for (const file of [dataFile, sessionFile, `${dataFile}.tmp`, invalidDataFile, invalidSessionFile, `${invalidDataFile}.tmp`]) {
+  strictChild.kill();
+  for (const file of [dataFile, sessionFile, `${dataFile}.tmp`, invalidDataFile, invalidSessionFile, `${invalidDataFile}.tmp`, strictDataFile, strictSessionFile, `${strictDataFile}.tmp`]) {
     if (existsSync(file)) unlinkSync(file);
   }
 };
@@ -69,6 +75,12 @@ try {
     if (!invalidReady) await new Promise((resolve) => setTimeout(resolve, 100));
   }
   if (!invalidReady || invalidReady.response.status !== 503 || invalidReady.body.checks?.requestResponseSlaConfiguration !== false) throw new Error('invalid request SLA configuration did not fail production readiness');
+  let strictReady = null;
+  for (let attempt = 0; attempt < 200 && !strictReady; attempt += 1) {
+    try { strictReady = await getJsonFrom(strictBase, '/api/ready'); } catch {}
+    if (!strictReady) await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  if (!strictReady || strictReady.response.status !== 503 || strictReady.body.checks?.liveMessageProvider !== false || strictReady.body.checks?.livePaymentProvider !== false) throw new Error('live provider requirement did not fail production readiness');
 
   const login = await getJson('/api/auth/login', {
     method: 'POST',

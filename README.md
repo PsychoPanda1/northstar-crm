@@ -215,6 +215,8 @@ docker run --rm -p 4173:4173 -v northstar-data:/app/data \
 
 The image runs as the unprivileged `node` user in production mode, stores local state under `/app/data`, and exposes `/api/ready` as its container readiness check. Readiness requires a non-default session secret, configured owner/staff authentication, and all four webhook secrets (`NORTHSTAR_PAYMENT_WEBHOOK_SECRET`, `NORTHSTAR_MESSAGE_WEBHOOK_SECRET`, `NORTHSTAR_CALL_WEBHOOK_SECRET`, and `NORTHSTAR_FINANCING_WEBHOOK_SECRET`); configure these through deployment environment variables and do not bake credentials into the image. Demo login is disabled in production unless `NORTHSTAR_ALLOW_DEMO_LOGIN=true` is explicitly set for an isolated preview or smoke environment.
 
+Set `NORTHSTAR_REQUIRE_LIVE_PROVIDERS=true` for a production deployment that must not become ready until both the server-side message provider and payment provider URLs are configured. Leave it `false` only for an intentional preview or a deployment that does not yet accept provider-backed communications or payments; `/api/integrations/health` still reports each provider's live configuration status to authenticated staff.
+
 For an additional local recovery layer, set `NORTHSTAR_BACKUP_FILE` to a separate path on the same persistent volume. Northstar copies the previous valid snapshot there before each write and uses it if the primary snapshot cannot be parsed at startup. Managed multi-writer storage is still required for horizontally scaled production deployments.
 
 ### Publish a release image
