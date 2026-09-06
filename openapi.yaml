@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Northstar CRM Public Integration API
-  version: 2.2.0
+  version: 2.3.0
   description: Public, tenant-routed contract for service landing pages. Owner records and credentials are never exposed by these endpoints.
 servers:
   - url: https://crm.example.com
@@ -285,6 +285,159 @@ paths:
         '200': { $ref: '#/components/responses/CalendarDownload' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
+  /api/public/customer-portal/preferences:
+    get:
+      summary: Read customer messaging preferences
+      parameters:
+        - $ref: '#/components/parameters/CustomerToken'
+      responses:
+        '200':
+          description: Customer-owned SMS and email preference state
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CustomerPreferences' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      summary: Update customer messaging preferences
+      parameters:
+        - $ref: '#/components/parameters/CustomerToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CustomerPreferences' }
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/customer-portal/request:
+    post:
+      summary: Submit a customer service request
+      parameters:
+        - $ref: '#/components/parameters/CustomerToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CustomerRequest' }
+      responses:
+        '201': { $ref: '#/components/responses/MutationAccepted' }
+        '200': { $ref: '#/components/responses/Duplicate' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/customer-portal/confirm:
+    post:
+      summary: Confirm a customer-owned appointment
+      parameters:
+        - $ref: '#/components/parameters/CustomerToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [jobId]
+              properties:
+                jobId: { type: string, maxLength: 120 }
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/customer-portal/payment-intent:
+    post:
+      summary: Create a provider-pending customer payment intent
+      parameters:
+        - $ref: '#/components/parameters/CustomerToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PaymentIntentRequest' }
+      responses:
+        '201': { $ref: '#/components/responses/MutationAccepted' }
+        '200': { $ref: '#/components/responses/Duplicate' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/customer-portal/financing-intent:
+    post:
+      summary: Submit a provider-pending financing request
+      parameters:
+        - $ref: '#/components/parameters/CustomerToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FinancingIntentRequest' }
+      responses:
+        '201': { $ref: '#/components/responses/MutationAccepted' }
+        '200': { $ref: '#/components/responses/Duplicate' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/customer-portal/referral-link:
+    get:
+      summary: Create a short-lived customer referral link
+      parameters:
+        - $ref: '#/components/parameters/CustomerToken'
+      responses:
+        '200':
+          description: Signed referral link scoped to the tenant and referring customer
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [url, expiresInDays]
+                properties:
+                  url: { type: string, format: uri }
+                  expiresInDays: { type: integer, example: 30 }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+  /api/public/referral:
+    get:
+      summary: Read the public referral landing context
+      parameters:
+        - $ref: '#/components/parameters/ReferralToken'
+      responses:
+        '200':
+          description: Minimal tenant-safe referral context
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReferralContext' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      summary: Submit a rate-limited referral lead
+      parameters:
+        - $ref: '#/components/parameters/ReferralToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReferralRequest' }
+      responses:
+        '201': { $ref: '#/components/responses/LeadAccepted' }
+        '200': { $ref: '#/components/responses/Duplicate' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
 components:
   parameters:
     Service:
@@ -303,6 +456,11 @@ components:
       required: true
       schema: { type: string, minLength: 20, maxLength: 400 }
     CustomerToken:
+      name: token
+      in: query
+      required: true
+      schema: { type: string, minLength: 20, maxLength: 400 }
+    ReferralToken:
       name: token
       in: query
       required: true
@@ -426,6 +584,57 @@ components:
       required: [reason]
       properties:
         reason: { type: string, minLength: 3, maxLength: 300 }
+    CustomerPreferences:
+      type: object
+      required: [smsOptOut, emailOptOut]
+      properties:
+        smsOptOut: { type: boolean }
+        emailOptOut: { type: boolean }
+    CustomerRequest:
+      type: object
+      required: [type, message]
+      properties:
+        jobId: { type: string, maxLength: 120 }
+        type: { type: string, enum: [Reschedule request, Cancellation request, Question] }
+        priority: { type: string, enum: [Low, Normal, High, Urgent], default: Normal }
+        message: { type: string, minLength: 3, maxLength: 500 }
+    PaymentIntentRequest:
+      type: object
+      required: [invoiceId, amount, method]
+      properties:
+        invoiceId: { type: string, maxLength: 120 }
+        installmentId: { type: string, maxLength: 120 }
+        amount: { type: number, exclusiveMinimum: 0 }
+        method: { type: string, enum: [Card, ACH] }
+    FinancingIntentRequest:
+      type: object
+      required: [amount, termMonths]
+      properties:
+        estimateId: { type: string, maxLength: 120 }
+        invoiceId: { type: string, maxLength: 120 }
+        amount: { type: number, exclusiveMinimum: 0 }
+        termMonths: { type: integer, enum: [6, 12, 18, 24, 36, 48, 60] }
+        provider: { type: string, maxLength: 100 }
+    ReferralContext:
+      type: object
+      required: [tenant]
+      properties:
+        tenant:
+          type: object
+          required: [businessName, serviceLabel]
+          properties:
+            businessName: { type: string }
+            serviceLabel: { type: string }
+            serviceArea: { type: string }
+    ReferralRequest:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 2, maxLength: 100 }
+        phone: { type: string, maxLength: 40 }
+        email: { type: string, format: email, maxLength: 120 }
+        message: { type: string, maxLength: 500 }
+        website: { type: string, maxLength: 120, description: Leave empty; honeypot field. }
     JobStatus:
       type: object
       required: [service, status, time, availableRescheduleSlots]
