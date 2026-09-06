@@ -11,7 +11,7 @@ const sandbox = {
   crypto: { randomUUID: () => 'landing-test-key' },
   fetch: async (url, options) => {
     calls.push({ url, options });
-    return { ok: true, status: 200, headers: { get: () => 'landing-request-1' }, json: async () => ({ tenant: { contactPhone: '(843) 555-0100', contactEmail: 'hello@example.test', serviceArea: 'Charleston area' }, integration: { ownerPortalPath: '/portal?service=plumbing', ownerAuthEndpoint: '/api/auth/login', ownerAuthMethods: ['password', 'oidc'], ownerOidcAuthEndpoint: '/api/auth/oidc', leadEndpoint: '/api/public/leads?service=plumbing', bookingEndpoint: '/api/public/bookings?service=plumbing' } }) };
+    return { ok: true, status: 200, headers: { get: () => 'landing-request-1' }, json: async () => ({ tenant: { contactPhone: '(843) 555-0100', contactEmail: 'hello@example.test', serviceArea: 'Charleston area' }, integration: { ownerPortalPath: '/portal?service=plumbing', ownerAuthEndpoint: '/api/auth/login', ownerAuthRefreshEndpoint: '/api/auth/refresh', ownerAuthMethods: ['password', 'oidc'], ownerOidcAuthEndpoint: '/api/auth/oidc', leadEndpoint: '/api/public/leads?service=plumbing', bookingEndpoint: '/api/public/bookings?service=plumbing' } }) };
   }
 };
 sandbox.globalThis = sandbox;
@@ -25,8 +25,10 @@ await client.ownerPasswordLogin('owner@example.test', 'owner-password');
 if (calls[1].url !== 'https://crm.example.test/api/auth/login?service=plumbing' || calls[1].options.method !== 'POST' || JSON.parse(calls[1].options.body).email !== 'owner@example.test' || JSON.parse(calls[1].options.body).service !== 'plumbing') throw new Error('landing password owner login helper failed');
 await client.ownerOidcLogin('signed-id-token');
 if (calls[2].url !== 'https://crm.example.test/api/auth/oidc' || calls[2].options.method !== 'POST' || JSON.parse(calls[2].options.body).idToken !== 'signed-id-token') throw new Error('landing OIDC owner login helper failed');
+await client.refreshOwnerSession('owner-session-token');
+if (calls[3].url !== 'https://crm.example.test/api/auth/refresh' || calls[3].options.method !== 'POST' || calls[3].options.headers.authorization !== 'Bearer owner-session-token') throw new Error('landing owner session refresh helper failed');
 await client.submitLead({ name: 'Landing Test', phone: '8435550100' });
-if (calls.length !== 4 || calls[3].options.headers['idempotency-key'] !== 'landing-test-key') throw new Error('landing lead retry contract failed');
+if (calls.length !== 5 || calls[4].options.headers['idempotency-key'] !== 'landing-test-key') throw new Error('landing lead retry contract failed');
 client.manifestPromise = Promise.resolve({ integration: { ownerAuthMethods: ['password'], ownerOidcAuthEndpoint: null } });
-try { await client.ownerOidcLogin('signed-id-token'); throw new Error('password-only tenant accepted OIDC'); } catch (error) { if (error.message !== 'oidc_owner_auth_unavailable' || error.status !== 404 || calls.length !== 4) throw error; }
+try { await client.ownerOidcLogin('signed-id-token'); throw new Error('password-only tenant accepted OIDC'); } catch (error) { if (error.message !== 'oidc_owner_auth_unavailable' || error.status !== 404 || calls.length !== 5) throw error; }
 console.log('Northstar landing client test passed');
