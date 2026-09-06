@@ -306,6 +306,7 @@ System events such as web-form lead capture, customer estimate approval, and rec
 - `POST /api/receivables/reminders` → owner/accountant-only bulk queue of deduplicated balance reminders above a caller-selected minimum balance, skipping opted-out channels and returning eligible, queued, and duplicate counts for safe aging-queue reruns
 - `POST /api/estimates/reminders` → owner/dispatcher-only bulk queue of deduplicated SMS/email follow-ups for open estimates at or beyond a caller-selected age from 1–365 days, skipping opted-out channels
 - `POST /api/invoices/:id/payment-link` → issue a 72-hour invoice payment link for the owner to share
+- `POST /api/invoices/:id/payment-request` → owner/dispatcher/accountant-only queue of one opt-out-aware SMS/email payment request for an open invoice; requests are deduplicated per invoice/channel and contain a signed 72-hour payment link
 - `GET /api/invoices/:id/receipt` → owner/accountant-only normalized receipt summary with invoice totals, settled payments, references, and remaining balance
 - The invoice workspace exposes this payment-link action only for tenant-created invoices; seeded demo invoice cards remain read-only
 - `GET|POST /api/invoices/:id/schedule` → read or create a tenant-scoped 2–12 installment schedule whose amounts must exactly match the invoice total; creation accepts an optional `Idempotency-Key` for safe retries, and public payment links and customer portals expose derived paid amounts as payments settle

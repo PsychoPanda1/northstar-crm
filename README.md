@@ -182,6 +182,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Service-plan renewal can schedule the next recurring visit using the same timezone-aware capacity slots as public booking, and normalized renewal dates can drive deduplicated SMS/email reminder campaigns
 - Service plans support auditable pause, resume, cancellation, idempotent monthly/quarterly/annual visit-series scheduling, and individual or batch due membership-invoice generation by billing period
 - Invoice payments support partial collection, remaining balances, payment methods, and references
+- Owners, dispatchers, and accountants can queue deduplicated SMS/email payment requests with signed 72-hour invoice links
 - Invoice installment schedules support deposits and milestone payments while deriving paid progress from the payment ledger
 - Signed customer invoice links create idempotent provider-pending payment intents without claiming settlement
 - Customer invoice links show settled payment history with safe references and recorded dates

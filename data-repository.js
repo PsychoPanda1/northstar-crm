@@ -1092,6 +1092,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async requestInvoicePayment(id, channel = 'SMS') {
+    if (!this.remote) throw new Error('API required for invoice payment requests');
+    const response = await fetch(`/api/invoices/${encodeURIComponent(id)}/payment-request`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ channel }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'invoice payment request failed');
+    return response.json();
+  }
+
   async remindReceivables(minBalance = 0, channel = 'Email') {
     if (!this.remote) throw new Error('API required for receivables reminders');
     const response = await fetch('/api/receivables/reminders', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ minBalance, channel }) });
