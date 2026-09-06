@@ -17,6 +17,7 @@ const technician = readFileSync(`${root}technician.html`, 'utf8');
 const ownerManifest = readFileSync(`${root}northstar.webmanifest`, 'utf8');
 const northstarServiceWorker = readFileSync(`${root}northstar-sw.js`, 'utf8');
 const server = readFileSync(`${root}server.mjs`, 'utf8');
+const portal = readFileSync(`${root}PORTAL_CONTRACT.md`, 'utf8');
 const tenantConfig = readFileSync(`${root}tenant-config.js`, 'utf8');
 const envExample = readFileSync(`${root}.env.example`, 'utf8');
 const containerRelease = readFileSync(`${root}.github/workflows/container-release.yml`, 'utf8');
@@ -268,8 +269,10 @@ assert(server.includes('inventoryRetryConfiguration') && server.includes('liveIn
 assert(server.includes("'/api/integrations/accounting/dispatch'") && server.includes('dispatchAccountingRecords') && server.includes('accountingProviderConfigured') && repository.includes('async dispatchAccounting') && app.includes('accounting-provider-dispatch') && envExample.includes('NORTHSTAR_ACCOUNTING_PROVIDER_URL'), 'accounting provider synchronization must preserve export records and expose an operator control');
 assert(server.includes("'/api/integrations/inventory/retry'") && server.includes("'/api/integrations/accounting/retry'") && repository.includes('async retryInventory') && repository.includes('async retryAccounting'), 'warehouse and accounting provider failures must have auditable operator recovery controls');
 assert(server.includes('accountingRetryConfiguration') && server.includes('liveAccountingProvider') && envExample.includes('NORTHSTAR_ACCOUNTING_RETRY_LIMIT=0'), 'accounting provider configuration must participate in production readiness');
+assert(server.includes("'/api/operations/metrics'") && server.includes('operationalMetricsFor') && repository.includes('async getOperationalMetrics') && portal.includes('GET /api/operations/metrics'), 'operational monitoring must expose sanitized tenant-scoped metrics');
 assert(packageJson.scripts?.['test:accounting-provider'] === 'node scripts/accounting-provider-test.mjs' && packageJson.scripts?.pretest.includes('node scripts/accounting-provider-test.mjs'), 'accounting provider synchronization must have a runnable regression contract');
 assert(server.includes('if (accountingProviderConfigured()) await dispatchAccountingRecords(saved, claims, 50)') && packageJson.scripts?.['test:accounting-provider-automation'] === 'node scripts/accounting-provider-automation-test.mjs', 'scheduled automation must dispatch accounting-provider handoffs');
+assert(packageJson.scripts?.['test:operations-metrics'] === 'node scripts/operations-metrics-test.mjs' && server.includes('operationalMetricsFor') && server.includes("'/api/operations/metrics'"), 'operational metrics must have an executable isolation regression contract');
 assert(app.includes('data-lead-health-card') && app.includes('data-integration-lead-dispatch') && app.includes('health.leads?.pending'), 'integration health must expose lead handoff queue controls');
 assert(app.includes('inventory-provider-dispatch') && app.includes('data-inventory-health-card') && app.includes('data-integration-inventory-dispatch') && app.includes('health.inventory?.pending'), 'integration health must expose inventory handoff queue controls');
 assert(server.includes('if (leadProviderConfigured()) await dispatchLeads(saved, claims, 50)') && packageJson.scripts?.['test:lead-provider-automation'] === 'node scripts/lead-provider-automation-test.mjs', 'scheduled automation must dispatch queued lead-provider handoffs');

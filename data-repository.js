@@ -197,6 +197,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async getOperationalMetrics() {
+    if (!this.remote) throw new Error('API required for operational metrics');
+    const response = await fetch('/api/operations/metrics', { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('operational metrics unavailable');
+    return response.json();
+  }
+
   async dispatchLeads(limit = 20) {
     if (!this.remote) throw new Error('API required for lead dispatch');
     const response = await fetch('/api/integrations/leads/dispatch', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ limit }) });
