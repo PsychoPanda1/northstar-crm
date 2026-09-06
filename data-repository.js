@@ -515,6 +515,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async bulkAssignLeads(leadIds, assignedTo, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for bulk lead assignment');
+    const response = await fetch('/api/leads/bulk-assign', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ leadIds, assignedTo }) });
+    if (!response.ok) throw new Error('bulk lead assignment failed');
+    return response.json();
+  }
+
   async createCustomer(name, phone, location, email = '') {
     if (!this.remote) throw new Error('API required for customer creation');
     const response = await fetch('/api/customers', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({ name, phone, location, ...(email ? { email } : {}) }) });

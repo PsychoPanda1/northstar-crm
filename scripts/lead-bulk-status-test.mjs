@@ -26,13 +26,15 @@ try {
     if (created.response.status !== 201) throw new Error('lead bulk status test setup failed');
     leads.push(created.body.id);
   }
+  const assignment = await postJson('/api/leads/bulk-assign', { leadIds: leads, assignedTo: 'Taylor Brooks' }, token, 'lead-bulk-assignment-test');
+  const assignmentDuplicate = await postJson('/api/leads/bulk-assign', { leadIds: leads, assignedTo: 'Taylor Brooks' }, token, 'lead-bulk-assignment-test');
   const key = 'lead-bulk-status-test';
   const first = await postJson('/api/leads/bulk-status', { leadIds: leads, status: 'Qualified', note: 'Ready for estimate follow-up.' }, token, key);
   const duplicate = await postJson('/api/leads/bulk-status', { leadIds: leads, status: 'Qualified', note: 'Ready for estimate follow-up.' }, token, key);
   const conflict = await postJson('/api/leads/bulk-status', { leadIds: leads, status: 'Lost' }, token, key);
   const records = await request('/api/leads?search=Bulk%20Status', { headers: { authorization: `Bearer ${token}` } });
   const matching = (records.body.items || []).filter((item) => leads.includes(item.id));
-  if (first.response.status !== 200 || first.body.updated?.length !== 2 || first.body.updated.every((item) => item.status === 'Qualified') !== true || duplicate.response.status !== 200 || duplicate.body.duplicate !== true || conflict.response.status !== 409 || conflict.body.error !== 'idempotency_key_reused' || matching.length !== 2 || matching.some((item) => item.status !== 'Qualified')) throw new Error('bulk lead status behavior failed');
+  if (assignment.response.status !== 200 || assignment.body.updated?.length !== 2 || assignment.body.updated.every((item) => item.assignedTo === 'Taylor Brooks') !== true || assignmentDuplicate.response.status !== 200 || assignmentDuplicate.body.duplicate !== true || first.response.status !== 200 || first.body.updated?.length !== 2 || first.body.updated.every((item) => item.status === 'Qualified') !== true || duplicate.response.status !== 200 || duplicate.body.duplicate !== true || conflict.response.status !== 409 || conflict.body.error !== 'idempotency_key_reused' || matching.length !== 2 || matching.some((item) => item.status !== 'Qualified' || item.assignedTo !== 'Taylor Brooks')) throw new Error('bulk lead assignment or status behavior failed');
   console.log('Northstar lead bulk status test passed');
 } finally {
   if (child && !child.killed) child.kill();
