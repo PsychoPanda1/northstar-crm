@@ -88,6 +88,7 @@ assert(server.includes("pathname === '/api/requests/bulk-assign'") && server.inc
 assert(app.includes('bulk-request-priority') && app.includes('repository.bulkUpdateRequestPriority'), 'bulk request priority UI is not wired');
 assert(server.includes("pathname === '/api/requests/bulk-priority'") && server.includes('valid_bulk_request_priority_required') && server.includes('requestBulkPriorityRequests'), 'bulk request priority route is not wired');
 assert(server.includes("if (recordType === 'requests')") && server.includes('priorityRank') && server.includes('statusRank'), 'request queue triage ordering is not wired');
+assert(server.includes('invalid_request_queue_filter') && server.includes('assignedTo') && server.includes('priorityFilter'), 'request queue filters are not wired');
 assert(index.includes('data-nav-count="requests"') && app.includes("repository.list('requests')"), 'navigation should expose live request counts');
 assert(index.includes('data-view="requests" data-required-permission="requests:read"') && server.includes("rolePermissions.owner.push('requests:read')") && server.includes("rolePermissions.dispatcher.push('requests:read')"), 'request navigation must follow role permissions');
 assert(app.includes("sessionPermissions.has('requests:read') ? repository.list('requests') : Promise.resolve([])"), 'restricted roles must not block other live navigation counts');
