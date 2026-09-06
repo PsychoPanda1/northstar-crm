@@ -1075,6 +1075,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async createLead({ name, phone = '', email = '', service = '', source = 'Owner workspace', location = '', note = '', attribution = {} }, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for lead creation');
+    const response = await fetch('/api/leads', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ name, phone, email, service, source, location, note, ...attribution }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'lead creation failed');
+    return response.json();
+  }
+
   async exportCustomerPrivacy(id) {
     if (!this.remote) throw new Error('API required for customer privacy exports');
     const response = await fetch(`/api/customers/${encodeURIComponent(id)}/privacy-export`, { headers: { authorization: `Bearer ${this.token}` } });
