@@ -15,7 +15,7 @@ try {
   second.writeSessions([{ sid: 'session-1' }]);
   const firstPragmas = first.getPragmas();
   const secondPragmas = second.getPragmas();
-  if (String(firstPragmas.journalMode).toLowerCase() !== 'wal' || Number(firstPragmas.busyTimeout) !== 5000 || String(secondPragmas.journalMode).toLowerCase() !== 'wal' || Number(secondPragmas.busyTimeout) !== 5000 || first.readState({}).source !== 'first' || second.readSessions([])[0]?.sid !== 'session-1') throw new Error('SQLite adapter did not configure WAL/busy timeout or persist through multiple handles');
+  if (String(firstPragmas.journalMode).toLowerCase() !== 'wal' || Number(firstPragmas.busyTimeout) !== 5000 || String(secondPragmas.journalMode).toLowerCase() !== 'wal' || Number(secondPragmas.busyTimeout) !== 5000 || !first.integrityCheck() || !second.integrityCheck() || first.readState({}).source !== 'first' || second.readSessions([])[0]?.sid !== 'session-1') throw new Error('SQLite adapter did not configure WAL/busy timeout, pass integrity checks, or persist through multiple handles');
   console.log('Northstar SQLite adapter test passed');
 } finally {
   first?.close();
