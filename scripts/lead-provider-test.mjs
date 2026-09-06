@@ -40,7 +40,12 @@ try {
   const delivered = (leads.body.items || []).find((item) => item.id === lead.body.id);
   const event = received[0];
   const retryRecord = (leads.body.items || []).find((item) => item.id === retryLead.body.id);
-  if (dispatch.response.status !== 200 || dispatch.body.delivered !== 1 || dispatch.body.retrying !== 1 || duplicateDispatch.body.attempted !== 0 || received.length !== 1 || event?.headers?.['idempotency-key'] !== lead.body.id || event?.headers?.authorization !== 'Bearer lead-test-key' || event.body.leadId !== lead.body.id || event.body.attribution?.utm_campaign !== 'summer-drain' || delivered?.providerDeliveryState !== 'Delivered' || delivered?.providerReference !== 'provider-lead-1' || retryRecord?.providerDeliveryState !== 'Retry scheduled' || health.body.checks?.leadProvider !== true || health.body.leads?.pending !== 1 || health.body.leads?.retrying !== 1) throw new Error('lead provider delivery or health contract failed');
+  const retry = await postJson(`/api/leads/${retryLead.body.id}/provider-retry`, {}, { ...headers, 'idempotency-key': 'lead-provider-retry-1' });
+  const retryDispatch = await postJson('/api/integrations/leads/dispatch', { limit: 10 }, headers);
+  const retryDuplicate = await postJson(`/api/leads/${retryLead.body.id}/provider-retry`, {}, { ...headers, 'idempotency-key': 'lead-provider-retry-1' });
+  const finalLeads = await request('/api/leads', { headers });
+  const finalRetryRecord = (finalLeads.body.items || []).find((item) => item.id === retryLead.body.id);
+  if (dispatch.response.status !== 200 || dispatch.body.delivered !== 1 || dispatch.body.retrying !== 1 || duplicateDispatch.body.attempted !== 0 || received.length !== 2 || event?.headers?.['idempotency-key'] !== lead.body.id || event?.headers?.authorization !== 'Bearer lead-test-key' || event.body.leadId !== lead.body.id || event.body.attribution?.utm_campaign !== 'summer-drain' || delivered?.providerDeliveryState !== 'Delivered' || delivered?.providerReference !== 'provider-lead-1' || retryRecord?.providerDeliveryState !== 'Retry scheduled' || health.body.checks?.leadProvider !== true || health.body.leads?.pending !== 1 || health.body.leads?.retrying !== 1 || retry.response.status !== 200 || retry.body.duplicate || retryDispatch.body.delivered !== 1 || finalRetryRecord?.providerDeliveryState !== 'Delivered' || retryDuplicate.body.duplicate !== true || providerAttempts !== 3) throw new Error('lead provider delivery or health contract failed');
   console.log('Northstar lead provider test passed');
 } finally {
   if (child && !child.killed) child.kill();

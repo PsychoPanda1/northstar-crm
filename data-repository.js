@@ -204,6 +204,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async retryLeadProvider(id, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for lead provider retry');
+    const response = await fetch(`/api/leads/${encodeURIComponent(id)}/provider-retry`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'idempotency-key': idempotencyKey } });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'lead provider retry failed');
+    return response.json();
+  }
+
   async exportRecords(type, range = {}) {
     if (!this.remote) throw new Error('API required for exports');
     const query = new URLSearchParams({ type, ...(range.startDate ? { startDate: range.startDate } : {}), ...(range.endDate ? { endDate: range.endDate } : {}) });
