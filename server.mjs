@@ -25,6 +25,7 @@ const OWNER_PASSWORD_DIGEST = String(process.env.NORTHSTAR_OWNER_PASSWORD_DIGEST
 const DATA_FILE = process.env.NORTHSTAR_DATA_FILE || join(ROOT, '.northstar-data.json');
 const SESSION_FILE = process.env.NORTHSTAR_SESSION_FILE || `${DATA_FILE}.sessions`;
 const BACKUP_FILE = String(process.env.NORTHSTAR_BACKUP_FILE || '').trim();
+const AUTOMATION_INTERVAL_MS = (() => { const minutes = Number(process.env.NORTHSTAR_AUTOMATION_INTERVAL_MINUTES || 0); return Number.isInteger(minutes) && minutes >= 15 && minutes <= 1440 ? minutes * 60 * 1000 : 0; })();
 const persistentStateWritable = () => { try { accessSync(DATA_FILE, fsConstants.F_OK | fsConstants.W_OK); return true; } catch { try { accessSync(dirname(DATA_FILE), fsConstants.F_OK | fsConstants.W_OK); return true; } catch { return false; } } };
 const ALLOWED_ORIGINS = new Set(String(process.env.NORTHSTAR_ALLOWED_ORIGINS || '').split(',').map((origin) => origin.trim()).filter(Boolean));
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.webmanifest': 'application/manifest+json; charset=utf-8', '.md': 'text/markdown; charset=utf-8', '.txt': 'text/plain; charset=utf-8', '.yaml': 'application/yaml; charset=utf-8', '.yml': 'application/yaml; charset=utf-8' };
@@ -155,6 +156,7 @@ const runAutomationsFor = (saved, claims, body = {}) => {
   }
   return result;
 };
+const runScheduledAutomations = () => { let changed = false; for (const [tenantId, saved] of state) { const result = runAutomationsFor(saved, { name: 'scheduled automation', role: 'owner' }, { channel: 'SMS', lookaheadHours: 24, estimateAgeDays: 3, invoiceAgeDays: 7, renewalDays: 30 }); const queued = result.appointments.queued + result.estimates.queued + result.invoices.queued + result.plans.queued; if (!queued) continue; const run = { id: `AUTO-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, tenantId, actor: 'scheduled automation', trigger: 'scheduled', createdAt: new Date().toISOString(), result }; saved.automationRuns = saved.automationRuns || []; saved.automationRuns.unshift(run); saved.automationRuns = saved.automationRuns.slice(0, 100); recordAudit(saved, { name: 'scheduled automation', role: 'system' }, 'automation.scheduled', 'automation', run.id, `${queued} queued`); changed = true; } if (changed) persist(); };
 const bookingCustomerFor = (saved, body, tenantId) => { const email = String(body.email || '').trim().toLowerCase(); const phone = String(body.phone || '').replace(/\D/g, ''); const existing = saved.customers.find((item) => (email && String(item.email || '').trim().toLowerCase() === email) || (phone && String(item.phone || '').replace(/\D/g, '') === phone)); if (existing) { existing.name = String(body.name).slice(0, 100); if (body.phone) existing.phone = String(body.phone).slice(0, 40); if (body.email) existing.email = String(body.email).slice(0, 120); if (body.location) existing.location = String(body.location).slice(0, 120); existing.lastService = 'Online booking'; return existing; } return { id: `${tenantId}_customer_${Date.now()}`, tenantId, name: String(body.name).slice(0, 100), phone: String(body.phone || '').slice(0, 40), email: String(body.email || '').slice(0, 120), location: String(body.location || 'Address pending').slice(0, 120), lastService: 'Online booking', status: 'Active' }; };
 const sessionCookie = (token) => `northstar_session=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=28800${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`;
 const json = (res, status, body) => { if (body && body.token) res.setHeader('set-cookie', sessionCookie(body.token)); const responseBody = status >= 400 && body && typeof body === 'object' ? { ...body, requestId: res.getHeader('x-request-id') || undefined } : body; res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' }); res.end(JSON.stringify(responseBody)); };
@@ -998,6 +1000,8 @@ if (pathname === '/api/invoices' && req.method === 'POST') { const claims = auth
     return json(res, 405, { error: 'method_not_allowed' });
   } catch (error) { console.error(JSON.stringify({ requestId: res.getHeader('x-request-id') || null, error: String(error?.message || error) })); return json(res, 400, { error: 'bad_request' }); }
 });
+const automationTimer = AUTOMATION_INTERVAL_MS ? setInterval(() => { try { runScheduledAutomations(); } catch (error) { console.error(JSON.stringify({ automation: 'scheduled', error: String(error?.message || error) })); } }, AUTOMATION_INTERVAL_MS) : null;
+automationTimer?.unref();
 server.listen(PORT, () => console.log(`Northstar CRM running at http://localhost:${PORT}`));
 const shutdown = () => server.close(() => process.exit(0));
 process.on('SIGTERM', shutdown);

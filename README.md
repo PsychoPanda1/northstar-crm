@@ -109,6 +109,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Reports summarize estimate close rate, memberships sold, no-shows, tracked field hours, material spend, logged labor cost, and gross margin, with CSV export for owner handoff
 - Labor entries feed customer timelines and job-cost reporting
 - Structured SMS/email message queue with explicit provider-pending status, server-side provider dispatch, and timeline capture
+- Optional server-side reminder worker runs appointment, estimate, receivables, and renewal automations on a bounded cadence with deduplication, opt-out enforcement, and audit evidence
 - Signed inbound SMS/email replies can be matched to customers and optional jobs for two-way communication history
 - Exact inbound SMS STOP-style replies automatically record SMS opt-out consent changes with audit history
 - Owners and dispatchers can reply to inbound customer messages from the message ledger with idempotent provider-pending delivery
