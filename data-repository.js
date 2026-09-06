@@ -271,6 +271,14 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async getCallReport(range = {}) {
+    if (!this.remote) throw new Error('API required for call reporting');
+    const query = new URLSearchParams(); if (range?.startDate) query.set('startDate', String(range.startDate)); if (range?.endDate) query.set('endDate', String(range.endDate));
+    const response = await fetch(`/api/reports/calls${query.toString() ? `?${query}` : ''}`, { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('call report unavailable');
+    return response.json();
+  }
+
   async getPayrollReport(startDate = '', endDate = '') {
     if (!this.remote) throw new Error('API required for payroll reporting');
     const query = new URLSearchParams(); if (startDate) query.set('startDate', startDate); if (endDate) query.set('endDate', endDate);
