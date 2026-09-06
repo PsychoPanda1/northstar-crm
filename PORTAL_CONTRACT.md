@@ -231,6 +231,7 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 - `POST /api/requests/bulk-assign` → owner/dispatcher-only all-or-nothing assignment of up to 50 open tenant-owned requests to one eligible owner or dispatcher; the whole batch is idempotent, with conflicting key reuse rejected before any mutation
 - `POST /api/requests/bulk-priority` → owner/dispatcher-only all-or-nothing priority update for up to 50 open tenant-owned requests; accepts `Low`, `Normal`, `High`, or `Urgent` and binds the batch to an optional `Idempotency-Key`
 - `POST /api/requests/bulk-status` → owner/dispatcher-only all-or-nothing acknowledgement of up to 50 open tenant-owned requests as `In progress`; retries are idempotent and each transition is activity- and audit-recorded
+- `POST /api/requests/bulk-resolve` → owner/dispatcher-only all-or-nothing resolution of up to 50 open or in-progress tenant-owned requests with a bounded note; retries are idempotent and each transition is activity- and audit-recorded
 - The request queue supports selecting open requests and bulk assignment through the same tenant and audit guarantees as individual request ownership changes
 - `GET /api/requests` → owner/dispatcher-only tenant-scoped request queue; technicians and accountants cannot read customer request records
 - The request queue orders open work before in-progress and resolved work, then ranks urgent/high/normal/low priority and oldest creation time so aging demand is not buried by newer requests

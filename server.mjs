@@ -519,6 +519,36 @@ const server = createServer(async (req, res) => {
       persist();
       return json(res, 200, { ...result, duplicate: false });
     }
+    if (pathname === '/api/requests/bulk-resolve' && req.method === 'POST') {
+      const claims = authenticate(req);
+      if (!claims) return json(res, 401, { error: 'unauthorized' });
+      if (!['owner', 'dispatcher'].includes(claims.role)) return json(res, 403, { error: 'forbidden' });
+      const body = await readBody(req);
+      const rawRequestIds = Array.isArray(body.requestIds) ? [...new Set(body.requestIds.map((id) => String(id).trim()).filter(Boolean))] : [];
+      const requestIds = rawRequestIds.slice(0, 50);
+      const note = String(body.note || '').trim().slice(0, 300);
+      if (!rawRequestIds.length || rawRequestIds.length > 50 || note.length < 3) return json(res, 422, { error: 'valid_bulk_request_resolution_required' });
+      const saved = state.get(claims.tenantId);
+      saved.requestBulkResolutionRequests = saved.requestBulkResolutionRequests || [];
+      const idempotencyKey = String(req.headers['idempotency-key'] || '').trim().slice(0, 100);
+      const fingerprint = payloadFingerprint({ requestIds, note });
+      if (idempotencyKey) {
+        const existing = saved.requestBulkResolutionRequests.find((item) => item.idempotencyKey === idempotencyKey);
+        if (existing) {
+          if (existing.fingerprint !== fingerprint) return json(res, 409, { error: 'idempotency_key_reused' });
+          return json(res, 200, { ...existing.result, duplicate: true });
+        }
+      }
+      const requests = requestIds.map((id) => saved.requests.find((item) => item.id === id));
+      if (requests.some((request) => !request)) return json(res, 404, { error: 'request_not_found' });
+      if (requests.some((request) => !['Open', 'In progress'].includes(request.status))) return json(res, 409, { error: 'request_not_resolvable' });
+      const resolvedAt = new Date().toISOString();
+      for (const request of requests) { request.status = 'Resolved'; request.resolvedAt = resolvedAt; request.resolutionNote = note; recordActivity(saved, request.customer, 'Customer request', request.type + ' resolved: ' + note, 'Resolved'); recordAudit(saved, claims, 'customer.request.resolved', 'request', request.id, request.type + ' · ' + note); }
+      const result = { status: 'Resolved', note, updated: requests.map((request) => ({ id: request.id, status: request.status })), resolvedAt };
+      if (idempotencyKey) { saved.requestBulkResolutionRequests.unshift({ idempotencyKey, fingerprint, result }); saved.requestBulkResolutionRequests = saved.requestBulkResolutionRequests.slice(0, 100); }
+      persist();
+      return json(res, 200, { ...result, duplicate: false });
+    }
     if (req.method === 'OPTIONS' && pathname.startsWith('/api/')) { const origin = String(req.headers.origin || ''); if (!origin || !ALLOWED_ORIGINS.has(origin)) return json(res, 403, { error: 'origin_not_allowed' }); res.setHeader('access-control-allow-origin', origin); res.setHeader('access-control-allow-methods', 'GET,POST,PATCH,PUT,OPTIONS'); res.setHeader('access-control-allow-headers', 'content-type,authorization,idempotency-key,x-northstar-signature'); res.setHeader('access-control-max-age', '600'); res.setHeader('vary', 'Origin'); res.writeHead(204); return res.end(); }
     if (pathname === '/api/integrations/messages/dispatch' && req.method === 'POST') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); if (!['owner', 'dispatcher'].includes(claims.role)) return json(res, 403, { error: 'forbidden' }); if (!MESSAGE_PROVIDER_URL) return json(res, 503, { error: 'message_provider_not_configured' }); const saved = state.get(claims.tenantId); const body = await readBody(req); const result = await dispatchMessages(saved, claims, body.limit); if (result.error) return json(res, 503, result); return json(res, 200, result); }
     if (pathname === '/api/integrations/payments/dispatch' && req.method === 'POST') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); if (!['owner', 'accountant'].includes(claims.role)) return json(res, 403, { error: 'forbidden' }); if (!paymentProviderConfigured()) return json(res, 503, { error: 'payment_provider_not_configured' }); const saved = state.get(claims.tenantId); const body = await readBody(req); const result = await dispatchPaymentIntents(saved, claims, body.limit); if (result.error) return json(res, 503, result); return json(res, 200, result); }

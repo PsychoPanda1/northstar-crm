@@ -254,6 +254,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async bulkResolveRequests(requestIds, note, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for request resolution');
+    const response = await fetch('/api/requests/bulk-resolve', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ requestIds, note }) });
+    if (!response.ok) throw new Error('bulk request resolution failed');
+    return response.json();
+  }
+
   completeTask(taskIndex, completed) {
     const completedTasks = new Set(this.state.completedTasks || []);
     completed ? completedTasks.add(taskIndex) : completedTasks.delete(taskIndex);
