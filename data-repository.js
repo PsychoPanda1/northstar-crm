@@ -83,9 +83,17 @@ class NorthstarDemoRepository {
 
   async list(type, search = '') {
     if (!this.remote) return [];
-    const response = await fetch(`/api/${type}${search ? `?search=${encodeURIComponent(search)}` : ''}`, { headers: { authorization: `Bearer ${this.token}` } });
-    if (!response.ok) throw new Error('records unavailable');
-    return (await response.json()).items;
+    const pageSize = 200;
+    const items = [];
+    let page = 1;
+    let hasMore = true;
+    while (hasMore && page <= 500) {
+      const result = await this.listPage(type, { search, page, pageSize });
+      items.push(...(Array.isArray(result.items) ? result.items : []));
+      hasMore = result.hasMore === true;
+      page += 1;
+    }
+    return items;
   }
 
   async listPage(type, { search = '', page = 1, pageSize = 50 } = {}) {
