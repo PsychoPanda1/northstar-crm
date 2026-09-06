@@ -540,6 +540,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async requestReview(id, channel = 'SMS') {
+    if (!this.remote) throw new Error('API required for review requests');
+    const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/review-request`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ channel }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'review request unavailable');
+    return response.json();
+  }
+
   async logActivity(customer, channel, note, customerId = '', idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for activity logging');
     const response = await fetch('/api/activities', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ ...(customerId ? { customerId } : { customer }), channel, note }) });
