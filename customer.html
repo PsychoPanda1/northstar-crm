@@ -135,3 +135,4 @@
 </script>
 </body>
 </html>
+<script>(()=>{const add=()=>{const portal=window.__northstarPortal;if(!portal?.invoices?.length)return;const section=[...document.querySelectorAll('.section')].find((node)=>node.querySelector('h2')?.textContent==='Invoices');if(!section)return;section.querySelectorAll('.row').forEach((row,index)=>{const invoice=portal.invoices[index];if(!invoice?.invoicePdfUrl||row.querySelector('[data-invoice-pdf]'))return;const link=document.createElement('a');link.className='link';link.dataset.invoicePdf='true';link.target='_blank';link.rel='noopener';link.href=invoice.invoicePdfUrl;link.textContent='Download invoice PDF';row.querySelector('.actions')?.append(link)});};const timer=setInterval(()=>{add();if(window.__northstarPortal?.invoices)clearInterval(timer)},150);})();</script>
