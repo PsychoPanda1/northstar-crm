@@ -41,6 +41,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Dispatch optimization can optionally enforce appointment windows using estimated travel time and reports route travel minutes when GPS routing is unavailable
 - Technicians can publish a validated estimated-arrival window to the customer-safe job and portal views while en route
 - Owner-only customer privacy exports collect the customer record and linked service history without exposing runtime credentials
+- Customers can generate separate signed referral links and friends can submit rate-limited, attributed service requests without portal access
 - Technician links can capture field labor hours and consume stocked materials against the assigned job
 - Crew members can receive individually scoped technician links while visit-level actions remain assigned to the designated visit technician
 - Technicians can clock in/out across multiple sessions on an in-progress job; elapsed field minutes are aggregated with audit events
