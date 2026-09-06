@@ -62,6 +62,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Provider-neutral signed fleet telemetry accepts GPS location events with replay protection and exposes a stale-aware owner fleet-location view without leaking telemetry to customers or landing pages
 - Stale fleet telemetry on active work creates an urgent, dismissible owner attention item so dispatch is warned before a vehicle disappears from the route
 - Fleet vehicles support auditable preventive-maintenance dates and odometer updates, with due-soon and overdue owner alerts
+- Global operator search includes fleet vehicles by name, model, plate, lifecycle status, maintenance date, or odometer, with tenant-scoped pagination
 - Multi-technician job crews with primary-technician compatibility, skill validation, schedule-conflict checks, and audit history
 - Configurable tenant pricebook items for consistent service quoting across landing pages and the owner portal, including category, default duration, and taxable metadata
 - Owner/dispatcher pricebook lifecycle controls update or archive persisted services without rewriting historical estimate snapshots; archived items remain restorable internally and disappear from public booking
