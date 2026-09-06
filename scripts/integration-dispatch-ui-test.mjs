@@ -59,6 +59,9 @@ const required = [
   'observeDialogSelection(button.dataset.customerId)',
   'Create estimate',
   'observeEstimateSelection(button.dataset.customerId)'
+  ,'populateAllCustomers'
+  ,'select.dataset.allCustomersLoaded'
+  ,'customers.map((item) => `<option value="${escapeHtml(item.id)}">'
 ];
 for (const snippet of required) {
   if (!source.includes(snippet)) throw new Error(`integration dispatch UI wiring missing: ${snippet}`);
