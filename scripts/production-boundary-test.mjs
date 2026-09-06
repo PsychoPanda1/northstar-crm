@@ -82,7 +82,7 @@ try {
     try { ready = await getJson('/api/ready'); } catch {}
     if (!ready?.response?.ok) await new Promise((resolve) => setTimeout(resolve, 100));
   }
-  if (!ready?.response?.ok || ready.body.checks?.configuration !== true || ready.body.checks?.requestResponseSlaConfiguration !== true) throw new Error('production server did not become ready with valid configuration');
+  if (!ready?.response?.ok || ready.body.checks?.configuration !== true || ready.body.checks?.requestResponseSlaConfiguration !== true || ready.body.checks?.documentRetryConfiguration !== true) throw new Error('production server did not become ready with valid configuration');
   const openapiResponse = await fetch(`${base}/api/openapi.yaml`);
   const openapiText = await openapiResponse.text();
   if (!openapiResponse.ok || !openapiResponse.headers.get('content-type')?.includes('application/yaml') || !openapiText.includes('openapi: 3.0.3') || !openapiText.includes('/api/public/bookings:')) throw new Error('canonical OpenAPI endpoint was not served');
@@ -97,7 +97,7 @@ try {
     try { strictReady = await getJsonFrom(strictBase, '/api/ready'); } catch {}
     if (!strictReady) await new Promise((resolve) => setTimeout(resolve, 100));
   }
-  if (!strictReady || strictReady.response.status !== 503 || strictReady.body.checks?.liveLeadProvider !== false || strictReady.body.checks?.liveMessageProvider !== false || strictReady.body.checks?.livePaymentProvider !== false) throw new Error('live provider requirement did not fail production readiness');
+  if (!strictReady || strictReady.response.status !== 503 || strictReady.body.checks?.liveLeadProvider !== false || strictReady.body.checks?.liveMessageProvider !== false || strictReady.body.checks?.livePaymentProvider !== false || strictReady.body.checks?.liveDocumentProvider !== false) throw new Error('live provider requirement did not fail production readiness');
   let outboundUrlReady = null;
   for (let attempt = 0; attempt < 200 && !outboundUrlReady; attempt += 1) {
     try { outboundUrlReady = await getJsonFrom(outboundUrlBase, '/api/ready'); } catch {}
