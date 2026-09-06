@@ -295,7 +295,7 @@ paths:
           description: Customer-owned SMS and email preference state
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/CustomerPreferences' }
+              schema: { $ref: '#/components/schemas/CustomerPreferencesResponse' }
         '401': { $ref: '#/components/responses/Unauthorized' }
     post:
       summary: Update customer messaging preferences
@@ -306,7 +306,7 @@ paths:
         required: true
         content:
           application/json:
-            schema: { $ref: '#/components/schemas/CustomerPreferences' }
+            schema: { $ref: '#/components/schemas/CustomerPreferencesUpdate' }
       responses:
         '200': { $ref: '#/components/responses/MutationAccepted' }
         '401': { $ref: '#/components/responses/Unauthorized' }
@@ -404,10 +404,11 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [url, expiresInDays]
+                required: [url, expiresInDays, businessName]
                 properties:
                   url: { type: string, format: uri }
                   expiresInDays: { type: integer, example: 30 }
+                  businessName: { type: string }
         '401': { $ref: '#/components/responses/Unauthorized' }
   /api/public/referral:
     get:
@@ -584,9 +585,20 @@ components:
       required: [reason]
       properties:
         reason: { type: string, minLength: 3, maxLength: 300 }
-    CustomerPreferences:
+    CustomerPreferencesState:
       type: object
       required: [smsOptOut, emailOptOut]
+      properties:
+        smsOptOut: { type: boolean }
+        emailOptOut: { type: boolean }
+    CustomerPreferencesResponse:
+      type: object
+      required: [contactPreferences]
+      properties:
+        contactPreferences: { $ref: '#/components/schemas/CustomerPreferencesState' }
+    CustomerPreferencesUpdate:
+      type: object
+      minProperties: 1
       properties:
         smsOptOut: { type: boolean }
         emailOptOut: { type: boolean }
@@ -617,15 +629,10 @@ components:
         provider: { type: string, maxLength: 100 }
     ReferralContext:
       type: object
-      required: [tenant]
+      required: [businessName, serviceLabel]
       properties:
-        tenant:
-          type: object
-          required: [businessName, serviceLabel]
-          properties:
-            businessName: { type: string }
-            serviceLabel: { type: string }
-            serviceArea: { type: string }
+        businessName: { type: string }
+        serviceLabel: { type: string }
     ReferralRequest:
       type: object
       required: [name]

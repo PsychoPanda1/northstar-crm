@@ -378,6 +378,14 @@ Use `tenantId` on every business record: `customers`, `locations`, `leads`, `job
 - `GET /api/jobs/:id` returns a tenant-scoped work-order detail bundle for authenticated staff: job data, customer summary, estimate/invoice summaries, visits, field materials, labor, provider-pending messages, cost totals, and job audit events. Owners and dispatchers may read any tenant job; technicians may read only jobs assigned to their authenticated name.
 
 - Preserve the tenant and auth boundary when adding routes.
+
+## Customer growth and operational handoff
+
+- `GET /api/public/customer-portal/referral-link?token=...` issues a separate 30-day signed referral token. The returned link contains no customer portal token; the public referral form can create only a rate-limited, tenant-scoped lead attributed to the referring customer.
+- `GET|POST /api/public/referral?token=...` reads minimal business context or accepts a bounded referral name plus phone/email/message. Empty honeypot values, contact validation, idempotency, tenant scope, and audit evidence are enforced server-side.
+- `GET /api/customers/:id/privacy-export` is owner-only and returns a downloadable customer record with linked locations, assets, jobs, estimates, invoices, payments, requests, messages, calls, plans, activities, and labor entries; runtime credentials and session state are excluded.
+- Technician en-route updates may include a bounded `etaMinutes` value. Owner, technician, status-link, and customer-portal views expose only the customer-safe estimate and update timestamp; duplicate en-route notifications are refreshed when the ETA is corrected.
+- `POST /api/dispatch/route-optimize` accepts optional `travelSpeedKph` for a travel-time-safe coordinate route. The response includes estimated travel minutes while preserving appointment-window safety and tenant-scoped idempotent mutation behavior.
 - Keep service-specific copy in configuration, not duplicated markup.
 - Add an authorization test for every tenant-scoped read and write.
 - Replace the demo login modal only after a real identity provider and session API exist.
