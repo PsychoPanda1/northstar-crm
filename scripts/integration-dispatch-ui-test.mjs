@@ -10,6 +10,8 @@ const required = [
   "'LEAD HANDOFF': { method: 'dispatchLeads'",
   "DOCUMENTS: { method: 'dispatchDocuments'",
   'operationsButton.click()',
+  'data-operations-refresh',
+  'Refresh health',
   'Integration health is unavailable',
   'data-job-tracking-history',
   'repository.getJobLocationHistory',
