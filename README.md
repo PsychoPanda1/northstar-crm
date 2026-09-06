@@ -44,6 +44,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - All API and static responses receive a browser security baseline; production mode additionally enables HSTS
 - CI runs a Node 20/22 verification matrix with a ten-minute timeout, stale-run cancellation, manual reruns, and a production-configured container readiness smoke check
 - Technician photo evidence with bounded HTTPS metadata, captions, timestamps, and owner-visible job records
+- Technician offline updates use an encrypted AES-GCM local queue with token-derived key material, legacy migration, idempotent replay, and explicit conflict review
 - Technicians can capture structured field findings with severity and recommended follow-up, preserving onsite upsell and safety context for owner review
 - Field findings generate tenant-scoped owner action notifications, with safety findings marked urgent for dispatch follow-up
 - Technicians can add equipment records from the field, carrying model/serial, install, warranty, and source-job history into the customer profile
@@ -123,6 +124,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Payroll-ready technician commission reporting with owner-controlled commission rates, date-bounded reports, and CSV handoff
 - Marketing and technician performance reports are exportable as owner-scoped CSVs
 - Reports summarize estimate close rate, memberships sold, no-shows, tracked field hours, material spend, logged labor cost, and gross margin, with CSV export for owner handoff
+- Owners can save a tenant-scoped custom KPI profile for reuse across reporting sessions; changes are idempotent and audit-recorded
 - Labor entries feed customer timelines and job-cost reporting
 - Structured SMS/email message queue with explicit provider-pending status, server-side provider dispatch, and timeline capture
 - Tenant-scoped lead-provider dispatch preserves landing-page contact and campaign attribution context, uses stable idempotency keys, and records delivery state for marketing or call-center handoff
