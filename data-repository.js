@@ -1065,6 +1065,20 @@ class NorthstarDemoRepository {
     return this.globalSearchPage(query);
   }
 
+  async getLeadStages() {
+    if (!this.remote) return { stages: this.tenant.leadStages || ['New', 'Contacted', 'Qualified', 'Estimate sent', 'Won', 'Lost', 'Converted'], updatedAt: null };
+    const response = await fetch('/api/settings/lead-stages', { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('lead stages unavailable');
+    return response.json();
+  }
+
+  async updateLeadStages(stages, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for lead stage configuration');
+    const response = await fetch('/api/settings/lead-stages', { method: 'PATCH', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ stages }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'lead stages update failed');
+    return response.json();
+  }
+
   async globalSearchPage(query, { page = 1, pageSize = 20 } = {}) {
     if (!this.remote) throw new Error('API required for global search');
     const params = new URLSearchParams({ q: String(query), page: String(page), pageSize: String(pageSize) });
