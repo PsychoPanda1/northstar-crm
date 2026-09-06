@@ -30,14 +30,14 @@
           <a href="#financing" data-view="financing-applications"><span>◫</span>Financing</a>
           <p class="nav-label second">Manage</p>
           <a href="#estimates" data-view="estimates"><span>▤</span>Estimates</a>
-          <a href="#reports" data-view="reports"><span>◒</span>Reports</a>
+          <a href="#reports" data-view="reports" data-required-permission="reports:read"><span>◒</span>Reports</a>
           <a href="#settings" id="settings-link"><span>⚙</span>Settings</a>
         </nav>
         <div class="sidebar-bottom"><div class="help-card"><span class="help-icon">?</span><div><b>Need a hand?</b><small>Talk to your success team</small></div><span>↗</span></div><button class="user-row" id="owner-account"><span class="avatar">JS</span><div><b>Workspace owner</b><small>Administrator</small></div><span class="dots">•••</span></button></div>
       </aside>
 
       <main class="main-content" id="overview">
-        <header class="topbar"><div class="breadcrumb">Workspace <span>/</span> <b>Overview</b></div><div class="top-actions"><button class="icon-btn" aria-label="Search">⌕</button><button class="icon-btn" aria-label="Notifications" id="notifications">♧<i></i></button><button class="primary-btn" id="new-job">＋ New job</button></div></header>
+        <header class="topbar"><div class="breadcrumb">Workspace <span>/</span> <b>Overview</b></div><div class="top-actions"><button class="icon-btn" aria-label="Search">⌕</button><button class="icon-btn" aria-label="Notifications" id="notifications">♧<i></i></button><button class="primary-btn" id="new-job" data-required-permission="jobs:write">＋ New job</button></div></header>
         <div class="page-wrap">
           <section class="hero"><div><div class="eyebrow"><span data-service-label>HOME SERVICES</span> · <span data-today-label>Today</span> <span class="live-dot"></span> LIVE</div><h1>Good morning, Workspace owner.</h1><p data-focus-line>Here’s the pulse of your business. You’re doing great work.</p></div><button class="date-btn">This week <span>⌄</span></button></section>
           <section class="metric-grid">

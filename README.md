@@ -96,6 +96,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Owner review workspace with searchable review history and CSV export
 - Review ratings feed dashboard satisfaction and owner reporting
 - Demo role permissions for owner, dispatcher, technician, and accountant workflows
+- Role-aware portal navigation hides actions the authenticated staff role cannot use while API authorization remains server-enforced
 - Field permissions are separated from dispatch administration so technicians cannot create or reassign jobs
 - Technician field writes are restricted to their assigned jobs; inventory management remains an owner/dispatcher capability
 - Tenant-scoped inventory with stock receipts, job material consumption, reorder thresholds, and CSV export
