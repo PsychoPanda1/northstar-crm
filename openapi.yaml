@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Northstar CRM Public Integration API
-  version: 2.1.0
+  version: 2.2.0
   description: Public, tenant-routed contract for service landing pages. Owner records and credentials are never exposed by these endpoints.
 servers:
   - url: https://crm.example.com
@@ -194,9 +194,14 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [slots]
+                required: [catalogItem, slots, slotOptions]
                 properties:
+                  catalogItem:
+                    $ref: '#/components/schemas/CatalogItem'
                   slots:
+                    type: array
+                    items: { $ref: '#/components/schemas/Slot' }
+                  slotOptions:
                     type: array
                     items: { $ref: '#/components/schemas/Slot' }
         '401': { $ref: '#/components/responses/Unauthorized' }
