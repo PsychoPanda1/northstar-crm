@@ -38,6 +38,8 @@ jobs:
         run: node scripts/lead-filters-test.mjs
       - name: Check integration dispatch UI wiring
         run: node scripts/integration-dispatch-ui-test.mjs
+      - name: Check integration dispatch permissions
+        run: node scripts/integration-dispatch-permissions-test.mjs
       - name: Check tenant manifest wiring
         run: node scripts/tenant-manifest-test.mjs
       - name: Build container image
