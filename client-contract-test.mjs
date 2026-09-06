@@ -22,6 +22,7 @@ const containerRelease = readFileSync(`${root}.github/workflows/container-releas
 const robots = readFileSync(`${root}robots.txt`, 'utf8');
 const openapi = readFileSync(`${root}openapi.yaml`, 'utf8');
 const locationPicker = readFileSync(`${root}location-picker.js`, 'utf8');
+const settings = readFileSync(`${root}settings.js`, 'utf8');
 const packageJson = JSON.parse(readFileSync(`${root}package.json`, 'utf8'));
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 assert(packageJson.scripts?.test === 'npm run check && npm run test:landing-client && npm run test:smoke && npm run test:production-boundary && npm run test:catalog-idempotency && npm run test:lead-assignment && npm run test:persistence-recovery' && packageJson.scripts?.['test:landing-client'] === 'node scripts/landing-client-test.mjs' && packageJson.scripts?.['test:catalog-idempotency'] === 'node scripts/catalog-idempotency-test.mjs' && packageJson.scripts?.['test:lead-assignment'] === 'node scripts/lead-assignment-test.mjs' && packageJson.scripts?.['test:persistence-recovery'] === 'node scripts/persistence-recovery-test.mjs', 'npm test must run the complete release verification suite');
@@ -157,6 +158,7 @@ assert(app.includes("Crew: ${escapeHtml(job.crew.join(', '))}"), 'job detail sum
 assert(app.includes('data-job-cost-action="labor"') && app.includes('data-job-cost-action="material"') && app.includes('repository.logLabor') && app.includes('repository.consumeMaterial') && repository.includes("async logLabor(jobId, technician, hours, hourlyRate, idempotencyKey") && repository.includes("async consumeMaterial(jobId, materialId, quantity, idempotencyKey"), 'job detail does not expose idempotent labor and material cost capture');
 assert(app.includes('const decorateInvoiceSchedules =') && app.includes('data-invoice-action="view-schedule"') && app.includes('repository.getPaymentSchedule') && app.includes('View installments') && app.includes("status === 'Paid' ? ''") && app.includes("invoiceButton?.dataset.invoiceAction === 'view-schedule'"), 'owner invoice workflow does not expose payment schedule visibility safely');
 assert(invoice.includes('data-installment-id') && invoice.includes('selectedInstallmentId') && invoice.includes('installmentId:selectedInstallmentId'), 'customer invoice payment page does not target scheduled installments');
+assert(index.includes('id="settings-link"') && settings.includes('getIntegrationHealth') && settings.includes('secrets are never displayed') && settings.includes('/api/public/tenant?service='), 'owner settings view does not expose safe tenant and integration configuration');
 assert(server.includes('materialFingerprint') && server.includes('laborFingerprint') && server.includes("error: 'idempotency_key_reused'"), 'job cost endpoints do not reject conflicting retry payloads');
 assert(server.includes('purchaseOrderFingerprint') && server.includes('purchase-order'), 'purchase-order creation does not preserve retry identity');
 assert(app.includes('Service history: ${item.serviceHistory.map'), 'customer profile does not expose equipment service history');
