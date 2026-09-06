@@ -7,6 +7,7 @@ const index = readFileSync(`${root}index.html`, 'utf8');
 const repository = readFileSync(`${root}data-repository.js`, 'utf8');
 const customer = readFileSync(`${root}customer.html`, 'utf8');
 const estimate = readFileSync(`${root}estimate.html`, 'utf8');
+const estimatePdf = readFileSync(`${root}estimate-pdf.mjs`, 'utf8');
 const status = readFileSync(`${root}status.html`, 'utf8');
 const invoice = readFileSync(`${root}invoice.html`, 'utf8');
 const booking = readFileSync(`${root}booking.html`, 'utf8');
@@ -257,6 +258,7 @@ assert(server.includes('search_page_and_page_size_out_of_range') && server.inclu
 assert(server.includes("'/api/settings/lead-stages'") && server.includes('lead_stages_must_contain_two_to_twelve_unique_non_converted_values') && server.includes('existing_leads_use_removed_stage') && repository.includes('updateLeadStages') && settings.includes('data-settings-lead-stages'), 'owners must be able to configure tenant-scoped lead pipeline stages safely');
 assert(server.includes('const claims = authenticate(req); const saved = claims ? state.get(claims.tenantId) : null') && server.includes('const attributionMatches = query.length >= 2'), 'attribution-aware global search must evaluate matches within the authenticated tenant');
 assert(server.includes('complete_option_details_required') && repository.includes('updateEstimateOptionDetails') && app.includes('data-estimate-option-details') && estimate.includes('data-option-items'), 'estimate option packages must support owner-managed included work and customer-visible detail');
+assert(server.includes("'/api/public/estimate/pdf'") && server.includes('estimatePdfFor') && estimatePdf.includes('export const estimatePdfFor') && estimate.includes('download-estimate-pdf'), 'signed customer estimates must support a portable PDF document artifact');
 assert(packageJson.scripts?.['test:customer-merge'] === 'node scripts/customer-merge-test.mjs' && packageJson.scripts?.test.includes('npm run test:customer-merge') && repository.includes('mergeCustomer') && server.includes('customerMergeMatch') && server.includes("customer.merged"), 'customer merge workflow is not covered end-to-end');
 assert(packageJson.scripts?.['test:sqlite-storage'] === 'node scripts/sqlite-storage-test.mjs' && packageJson.scripts?.['test:intake-fields'] === 'node scripts/intake-fields-test.mjs' && packageJson.scripts?.test.includes('npm run test:intake-fields') && server.includes('NORTHSTAR_SQLITE_FILE') && server.includes('createSqliteStore') && readFileSync(`${root}storage-adapter.mjs`, 'utf8').includes('BEGIN IMMEDIATE'), 'transactional SQLite storage seam is not covered');
 assert(server.includes('normalizeIntakeFields') && server.includes('intakeAnswersFor') && booking.includes('intake-fields') && booking.includes('northstar.book=(payload,options)') && app.includes('item.intakeSummary') && app.includes('job.intakeSummary'), 'guided tenant intake contract is not covered');

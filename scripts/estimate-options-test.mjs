@@ -27,7 +27,9 @@ try {
   const updated = await request(`/api/estimates/${estimate.body.id}/options`, { method: 'PATCH', headers, body: JSON.stringify({ options: details }) });
   const duplicate = await request(`/api/estimates/${estimate.body.id}/options`, { method: 'PATCH', headers, body: JSON.stringify({ options: details }) });
   const publicView = await request(`/api/public/estimate?token=${encodeURIComponent(estimate.body.estimateApprovalToken)}`);
-  if (customer.response.status !== 201 || estimate.response.status !== 201 || updated.response.status !== 200 || updated.body.estimate?.options?.[1]?.items?.[2] !== 'Protection plan' || duplicate.response.status !== 200 || duplicate.body.duplicate !== true || publicView.response.status !== 200 || publicView.body.options?.[0]?.items?.[0] !== 'Diagnostic') throw new Error('estimate option detail contract failed');
+  const pdfResponse = await fetch(`${base}/api/public/estimate/pdf?token=${encodeURIComponent(estimate.body.estimateApprovalToken)}`);
+  const pdfBytes = Buffer.from(await pdfResponse.arrayBuffer());
+  if (customer.response.status !== 201 || estimate.response.status !== 201 || updated.response.status !== 200 || updated.body.estimate?.options?.[1]?.items?.[2] !== 'Protection plan' || duplicate.response.status !== 200 || duplicate.body.duplicate !== true || publicView.response.status !== 200 || publicView.body.options?.[0]?.items?.[0] !== 'Diagnostic' || pdfResponse.status !== 200 || pdfResponse.headers.get('content-type') !== 'application/pdf' || !pdfBytes.subarray(0, 8).toString('ascii').startsWith('%PDF-1.4')) throw new Error('estimate option detail or PDF contract failed');
   console.log('Northstar estimate option detail test passed');
 } finally {
   if (child && !child.killed) child.kill();
