@@ -167,6 +167,19 @@ paths:
         '200': { $ref: '#/components/responses/CalendarDownload' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
+  /api/public/invoice/pdf:
+    get:
+      summary: Download a customer invoice PDF from a signed invoice link
+      parameters:
+        - $ref: '#/components/parameters/InvoiceToken'
+      responses:
+        '200':
+          description: Non-cacheable invoice PDF artifact
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
   /api/public/customer-portal:
     get:
       summary: Read a customer-safe service portal
@@ -457,6 +470,11 @@ components:
       required: true
       schema: { type: string, minLength: 20, maxLength: 400 }
     CustomerToken:
+      name: token
+      in: query
+      required: true
+      schema: { type: string, minLength: 20, maxLength: 400 }
+    InvoiceToken:
       name: token
       in: query
       required: true
