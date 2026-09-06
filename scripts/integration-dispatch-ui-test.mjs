@@ -56,7 +56,9 @@ const required = [
   'Clear visible ${view} selection',
   'Schedule service',
   'northstarScheduleCustomerId',
-  'observeDialogSelection(button.dataset.customerId)'
+  'observeDialogSelection(button.dataset.customerId)',
+  'Create estimate',
+  'observeEstimateSelection(button.dataset.customerId)'
 ];
 for (const snippet of required) {
   if (!source.includes(snippet)) throw new Error(`integration dispatch UI wiring missing: ${snippet}`);
