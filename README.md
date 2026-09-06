@@ -73,7 +73,8 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Customers can self-service a new appointment after a no-show through their signed status or portal link
 - Owners and dispatchers can queue deduplicated appointment reminders before a visit
 - Automatic customer notifications when jobs are assigned, en route, or completed, with deduplication before provider delivery
-- Customer status links and portals expose the recorded technician en-route timestamp when available
++- Customer status links and portals expose the recorded technician en-route timestamp when available
+- Existing customers can book another service directly from their secure portal using the tenant's available capacity and saved service location
 - Landing-page availability and idempotent online booking into the dispatch queue
 - Versioned, tenant-configurable guided intake fields render on the reusable booking page and persist validated answers on the resulting lead or job for service-specific triage
 - Environment-driven tenant and service routing supports adding new landing-page businesses without changing server source
