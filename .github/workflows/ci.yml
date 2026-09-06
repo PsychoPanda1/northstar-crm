@@ -34,6 +34,8 @@ jobs:
         run: node --check scripts/generate-owner-digest.mjs
       - name: Check dispatch filter wiring
         run: node scripts/dispatch-filters-test.mjs
+      - name: Check tenant manifest wiring
+        run: node scripts/tenant-manifest-test.mjs
       - name: Build container image
         run: docker build --tag northstar-crm:ci .
       - name: Verify container readiness

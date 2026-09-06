@@ -320,6 +320,9 @@ components:
             businessName: { type: string }
             serviceLabel: { type: string }
             timeZone: { type: string }
+            contactPhone: { type: string, description: Optional public business phone for landing-page call-to-action rendering. }
+            contactEmail: { type: string, format: email, description: Optional public business email for landing-page contact rendering. }
+            serviceArea: { type: string, description: Optional public service-area label. }
             intakeFields:
               type: array
               maxItems: 8
