@@ -23,6 +23,9 @@ try {
   if (asset.response.status !== 201 || asset.body.nextServiceDue !== '2099-04-15') throw new Error('asset service due creation failed');
   const listed = await request('/api/assets?search=Asset%20Due%20Customer', { headers: auth });
   if (!listed.response.ok || listed.body.items?.[0]?.serviceDueStatus !== 'Scheduled') throw new Error('asset service due status projection failed');
+  const alertAsset = await request(`/api/assets/${encodeURIComponent(asset.body.id)}`, { method: 'PATCH', headers: { ...auth, 'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({ nextServiceDue: '2000-04-15' }) });
+  const notifications = await request('/api/notifications', { headers: auth });
+  if (!alertAsset.response.ok || !notifications.body.items?.some((item) => item.assetId === asset.body.id && item.title === 'Asset service overdue')) throw new Error('asset service due alert was not surfaced');
   const invalid = await request(`/api/assets/${encodeURIComponent(asset.body.id)}`, { method: 'PATCH', headers: { ...auth, 'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({ nextServiceDue: 'not-a-date' }) });
   if (invalid.response.status !== 422) throw new Error('invalid service due date was accepted');
   console.log('Northstar asset service due test passed');
