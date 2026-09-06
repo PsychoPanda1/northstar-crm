@@ -17,15 +17,34 @@ const routeDistanceKm = (ordered, start) => {
   return total;
 };
 
-const respectsTimeWindows = (ordered) => ordered.every((item, index) => {
-  if (!index) return true;
-  const previousEnd = Date.parse(ordered[index - 1].job.endsAt || '');
-  const currentStart = Date.parse(item.job.startsAt || '');
-  return !Number.isFinite(previousEnd) || !Number.isFinite(currentStart) || previousEnd <= currentStart;
-});
+export const estimatedTravelMinutes = (ordered, start = null, speedKph = 32) => {
+  const speed = Number(speedKph);
+  if (!Number.isFinite(speed) || speed <= 0) return null;
+  const points = ordered.map((item) => item.coordinates);
+  let previous = start;
+  let minutes = 0;
+  for (const point of points) { if (previous) minutes += distanceKmBetween(previous, point) / speed * 60; previous = point; }
+  return Math.round(minutes);
+};
+
+const respectsTimeWindows = (ordered, start, speedKph) => {
+  let previousPoint = start;
+  let availableAt = null;
+  for (const item of ordered) {
+    const currentStart = Date.parse(item.job.startsAt || '');
+    const previousTravelMinutes = previousPoint && speedKph ? distanceKmBetween(previousPoint, item.coordinates) / speedKph * 60 : 0;
+    const earliestArrival = Number.isFinite(availableAt) ? availableAt + previousTravelMinutes * 60_000 : null;
+    if (Number.isFinite(currentStart) && Number.isFinite(earliestArrival) && currentStart < earliestArrival) return false;
+    const currentEnd = Date.parse(item.job.endsAt || '');
+    availableAt = Number.isFinite(currentEnd) ? currentEnd : Number.isFinite(currentStart) ? currentStart : availableAt;
+    previousPoint = item.coordinates;
+  }
+  return true;
+};
 
 export const optimizeCoordinateRoute = (stops, start = null, options = {}) => {
   const respectTimeWindows = options.respectTimeWindows !== false;
+  const travelSpeedKph = Number.isFinite(Number(options.travelSpeedKph)) && Number(options.travelSpeedKph) > 0 ? Number(options.travelSpeedKph) : null;
   const remaining = stops.slice().sort((a, b) => Date.parse(a.job.startsAt || '') - Date.parse(b.job.startsAt || '') || a.job.id.localeCompare(b.job.id));
   const ordered = [];
   let current = start || remaining[0]?.coordinates || null;
@@ -48,7 +67,7 @@ export const optimizeCoordinateRoute = (stops, start = null, options = {}) => {
     for (let i = 0; i < ordered.length - 1; i += 1) {
       for (let k = i + 1; k < ordered.length; k += 1) {
         const candidate = ordered.slice(0, i).concat(ordered.slice(i, k + 1).reverse(), ordered.slice(k + 1));
-        if (respectTimeWindows && !respectsTimeWindows(candidate)) continue;
+        if (respectTimeWindows && !respectsTimeWindows(candidate, start, travelSpeedKph)) continue;
         const candidateDistance = routeDistanceKm(candidate, start);
         if (candidateDistance + 0.001 < currentDistance) {
           ordered.splice(0, ordered.length, ...candidate);
@@ -59,5 +78,5 @@ export const optimizeCoordinateRoute = (stops, start = null, options = {}) => {
       if (improved) break;
     }
   }
-  return { ordered, distanceKm: Number(routeDistanceKm(ordered, start).toFixed(2)), passes, method: respectTimeWindows ? 'coordinate_nearest_neighbor_2opt_time_safe' : 'coordinate_nearest_neighbor_2opt' };
+  return { ordered, distanceKm: Number(routeDistanceKm(ordered, start).toFixed(2)), estimatedTravelMinutes: estimatedTravelMinutes(ordered, start, travelSpeedKph || 32), passes, method: respectTimeWindows ? (travelSpeedKph ? 'coordinate_nearest_neighbor_2opt_travel_time_safe' : 'coordinate_nearest_neighbor_2opt_time_safe') : 'coordinate_nearest_neighbor_2opt' };
 };

@@ -855,9 +855,9 @@ const server = createServer(async (req, res) => {
       const startLatitude = Number(body.startLatitude);
       const startLongitude = Number(body.startLongitude);
       const start = Number.isFinite(startLatitude) && startLatitude >= -90 && startLatitude <= 90 && Number.isFinite(startLongitude) && startLongitude >= -180 && startLongitude <= 180 ? { latitude: startLatitude, longitude: startLongitude } : null;
-      const optimized = optimizeCoordinateRoute(stops, start, { respectTimeWindows: body.respectTimeWindows !== false });
+      const optimized = optimizeCoordinateRoute(stops, start, { respectTimeWindows: body.respectTimeWindows !== false, ...(body.travelSpeedKph !== undefined ? { travelSpeedKph: body.travelSpeedKph } : {}) });
       optimized.ordered.forEach((item, index) => { item.job.routeOrder = index + 1; item.job.routeOptimization = optimized.method; item.job.routeDistanceKm = optimized.distanceKm; });
-      const result = { date, technician, jobIds: optimized.ordered.map((item) => item.job.id), optimizedStops: optimized.ordered.length, skippedStops: jobs.length - optimized.ordered.length, method: optimized.method, distanceKm: optimized.distanceKm, passes: optimized.passes };
+      const result = { date, technician, jobIds: optimized.ordered.map((item) => item.job.id), optimizedStops: optimized.ordered.length, skippedStops: jobs.length - optimized.ordered.length, method: optimized.method, distanceKm: optimized.distanceKm, estimatedTravelMinutes: optimized.estimatedTravelMinutes, passes: optimized.passes };
       if (idempotencyKey) saved.routeOptimizationRequests.unshift({ key: idempotencyKey, fingerprint, result });
       recordAudit(saved, claims, 'route.order.optimized', 'route', date + ':' + technician, `${optimized.ordered.length} coordinate stops optimized; ${jobs.length - optimized.ordered.length} skipped; ${optimized.distanceKm} km`);
       persist();
