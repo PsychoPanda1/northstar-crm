@@ -95,6 +95,7 @@ assert(server.includes('requestConvertMatch') && server.includes('customer.reque
 assert(server.includes('N-low-stock-') && server.includes('Material low stock') && app.includes('data-notification-open="materials"'), 'low-stock inventory alerts are not wired');
 assert(app.includes('data-material-action="reorder"') && app.includes('data-material-unit-cost'), 'low-stock alerts do not expose direct reorder action');
 assert(app.includes("['Requests', profile.requests || []]") && app.includes("item.type && item.message"), 'customer profiles do not expose request history');
+assert(server.includes("kind: 'request'") && server.includes('profile.requests.map'), 'customer timelines do not expose request history');
 assert(server.includes("if (recordType === 'requests')") && server.includes('priorityRank') && server.includes('statusRank'), 'request queue triage ordering is not wired');
 assert(server.includes('invalid_request_queue_filter') && server.includes('assignedTo') && server.includes('priorityFilter'), 'request queue filters are not wired');
 assert(app.includes('request-queue-filters') && app.includes('Filter request status') && app.includes('Filter request priority') && app.includes('Filter requests by assigned owner') && app.includes('requestQueueFilters'), 'request queue filters are not exposed in the owner workspace');

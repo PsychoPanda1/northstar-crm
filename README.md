@@ -140,6 +140,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Inventory items at or below their reorder point create urgent owner alerts with a direct material-workspace link
 - Low-stock alerts include a direct order-stock action that starts the purchase-order workflow with the affected material preselected
 - Customer profiles now include request history so customer communication and service demand stay together
+- Customer timelines include inbound request events with lifecycle status, preserving the full demand-to-service narrative
 - Customer request triage supports Low, Normal, High, and Urgent priority so safety-sensitive service issues reach owners immediately
 - The Requests workspace keeps that priority visible beside the customer message for dispatcher handoff
 - Global search also indexes and displays request priority so urgent customer work is discoverable from anywhere in the owner portal
