@@ -23,7 +23,7 @@ try {
   const token = bookingBody.customerPortalAccessToken;
   const portal = await (await fetch(`${base}/api/public/customer-portal?token=${encodeURIComponent(token)}`)).json();
   assert(portal.availableBookingSlots?.length, 'customer portal booking slots unavailable');
-  const book = () => fetch(`${base}/api/public/customer-portal/book?token=${encodeURIComponent(token)}`, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': 'portal-booking-repeatable' }, body: JSON.stringify({ service: 'Drain cleaning', slotId: nextSlot.id }) });
+  const book = () => fetch(`${base}/api/public/customer-portal/book?token=${encodeURIComponent(token)}`, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': 'portal-booking-repeatable' }, body: JSON.stringify({ service: 'Drain cleaning', slotId: nextSlot.id, intakeAnswers: { issue_type: 'Clog or drain', urgency: 'This week' } }) });
   const response = await book();
   const body = await response.json();
   const duplicate = await book();
