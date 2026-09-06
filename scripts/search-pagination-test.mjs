@@ -26,14 +26,18 @@ try {
   }
   const vehicle = await postJson('/api/vehicles', { name: 'Search Fleet Van', makeModel: 'Ford Transit 250', licensePlate: 'SEARCH-42' }, token);
   if (vehicle.response.status !== 201) throw new Error('search pagination test vehicle setup failed');
+  const material = await postJson('/api/materials', { name: 'Search copper fitting', sku: 'SEARCH-SKU-7', unit: 'each', unitCost: 4, onHand: 12, reorderPoint: 2 }, token);
+  if (material.response.status !== 201) throw new Error('search pagination test material setup failed');
+  const barcode = await request(`/api/materials/${material.body.id}/barcode`, { method: 'PATCH', headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json', 'idempotency-key': 'search-barcode-1' }, body: JSON.stringify({ barcode: 'SEARCH-BARCODE-7' }) });
   const headers = { authorization: `Bearer ${token}` };
   const first = await request('/api/search?q=pagination%20search&page=1&pageSize=1', { headers });
   const second = await request('/api/search?q=pagination%20search&page=2&pageSize=1', { headers });
   const invalid = await request('/api/search?q=pagination%20search&pageSize=51', { headers });
   const vehicleSearch = await request('/api/search?q=search-42', { headers });
+  const materialLookup = await request('/api/materials/lookup?code=SEARCH-BARCODE-7', { headers });
   const firstIds = (first.body.results?.customers || []).map((item) => item.id);
   const secondIds = (second.body.results?.customers || []).map((item) => item.id);
-  if (first.response.status !== 200 || second.response.status !== 200 || first.body.pagination?.page !== 1 || first.body.pagination?.pageSize !== 1 || first.body.pagination?.hasMore !== true || first.body.pagination?.nextPage !== 2 || second.body.pagination?.page !== 2 || second.body.pagination?.hasMore !== false || firstIds.length !== 1 || secondIds.length !== 1 || firstIds[0] === secondIds[0] || invalid.response.status !== 422 || vehicleSearch.response.status !== 200 || vehicleSearch.body.results?.vehicles?.[0]?.licensePlate !== 'SEARCH-42' || vehicleSearch.body.results?.vehicles?.[0]?.makeModel !== 'Ford Transit 250') throw new Error('global search pagination or fleet search contract failed');
+  if (first.response.status !== 200 || second.response.status !== 200 || first.body.pagination?.page !== 1 || first.body.pagination?.pageSize !== 1 || first.body.pagination?.hasMore !== true || first.body.pagination?.nextPage !== 2 || second.body.pagination?.page !== 2 || second.body.pagination?.hasMore !== false || firstIds.length !== 1 || secondIds.length !== 1 || firstIds[0] === secondIds[0] || invalid.response.status !== 422 || vehicleSearch.response.status !== 200 || vehicleSearch.body.results?.vehicles?.[0]?.licensePlate !== 'SEARCH-42' || vehicleSearch.body.results?.vehicles?.[0]?.makeModel !== 'Ford Transit 250' || barcode.response.status !== 200 || materialLookup.response.status !== 200 || materialLookup.body.material?.name !== 'Search copper fitting' || materialLookup.body.locations?.find((item) => item.id === 'main')?.quantity !== 12) throw new Error('global search, fleet search, or material barcode contract failed');
   console.log('Northstar search pagination test passed');
 } finally {
   if (child && !child.killed) child.kill();

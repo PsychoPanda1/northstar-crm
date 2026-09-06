@@ -154,6 +154,8 @@ When a configured tenant sets `autoAssignOnlineBookings: true` in `NORTHSTAR_TEN
 - `GET /api/reviews` → tenant-scoped completed-job ratings and comments
 - `GET /api/export?type=reviews` → tenant-scoped review history CSV for owner reporting
 - `GET /api/materials` and `POST /api/materials` → tenant-scoped inventory records with stock and reorder thresholds; creation accepts an optional `Idempotency-Key` for safe retries
+- `GET /api/materials/lookup?code=...` → owner/dispatcher/accountant-only exact lookup by material ID, SKU, or barcode, returning the safe material projection plus active location balances for warehouse/truck workflows
+- `PATCH /api/materials/:id/barcode` → owner/dispatcher-only barcode assignment or clearing with safe-character validation, tenant uniqueness, idempotency, and `material.barcode.updated` audit history
 - `GET /api/inventory-locations` and `POST /api/inventory-locations` → tenant-scoped warehouse, truck, van, and other active stock locations; creation is owner/dispatcher-only and supports idempotent retries
 - `POST /api/inventory-locations/:id/transfer` → owner/dispatcher-only transfer from `fromLocationId` (default `main`) into the destination location; validates available location stock, records paired transfer ledger rows plus `inventory.transferred`, and preserves material `onHand` totals; accepts an optional `Idempotency-Key`
 - `POST /api/materials/:id/adjust` → owner/dispatcher-only cycle-count adjustment for an active inventory location; accepts a non-negative `countedQuantity` and bounded reason, recalculates the material total from location balances, records the signed delta in the inventory ledger and `inventory.cycle_count.adjusted` audit event, and is idempotent

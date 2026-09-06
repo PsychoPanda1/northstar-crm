@@ -710,6 +710,20 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async setMaterialBarcode(materialId, barcode, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for material barcode updates');
+    const response = await fetch(`/api/materials/${encodeURIComponent(materialId)}/barcode`, { method: 'PATCH', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ barcode }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'material barcode update failed');
+    return response.json();
+  }
+
+  async lookupMaterial(code) {
+    if (!this.remote) throw new Error('API required for material lookup');
+    const response = await fetch(`/api/materials/lookup?code=${encodeURIComponent(code)}`, { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'material lookup failed');
+    return response.json();
+  }
+
   async listInventoryLocations() {
     if (!this.remote) throw new Error('API required for inventory locations');
     const response = await fetch('/api/inventory-locations', { headers: { authorization: `Bearer ${this.token}` } });
