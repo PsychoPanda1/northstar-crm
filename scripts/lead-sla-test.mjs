@@ -8,7 +8,7 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const port = 5100 + Math.floor(Math.random() * 100);
 const dataFile = join(tmpdir(), `northstar-lead-sla-${process.pid}-${Date.now()}.json`);
 const receivedAt = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
-writeFileSync(dataFile, JSON.stringify({ 'clearwater-plumbing': { leads: [{ id: 'sla-lead-1', tenantId: 'clearwater-plumbing', name: 'SLA Test Lead', service: 'Plumbing', source: 'Landing page', phone: '843-555-0261', status: 'New', receivedAt }], jobs: [{ id: 'sla-job-1', tenantId: 'clearwater-plumbing', customer: 'Late Appointment Customer', service: 'Plumbing', status: 'Confirmed', technician: 'Alex Rivera', time: 'Today 9:00 AM', startsAt: receivedAt }] } }));
+writeFileSync(dataFile, JSON.stringify({ 'clearwater-plumbing': { leads: [{ id: 'sla-lead-1', tenantId: 'clearwater-plumbing', name: 'SLA Test Lead', service: 'Plumbing', source: 'Landing page', phone: '843-555-0261', status: 'New', receivedAt }], jobs: [{ id: 'sla-job-1', tenantId: 'clearwater-plumbing', customer: 'Late Appointment Customer', service: 'Plumbing', status: 'Confirmed', technician: 'Alex Rivera', time: 'Today 9:00 AM', startsAt: receivedAt }], estimates: [{ id: 'sla-estimate-1', tenantId: 'clearwater-plumbing', customer: 'Estimate Follow-up Customer', service: 'Plumbing', status: 'Sent', value: '$500', createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() }] } }));
 const env = { ...process.env, NODE_ENV: 'development', NORTHSTAR_ALLOW_DEMO_LOGIN: 'true', NORTHSTAR_LEAD_RESPONSE_SLA_HOURS: '2', PORT: String(port), NORTHSTAR_DATA_FILE: dataFile, NORTHSTAR_SESSION_FILE: `${dataFile}.sessions` };
 const base = `http://127.0.0.1:${port}`;
 let child;
@@ -27,6 +27,7 @@ try {
   const dashboard = await request('/api/dashboard', { headers });
   const breached = (before.body.items || []).find((item) => item.leadId === 'sla-lead-1');
   const lateAppointment = (before.body.items || []).find((item) => item.jobId === 'sla-job-1');
+  const estimateFollowup = (before.body.items || []).find((item) => item.estimateId === 'sla-estimate-1');
   const status = await postJson('/api/leads/sla-lead-1/status', { status: 'Contacted', note: 'Called within the response workflow.' }, token);
   const enRoute = await postJson('/api/jobs/sla-job-1/status', { status: 'En route' }, token);
   const after = await request('/api/notifications', { headers });
@@ -34,7 +35,7 @@ try {
   const stillBreached = (after.body.items || []).some((item) => item.leadId === 'sla-lead-1' && item.title === 'Lead response SLA breached');
   const stillLeadAlert = (after.body.items || []).some((item) => item.leadId === 'sla-lead-1');
   const stillLateAppointment = (after.body.items || []).some((item) => item.jobId === 'sla-job-1' && item.title === 'Late appointment needs attention');
-  if (before.response.status !== 200 || dashboard.response.status !== 200 || dashboard.body.metrics?.leadSlaBreaches !== '1' || dashboard.body.metrics?.lateAppointments !== '1' || breached?.title !== 'Lead response SLA breached' || breached?.status !== 'Urgent' || lateAppointment?.title !== 'Late appointment needs attention' || lateAppointment?.status !== 'Urgent' || status.response.status !== 200 || !status.body.lead?.firstResponseAt || enRoute.response.status !== 200 || enRoute.body?.status !== 'En route' || afterDashboard.body.metrics?.lateAppointments !== '0' || stillBreached || stillLeadAlert || stillLateAppointment) throw new Error('lead response SLA behavior failed');
+  if (before.response.status !== 200 || dashboard.response.status !== 200 || dashboard.body.metrics?.leadSlaBreaches !== '1' || dashboard.body.metrics?.lateAppointments !== '1' || dashboard.body.metrics?.estimatesAtRisk !== '1' || breached?.title !== 'Lead response SLA breached' || breached?.status !== 'Urgent' || lateAppointment?.title !== 'Late appointment needs attention' || lateAppointment?.status !== 'Urgent' || estimateFollowup?.title !== 'Estimate follow-up due' || estimateFollowup?.status !== 'Action needed' || status.response.status !== 200 || !status.body.lead?.firstResponseAt || enRoute.response.status !== 200 || enRoute.body?.status !== 'En route' || afterDashboard.body.metrics?.lateAppointments !== '0' || stillBreached || stillLeadAlert || stillLateAppointment) throw new Error('lead response SLA behavior failed');
   console.log('Northstar lead SLA test passed');
 } finally {
   if (child && !child.killed) child.kill();
