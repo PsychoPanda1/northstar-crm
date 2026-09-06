@@ -731,6 +731,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async adjustInventory(materialId, locationId, countedQuantity, reason, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for inventory adjustments');
+    const response = await fetch(`/api/materials/${encodeURIComponent(materialId)}/adjust`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ locationId, countedQuantity, reason }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'inventory adjustment failed');
+    return response.json();
+  }
+
   async consumeMaterial(jobId, materialId, quantity, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for material usage');
     const response = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/materials`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ materialId, quantity }) });

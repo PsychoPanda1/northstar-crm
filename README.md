@@ -109,6 +109,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Technician field writes are restricted to their assigned jobs; inventory management remains an owner/dispatcher capability
 - Tenant-scoped inventory with stock receipts, job material consumption, reorder thresholds, and CSV export
 - Inventory locations for warehouses and service trucks with auditable, idempotent stock transfers while preserving total on-hand quantities
+- Owner and dispatcher cycle counts can reconcile a material at a specific warehouse or truck location, preserving prior quantity, counted quantity, delta, reason, and audit history
 - Purchase orders with owner approval, vendor, receiving, and automatic stock reconciliation
 - Tenant-scoped inventory transaction ledger with searchable owner view and CSV export
 - Job profitability workspace combining material cost, logged labor, revenue, and gross margin

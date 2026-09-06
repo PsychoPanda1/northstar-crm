@@ -488,6 +488,38 @@ const server = createServer(async (req, res) => {
     applySecurityHeaders(res);
     const requestUrl = new URL(req.url, `http://${req.headers.host}`);
     const pathname = requestUrl.pathname;
+    const inventoryAdjustMatch = pathname.match(/^\/api\/materials\/([^/]+)\/adjust$/);
+    if (inventoryAdjustMatch && req.method === 'POST') {
+      const claims = authenticate(req);
+      if (!claims) return json(res, 401, { error: 'unauthorized' });
+      if (!['owner', 'dispatcher'].includes(claims.role)) return json(res, 403, { error: 'forbidden' });
+      const body = await readBody(req);
+      const saved = state.get(claims.tenantId);
+      const material = saved.materials.find((item) => item.id === inventoryAdjustMatch[1]);
+      if (!material) return json(res, 404, { error: 'material_not_found' });
+      const locationId = String(body.locationId || 'main').trim();
+      const location = inventoryLocationsFor(claims.tenantId).find((item) => item.id === locationId);
+      const countedQuantity = Number(body.countedQuantity);
+      const reason = String(body.reason || '').trim().slice(0, 240);
+      if (!location || location.status !== 'Active') return json(res, 404, { error: 'adjustment_location_not_found' });
+      if (!Number.isInteger(countedQuantity) || countedQuantity < 0 || countedQuantity > 1000000 || reason.length < 3) return json(res, 422, { error: 'counted_quantity_and_reason_required' });
+      const balances = { ...(material.stockByLocation || { main: material.onHand }) };
+      const previousQuantity = Number(balances[locationId] || 0);
+      const delta = countedQuantity - previousQuantity;
+      const fingerprint = payloadFingerprint({ materialId: material.id, locationId, countedQuantity, reason });
+      saved.inventoryTransactions = saved.inventoryTransactions || [];
+      const idempotencyKey = String(req.headers['idempotency-key'] || '').trim().slice(0, 100);
+      const existing = idempotencyKey ? saved.inventoryTransactions.find((item) => item.type === 'Cycle count adjustment' && item.idempotencyKey === idempotencyKey) : null;
+      if (existing) { if (existing.idempotencyFingerprint !== fingerprint) return json(res, 409, { error: 'idempotency_key_reused' }); return json(res, 200, { material: recordsFor(claims.tenantId, 'materials').find((item) => item.id === material.id), transaction: existing, duplicate: true }); }
+      balances[locationId] = countedQuantity;
+      material.stockByLocation = balances;
+      material.onHand = Object.values(balances).reduce((sum, value) => sum + Math.max(0, Number(value) || 0), 0);
+      const transaction = { id: `INVTX-${Date.now()}`, tenantId: claims.tenantId, materialId: material.id, locationId, type: 'Cycle count adjustment', quantity: delta, previousQuantity, countedQuantity, reason, createdAt: new Date().toISOString(), ...(idempotencyKey ? { idempotencyKey, idempotencyFingerprint: fingerprint } : {}) };
+      saved.inventoryTransactions.unshift(transaction);
+      recordAudit(saved, claims, 'inventory.cycle_count.adjusted', 'material', material.id, `${material.name} · ${location.name} · ${previousQuantity} to ${countedQuantity} · ${reason}`);
+      persist();
+      return json(res, 200, { material: recordsFor(claims.tenantId, 'materials').find((item) => item.id === material.id), transaction, balances, duplicate: false });
+    }
     if (pathname === '/api/dispatch/route-optimize' && req.method === 'POST') {
       const claims = authenticate(req);
       if (!claims) return json(res, 401, { error: 'unauthorized' });
