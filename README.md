@@ -125,6 +125,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Customer request urgency uses optional tenant-level `requestResponseSlaHours` in `NORTHSTAR_TENANTS_JSON` (1–168 hours), falling back to the deployment-wide `NORTHSTAR_REQUEST_RESPONSE_SLA_HOURS` setting (default 24)
 - Request alerts show elapsed age (`h open` or `d open`) alongside their urgency so owners can prioritize transparently
 - The dashboard surfaces open customer requests as a live KPI alongside lead, appointment, and estimate risk
+- Owners and dispatchers can re-triage open customer requests by priority with an idempotent, audited workflow
 - Customer request triage supports Low, Normal, High, and Urgent priority so safety-sensitive service issues reach owners immediately
 - The Requests workspace keeps that priority visible beside the customer message for dispatcher handoff
 - Global search also indexes and displays request priority so urgent customer work is discoverable from anywhere in the owner portal

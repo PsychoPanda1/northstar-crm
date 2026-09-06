@@ -209,6 +209,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async updateRequestPriority(id, priority, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for request priority updates');
+    const response = await fetch(`/api/requests/${encodeURIComponent(id)}/priority`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ priority }) });
+    if (!response.ok) throw new Error('request priority update failed');
+    return response.json();
+  }
+
   completeTask(taskIndex, completed) {
     const completedTasks = new Set(this.state.completedTasks || []);
     completed ? completedTasks.add(taskIndex) : completedTasks.delete(taskIndex);

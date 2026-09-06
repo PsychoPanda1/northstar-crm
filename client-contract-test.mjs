@@ -77,6 +77,8 @@ assert(server.includes('Invoice overdue') && server.includes('days}d past due'),
 assert(server.includes('Customer request overdue') && server.includes('days}d open'), 'overdue customer request alert workflow is not wired');
 assert(app.includes('data-notification-open="requests"') && app.includes('data-request-action="reply"') && app.includes('repository.replyToRequest'), 'request alerts do not expose a direct reply action');
 assert(app.includes('data-request-action="resolve"') && app.includes('repository.resolveRequest'), 'request alerts do not expose a direct resolve action');
+assert(app.includes('data-request-action="priority"') && app.includes('repository.updateRequestPriority') && repository.includes('updateRequestPriority'), 'request priority triage control is not wired');
+assert(server.includes('requestPriorityMatch') && server.includes('invalid_request_priority') && server.includes('customer.request.priority.updated'), 'request priority update route is not wired');
 assert(index.includes('data-nav-count="requests"') && app.includes("repository.list('requests')"), 'navigation should expose live request counts');
 assert(index.includes('data-view="requests" data-required-permission="requests:read"') && server.includes("rolePermissions.owner.push('requests:read')") && server.includes("rolePermissions.dispatcher.push('requests:read')"), 'request navigation must follow role permissions');
 assert(app.includes("sessionPermissions.has('requests:read') ? repository.list('requests') : Promise.resolve([])"), 'restricted roles must not block other live navigation counts');
