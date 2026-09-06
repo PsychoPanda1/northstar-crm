@@ -50,6 +50,8 @@ jobs:
         run: node scripts/estimate-media-ui-test.mjs
       - name: Run invoice bill-to test
         run: node scripts/invoice-bill-to-test.mjs
+      - name: Run custom report test
+        run: node scripts/custom-report-test.mjs
       - name: Run appointment reply test
         run: node scripts/appointment-reply-test.mjs
       - name: Check integration dispatch UI wiring

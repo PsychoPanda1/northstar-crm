@@ -153,6 +153,14 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async getCustomReport(metrics = []) {
+    if (!this.remote) throw new Error('API required for custom reporting');
+    const query = new URLSearchParams(); (Array.isArray(metrics) ? metrics : []).slice(0, 20).forEach((metric) => query.append('metric', metric));
+    const response = await fetch(`/api/reports/custom${query.toString() ? `?${query}` : ''}`, { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('custom report unavailable');
+    return response.json();
+  }
+
   async getMarketingReport() {
     if (!this.remote) throw new Error('API required for marketing reporting');
     const response = await fetch('/api/reports/marketing', { headers: { authorization: `Bearer ${this.token}` } });

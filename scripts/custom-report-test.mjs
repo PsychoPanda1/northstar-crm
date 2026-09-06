@@ -1,0 +1,31 @@
+import { existsSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { spawn } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+
+const root = fileURLToPath(new URL('../', import.meta.url));
+const port = 8500 + Math.floor(Math.random() * 700);
+const dataFile = join(tmpdir(), `northstar-custom-report-${process.pid}-${Date.now()}.json`);
+const env = { ...process.env, NODE_ENV: 'development', PORT: String(port), NORTHSTAR_DATA_FILE: dataFile, NORTHSTAR_SESSION_FILE: `${dataFile}.sessions` };
+const base = `http://127.0.0.1:${port}`;
+let child;
+const request = async (path, options = {}) => { const response = await fetch(`${base}${path}`, options); return { response, body: await response.json().catch(() => ({})) }; };
+const post = (path, body) => request(path, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+const waitForServer = async () => { for (let attempt = 0; attempt < 200; attempt += 1) { try { if ((await fetch(`${base}/api/health`)).ok) return; } catch {} await new Promise((resolve) => setTimeout(resolve, 50)); } throw new Error('custom report test server did not start'); };
+
+try {
+  writeFileSync(dataFile, '{}');
+  child = spawn(process.execPath, ['server.mjs'], { cwd: root, env, stdio: 'ignore' });
+  await waitForServer();
+  const login = await post('/api/auth/demo-login?service=plumbing', { service: 'plumbing', role: 'owner' });
+  const headers = { authorization: `Bearer ${login.body.token}` };
+  const available = await request('/api/reports/custom', { headers });
+  const selected = await request('/api/reports/custom?metric=Cash%20collected&metric=No-shows', { headers });
+  const unknown = await request('/api/reports/custom?metric=Secret%20metric', { headers });
+  if (!login.response.ok || available.response.status !== 200 || available.body.metrics?.length !== 8 || !available.body.availableMetrics?.includes('Gross margin') || selected.response.status !== 200 || selected.body.metrics?.length !== 2 || selected.body.metrics[0]?.label !== 'No-shows' || selected.body.metrics[1]?.label !== 'Cash collected' || unknown.response.status !== 422) throw new Error('custom report metric selection or validation failed');
+  console.log('Northstar custom report test passed');
+} finally {
+  if (child && !child.killed) child.kill();
+  for (const file of [dataFile, `${dataFile}.sessions`, `${dataFile}.tmp`, `${dataFile}.backup`]) if (existsSync(file)) rmSync(file, { force: true });
+}
