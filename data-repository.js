@@ -103,7 +103,7 @@ class NorthstarDemoRepository {
     return items;
   }
 
-  async listPage(type, { search = '', status = '', priority = '', assignedTo = '', source = '', page = 1, pageSize = 50 } = {}) {
+  async listPage(type, { search = '', status = '', priority = '', assignedTo = '', source = '', includeCompleted = false, page = 1, pageSize = 50 } = {}) {
     if (!this.remote) return { items: [], total: 0, page, pageSize, hasMore: false };
     const query = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
     if (search) query.set('search', search);
@@ -111,6 +111,7 @@ class NorthstarDemoRepository {
     if (priority) query.set('priority', priority);
     if (assignedTo) query.set('assignedTo', assignedTo);
     if (source) query.set('source', source);
+    if (includeCompleted) query.set('includeCompleted', 'true');
     const response = await fetch(`/api/${type}?${query}`, { headers: { authorization: `Bearer ${this.token}` } });
     if (!response.ok) throw new Error('records unavailable');
     return response.json();
@@ -650,6 +651,12 @@ class NorthstarDemoRepository {
     const response = await fetch(`/api/payments/${encodeURIComponent(id)}/refund`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ ...(amount !== undefined ? { amount } : {}), ...(reason ? { reason } : {}) }) });
     if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'payment refund failed');
     return response.json();
+  }
+
+  async listTasks(includeCompleted = false) {
+    if (!this.remote) return (this.state.customTasks || []).filter((item) => includeCompleted || item.status !== 'Completed');
+    const result = await this.listPage('tasks', { includeCompleted, page: 1, pageSize: 200 });
+    return result.items || [];
   }
 
   async createTask(title, detail = '', dueAt = '', idempotencyKey = crypto.randomUUID()) {
