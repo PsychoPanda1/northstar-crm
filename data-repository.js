@@ -1067,9 +1067,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async getCustomerTimeline(id, limit = 100) {
+  async getCustomerTimeline(id, limit = 24, offset = 0) {
     if (!this.remote) throw new Error('API required for customer timelines');
-    const response = await fetch(`/api/customers/${encodeURIComponent(id)}/timeline?limit=${encodeURIComponent(limit)}`, { headers: { authorization: `Bearer ${this.token}` } });
+    const response = await fetch(`/api/customers/${encodeURIComponent(id)}/timeline?limit=${encodeURIComponent(limit)}&offset=${encodeURIComponent(offset)}`, { headers: { authorization: `Bearer ${this.token}` } });
     if (!response.ok) throw new Error('customer timeline unavailable');
     return response.json();
   }
