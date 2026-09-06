@@ -20,7 +20,7 @@ const signedPost = (path, body, signatureSecret = secret) => { const raw = JSON.
 const waitForServer = async () => { for (let attempt = 0; attempt < 200; attempt += 1) { try { if ((await fetch(`${base}/api/health`)).ok) return; } catch {} await new Promise((resolve) => setTimeout(resolve, 50)); } throw new Error('fleet location test server did not start'); };
 
 try {
-  writeFileSync(dataFile, JSON.stringify({ [tenantId]: { vehicles: [{ id: vehicleId, tenantId, name: 'Van 1', makeModel: 'Ford Transit', licensePlate: 'NS-001', status: 'Active' }], fleetLocationEvents: [] } }));
+  writeFileSync(dataFile, JSON.stringify({ [tenantId]: { vehicles: [{ id: vehicleId, tenantId, name: 'Van 1', makeModel: 'Ford Transit', licensePlate: 'NS-001', status: 'Active' }], jobs: [{ id: 'fleet-job-1', tenantId, vehicleId, customer: 'Fleet Customer', service: 'Emergency plumbing', status: 'En route', technician: 'Alex Rivera' }], fleetLocationEvents: [] } }));
   child = spawn(process.execPath, ['server.mjs'], { cwd: root, env, stdio: 'ignore' });
   await waitForServer();
   const login = await post('/api/auth/demo-login?service=plumbing', { service: 'plumbing', role: 'owner' });
@@ -30,9 +30,12 @@ try {
   const delayed = await signedPost('/api/webhooks/fleet/location', { ...location, eventId: 'fleet-event-0', latitude: 31.5, recordedAt: '2019-12-31T14:00:00.000Z' });
   const conflict = await signedPost('/api/webhooks/fleet/location', { ...location, latitude: 33 });
   const locations = await request('/api/vehicles/locations', { headers: { authorization: `Bearer ${login.body.token}` } });
+  const notifications = await request('/api/notifications', { headers: { authorization: `Bearer ${login.body.token}` } });
+  const staleNotification = notifications.body.items?.find((entry) => entry.vehicleId === vehicleId);
+  const marked = staleNotification ? await request(`/api/notifications/${encodeURIComponent(staleNotification.id)}/read`, { method: 'POST', headers: { authorization: `Bearer ${login.body.token}` } }) : { response: { status: 0 }, body: {} };
   const saved = JSON.parse(readFileSync(dataFile, 'utf8'))[tenantId];
   const item = locations.body.items?.find((entry) => entry.vehicleId === vehicleId);
-  if (!login.response.ok || received.response.status !== 200 || received.body.applied !== true || duplicate.response.status !== 200 || !duplicate.body.duplicate || delayed.response.status !== 200 || delayed.body.applied !== false || conflict.response.status !== 409 || locations.response.status !== 200 || item?.location?.latitude !== 32.7765 || item?.location?.speed !== 32.4 || item?.status !== 'stale' || saved.fleetLocationEvents?.length !== 2 || saved.vehicles?.[0]?.locationPings?.length !== 1 || !saved.auditEvents?.some((entry) => entry.action === 'vehicle.location.stale_event_ignored')) throw new Error('fleet telemetry did not validate, deduplicate, retain, or order events safely');
+  if (!login.response.ok || received.response.status !== 200 || received.body.applied !== true || duplicate.response.status !== 200 || !duplicate.body.duplicate || delayed.response.status !== 200 || delayed.body.applied !== false || conflict.response.status !== 409 || locations.response.status !== 200 || item?.location?.latitude !== 32.7765 || item?.location?.speed !== 32.4 || item?.status !== 'stale' || notifications.response.status !== 200 || staleNotification?.title !== 'Fleet location stale' || marked.response.status !== 200 || saved.fleetLocationEvents?.length !== 2 || saved.vehicles?.[0]?.locationPings?.length !== 1 || !saved.auditEvents?.some((entry) => entry.action === 'vehicle.location.stale_event_ignored')) throw new Error('fleet telemetry did not validate, deduplicate, retain, order, or notify safely');
   console.log('Northstar fleet location test passed');
 } finally {
   if (child && !child.killed) child.kill();

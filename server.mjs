@@ -119,6 +119,7 @@ const customerCancellationNotificationsFor = (tenantId) => { const saved = state
 const customerRescheduleNotificationsFor = (tenantId) => { const saved = state.get(tenantId); return (saved.auditEvents || []).filter((item) => item.action === 'appointment.rescheduled' && item.entityType === 'job').map((audit) => { const job = saved.jobs.find((candidate) => candidate.id === audit.entityId); return { id: `N-customer-rescheduled-${audit.id}`, tenantId, title: 'Customer rescheduled appointment', detail: `${job?.service || 'Service appointment'} · ${job?.customer || audit.actor} · ${audit.detail}`, status: 'Action needed', read: saved.notificationReads.includes(`N-customer-rescheduled-${audit.id}`) }; }); };
 const noShowNotificationsFor = (tenantId) => { const saved = state.get(tenantId); return saved.jobs.filter((item) => item.status === 'No-show').map((item) => ({ id: `N-no-show-${item.id}`, tenantId, jobId: item.id, title: 'No-show needs follow-up', detail: `${item.service} · ${item.customer || item.customerId} · ${item.noShowReason || 'Customer unavailable'}`, status: 'Action needed', read: saved.notificationReads.includes(`N-no-show-${item.id}`) })); };
 const assetServiceNotificationsFor = (tenantId) => { const saved = state.get(tenantId); const now = Date.now(); return saved.assets.filter((item) => item.status !== 'Retired' && Number.isFinite(Date.parse(item.nextServiceDue || '')) && Date.parse(item.nextServiceDue) <= now + 30 * 24 * 60 * 60 * 1000).map((item) => { const overdue = Date.parse(item.nextServiceDue) < now; return { id: `N-service-due-${item.id}`, tenantId, title: overdue ? 'Asset service overdue' : 'Asset service due soon', detail: `${item.customer} · ${item.name} · ${item.nextServiceDue}`, status: overdue ? 'Urgent' : 'Follow up', assetId: item.id, read: saved.notificationReads.includes(`N-service-due-${item.id}`) }; }); };
+const fleetTelemetryNotificationsFor = (tenantId) => { const saved = state.get(tenantId); const now = Date.now(); const activeJobsByVehicle = new Map((saved.jobs || []).filter((job) => job.vehicleId && !['Completed', 'Canceled', 'No-show'].includes(job.status)).map((job) => [job.vehicleId, job])); return (saved.vehicles || []).filter((vehicle) => vehicle.status !== 'Retired' && activeJobsByVehicle.has(vehicle.id) && vehicle.locationPing && (!Number.isFinite(Date.parse(vehicle.locationPing.recordedAt)) || now - Date.parse(vehicle.locationPing.recordedAt) > 15 * 60 * 1000)).map((vehicle) => { const job = activeJobsByVehicle.get(vehicle.id); const id = `N-fleet-stale-${vehicle.id}`; return { id, tenantId, title: 'Fleet location stale', detail: `${vehicle.name} · ${job.service || 'Active job'} · last update ${vehicle.locationPing.recordedAt}`, status: 'Urgent', vehicleId: vehicle.id, jobId: job.id, read: saved.notificationReads.includes(id) }; }); };
 const actionableNotificationsFor = (tenantId) => { const saved = state.get(tenantId); return [...notificationsFor(tenantId), ...assetServiceNotificationsFor(tenantId), ...customerCancellationNotificationsFor(tenantId), ...customerRescheduleNotificationsFor(tenantId), ...noShowNotificationsFor(tenantId)].filter((item) => { if (item.title === 'New lead needs follow-up') { const lead = saved.leads.find((candidate) => `N-${candidate.id}` === item.id); if (['Converted', 'Lost'].includes(lead?.status)) return false; } if (item.title === 'Customer message needs response') { const message = saved.messages.find((candidate) => `N-${candidate.id}` === item.id); if (message && saved.messages.some((candidate) => candidate.replyTo === message.id)) return false; } return true; }); };
 const blankState = () => ({ completedTasks: [], lastAction: null, leads: [], jobs: [], estimates: [], estimateRevisions: [], estimateChangeNotifications: [], invoices: [], payments: [], paymentIntents: [], paymentEvents: [], paymentSchedules: [], financingApplications: [], financingEvents: [], teamMembers: [], commissionRates: {}, teamTimeOff: [], vehicles: [], plans: [], planBillingCycles: [], activities: [], customers: [], assets: [], locations: [], reviews: [], requests: [], materials: [], inventoryLocations: [], inventoryTransactions: [], purchaseOrders: [], purchaseApprovalRequests: [], laborEntries: [], messages: [], messageEvents: [], calls: [], callEvents: [], catalogItems: [], auditEvents: [], notificationReads: [], routeOrderRequests: [], capacityTargets: [], automationRuns: [] });
 const readPersistedJson = (file, fallback) => { const candidates = [file, `${file}.tmp`].filter((candidate) => existsSync(candidate)).sort((a, b) => { try { return statSync(b).mtimeMs - statSync(a).mtimeMs; } catch { return 0; } }); for (const candidate of candidates) { try { return JSON.parse(readFileSync(candidate, 'utf8')); } catch {} } return fallback; };
@@ -489,6 +490,46 @@ const server = createServer(async (req, res) => {
     applySecurityHeaders(res);
     const requestUrl = new URL(req.url, `http://${req.headers.host}`);
     const pathname = requestUrl.pathname;
+    if (pathname === '/api/notifications' && req.method === 'GET') {
+      const claims = authenticate(req);
+      if (!claims) return json(res, 401, { error: 'unauthorized' });
+      if (!['owner', 'dispatcher', 'accountant'].includes(claims.role)) return json(res, 403, { error: 'forbidden' });
+      const fleetNotifications = fleetTelemetryNotificationsFor(claims.tenantId);
+      const query = String(requestUrl.searchParams.get('search') || '').trim().toLowerCase();
+      const allItems = [...actionableNotificationsFor(claims.tenantId), ...fleetNotifications];
+      const items = query ? allItems.filter((item) => Object.values(item).some((value) => String(value || '').toLowerCase().includes(query))) : allItems;
+      const page = Number(requestUrl.searchParams.get('page') || 1);
+      const pageSize = Number(requestUrl.searchParams.get('pageSize') || 200);
+      if (!Number.isInteger(page) || page < 1 || page > 100000 || !Number.isInteger(pageSize) || pageSize < 1 || pageSize > 200) return json(res, 422, { error: 'valid_page_and_page_size_required' });
+      const start = (page - 1) * pageSize;
+      return json(res, 200, { items: items.slice(start, start + pageSize), total: items.length, page, pageSize, hasMore: start + pageSize < items.length, tenantId: claims.tenantId });
+    }
+    const fleetNotificationReadMatch = pathname.match(/^\/api\/notifications\/(N-fleet-stale-[^/]+)\/read$/);
+    if (fleetNotificationReadMatch && req.method === 'POST') {
+      const claims = authenticate(req);
+      if (!claims) return json(res, 401, { error: 'unauthorized' });
+      if (!['owner', 'dispatcher', 'accountant'].includes(claims.role)) return json(res, 403, { error: 'forbidden' });
+      const fleetNotifications = fleetTelemetryNotificationsFor(claims.tenantId);
+      const id = fleetNotificationReadMatch[1];
+      if (!fleetNotifications.some((item) => item.id === id)) return json(res, 404, { error: 'notification_not_found' });
+      const saved = state.get(claims.tenantId);
+      if (!saved.notificationReads.includes(id)) saved.notificationReads.push(id);
+      persist();
+      return json(res, 200, { id, read: true });
+    }
+    if (pathname === '/api/notifications' && req.method === 'POST') {
+      const claims = authenticate(req);
+      if (!claims) return json(res, 401, { error: 'unauthorized' });
+      if (!['owner', 'dispatcher', 'accountant'].includes(claims.role)) return json(res, 403, { error: 'forbidden' });
+      const body = await readBody(req);
+      const id = String(body.id || '').trim();
+      const notification = fleetTelemetryNotificationsFor(claims.tenantId).find((item) => item.id === id);
+      if (!notification) return json(res, 404, { error: 'notification_not_found' });
+      const saved = state.get(claims.tenantId);
+      if (!saved.notificationReads.includes(id)) saved.notificationReads.push(id);
+      persist();
+      return json(res, 200, { id, read: true });
+    }
     if (pathname === '/api/vehicles/locations' && req.method === 'GET') {
       const claims = authenticate(req);
       if (!claims) return json(res, 401, { error: 'unauthorized' });
