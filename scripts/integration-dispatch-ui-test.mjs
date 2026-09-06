@@ -68,6 +68,8 @@ const required = [
   ,"Jobs: 'dispatch'"
   ,'openGlobalSearch'
   ,'event.key === \'/\''
+  ,'Recording available'
+  ,'data-call-recording'
 ];
 for (const snippet of required) {
   if (!source.includes(snippet)) throw new Error(`integration dispatch UI wiring missing: ${snippet}`);
