@@ -1000,6 +1000,7 @@ if (pathname === '/api/invoices' && req.method === 'POST') { const claims = auth
     return json(res, 405, { error: 'method_not_allowed' });
   } catch (error) { console.error(JSON.stringify({ requestId: res.getHeader('x-request-id') || null, error: String(error?.message || error) })); return json(res, 400, { error: 'bad_request' }); }
 });
+if (AUTOMATION_INTERVAL_MS) { try { runScheduledAutomations(); } catch (error) { console.error(JSON.stringify({ automation: 'scheduled-startup', error: String(error?.message || error) })); } }
 const automationTimer = AUTOMATION_INTERVAL_MS ? setInterval(() => { try { runScheduledAutomations(); } catch (error) { console.error(JSON.stringify({ automation: 'scheduled', error: String(error?.message || error) })); } }, AUTOMATION_INTERVAL_MS) : null;
 automationTimer?.unref();
 server.listen(PORT, () => console.log(`Northstar CRM running at http://localhost:${PORT}`));
