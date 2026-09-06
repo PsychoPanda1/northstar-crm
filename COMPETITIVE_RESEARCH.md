@@ -32,3 +32,16 @@ Northstar should compete on clarity and speed for multi-service operators: one o
 The next product advantage should be explainable automation: detect urgency, suggest the next action, and preserve an auditable human approval point for consequential changes. Provider-backed AI or telephony must remain optional and server-side; the local CRM should never imply that a queued or simulated action was completed externally.
 
 This benchmark is a product-design reference, not an endorsement of third-party pricing or an instruction to depend on any vendor.
+
+## September 2026 parity verification
+
+The current official benchmark still groups the category around one connected revenue cycle: lead generation and booking, dispatch, technician/mobile execution, pricebook and estimates, customer communication, payments, fleet, inventory, and reporting. ServiceTitan also calls out service agreements, equipment history, multi-party billing, forms, timesheets, two-way SMS, and real-time technician tracking; Jobber and Housecall Pro emphasize online booking, customer portals, recurring work, routing, automated reminders, estimates, invoicing, and payment collection.
+
+Northstar has local implementations for those workflows, including tenant-scoped landing-page intake, customer and property history, recurring plans, multi-location billing, forms, timesheets, two-way message history, technician tracking, portals, routing, estimates, invoices, payments, inventory, and reporting. The remaining parity boundary is operational activation: provider-backed telephony and recording retention, live messaging/payment/financing/accounting/GPS connectors, managed storage and identity, and verified production monitoring and backups.
+
+Reference pages reviewed:
+
+- [ServiceTitan features](https://www.servicetitan.com/features)
+- [ServiceTitan dispatch software](https://www.servicetitan.com/features/dispatch-software)
+- [Jobber field-service management](https://www.getjobber.com/features/field-service-management-software/)
+- [Housecall Pro features](https://www.housecallpro.com/features/)
