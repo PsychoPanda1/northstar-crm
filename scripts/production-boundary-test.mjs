@@ -22,6 +22,7 @@ const env = {
   NORTHSTAR_OWNER_EMAIL: 'owner@example.test',
   NORTHSTAR_OWNER_PASSWORD_DIGEST: createHmac('sha256', secret).update(password).digest('hex'),
   NORTHSTAR_OWNER_TENANT_ID: 'johnson-service-co',
+  NORTHSTAR_REQUEST_RESPONSE_SLA_HOURS: '48',
   NORTHSTAR_CATALOG_JSON: JSON.stringify([{ tenantId: 'johnson-service-co', id: 'configured-inspection', name: 'Configured inspection', description: 'A configured production service', priceFrom: '$199', category: 'Inspection', durationMinutes: 90, taxable: true }]),
   NORTHSTAR_PAYMENT_WEBHOOK_SECRET: 'payment-secret-32-characters-for-test',
   NORTHSTAR_MESSAGE_WEBHOOK_SECRET: 'message-secret-32-characters-for-test',
@@ -50,7 +51,7 @@ try {
     try { ready = await getJson('/api/ready'); } catch {}
     if (!ready?.response?.ok) await new Promise((resolve) => setTimeout(resolve, 100));
   }
-  if (!ready?.response?.ok || ready.body.checks?.configuration !== true) throw new Error('production server did not become ready with valid configuration');
+  if (!ready?.response?.ok || ready.body.checks?.configuration !== true || ready.body.checks?.requestResponseSlaConfiguration !== true) throw new Error('production server did not become ready with valid configuration');
 
   const login = await getJson('/api/auth/login', {
     method: 'POST',
