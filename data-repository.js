@@ -191,6 +191,13 @@ class NorthstarDemoRepository {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
+  async validateTenantSnapshot(snapshot) {
+    if (!this.remote) throw new Error('API required for snapshot validation');
+    const response = await fetch('/api/import/tenant-snapshot/validate', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify(snapshot) });
+    if (!response.ok) throw new Error('snapshot validation unavailable');
+    return response.json();
+  }
+
   async markNotificationRead(id) {
     if (!this.remote) throw new Error('API required for notification state');
     const response = await fetch(`/api/notifications/${encodeURIComponent(id)}/read`, { method: 'POST', headers: { authorization: `Bearer ${this.token}` } });
