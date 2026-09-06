@@ -1418,7 +1418,7 @@ class NorthstarDemoRepository {
 
   async createJobInvoice(jobId, amount, due = '30 days', lineItems = [], idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for job invoice creation');
-    const response = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/invoice`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ amount, due, ...(lineItems.length ? { lineItems } : {}) }) });
+    const response = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/invoice`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ ...(amount !== undefined && amount !== null ? { amount } : {}), due, ...(lineItems.length ? { lineItems } : {}) }) });
     if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'job invoice creation failed');
     return response.json();
   }
