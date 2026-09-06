@@ -125,6 +125,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Reports summarize estimate close rate, memberships sold, no-shows, tracked field hours, material spend, logged labor cost, and gross margin, with CSV export for owner handoff
 - Labor entries feed customer timelines and job-cost reporting
 - Structured SMS/email message queue with explicit provider-pending status, server-side provider dispatch, and timeline capture
+- Tenant-scoped lead-provider dispatch preserves landing-page contact and campaign attribution context, uses stable idempotency keys, and records delivery state for marketing or call-center handoff
 - Optional server-side reminder worker runs appointment, estimate, receivables, and renewal automations on a bounded cadence with deduplication, opt-out enforcement, and audit evidence
 - When providers are configured, the worker also submits queued messages and payment intents automatically; invoice settlement still requires a signed provider webhook
 - The same opt-in worker can create tenant-local recurring-plan invoices after `NORTHSTAR_PLAN_BILLING_DAY` (1–28), with durable period guards; leave it at `0` for manual billing
@@ -241,6 +242,8 @@ The image runs as the unprivileged `node` user in production mode, stores transa
 Set `NORTHSTAR_REQUIRE_LIVE_PROVIDERS=true` for a production deployment that must not become ready until both the server-side message provider and payment provider URLs are configured. Leave it `false` only for an intentional preview or a deployment that does not yet accept provider-backed communications or payments; `/api/integrations/health` still reports each provider's live configuration status to authenticated staff.
 
 Set `NORTHSTAR_PUBLIC_URL` to the deployed HTTPS origin so provider-delivered review, estimate, estimate-PDF, and payment links are clickable outside the CRM host. Estimate delivery keeps relative `estimateUrl` and `estimatePdfUrl` fields for browser routing and includes resolved `publicEstimateUrl` and `publicEstimatePdfUrl` fields for outbound providers.
+
+Set `NORTHSTAR_LEAD_PROVIDER_URL` and optional `NORTHSTAR_LEAD_PROVIDER_API_KEY` to enable the authenticated owner/dispatcher lead handoff at `POST /api/integrations/leads/dispatch`. The provider receives a stable `leadId` idempotency key and attribution context; delivery remains explicitly `Delivered` or `Failed` in the tenant record.
 
 Set `NORTHSTAR_MESSAGE_RETRY_LIMIT` from `0` to `5` to enable bounded automatic retries for transient message-provider timeouts and 408/409/425/429/5xx responses. Retries use a one-minute, five-minute, fifteen-minute, then thirty-minute backoff; missing recipients and other permanent 4xx failures remain visible as `Failed`, and each attempt uses the stable message ID as the provider idempotency key.
 
