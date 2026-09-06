@@ -128,6 +128,7 @@ Deployments may extend the built-in service tenants with `NORTHSTAR_TENANTS_JSON
 - Overdue invoice alerts retain direct invoice navigation and can queue the existing deduplicated SMS/email reminder workflow from the owner notification drawer
 - Open customer requests older than 24 hours appear as urgent `Customer request overdue` items with elapsed open days; newer requests remain standard response items
 - Customer request alerts retain direct request navigation and can open the existing owner/dispatcher reply workflow from the notification drawer
+- Customer request alerts also expose the existing owner/dispatcher resolution workflow, preserving its required note, idempotency, activity, and audit behavior
 - Uncontacted leads with `receivedAt` older than `NORTHSTAR_LEAD_RESPONSE_SLA_HOURS` (default 2, valid 1–72) appear as `Lead response SLA breached` with urgent status; moving a lead out of `New` records `firstResponseAt`, and invalid production SLA configuration fails readiness
 - `POST /api/notifications/:id/read` → acknowledge a currently active tenant notification without deleting its source record
 - Notification source actions remain available after acknowledgment so owners can reopen the linked lead, job, invoice, message, or other source record from history

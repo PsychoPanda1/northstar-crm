@@ -75,6 +75,7 @@ assert(server.includes('ESTIMATE_FOLLOWUP_DAYS') && server.includes('estimateFol
 assert(server.includes('Invoice overdue') && server.includes('days}d past due'), 'overdue invoice alert workflow is not wired');
 assert(server.includes('Customer request overdue') && server.includes('days}d open'), 'overdue customer request alert workflow is not wired');
 assert(app.includes('data-notification-open="requests"') && app.includes('data-request-action="reply"') && app.includes('repository.replyToRequest'), 'request alerts do not expose a direct reply action');
+assert(app.includes('data-request-action="resolve"') && app.includes('repository.resolveRequest'), 'request alerts do not expose a direct resolve action');
 assert(app.includes('data-invoice-reminder-action="remind"') && app.includes('data-notification-open="invoices"') && app.includes('repository.remindInvoice'), 'invoice alerts do not expose a direct reminder action');
 assert(app.includes('data-estimate-reminder-action="remind"') && app.includes('data-notification-open="estimates"') && app.includes('repository.remindEstimate'), 'estimate alerts do not expose a direct follow-up action');
 assert(app.includes('data-lead-quick-contact') && app.includes("repository.updateLeadStatus(quickContactButton.dataset.leadQuickContact, 'Contacted'"), 'lead notifications do not expose a direct contact action');
