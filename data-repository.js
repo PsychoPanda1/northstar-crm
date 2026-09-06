@@ -914,6 +914,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async listVehicleLocations() {
+    if (!this.remote) throw new Error('API required for fleet locations');
+    const response = await fetch('/api/vehicles/locations', { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('vehicle locations unavailable');
+    return response.json();
+  }
+
   async createVehicle(name, makeModel, licensePlate, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for fleet');
     const response = await fetch('/api/vehicles', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ name, makeModel, licensePlate }) });

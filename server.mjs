@@ -14,6 +14,7 @@ const PAYMENT_WEBHOOK_SECRET = process.env.NORTHSTAR_PAYMENT_WEBHOOK_SECRET || `
 const FINANCING_WEBHOOK_SECRET = process.env.NORTHSTAR_FINANCING_WEBHOOK_SECRET || `${SECRET}-financing-webhook`;
 const MESSAGE_WEBHOOK_SECRET = process.env.NORTHSTAR_MESSAGE_WEBHOOK_SECRET || `${SECRET}-message-webhook`;
 const CALL_WEBHOOK_SECRET = process.env.NORTHSTAR_CALL_WEBHOOK_SECRET || `${SECRET}-call-webhook`;
+const FLEET_WEBHOOK_SECRET = process.env.NORTHSTAR_FLEET_WEBHOOK_SECRET || (process.env.NODE_ENV === 'production' ? '' : `${SECRET}-fleet-webhook`);
 const PUBLIC_URL = String(process.env.NORTHSTAR_PUBLIC_URL || '').trim().replace(/\/$/, '');
 const MESSAGE_PROVIDER_URL = String(process.env.NORTHSTAR_MESSAGE_PROVIDER_URL || '').trim();
 const MESSAGE_PROVIDER_API_KEY = String(process.env.NORTHSTAR_MESSAGE_PROVIDER_API_KEY || '').trim();
@@ -422,7 +423,7 @@ const dispatch = [...(ALLOW_DEMO_LOGIN ? [{ id: 'JOB-2194', customer: 'Michael T
   const requests = state.get(tenantId).requests;
   const materials = state.get(tenantId).materials.map((item) => ({ ...item, status: item.onHand <= item.reorderPoint ? 'Low stock' : 'In stock', stockValue: `$${(item.onHand * item.unitCost).toFixed(2)}` }));
   const purchaseOrders = state.get(tenantId).purchaseOrders.map((item) => ({ ...item, status: item.reconciliationStatus || (item.approvalStatus === 'Pending' ? 'Pending approval' : item.status), total: `$${(item.quantity * item.unitCost).toFixed(2)}` }));
-  const vehicles = (state.get(tenantId).vehicles || []).map((item) => ({ ...item, detail: `${item.makeModel} · ${item.licensePlate}`, status: item.status || 'Active' }));
+  const vehicles = (state.get(tenantId).vehicles || []).map((item) => { const ping = item.locationPing; const recordedAt = Date.parse(ping?.recordedAt || ''); const locationStatus = Number.isFinite(recordedAt) && Date.now() - recordedAt <= 15 * 60 * 1000 ? 'Live' : ping ? 'Stale' : 'No signal'; return { ...item, detail: `${item.makeModel} · ${item.licensePlate}`, status: item.status || 'Active', locationStatus, latestLocation: ping ? { latitude: ping.latitude, longitude: ping.longitude, accuracy: ping.accuracy, speed: ping.speed ?? null, heading: ping.heading ?? null, recordedAt: ping.recordedAt } : null }; });
   const inventoryTransactions = state.get(tenantId).inventoryTransactions.map((item) => { const material = state.get(tenantId).materials.find((candidate) => candidate.id === item.materialId); const job = item.jobId ? state.get(tenantId).jobs.find((candidate) => candidate.id === item.jobId) : null; const locationName = item.locationId ? inventoryLocationsFor(tenantId).find((location) => location.id === item.locationId)?.name : null; return { ...item, ...(job?.customerId ? { customerId: job.customerId } : {}), material: material?.name || item.materialId, job: job ? `${job.customer} · ${job.service}` : item.purchaseOrderId ? `Purchase order ${item.purchaseOrderId}` : 'Inventory receipt', detail: `${item.type}: ${item.quantity > 0 ? '+' : ''}${item.quantity} ${material?.unit || 'units'}${locationName ? ` · ${locationName}` : ''}`, status: item.type }; });
   const laborEntries = state.get(tenantId).laborEntries;
   laborEntries.forEach((entry) => {
@@ -488,6 +489,56 @@ const server = createServer(async (req, res) => {
     applySecurityHeaders(res);
     const requestUrl = new URL(req.url, `http://${req.headers.host}`);
     const pathname = requestUrl.pathname;
+    if (pathname === '/api/vehicles/locations' && req.method === 'GET') {
+      const claims = authenticate(req);
+      if (!claims) return json(res, 401, { error: 'unauthorized' });
+      if (!['owner', 'dispatcher', 'accountant'].includes(claims.role)) return json(res, 403, { error: 'forbidden' });
+      const now = Date.now();
+      const items = (state.get(claims.tenantId).vehicles || []).map((vehicle) => {
+        const ping = vehicle.locationPing;
+        const recordedAt = Date.parse(ping?.recordedAt || '');
+        const status = vehicle.status === 'Retired' ? 'retired' : Number.isFinite(recordedAt) && now - recordedAt <= 15 * 60 * 1000 ? 'live' : ping ? 'stale' : 'unavailable';
+        return { vehicleId: vehicle.id, name: vehicle.name, makeModel: vehicle.makeModel, licensePlate: vehicle.licensePlate, vehicleStatus: vehicle.status || 'Active', status, location: ping ? { latitude: ping.latitude, longitude: ping.longitude, accuracy: ping.accuracy, speed: ping.speed ?? null, heading: ping.heading ?? null, recordedAt: ping.recordedAt } : null };
+      });
+      return json(res, 200, { items, generatedAt: new Date().toISOString() });
+    }
+    if (pathname === '/api/webhooks/fleet/location' && req.method === 'POST') {
+      if (!FLEET_WEBHOOK_SECRET) return json(res, 503, { error: 'fleet_webhook_secret_not_configured' });
+      const raw = await readRawBody(req);
+      const supplied = String(req.headers['x-northstar-signature'] || '');
+      const expected = createHmac('sha256', FLEET_WEBHOOK_SECRET).update(raw).digest('hex');
+      if (supplied.length !== expected.length || !timingSafeEqual(Buffer.from(supplied), Buffer.from(expected))) return json(res, 401, { error: 'invalid_webhook_signature' });
+      let body;
+      try { body = JSON.parse(raw || '{}'); } catch { return json(res, 400, { error: 'invalid_json' }); }
+      const tenantId = String(body.tenantId || '').trim();
+      const vehicleId = String(body.vehicleId || '').trim();
+      const eventId = String(body.eventId || '').trim().slice(0, 120);
+      const latitude = Number(body.latitude);
+      const longitude = Number(body.longitude);
+      const accuracy = Number(body.accuracy ?? 0);
+      const speed = body.speed === undefined || body.speed === null || body.speed === '' ? null : Number(body.speed);
+      const heading = body.heading === undefined || body.heading === null || body.heading === '' ? null : Number(body.heading);
+      const parsedRecordedAt = body.recordedAt ? Date.parse(String(body.recordedAt)) : Date.now();
+      const recordedAt = Number.isFinite(parsedRecordedAt) ? new Date(parsedRecordedAt).toISOString() : '';
+      const saved = state.get(tenantId);
+      const vehicle = saved?.vehicles?.find((item) => item.id === vehicleId);
+      if (!saved || !vehicle || !eventId) return json(res, 422, { error: 'tenant_vehicle_and_event_required' });
+      if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90 || !Number.isFinite(longitude) || longitude < -180 || longitude > 180 || !Number.isFinite(accuracy) || accuracy < 0 || accuracy > 10000 || (speed !== null && (!Number.isFinite(speed) || speed < 0 || speed > 300)) || (heading !== null && (!Number.isFinite(heading) || heading < 0 || heading > 360)) || !Number.isFinite(Date.parse(recordedAt))) return json(res, 422, { error: 'valid_vehicle_location_required' });
+      saved.fleetLocationEvents = saved.fleetLocationEvents || [];
+      const replay = webhookReplayFor(saved, 'fleetLocationEvents', eventId, body);
+      if (replay?.conflict) return json(res, 409, { error: 'webhook_event_reused' });
+      if (replay?.duplicate) return json(res, 200, { duplicate: true, eventId });
+      const location = { latitude: Number(latitude.toFixed(6)), longitude: Number(longitude.toFixed(6)), accuracy: Number(accuracy.toFixed(1)), ...(speed === null ? {} : { speed: Number(speed.toFixed(1)) }), ...(heading === null ? {} : { heading: Number(heading.toFixed(1)) }), recordedAt, provider: String(body.provider || 'fleet-provider').trim().slice(0, 80) };
+      const event = { eventId, tenantId, vehicleId, location, receivedAt: new Date().toISOString(), payloadFingerprint: payloadFingerprint(body) };
+      saved.fleetLocationEvents.unshift(event);
+      saved.fleetLocationEvents = saved.fleetLocationEvents.slice(0, 500);
+      vehicle.locationPing = location;
+      vehicle.locationPings = [...(Array.isArray(vehicle.locationPings) ? vehicle.locationPings : []), location].slice(-100);
+      vehicle.locationUpdatedAt = location.recordedAt;
+      recordAudit(saved, { name: 'fleet provider', role: 'system' }, 'vehicle.location.updated', 'vehicle', vehicle.id, `${vehicle.name} · ${location.latitude},${location.longitude}`);
+      persist();
+      return json(res, 200, { eventId, vehicleId, recordedAt, duplicate: false });
+    }
     const inventoryAdjustMatch = pathname.match(/^\/api\/materials\/([^/]+)\/adjust$/);
     if (inventoryAdjustMatch && req.method === 'POST') {
       const claims = authenticate(req);
