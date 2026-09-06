@@ -255,7 +255,7 @@ System events such as web-form lead capture, customer estimate approval, and rec
 - `POST /api/public/customer-portal/financing-intent?token=...` → create a customer-scoped, idempotent financing request against a customer-owned draft/sent estimate or open invoice for a bounded term (6–60 months); the response is explicitly `Pending provider` and does not represent a credit decision, loan offer, or settlement
 - `POST /api/webhooks/financing` → accept an HMAC-signed, idempotent provider status event (`approved`, `declined`, `canceled`, `funded`, or `failed`) and update the financing request with bounded provider reference/reason fields; changed payloads under an accepted event ID return `409 webhook_event_reused`; it never settles an invoice automatically
 - `POST /api/webhooks/payments` → accept an HMAC-signed, idempotent provider event and reconcile a succeeded intent into the invoice and payment ledger while preserving its durable `customerId`; changed payloads under an accepted event ID return `409 webhook_event_reused`; set `NORTHSTAR_PAYMENT_WEBHOOK_SECRET` in production
-- `POST /api/payment-intents/:id/retry` → owner/accountant-only retry of a failed provider intent while enforcing the current invoice balance, preserving invoice/customer/job context, linking the new intent through `retryOf`, and accepting an `Idempotency-Key`
+- `POST /api/payment-intents/:id/retry` → owner/accountant-only retry of a failed provider intent while enforcing the current invoice or installment balance, preserving invoice/customer/job/installment context, linking the new intent through `retryOf`, and accepting an `Idempotency-Key`
 
 ## Data model starting point
 
