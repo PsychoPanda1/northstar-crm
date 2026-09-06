@@ -235,7 +235,7 @@ class NorthstarDemoRepository {
 
   async convertRequest(id, time, service, appointment = {}, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for request conversion');
-    const response = await fetch(`/api/requests/${encodeURIComponent(id)}/convert`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ time, service, ...(appointment.startsAt ? { startsAt: appointment.startsAt } : {}), ...(appointment.endsAt ? { endsAt: appointment.endsAt } : {}) }) });
+    const response = await fetch(`/api/requests/${encodeURIComponent(id)}/convert`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ time, service, ...(appointment.slotId ? { slotId: appointment.slotId } : {}), ...(appointment.locationId ? { locationId: appointment.locationId } : {}), ...(appointment.startsAt ? { startsAt: appointment.startsAt } : {}), ...(appointment.endsAt ? { endsAt: appointment.endsAt } : {}) }) });
     if (!response.ok) throw new Error('request conversion failed');
     return response.json();
   }

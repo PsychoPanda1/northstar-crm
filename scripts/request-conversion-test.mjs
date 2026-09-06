@@ -22,13 +22,16 @@ try {
   const login = await request('/api/auth/demo-login?service=plumbing', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ service: 'plumbing', role: 'owner' }) });
   if (!login.response.ok) throw new Error('request conversion login failed');
   const headers = { authorization: `Bearer ${login.body.token}`, 'content-type': 'application/json' };
+  const availability = await request('/api/public/availability?service=plumbing&days=14');
+  const slot = availability.body.slotOptions?.[0];
+  if (!slot) throw new Error('request conversion test has no available slot');
   const key = 'request-conversion-1';
-  const first = await request('/api/requests/REQ-convert-1/convert', { method: 'POST', headers: { ...headers, 'idempotency-key': key }, body: JSON.stringify({ time: 'Thursday 10:00 AM', service: 'Drain cleaning', startsAt: startsAt.toISOString(), endsAt: endsAt.toISOString() }) });
-  const duplicate = await request('/api/requests/REQ-convert-1/convert', { method: 'POST', headers: { ...headers, 'idempotency-key': key }, body: JSON.stringify({ time: 'Thursday 10:00 AM', service: 'Drain cleaning', startsAt: startsAt.toISOString(), endsAt: endsAt.toISOString() }) });
+  const first = await request('/api/requests/REQ-convert-1/convert', { method: 'POST', headers: { ...headers, 'idempotency-key': key }, body: JSON.stringify({ time: slot.label, slotId: slot.id, service: 'Drain cleaning', startsAt: slot.startsAt, endsAt: slot.endsAt }) });
+  const duplicate = await request('/api/requests/REQ-convert-1/convert', { method: 'POST', headers: { ...headers, 'idempotency-key': key }, body: JSON.stringify({ time: slot.label, slotId: slot.id, service: 'Drain cleaning', startsAt: slot.startsAt, endsAt: slot.endsAt }) });
   const conflict = await request('/api/requests/REQ-convert-1/convert', { method: 'POST', headers: { ...headers, 'idempotency-key': key }, body: JSON.stringify({ time: 'Thursday 10:00 AM', service: 'Electrical repair' }) });
   const dispatch = await request('/api/dispatch', { headers });
   const job = first.body.job;
-  if (first.response.status !== 201 || !job?.requestId || job.customerId !== 'customer-convert-1' || job.priority !== 'High' || first.body.request?.status !== 'In progress' || duplicate.response.status !== 200 || !duplicate.body.duplicate || duplicate.body.job?.id !== job.id || conflict.response.status !== 409 || conflict.body.error !== 'idempotency_key_reused' || !dispatch.body.items?.some((item) => item.id === job.id)) throw new Error('request conversion behavior failed');
+  if (availability.response.status !== 200 || !slot || first.response.status !== 201 || !job?.requestId || job.customerId !== 'customer-convert-1' || job.priority !== 'High' || job.slotId !== slot.id || job.startsAt !== slot.startsAt || first.body.request?.status !== 'In progress' || duplicate.response.status !== 200 || !duplicate.body.duplicate || duplicate.body.job?.id !== job.id || conflict.response.status !== 409 || conflict.body.error !== 'idempotency_key_reused' || !dispatch.body.items?.some((item) => item.id === job.id)) throw new Error('request conversion behavior failed');
   console.log('Northstar request conversion test passed');
 } finally {
   if (child && !child.killed) child.kill();
