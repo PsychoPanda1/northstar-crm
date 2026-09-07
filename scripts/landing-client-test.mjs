@@ -21,7 +21,7 @@ const ownerUrl = await client.ownerPortalUrl();
 if (ownerUrl !== 'https://crm.example.test/portal?service=plumbing') throw new Error(`owner URL resolution failed: ${ownerUrl}`);
 const contact = await client.publicContact();
 if (contact.phone !== '(843) 555-0100' || contact.email !== 'hello@example.test' || contact.serviceArea !== 'Charleston area') throw new Error('public contact helper failed');
-if (await client.endpoint('technicianEndpoints', 'complete') !== '/api/public/technician-job/complete' || !(await client.capability('technicianFieldOperations'))) throw new Error('manifest endpoint and capability helpers failed');
+if (await client.endpoint('technicianEndpoints', 'complete') !== '/api/public/technician-job/complete' || await client.endpointUrl('technicianEndpoints', 'complete', { token: 'signed-field-token', params: { jobId: 'job-1' } }) !== 'https://crm.example.test/api/public/technician-job/complete?token=signed-field-token&jobId=job-1' || !(await client.capability('technicianFieldOperations'))) throw new Error('manifest endpoint and capability helpers failed');
 await client.ownerPasswordLogin('owner@example.test', 'owner-password');
 if (calls[1].url !== 'https://crm.example.test/api/auth/login?service=plumbing' || calls[1].options.method !== 'POST' || JSON.parse(calls[1].options.body).email !== 'owner@example.test' || JSON.parse(calls[1].options.body).service !== 'plumbing') throw new Error('landing password owner login helper failed');
 await client.ownerOidcLogin('signed-id-token');

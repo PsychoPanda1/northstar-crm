@@ -58,6 +58,17 @@
       return endpoint;
     }
 
+    async endpointUrl(scope, name, { token = '', params = {} } = {}) {
+      const endpoint = await this.endpoint(scope, name);
+      const url = new URL(this.url(endpoint));
+      if (token) {
+        if (typeof token !== 'string' || token.length > 20_000) throw new Error('signed_endpoint_token_invalid');
+        url.searchParams.set('token', token);
+      }
+      for (const [key, value] of Object.entries(params || {})) if (value !== undefined && value !== null && value !== '') url.searchParams.set(key, String(value));
+      return url.toString();
+    }
+
     async capability(name) {
       const integration = await this.integration();
       return integration.capabilities?.[name] === true;
