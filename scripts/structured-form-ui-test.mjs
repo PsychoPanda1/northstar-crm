@@ -15,6 +15,8 @@ assert.match(owner, /structured-form-editor/);
 assert.match(owner, /data-form-builder/);
 assert.match(owner, /data-add-form/);
 assert.match(owner, /data-add-field/);
+assert.match(owner, /data-preview-form/);
+assert.match(owner, /TECHNICIAN PREVIEW/);
 assert.match(owner, /stopImmediatePropagation/);
 assert.match(owner, /idempotency-key/);
 assert.match(index, /structured-form-owner\.js/);

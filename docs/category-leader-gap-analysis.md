@@ -22,7 +22,7 @@ The implementation now includes:
 3. A technician renderer for text, number, date, select, and boolean fields. Conditional fields should be evaluated deterministically on the client for usability and again on the server for trust.
 4. Server validation that rejects missing visible required fields, invalid select values, invalid booleans/numbers, oversized answers, unknown field ids, and answers submitted for a form that is not required on the job.
 5. Backward compatibility: the existing `formName`, `result`, `notes`, and `customerSignature` payload remains valid for legacy forms with no field definition.
-6. Owner setup and pricebook UI for editing definitions through a bounded visual builder for form names, field types, select options, required fields, and conditional visibility; an advanced JSON editor remains available for migrations. Contract tests prove tenant isolation, snapshot behavior, conditional visibility, configured-catalog booking, and completion blocking. The structured-form runtime suite is part of the main CI contract.
+6. Owner setup and pricebook UI for editing and previewing definitions through a bounded visual builder for form names, field types, select options, required fields, and conditional visibility; an advanced JSON editor remains available for migrations. Contract tests prove tenant isolation, snapshot behavior, conditional visibility, configured-catalog booking, and completion blocking. The structured-form runtime suite is part of the main CI contract.
 
 ## Next parity milestone: production activation
 
