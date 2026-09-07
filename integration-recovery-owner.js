@@ -8,6 +8,7 @@
     const roles = {
       lead: ['owner', 'dispatcher'],
       message: ['owner', 'dispatcher'],
+      payment: ['owner', 'accountant'],
       inventory: ['owner', 'dispatcher', 'accountant'],
       accounting: ['owner', 'accountant'],
       document: ['owner', 'dispatcher', 'accountant'],
@@ -22,7 +23,7 @@
       setTimeout(() => toast.classList.remove('show'), 2800);
     };
     const escape = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
-    const loadFailed = async () => {
+    const loadFailed = async (health) => {
       const [leads, messages, inventory, accounting, documents, payroll] = await Promise.all([
         repository.list?.('leads').catch(() => []) || [],
         repository.list?.('messages').catch(() => []) || [],
@@ -34,6 +35,7 @@
       return [
         ...leads.filter((item) => item.providerDeliveryState === 'Failed').map((item) => ({ kind: 'lead', id: item.id, label: item.name || item.id, detail: item.providerError || 'Lead provider rejected delivery', retry: () => repository.retryLeadProvider(item.id) })),
         ...messages.filter((item) => item.status === 'Failed').map((item) => ({ kind: 'message', id: item.id, label: item.customer || item.id, detail: item.providerError || `${item.channel || 'Message'} delivery failed`, retry: () => repository.retryMessage(item.id) })),
+        ...(health?.payments?.failedItems || []).map((item) => ({ kind: 'payment', id: item.id, label: `${item.customer} · ${item.amount}`, detail: item.providerError || `${item.method || 'Payment'} provider rejected payment`, retry: () => repository.retryPaymentIntent(item.id) })),
         ...inventory.filter((item) => item.providerSyncState === 'Failed').map((item) => ({ kind: 'inventory', id: item.id, label: item.material || item.id, detail: item.providerError || 'Inventory provider rejected sync', retry: () => repository.retryInventory(item.id) })),
         ...accounting.map((item) => ({ kind: 'accounting', id: item.key, label: `${item.recordType || 'Accounting'} · ${item.sourceId || item.key}`, detail: item.error || 'Accounting provider rejected sync', retry: () => repository.retryAccounting(item.key) })),
         ...documents.map((item) => ({ kind: 'document', id: item.id, label: `${item.documentType || 'Document'} · ${item.documentId || item.id}`, detail: item.providerError || 'Document provider rejected delivery', retry: () => repository.retryDocumentDelivery(item.id) })),
@@ -43,7 +45,8 @@
     const decorate = async () => {
       if (drawer.dataset.view !== 'integration-health' || list.querySelector('[data-integration-recovery-card]')) return;
       try {
-        const failures = await loadFailed();
+        const health = await repository.getIntegrationHealth();
+        const failures = await loadFailed(health);
         if (drawer.dataset.view !== 'integration-health' || list.querySelector('[data-integration-recovery-card]') || !failures.length) return;
         const card = document.createElement('article');
         card.className = 'report-card';
