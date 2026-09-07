@@ -20,15 +20,18 @@ try {
   child = spawn(process.execPath, ['server.mjs'], { cwd: root, env, stdio: 'ignore' });
   await waitForServer();
   const login = await post('/api/auth/demo-login?service=plumbing', { service: 'plumbing', role: 'owner' });
-  const link = await post('/api/jobs/JOB-OFFLINE-1/technician-link', { technician: 'Alex Rivera' }, { authorization: `Bearer ${login.body.token}` });
+  const auth = { authorization: `Bearer ${login.body.token}` };
+  const link = await post('/api/jobs/JOB-OFFLINE-1/technician-link', { technician: 'Alex Rivera' }, auth);
   const token = new URL(link.body.url, base).searchParams.get('token');
   const batchId = `SYNC-${Date.now()}`;
   const actions = [{ id: 'ACTION-STATUS-1', path: '/api/public/technician-job/status', method: 'POST', body: { status: 'In progress' }, idempotencyKey: 'offline-status-1' }, { id: 'ACTION-CHECK-1', path: '/api/public/technician-job/checklist', method: 'POST', body: { index: 0, completed: true }, idempotencyKey: 'offline-check-1' }];
   const batch = await post(`/api/public/technician-job/offline-sync?token=${encodeURIComponent(token)}`, { batchId, actions });
   const duplicate = await post(`/api/public/technician-job/offline-sync?token=${encodeURIComponent(token)}`, { batchId, actions });
   const history = await request(`/api/public/technician-job/offline-sync?token=${encodeURIComponent(token)}&limit=10`);
+  const failedBatch = await post(`/api/public/technician-job/offline-sync?token=${encodeURIComponent(token)}`, { batchId: `SYNC-FAILED-${Date.now()}`, actions: [{ id: 'ACTION-FAILED-1', path: '/api/public/technician-job/checklist', method: 'POST', body: { index: 99, completed: true }, idempotencyKey: 'offline-failed-1' }] });
+  const notifications = await request('/api/notifications?search=offline%20sync', { headers: auth });
   const persisted = JSON.parse(readFileSync(dataFile, 'utf8'))[tenantId];
-  if (!login.response.ok || link.response.status !== 200 || batch.response.status !== 200 || batch.body.duplicate !== false || batch.body.results?.length !== 2 || batch.body.results.some((item) => !item.ok) || duplicate.response.status !== 200 || duplicate.body.duplicate !== true || history.response.status !== 200 || history.body.batches?.length !== 1 || history.body.batches[0].results?.length !== 2 || history.body.batches[0].results.some((item) => item.body || item.idempotencyKey) || persisted.jobs[0].status !== 'In progress' || persisted.jobs[0].checklist?.[0]?.completed !== true || persisted.technicianSyncBatches?.length !== 1) throw new Error('bounded technician offline sync did not apply, persist, or expose safe receipts');
+  if (!login.response.ok || link.response.status !== 200 || batch.response.status !== 200 || batch.body.duplicate !== false || batch.body.results?.length !== 2 || batch.body.results.some((item) => !item.ok) || duplicate.response.status !== 200 || duplicate.body.duplicate !== true || history.response.status !== 200 || history.body.batches?.length !== 1 || history.body.batches[0].results?.length !== 2 || history.body.batches[0].results.some((item) => item.body || item.idempotencyKey) || failedBatch.response.status !== 200 || failedBatch.body.results?.[0]?.ok !== false || notifications.response.status !== 200 || !notifications.body.items?.some((item) => item.title === 'Technician offline sync needs review' && item.batchId) || persisted.jobs[0].status !== 'In progress' || persisted.jobs[0].checklist?.[0]?.completed !== true || persisted.technicianSyncBatches?.length !== 2) throw new Error('bounded technician offline sync did not apply, persist, expose safe receipts, or notify the owner');
   console.log('Northstar technician offline sync test passed');
 } finally {
   if (child && !child.killed) child.kill();
