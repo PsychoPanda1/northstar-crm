@@ -97,10 +97,12 @@
         throw error;
       }
       if (typeof idToken !== 'string' || !idToken.trim() || idToken.length > 20_000) throw new Error('identity_token_required');
-      return this.request(integration.ownerOidcAuthEndpoint, {
+      const endpoint = new URL(this.url(integration.ownerOidcAuthEndpoint));
+      endpoint.searchParams.set('service', this.service);
+      return this.request(`${endpoint.pathname}${endpoint.search}`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ idToken: idToken.trim() })
+        body: JSON.stringify({ idToken: idToken.trim(), service: this.service })
       });
     }
 
@@ -113,7 +115,9 @@
         throw error;
       }
       if (typeof token !== 'string' || !token.trim() || token.length > 20_000) throw new Error('owner_session_token_required');
-      return this.request(endpoint, { method: 'POST', headers: { authorization: `Bearer ${token.trim()}` } });
+      const refreshUrl = new URL(this.url(endpoint));
+      refreshUrl.searchParams.set('service', this.service);
+      return this.request(`${refreshUrl.pathname}${refreshUrl.search}`, { method: 'POST', headers: { authorization: `Bearer ${token.trim()}` } });
     }
 
     async logoutOwnerSession(token) {

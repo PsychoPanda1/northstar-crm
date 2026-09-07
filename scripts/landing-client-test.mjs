@@ -24,9 +24,9 @@ if (contact.phone !== '(843) 555-0100' || contact.email !== 'hello@example.test'
 await client.ownerPasswordLogin('owner@example.test', 'owner-password');
 if (calls[1].url !== 'https://crm.example.test/api/auth/login?service=plumbing' || calls[1].options.method !== 'POST' || JSON.parse(calls[1].options.body).email !== 'owner@example.test' || JSON.parse(calls[1].options.body).service !== 'plumbing') throw new Error('landing password owner login helper failed');
 await client.ownerOidcLogin('signed-id-token');
-if (calls[2].url !== 'https://crm.example.test/api/auth/oidc' || calls[2].options.method !== 'POST' || JSON.parse(calls[2].options.body).idToken !== 'signed-id-token') throw new Error('landing OIDC owner login helper failed');
+if (calls[2].url !== 'https://crm.example.test/api/auth/oidc?service=plumbing' || calls[2].options.method !== 'POST' || JSON.parse(calls[2].options.body).idToken !== 'signed-id-token' || JSON.parse(calls[2].options.body).service !== 'plumbing') throw new Error('landing OIDC owner login helper failed');
 await client.refreshOwnerSession('owner-session-token');
-if (calls[3].url !== 'https://crm.example.test/api/auth/refresh' || calls[3].options.method !== 'POST' || calls[3].options.headers.authorization !== 'Bearer owner-session-token') throw new Error('landing owner session refresh helper failed');
+if (calls[3].url !== 'https://crm.example.test/api/auth/refresh?service=plumbing' || calls[3].options.method !== 'POST' || calls[3].options.headers.authorization !== 'Bearer owner-session-token') throw new Error('landing owner session refresh helper failed');
 await client.logoutOwnerSession('owner-session-token');
 if (calls[4].url !== 'https://crm.example.test/api/auth/logout' || calls[4].options.method !== 'POST' || calls[4].options.headers.authorization !== 'Bearer owner-session-token') throw new Error('landing owner session logout helper failed');
 await client.submitLead({ name: 'Landing Test', phone: '8435550100' });
