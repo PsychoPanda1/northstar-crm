@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const port = 4500 + Math.floor(Math.random() * 100);
+const port = 30000 + Math.floor(Math.random() * 20000);
 const dataFile = join(tmpdir(), `northstar-recovery-${process.pid}-${Date.now()}.json`);
 const backupFile = `${dataFile}.backup`;
 const base = `http://127.0.0.1:${port}`;
