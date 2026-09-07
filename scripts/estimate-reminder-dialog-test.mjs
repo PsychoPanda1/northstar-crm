@@ -1,0 +1,10 @@
+import { readFileSync } from 'node:fs';
+const root = new URL('../', import.meta.url);
+const html = readFileSync(new URL('index.html', root), 'utf8');
+const source = readFileSync(new URL('estimate-reminder-dialog.js', root), 'utf8');
+const assert = (condition, message) => { if (!condition) throw new Error(message); };
+assert(html.includes('/estimate-reminder-dialog.js'), 'estimate reminder dialog is not loaded');
+assert(source.includes('#estimate-reminders') && source.includes('remindOpenEstimates'), 'estimate reminder trigger or API is missing');
+assert(source.includes('showModal') && source.includes('stopImmediatePropagation') && source.includes('role="status"'), 'estimate reminder dialog is not accessible or does not replace prompts');
+assert(source.includes('min="1"') && source.includes('max="365"') && source.includes('SMS') && source.includes('Email'), 'estimate reminder bounds or channels are missing');
+console.log('Northstar estimate reminder dialog checks passed');
