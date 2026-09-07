@@ -85,7 +85,7 @@ try {
     try { ready = await getJson('/api/ready'); } catch {}
     if (!ready?.response?.ok) await new Promise((resolve) => setTimeout(resolve, 100));
   }
-  if (!ready?.response?.ok || ready.body.checks?.configuration !== true || ready.body.checks?.tenantDeploymentContract !== true || ready.body.checks?.backupConfiguration !== true || ready.body.checks?.requestResponseSlaConfiguration !== true || ready.body.checks?.documentRetryConfiguration !== true) throw new Error('production server did not become ready with valid configuration');
+  if (!ready?.response?.ok || ready.body.checks?.configuration !== true || ready.body.checks?.tenantDeploymentContract !== true || ready.body.checks?.backupConfiguration !== true || ready.body.checks?.backupStorage !== true || ready.body.checks?.requestResponseSlaConfiguration !== true || ready.body.checks?.documentRetryConfiguration !== true) throw new Error('production server did not become ready with valid configuration');
   const openapiResponse = await fetch(`${base}/api/openapi.yaml`);
   const openapiText = await openapiResponse.text();
   if (!openapiResponse.ok || !openapiResponse.headers.get('content-type')?.includes('application/yaml') || !openapiText.includes('openapi: 3.0.3') || !openapiText.includes('/api/public/bookings:') || !openapiText.includes('/api/session/services:') || !openapiText.includes('bearerAuth: []')) throw new Error('canonical OpenAPI endpoint was not served with authenticated workspace discovery');
@@ -94,7 +94,7 @@ try {
     try { invalidReady = await getJsonFrom(invalidBase, '/api/ready'); } catch {}
     if (!invalidReady) await new Promise((resolve) => setTimeout(resolve, 100));
   }
-  if (!invalidReady || invalidReady.response.status !== 503 || invalidReady.body.checks?.requestResponseSlaConfiguration !== false || invalidReady.body.checks?.identityProviderConfiguration !== false || invalidReady.body.checks?.allowedOriginsConfiguration !== false || invalidReady.body.checks?.serviceOriginConfiguration !== false || invalidReady.body.checks?.tenantDeploymentContract !== false || invalidReady.body.checks?.backupConfiguration !== true || invalidReady.body.checks?.tenantDataIntegrity !== false) throw new Error('invalid production configuration did not fail readiness');
+  if (!invalidReady || invalidReady.response.status !== 503 || invalidReady.body.checks?.requestResponseSlaConfiguration !== false || invalidReady.body.checks?.identityProviderConfiguration !== false || invalidReady.body.checks?.allowedOriginsConfiguration !== false || invalidReady.body.checks?.serviceOriginConfiguration !== false || invalidReady.body.checks?.tenantDeploymentContract !== false || invalidReady.body.checks?.backupConfiguration !== true || invalidReady.body.checks?.backupStorage !== true || invalidReady.body.checks?.tenantDataIntegrity !== false) throw new Error('invalid production configuration did not fail readiness');
   let strictReady = null;
   for (let attempt = 0; attempt < 200 && !strictReady; attempt += 1) {
     try { strictReady = await getJsonFrom(strictBase, '/api/ready'); } catch {}
