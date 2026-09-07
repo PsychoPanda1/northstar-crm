@@ -24,6 +24,7 @@
     "test:intake-fields": "node scripts/intake-fields-test.mjs",
     "test:accounting-export": "node scripts/accounting-export-test.mjs",
     "test:customer-portal-booking": "node scripts/customer-portal-booking-test.mjs",
+    "test:payment-methods": "node scripts/payment-methods-test.mjs",
     "test:customer-plan-visit": "node scripts/customer-plan-visit-test.mjs",
     "test:review-idempotency": "node scripts/review-idempotency-test.mjs",
     "test:catalog-idempotency": "node scripts/catalog-idempotency-test.mjs",
