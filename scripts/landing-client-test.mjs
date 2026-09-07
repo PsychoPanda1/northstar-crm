@@ -31,6 +31,10 @@ await client.logoutOwnerSession('owner-session-token');
 if (calls[4].url !== 'https://crm.example.test/api/auth/logout' || calls[4].options.method !== 'POST' || calls[4].options.headers.authorization !== 'Bearer owner-session-token') throw new Error('landing owner session logout helper failed');
 await client.submitLead({ name: 'Landing Test', phone: '8435550100' });
 if (calls.length !== 6 || calls[5].options.headers['idempotency-key'] !== 'landing-test-key') throw new Error('landing lead retry contract failed');
+client.manifestPromise = Promise.resolve({ tenant: { slug: 'clearwater-plumbing' } });
+const aliasedSession = await client.validateOwnerSession({ tenant: { slug: 'clearwater-plumbing' }, service: 'default' });
+if (aliasedSession.service !== 'default') throw new Error('same-tenant service alias was rejected');
+try { await client.validateOwnerSession({ service: 'other' }); throw new Error('service-only mismatch was accepted'); } catch (error) { if (error.message !== 'owner_session_service_mismatch') throw error; }
 client.manifestPromise = Promise.resolve({ tenant: { slug: 'wrong-tenant' }, integration: { ownerAuthMethods: ['password'], ownerAuthEndpoint: '/api/auth/login' } });
 try { await client.ownerPasswordLogin('owner@example.test', 'owner-password'); throw new Error('wrong-tenant owner session accepted'); } catch (error) { if (error.message !== 'owner_session_tenant_mismatch' || calls.length !== 7) throw error; }
 client.manifestPromise = Promise.resolve({ integration: { ownerAuthMethods: ['password'], ownerOidcAuthEndpoint: null } });

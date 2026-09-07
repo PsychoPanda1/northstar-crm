@@ -44,8 +44,9 @@
 
     async validateOwnerSession(result) {
       const manifest = await this.manifest();
-      if (result?.service && result.service !== this.service) throw new Error('owner_session_service_mismatch');
-      if (result?.tenant?.slug && manifest?.tenant?.slug && result.tenant.slug !== manifest.tenant.slug) throw new Error('owner_session_tenant_mismatch');
+      const tenantMismatch = result?.tenant?.slug && manifest?.tenant?.slug && result.tenant.slug !== manifest.tenant.slug;
+      if (tenantMismatch) throw new Error('owner_session_tenant_mismatch');
+      if (result?.service && result.service !== this.service && !result?.tenant?.slug) throw new Error('owner_session_service_mismatch');
       return result;
     }
 
