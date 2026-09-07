@@ -25,7 +25,7 @@ try {
   const slot = availability.body.slotOptions?.[0];
   const estimateResult = await request('/api/estimates', { method: 'POST', headers, body: JSON.stringify({ customerId: 'customer-archive-1', catalogItemId: catalogItem.id, amount: 249 }) });
   const estimateId = estimateResult.body.id;
-  const archived = await request(`/api/catalog/${catalogItem.id}`, { method: 'PATCH', headers, body: JSON.stringify({ active: false }) });
+  const archived = await request(`/api/catalog/${catalogItem.id}`, { method: 'PATCH', headers, body: JSON.stringify({ active: false, formNames: ['Changed after quote'], checklist: [{ label: 'Changed after quote' }] }) });
   const approved = await request(`/api/estimates/${estimateId}/approve`, { method: 'POST', headers, body: '{}' });
   const converted = await request(`/api/estimates/${estimateId}/convert`, { method: 'POST', headers, body: JSON.stringify({ slotId: slot?.id }) });
   const job = converted.body.job;
