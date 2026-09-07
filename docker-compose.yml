@@ -24,6 +24,7 @@ services:
       NORTHSTAR_SESSION_FILE: /app/data/state.json.sessions
       NORTHSTAR_SQLITE_FILE: /app/data/northstar.sqlite
       NORTHSTAR_REQUIRE_SQLITE: "true"
+      NORTHSTAR_EXPECTED_WRITERS: "1"
       NORTHSTAR_BACKUP_FILE: /app/data/northstar.sqlite.backup
     volumes:
       - northstar-data:/app/data
