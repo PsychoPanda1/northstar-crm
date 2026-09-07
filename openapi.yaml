@@ -643,6 +643,205 @@ paths:
         '409': { $ref: '#/components/responses/IdempotencyConflict' }
         '422': { $ref: '#/components/responses/ValidationError' }
         '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/technician-job/visit-status:
+    post:
+      summary: Replay or update a technician visit status
+      parameters:
+        - $ref: '#/components/parameters/TechnicianToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TechnicianFieldPayload' }
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '202': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/technician-job/customer-context:
+    get:
+      summary: Read bounded customer context for an assigned technician job
+      parameters:
+        - $ref: '#/components/parameters/TechnicianToken'
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/public/technician-job/checklist:
+    post:
+      summary: Complete a checklist item from the technician job
+      parameters:
+        - $ref: '#/components/parameters/TechnicianToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TechnicianFieldPayload' }
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '201': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/technician-job/photo:
+    post:
+      summary: Attach HTTPS work evidence to a technician job
+      parameters:
+        - $ref: '#/components/parameters/TechnicianToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TechnicianFieldPayload' }
+      responses:
+        '201': { $ref: '#/components/responses/MutationAccepted' }
+        '200': { $ref: '#/components/responses/Duplicate' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/technician-job/finding:
+    post:
+      summary: Record a field finding from a technician job
+      parameters:
+        - $ref: '#/components/parameters/TechnicianToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TechnicianFieldPayload' }
+      responses:
+        '201': { $ref: '#/components/responses/MutationAccepted' }
+        '200': { $ref: '#/components/responses/Duplicate' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/technician-job/form:
+    post:
+      summary: Submit a required technician job form
+      parameters:
+        - $ref: '#/components/parameters/TechnicianToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TechnicianFieldPayload' }
+      responses:
+        '201': { $ref: '#/components/responses/MutationAccepted' }
+        '200': { $ref: '#/components/responses/Duplicate' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/technician-job/asset:
+    post:
+      summary: Record a customer asset discovered during field work
+      parameters:
+        - $ref: '#/components/parameters/TechnicianToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TechnicianFieldPayload' }
+      responses:
+        '201': { $ref: '#/components/responses/MutationAccepted' }
+        '200': { $ref: '#/components/responses/Duplicate' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/technician-job/labor:
+    post:
+      summary: Record technician labor against the current field job
+      parameters:
+        - $ref: '#/components/parameters/TechnicianToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TechnicianFieldPayload' }
+      responses:
+        '201': { $ref: '#/components/responses/MutationAccepted' }
+        '200': { $ref: '#/components/responses/Duplicate' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/technician-job/materials:
+    post:
+      summary: Record materials used on the current field job
+      parameters:
+        - $ref: '#/components/parameters/TechnicianToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TechnicianFieldPayload' }
+      responses:
+        '201': { $ref: '#/components/responses/MutationAccepted' }
+        '200': { $ref: '#/components/responses/Duplicate' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/technician-job/estimate:
+    post:
+      summary: Create a draft field estimate for customer approval
+      parameters:
+        - $ref: '#/components/parameters/TechnicianToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TechnicianFieldPayload' }
+      responses:
+        '201': { $ref: '#/components/responses/MutationAccepted' }
+        '200': { $ref: '#/components/responses/Duplicate' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/technician-job/payment-intent:
+    post:
+      summary: Create a provider-pending payment intent from field work
+      parameters:
+        - $ref: '#/components/parameters/TechnicianToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TechnicianFieldPayload' }
+      responses:
+        '201': { $ref: '#/components/responses/MutationAccepted' }
+        '200': { $ref: '#/components/responses/Duplicate' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
 components:
   securitySchemes:
     bearerAuth:
@@ -713,6 +912,10 @@ components:
     TechnicianJobView:
       type: object
       description: Tenant-safe field-service payload; no owner credentials are returned.
+      additionalProperties: true
+    TechnicianFieldPayload:
+      type: object
+      description: Action-specific technician payload. The server validates each field workflow and keeps it tenant-scoped.
       additionalProperties: true
     InvoicePaymentIntentRequest:
       type: object
