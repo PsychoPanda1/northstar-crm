@@ -103,6 +103,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Customer portal booking, rescheduling, and cancellation use accessible validated dialogs with tenant pricebook services, guided intake fields, saved service locations, availability slots, and explicit cancellation confirmation
 - Customer service-plan visits and pause/resume/change/cancel requests use accessible validated dialogs with tenant-scoped plans, saved locations, availability, idempotent submissions, and explicit service-office follow-up states
 - Technician en-route ETA, job completion acknowledgment, and labor capture use accessible validated dialogs while reusing the encrypted offline queue and idempotent field-action boundary
+- Dispatch assignment uses an accessible roster picker for single and bulk jobs, while server-side skill, availability, and schedule-conflict checks remain authoritative
 - Owners and dispatchers can queue deduplicated appointment reminders before a visit
 - Automatic customer notifications when jobs are assigned, en route, or completed, with deduplication before provider delivery
 - Owner/dispatcher review requests can be queued by SMS or email after completion, honoring channel opt-outs and deduplicating signed 72-hour review links
