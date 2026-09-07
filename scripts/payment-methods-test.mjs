@@ -21,6 +21,11 @@ try {
   const saveBody = await save.json();
   const list = await (await fetch(`${base}/api/public/customer-portal/payment-methods?token=${encodeURIComponent(token)}`)).json();
   assert(save.status === 201 && saveBody.paymentMethod?.last4 === '4242' && !saveBody.paymentMethod.providerPaymentMethodId && list.items?.length === 1 && list.items[0].isDefault, 'tokenized payment method was not saved safely');
+  const secondSave = await fetch(`${base}/api/public/customer-portal/payment-method?token=${encodeURIComponent(token)}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ providerPaymentMethodId: 'pm_provider_token_67890', type: 'ACH', brand: 'Bank', last4: '6789', isDefault: false }) });
+  const secondBody = await secondSave.json();
+  const makeDefault = await fetch(`${base}/api/public/customer-portal/payment-method/default?token=${encodeURIComponent(token)}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: secondBody.paymentMethod?.id }) });
+  const defaultBody = await makeDefault.json();
+  assert(secondSave.status === 201 && makeDefault.status === 200 && defaultBody.paymentMethod?.id === secondBody.paymentMethod?.id && defaultBody.paymentMethod?.isDefault && defaultBody.items?.filter((item) => item.isDefault).length === 1, 'customer could not switch the recurring default payment method safely');
   const rawCard = await fetch(`${base}/api/public/customer-portal/payment-method?token=${encodeURIComponent(token)}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ providerPaymentMethodId: '4242424242424242', type: 'Card', last4: '4242' }) });
   assert(rawCard.status === 422, 'raw card number was accepted');
   const removed = await fetch(`${base}/api/public/customer-portal/payment-method?token=${encodeURIComponent(token)}&id=${encodeURIComponent(saveBody.paymentMethod.id)}`, { method: 'DELETE' });

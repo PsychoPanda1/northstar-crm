@@ -190,16 +190,19 @@
     if (!portal || !content || content.querySelector('[data-payment-method-section]')) return Boolean(portal);
     const section = document.createElement('section'); section.className = 'section'; section.dataset.paymentMethodSection = 'true';
     const methods = portal.paymentMethods || [];
-    section.innerHTML = `<h2>Payment methods</h2><p class="intro">Saved methods are managed by your payment provider. Northstar stores only masked details and an opaque provider reference.</p>${methods.length ? methods.map((item) => `<div class="row"><div><strong>${escapeHtml(item.brand || item.type)}</strong><small>${escapeHtml(item.type)} ending ${escapeHtml(item.last4)}${item.expMonth && item.expYear ? ` · Expires ${escapeHtml(item.expMonth)}/${escapeHtml(item.expYear)}` : ''}</small></div><span class="pill">${item.isDefault ? 'Default' : ''}<button type="button" data-action="remove-payment-method" data-payment-method-id="${escapeHtml(item.id)}">Remove</button></span></div>`).join('') : '<div class="detail">No saved payment methods.</div>'}<div class="actions"><button type="button" data-action="add-payment-method">Add provider-vaulted method</button></div><small>Use your provider’s hosted setup form to obtain the opaque token. Do not enter a card number, bank account, routing number, CVV, or CVC here.</small>`;
+    section.innerHTML = `<h2>Payment methods</h2><p class="intro">Saved methods are managed by your payment provider. Northstar stores only masked details and an opaque provider reference.</p>${methods.length ? methods.map((item) => `<div class="row"><div><strong>${escapeHtml(item.brand || item.type)}</strong><small>${escapeHtml(item.type)} ending ${escapeHtml(item.last4)}${item.expMonth && item.expYear ? ` · Expires ${escapeHtml(item.expMonth)}/${escapeHtml(item.expYear)}` : ''}</small></div><span class="pill">${item.isDefault ? 'Default' : `<button type="button" data-action="default-payment-method" data-payment-method-id="${escapeHtml(item.id)}">Set default</button>`}<button type="button" data-action="remove-payment-method" data-payment-method-id="${escapeHtml(item.id)}">Remove</button></span></div>`).join('') : '<div class="detail">No saved payment methods.</div>'}<div class="actions"><button type="button" data-action="add-payment-method">Add provider-vaulted method</button></div><small>Use your provider’s hosted setup form to obtain the opaque token. Do not enter a card number, bank account, routing number, CVV, or CVC here.</small>`;
     content.append(section);
     return true;
   };
   document.addEventListener('click', async (event) => {
-    const button = event.target.closest('[data-action="add-payment-method"], [data-action="remove-payment-method"]');
+    const button = event.target.closest('[data-action="add-payment-method"], [data-action="remove-payment-method"], [data-action="default-payment-method"]');
     if (!button) return;
     event.preventDefault(); button.disabled = true;
     try {
-      if (button.dataset.action === 'add-payment-method') {
+      if (button.dataset.action === 'default-payment-method') {
+        const response = await fetch('/api/public/customer-portal/payment-method/default' + query, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: button.dataset.paymentMethodId }) });
+        message(response.ok ? 'Default payment method updated.' : 'Payment method could not be made default.');
+      } else if (button.dataset.action === 'add-payment-method') {
         const providerPaymentMethodId = window.prompt('Paste the opaque provider token from the hosted payment setup. Do not enter card or bank details.');
         if (!providerPaymentMethodId?.trim()) return;
         const type = window.prompt('Method type: Card or ACH', 'Card');
@@ -214,7 +217,7 @@
         const response = await fetch('/api/public/customer-portal/payment-method' + query + '&id=' + encodeURIComponent(button.dataset.paymentMethodId), { method: 'DELETE' });
         message(response.ok ? 'Payment method removed.' : 'Payment method could not be removed.');
       }
-      if (message && (button.dataset.action === 'add-payment-method' || button.dataset.action === 'remove-payment-method')) window.location.reload();
+      if (message && ['add-payment-method', 'remove-payment-method', 'default-payment-method'].includes(button.dataset.action)) window.location.reload();
     } catch { message('Payment method action could not be completed.'); } finally { button.disabled = false; }
   });
   const timer = setInterval(() => { if (render()) clearInterval(timer); }, 150);

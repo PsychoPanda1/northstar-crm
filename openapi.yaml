@@ -889,6 +889,25 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
         '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/customer-portal/payment-method/default:
+    post:
+      summary: Make one saved vaulted payment method the recurring default
+      parameters:
+        - $ref: '#/components/parameters/CustomerToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [id]
+              properties:
+                id: { type: string, maxLength: 120 }
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/RateLimited' }
   /api/public/customer-portal/payment-method:
     post:
       summary: Save a provider-vaulted customer payment method reference
