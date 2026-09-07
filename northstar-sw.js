@@ -4,6 +4,7 @@ const NORTHSTAR_ASSETS = ['/styles.css', '/customer-support-dialog.js', '/team-m
 NORTHSTAR_ASSETS.push('/call-booking-dialog.js');
 NORTHSTAR_ASSETS.push('/capacity-plan-dialog.js');
 NORTHSTAR_ASSETS.push('/team-time-off-dialog.js');
+NORTHSTAR_ASSETS.push('/vehicle-status-dialog.js');
 NORTHSTAR_ASSETS.push('/job-invoice-dialog.js');
 NORTHSTAR_ASSETS.push('/call-outcome-dialog.js');
 NORTHSTAR_ASSETS.push('/receivables-reminder-dialog.js');
