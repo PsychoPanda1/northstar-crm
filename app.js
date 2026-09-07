@@ -1,3 +1,10 @@
+const mobileNavToggle = document.querySelector('#mobile-nav-toggle');
+const workspaceSidebar = document.querySelector('#workspace-sidebar');
+const closeMobileNavigation = () => { workspaceSidebar?.classList.remove('mobile-open'); mobileNavToggle?.setAttribute('aria-expanded', 'false'); };
+mobileNavToggle?.addEventListener('click', () => { const open = workspaceSidebar?.classList.toggle('mobile-open') === true; mobileNavToggle.setAttribute('aria-expanded', String(open)); });
+document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeMobileNavigation(); });
+workspaceSidebar?.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeMobileNavigation));
+
 async function bootstrap() {
 const tenant = await resolveTenant();
 if (tenant.unavailable) { document.body.innerHTML = '<main style="min-height:100vh;display:grid;place-items:center;padding:24px;background:#f4f7f6;color:#203238;font-family:system-ui,sans-serif"><section style="width:min(460px,100%);padding:32px;border:1px solid #dbe6e2;border-radius:20px;background:#fff;box-shadow:0 18px 60px rgba(32,50,56,.12)"><p style="letter-spacing:.12em;font-size:12px;font-weight:800;color:#b56b47">NORTHSTAR CRM</p><h1 style="margin:8px 0">Service configuration unavailable</h1><p style="line-height:1.6;color:#607078">This owner workspace is not connected to a configured service tenant. Check the service key and deployment mapping, then try again.</p></section></main>'; return; }

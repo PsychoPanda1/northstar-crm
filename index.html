@@ -15,7 +15,7 @@
   </head>
   <body>
     <div class="app-shell">
-      <aside class="sidebar">
+      <aside class="sidebar" id="workspace-sidebar">
         <div class="brand"><div class="brand-mark">N</div><div><strong>northstar</strong><span>service cloud</span></div></div>
         <button class="workspace-switcher" id="workspace-switcher"><span class="avatar small">JS</span><div><b data-tenant-name>Johnson Service Co.</b><small><span data-service-label>Operations</span> workspace</small></div><span class="chevron">⌄</span></button>
         <nav>
@@ -39,7 +39,7 @@
       </aside>
 
       <main class="main-content" id="overview">
-        <header class="topbar"><div class="breadcrumb">Workspace <span>/</span> <b>Overview</b></div><div class="top-actions"><button class="icon-btn" aria-label="Search" title="Search workspace (Ctrl+K)">⌕</button><button class="icon-btn" aria-label="Notifications" id="notifications">♧<i></i></button><button class="primary-btn" id="new-job" data-required-permission="jobs:write">＋ New job</button></div></header>
+        <header class="topbar"><div class="breadcrumb"><button class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="Open workspace navigation" aria-controls="workspace-sidebar" aria-expanded="false">☰</button>Workspace <span>/</span> <b>Overview</b></div><div class="top-actions"><button class="icon-btn" aria-label="Search" title="Search workspace (Ctrl+K)">⌕</button><button class="icon-btn" aria-label="Notifications" id="notifications">♧<i></i></button><button class="primary-btn" id="new-job" data-required-permission="jobs:write">＋ New job</button></div></header>
         <div class="page-wrap">
           <section class="hero"><div><div class="eyebrow"><span data-service-label>HOME SERVICES</span> · <span data-today-label>Today</span> <span class="live-dot"></span> LIVE</div><h1>Good morning, Workspace owner.</h1><p data-focus-line>Here’s the pulse of your business. You’re doing great work.</p></div><button class="date-btn">This week <span>⌄</span></button></section>
           <section class="metric-grid">
