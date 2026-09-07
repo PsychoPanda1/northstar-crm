@@ -1143,7 +1143,7 @@ const server = createServer(async (req, res) => {
     if (origin && ['/api/public/bookings', '/api/public/leads'].includes(pathname) && Object.keys(SERVICE_ORIGINS).length && !requestedServiceOrigin) return json(res, 403, { error: 'service_query_required_for_origin_binding' });
     if (origin && Object.keys(SERVICE_ORIGINS).length && ['/api/public/bookings', '/api/public/leads'].includes(pathname) && requestedServiceOrigin && !originAllowedForService(String(origin), requestedServiceOrigin)) return json(res, 403, { error: 'origin_not_allowed_for_service' });
     if (origin && ALLOWED_ORIGINS.has(origin)) { res.setHeader('access-control-allow-origin', origin); res.setHeader('vary', 'Origin'); }
-    const publicMutationScope = pathname.startsWith('/api/public/technician-job') ? 'technician-field' : pathname.startsWith('/api/public/customer-portal') || pathname.startsWith('/api/public/job-status') || pathname.startsWith('/api/public/estimate/') || pathname === '/api/public/invoice/payment-intent' ? 'public-portal' : '';
+    const publicMutationScope = pathname.startsWith('/api/public/technician-job') ? 'technician-field' : pathname.startsWith('/api/public/customer-portal') || pathname.startsWith('/api/public/job-status') || pathname.startsWith('/api/public/estimate/') || pathname === '/api/public/invoice/payment-intent' || pathname === '/api/public/review' ? 'public-portal' : '';
     if (req.method === 'POST' && publicMutationScope && !allowPublicMutation(req, publicMutationScope)) return rateLimited(res, 'rate_limited');
     if (pathname === '/api/public/customer-portal/book' && req.method === 'POST') {
       const claims = readCustomerToken(requestUrl.searchParams.get('token'));
