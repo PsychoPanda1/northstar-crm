@@ -4,6 +4,8 @@ import { Script } from 'node:vm';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
+const bookingSource = readFileSync(join(root, 'booking.html'), 'utf8');
+if (!bookingSource.includes('select.required') || !bookingSource.includes('Choose a service before selecting an appointment time.')) throw new Error('booking page must require an explicit service when a catalog is populated');
 const htmlFiles = readdirSync(root).filter((name) => name.endsWith('.html'));
 let scripts = 0;
 for (const file of htmlFiles) {
