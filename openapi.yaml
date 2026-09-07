@@ -1188,6 +1188,21 @@ components:
               minItems: 1
               uniqueItems: true
             ownerOidcAuthEndpoint: { type: string, nullable: true }
+            technicianFieldEstimateEndpoint: { type: string }
+            technicianLocationEndpoint: { type: string }
+            technicianEndpoints:
+              type: object
+              description: Copyable signed technician field-operation endpoints for the tenant's mobile workspace.
+              additionalProperties: { type: string }
+            customerPortalEndpoints:
+              type: object
+              additionalProperties: { type: string }
+            statusEndpoints:
+              type: object
+              additionalProperties: { type: string }
+            capabilities:
+              type: object
+              additionalProperties: { type: boolean }
     CatalogItem:
       type: object
       required: [id, name, description, priceFrom, durationMinutes]
