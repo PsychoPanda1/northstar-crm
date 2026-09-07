@@ -32,6 +32,7 @@ Set `NORTHSTAR_REQUIRE_LIVE_PROVIDERS=true` only after the corresponding provide
 - Messaging and inbound replies: `NORTHSTAR_MESSAGE_PROVIDER_URL`, API key, and rotated webhook secret.
 - Payments and signed settlement webhooks: `NORTHSTAR_PAYMENT_PROVIDER_URL`, API key, and rotated webhook secret.
 - Stored payment methods: use the payment provider's hosted setup flow to create opaque customer-scoped method tokens; only send those tokens plus display metadata to Northstar, and verify provider-side detach/expiry behavior before enabling recurring autopay.
+- If `NORTHSTAR_REQUIRE_LIVE_PROVIDERS=true` and a live payment provider is enabled, configure the tenant `paymentSetup` provider as well; `/api/ready` fails closed with `livePaymentSetupProvider` when hosted stored-method setup is missing.
 - Financing: provider webhook secret and approved provider contract.
 - Estimate/invoice documents: tenant document-provider override when businesses use separate delivery accounts, otherwise `NORTHSTAR_DOCUMENT_PROVIDER_URL`, plus API key and public HTTPS URLs.
 - Technician field media: `NORTHSTAR_MEDIA_PROVIDER_URL` or a tenant `media` override for short-lived signed object-storage uploads; verify upload expiry, object lifecycle, and provider-side deletion/retention.

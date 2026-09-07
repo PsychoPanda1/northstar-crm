@@ -27,4 +27,6 @@ await runCase('unknown-tenant', JSON.stringify({ 'unknown-tenant': { lead: { url
 await runCase('insecure-http', JSON.stringify({ 'johnson-service-co': { lead: { url: 'http://lead.example.test/ingest' } } }), 'tenantProviderConfiguration');
 await runCase('insecure-document-http', JSON.stringify({ 'johnson-service-co': { document: { url: 'http://document.example.test/deliver' } } }), 'tenantProviderConfiguration');
 await runCase('insecure-global-http', '{}', 'liveLeadProvider', { NORTHSTAR_REQUIRE_LIVE_PROVIDERS: 'true', NORTHSTAR_LEAD_PROVIDER_URL: 'http://external.example.test/ingest' });
+const allLiveProviders = { 'johnson-service-co': { lead: { url: 'https://lead.example.test/ingest' }, message: { url: 'https://message.example.test/send' }, inventory: { url: 'https://inventory.example.test/sync' }, accounting: { url: 'https://accounting.example.test/sync' }, payment: { url: 'https://payment.example.test/intents' }, payroll: { url: 'https://payroll.example.test/runs' } } };
+await runCase('missing-payment-setup', JSON.stringify(allLiveProviders), 'livePaymentSetupProvider', { NORTHSTAR_REQUIRE_LIVE_PROVIDERS: 'true' });
 console.log('Northstar tenant provider configuration test passed');
