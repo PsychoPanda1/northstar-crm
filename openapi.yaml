@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Northstar CRM Public Integration API
-  version: 2.4.0
+  version: 2.3.0
   description: Public, tenant-routed contract for service landing pages. Owner records and credentials are never exposed by these endpoints.
 servers:
   - url: https://crm.example.com

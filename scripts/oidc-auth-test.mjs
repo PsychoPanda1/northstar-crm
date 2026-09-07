@@ -43,6 +43,6 @@ try {
   assert(unprovisioned.status === 403, 'unprovisioned OIDC subject was accepted');
   assert(wrongService.status === 403, 'OIDC identity crossed service tenant boundary');
   assert(wrongSessionService.status === 403, 'session was accepted for a mismatched service');
-  assert(services.status === 200 && servicesBody.items?.map((item) => item.service).join(',') === 'default', 'tenant service discovery leaked or omitted service aliases');
+  assert(services.status === 200 && servicesBody.tenant === 'johnson-service-co' && servicesBody.items?.map((item) => item.service).join(',') === 'default' && servicesBody.items.every((item) => item.tenant === 'johnson-service-co' && Object.keys(item).length === 2), 'tenant service discovery leaked or omitted service aliases');
   console.log('Northstar OIDC authentication test passed');
 } finally { cleanup(); }
