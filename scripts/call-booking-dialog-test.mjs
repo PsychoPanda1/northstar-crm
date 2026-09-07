@@ -1,0 +1,10 @@
+import { readFileSync } from 'node:fs';
+const root = new URL('../', import.meta.url);
+const html = readFileSync(new URL('index.html', root), 'utf8');
+const source = readFileSync(new URL('call-booking-dialog.js', root), 'utf8');
+const assert = (condition, message) => { if (!condition) throw new Error(message); };
+assert(html.includes('/call-booking-dialog.js'), 'call booking dialog is not loaded');
+assert(source.includes('data-call-action="book"') && source.includes('bookCall'), 'call booking trigger or API is missing');
+assert(source.includes('showModal') && source.includes('stopImmediatePropagation') && source.includes('role="status"'), 'call booking dialog is not accessible or does not replace prompts');
+assert(source.includes('crypto.randomUUID'), 'call booking mutation is not retry-safe');
+console.log('Northstar call booking dialog checks passed');
