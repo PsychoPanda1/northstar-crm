@@ -946,6 +946,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async markMessageRead(messageId) {
+    if (!this.remote) throw new Error('API required for message read state');
+    const response = await fetch(`/api/messages/${encodeURIComponent(messageId)}/read`, { method: 'POST', headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('message read state failed');
+    return response.json();
+  }
+
   async convertLead(id, time, idempotencyKey = '', slotId = '', locationId = '') {
     if (!this.remote) throw new Error('API required for lead conversion');
     const response = await fetch(`/api/leads/${encodeURIComponent(id)}/convert`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', ...(idempotencyKey ? { 'idempotency-key': idempotencyKey } : {}) }, body: JSON.stringify({ time, ...(slotId ? { slotId } : {}), ...(locationId ? { locationId } : {}) }) });

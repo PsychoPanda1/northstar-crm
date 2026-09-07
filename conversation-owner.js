@@ -25,6 +25,7 @@
   };
 
   const threadKey = (item) => item.customerId || `name:${String(item.customer || 'Unknown customer').trim().toLowerCase()}`;
+  const unread = (item) => item.direction === 'inbound' && !item.readAt;
   const threadGroups = () => [...messages.reduce((groups, item) => {
     const key = threadKey(item);
     const existing = groups.get(key) || { key, customerId: item.customerId || '', customer: item.customer || 'Unknown customer', items: [] };
@@ -34,11 +35,18 @@
     return groups;
   }, new Map()).values()].map((group) => ({ ...group, items: group.items.sort((a, b) => when(a) - when(b)), latest: group.items[group.items.length - 1] })).sort((a, b) => when(b.latest) - when(a.latest));
 
-  const threadSummary = (group) => `<article class="record-card"><div><span class="record-id">${escapeHtml(group.customerId || 'CUSTOMER THREAD')}</span><h3>${escapeHtml(group.customer)}</h3><p>${escapeHtml(group.latest?.message || 'No message text')} · ${escapeHtml(group.latest?.channel || 'Message')} · ${escapeHtml(group.latest?.status || 'Queued')}</p><div class="record-actions"><button class="ghost-btn" data-conversation-open="${escapeHtml(group.key)}">Open conversation</button></div></div><span class="record-status">${group.items.length} message${group.items.length === 1 ? '' : 's'}</span></article>`;
-  const renderInbox = () => openDrawer('Conversations', `<div class="report-period">${threadGroups().length} customer thread${threadGroups().length === 1 ? '' : 's'} · provider delivery remains auditable</div>${threadGroups().map(threadSummary).join('') || '<div class="empty-state">No customer messages yet.</div>'}`);
+  const threadSummary = (group) => { const unreadCount = group.items.filter(unread).length; return `<article class="record-card"><div><span class="record-id">${escapeHtml(group.customerId || 'CUSTOMER THREAD')}</span><h3>${escapeHtml(group.customer)}${unreadCount ? ` <span class="record-status">${unreadCount} unread</span>` : ''}</h3><p>${escapeHtml(group.latest?.message || 'No message text')} · ${escapeHtml(group.latest?.channel || 'Message')} · ${escapeHtml(group.latest?.status || 'Queued')}</p><div class="record-actions"><button class="ghost-btn" data-conversation-open="${escapeHtml(group.key)}">Open conversation</button></div></div><span class="record-status">${group.items.length} message${group.items.length === 1 ? '' : 's'}</span></article>`; };
+  const renderInbox = () => { const groups = threadGroups(); const unreadCount = groups.reduce((total, group) => total + group.items.filter(unread).length, 0); openDrawer('Conversations', `<div class="report-period">${groups.length} customer thread${groups.length === 1 ? '' : 's'} · ${unreadCount} unread · provider delivery remains auditable</div>${groups.map(threadSummary).join('') || '<div class="empty-state">No customer messages yet.</div>'}`); };
+  const markThreadRead = async (group) => {
+    const pending = group.items.filter(unread);
+    if (!pending.length || typeof repository.markMessageRead !== 'function') return 0;
+    const results = await Promise.allSettled(pending.map(async (item) => { const result = await repository.markMessageRead(item.id); const updated = result.message || result; const local = messages.find((candidate) => candidate.id === item.id); if (local) { local.readAt = updated.readAt || new Date().toISOString(); local.readBy = updated.readBy || repository.session?.owner?.name || ''; } }));
+    return results.filter((result) => result.status === 'fulfilled').length;
+  };
   const renderThread = (group) => {
     const content = `<div class="report-period">${escapeHtml(group.customer)} · ${group.items.length} message${group.items.length === 1 ? '' : 's'}</div><div class="record-actions"><button class="ghost-btn" data-conversation-back>All conversations</button><button class="primary-btn" data-conversation-compose>New message</button></div>${group.items.map((item) => `<article class="record-card"><div><span class="record-id">${escapeHtml(item.id)}</span><h3>${escapeHtml(item.direction === 'inbound' ? 'Customer' : 'Workspace')} · ${escapeHtml(item.channel || 'Message')}</h3><p>${escapeHtml(item.message || 'No message text')}</p><small class="muted">${escapeHtml(item.status || 'Queued')} · ${when(item) ? escapeHtml(new Date(when(item)).toLocaleString()) : 'Time not recorded'}</small><div class="record-actions"><button class="ghost-btn" data-conversation-reply="${escapeHtml(item.id)}">Reply</button></div></div><span class="record-status">${escapeHtml(item.direction || item.status || '')}</span></article>`).join('')}`;
     openDrawer(`Conversation · ${group.customer}`, content);
+    void markThreadRead(group).then((marked) => { if (marked && drawer.dataset.view === 'conversation') renderThread(threadGroups().find((candidate) => candidate.key === group.key) || group); });
   };
 
   const load = async () => {

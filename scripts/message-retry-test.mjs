@@ -29,7 +29,8 @@ try {
   const messages = await request('/api/messages', { headers: { authorization: headers.authorization } });
   const saved = JSON.parse(readFileSync(dataFile, 'utf8'))['clearwater-plumbing'].messages.find((item) => item.id === 'retry_message');
   if (!login.response.ok || dispatch.response.status !== 200 || dispatch.body.retrying !== 1 || dispatch.body.failed !== 0 || providerCalls !== 1 || lastAuthorization !== 'Bearer tenant-message-key' || saved.status !== 'Queued (provider pending)' || saved.deliveryState !== 'Retry scheduled' || saved.deliveryAttempt !== 1 || !saved.nextRetryAt || !messages.body.items?.some((item) => item.id === 'retry_message' && item.deliveryState === 'Retry scheduled')) throw new Error('transient message failure was not scheduled for bounded retry');
-  console.log('Northstar message retry test passed');
+console.log('Northstar message retry test passed');
+await import('./message-read-test.mjs');
 } finally {
   child.kill();
   provider.close();

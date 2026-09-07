@@ -2499,6 +2499,24 @@ if (pathname === '/api/public/technician-job/location' && req.method === 'POST')
       saved.messages.unshift(message); recordActivity(saved, customer.name, channel, `Customer portal message received: ${messageText}`, 'Received'); recordAudit(saved, { name: customer.name, role: 'customer' }, 'customer.portal.message.received', 'customer', customer.id, `${channel} · ${message.id}`); persist();
       return json(res, 201, { message: customerMessagesFor(claims.tenantId, customer.id, customer.name).find((item) => item.id === message.id) || message, duplicate: false });
     }
+    const messageReadMatch = pathname.match(/^\/api\/messages\/([^/]+)\/read$/);
+    if (messageReadMatch && req.method === 'POST') {
+      const claims = authenticate(req);
+      if (!claims) return json(res, 401, { error: 'unauthorized' });
+      if (!['owner', 'dispatcher'].includes(claims.role)) return json(res, 403, { error: 'forbidden' });
+      const saved = state.get(claims.tenantId);
+      const message = saved.messages.find((item) => item.id === messageReadMatch[1]);
+      if (!message) return json(res, 404, { error: 'message_not_found' });
+      if (message.direction !== 'inbound') return json(res, 422, { error: 'only_inbound_messages_can_be_read' });
+      const alreadyRead = Boolean(message.readAt);
+      if (!alreadyRead) {
+        message.readAt = new Date().toISOString();
+        message.readBy = claims.name;
+        recordAudit(saved, claims, 'message.read', 'message', message.id, `${message.customer || message.customerId} · ${message.channel || 'Message'}`);
+        persist();
+      }
+      return json(res, 200, { message: recordsFor(claims.tenantId, 'messages').find((item) => item.id === message.id) || message, duplicate: alreadyRead });
+    }
     if (req.method === 'GET') return sendStatic(req, res);
     return json(res, 405, { error: 'method_not_allowed' });
   } catch (error) { const message = String(error?.message || error); console.error(JSON.stringify({ requestId: res.getHeader('x-request-id') || null, error: message })); if (message.startsWith('sqlite_concurrent_write_conflict:')) return json(res, 409, { error: 'storage_write_conflict', retryable: true }); return json(res, 400, { error: 'bad_request' }); }
