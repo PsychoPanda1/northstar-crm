@@ -21,6 +21,7 @@ try {
   if (!login.response.ok) throw new Error('catalog bulk test login failed');
   const token = login.body.token;
   const items = [{ name: 'Bulk drain cleaning', description: 'Clear and inspect residential drains', priceFrom: '$249', category: 'Repair', durationMinutes: 90, taxable: true, checklist: ['Protect work area'] }, { name: 'Bulk faucet repair', description: 'Diagnose and repair a leaking faucet', priceFrom: '$179', category: 'Repair', durationMinutes: 60, taxable: true }];
+  const preview = await postJson('/api/catalog/import', { items, dryRun: true }, token, 'catalog-bulk-preview');
   const first = await postJson('/api/catalog/import', { items }, token, 'catalog-bulk-test');
   const replay = await postJson('/api/catalog/import', { items }, token, 'catalog-bulk-test');
   const conflict = await postJson('/api/catalog/import', { items: [{ ...items[0], priceFrom: '$299' }] }, token, 'catalog-bulk-test');
@@ -31,7 +32,7 @@ try {
   const archiveConflict = await postJson('/api/catalog/bulk-update', { ids, active: true }, token, 'catalog-bulk-archive');
   const exportResponse = await fetch(`${base}/api/export?type=catalog`, { headers: { authorization: `Bearer ${token}` } });
   const csv = await exportResponse.text();
-  if (first.response.status !== 201 || first.body.created !== 2 || replay.response.status !== 200 || replay.body.duplicate !== true || conflict.response.status !== 409 || invalid.response.status !== 422 || archived.response.status !== 200 || archived.body.updated !== 2 || archivedReplay.response.status !== 200 || archivedReplay.body.duplicate !== true || archiveConflict.response.status !== 409 || exportResponse.status !== 200 || !csv.includes('Bulk drain cleaning') || !csv.includes('Bulk faucet repair')) throw new Error('bulk catalog import/export/archive contract failed');
+  if (preview.response.status !== 200 || preview.body.dryRun !== true || preview.body.validated !== 2 || first.response.status !== 201 || first.body.created !== 2 || replay.response.status !== 200 || replay.body.duplicate !== true || conflict.response.status !== 409 || invalid.response.status !== 422 || archived.response.status !== 200 || archived.body.updated !== 2 || archivedReplay.response.status !== 200 || archivedReplay.body.duplicate !== true || archiveConflict.response.status !== 409 || exportResponse.status !== 200 || !csv.includes('Bulk drain cleaning') || !csv.includes('Bulk faucet repair')) throw new Error('bulk catalog import preview/export/archive contract failed');
   console.log('Northstar bulk catalog import test passed');
 } finally {
   if (child && !child.killed) child.kill();

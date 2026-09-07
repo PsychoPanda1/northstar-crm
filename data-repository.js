@@ -1185,9 +1185,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async importCatalogItems(items, idempotencyKey = crypto.randomUUID()) {
+  async importCatalogItems(items, idempotencyKey = crypto.randomUUID(), dryRun = false) {
     if (!this.remote) throw new Error('API required for catalog editing');
-    const response = await fetch('/api/catalog/import', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ items }) });
+    const response = await fetch('/api/catalog/import', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ items, ...(dryRun ? { dryRun: true } : {}) }) });
     if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'catalog import failed');
     return response.json();
   }
