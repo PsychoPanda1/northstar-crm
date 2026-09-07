@@ -1337,6 +1337,33 @@ paths:
         '409': { $ref: '#/components/responses/IdempotencyConflict' }
         '422': { $ref: '#/components/responses/ValidationError' }
         '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/technician-job/forms:
+    get:
+      summary: Read structured technician forms for an assigned job
+      parameters:
+        - $ref: '#/components/parameters/TechnicianToken'
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      summary: Submit validated structured technician form answers
+      parameters:
+        - $ref: '#/components/parameters/TechnicianToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StructuredFormSubmission' }
+      responses:
+        '201': { $ref: '#/components/responses/MutationAccepted' }
+        '200': { $ref: '#/components/responses/Duplicate' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
   /api/public/technician-job/asset:
     post:
       summary: Record a customer asset discovered during field work
@@ -1662,6 +1689,15 @@ components:
       type: object
       description: Action-specific technician payload. The server validates each field workflow and keeps it tenant-scoped.
       additionalProperties: true
+    StructuredFormSubmission:
+      type: object
+      required: [formName, result, notes, answers]
+      properties:
+        formName: { type: string, minLength: 2, maxLength: 120 }
+        result: { type: string, minLength: 2, maxLength: 80 }
+        notes: { type: string, minLength: 2, maxLength: 500 }
+        customerSignature: { type: string, maxLength: 100 }
+        answers: { type: object, additionalProperties: true, maxProperties: 20 }
     CustomerLocationRequest:
       type: object
       required: [address]
