@@ -110,6 +110,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Call-center outcomes use a structured dialog with bounded notes and retry-safe classification for lead, booking, resolution, and missed-call recovery reporting
 - Receivables follow-up uses a structured channel and minimum-balance dialog while preserving customer opt-outs and the server-side duplicate guard
 - Estimate pricing uses a structured scope dialog with line-item validation, discount and tax controls, and retry-safe server updates
+- Estimate delivery uses a structured SMS/email dialog with provider-pending status, duplicate protection, and retry-safe delivery requests
 - Technician en-route ETA, job completion acknowledgment, and labor capture use accessible validated dialogs while reusing the encrypted offline queue and idempotent field-action boundary
 - Dispatch assignment uses an accessible roster picker for single and bulk jobs, while server-side skill, availability, and schedule-conflict checks remain authoritative
 - Multi-party invoice billing uses an accessible validated bill-to dialog with existing profile prefill, contact details, payment terms, and server-side tenant-scoped validation

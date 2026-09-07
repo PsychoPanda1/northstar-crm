@@ -1,0 +1,10 @@
+import { readFileSync } from 'node:fs';
+const root = new URL('../', import.meta.url);
+const html = readFileSync(new URL('index.html', root), 'utf8');
+const source = readFileSync(new URL('estimate-send-dialog.js', root), 'utf8');
+const assert = (condition, message) => { if (!condition) throw new Error(message); };
+assert(html.includes('/estimate-send-dialog.js'), 'estimate send dialog is not loaded');
+assert(source.includes('data-estimate-send') && source.includes('sendEstimate'), 'estimate send trigger or API is missing');
+assert(source.includes('showModal') && source.includes('stopImmediatePropagation') && source.includes('role="status"'), 'estimate send dialog is not accessible or does not replace prompts');
+assert(source.includes('crypto.randomUUID') && source.includes('SMS') && source.includes('Email'), 'estimate delivery channel or retry safety is missing');
+console.log('Northstar estimate send dialog checks passed');
