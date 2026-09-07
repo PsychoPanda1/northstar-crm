@@ -1192,6 +1192,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async bulkUpdateCatalogItems(ids, active = false, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for catalog editing');
+    const response = await fetch('/api/catalog/bulk-update', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ ids, active }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'catalog bulk update failed');
+    return response.json();
+  }
+
   async billPlanCycle(period, due = 'Due on receipt', idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for plan billing');
     const response = await fetch('/api/plans/billing-cycle', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ period, due }) });

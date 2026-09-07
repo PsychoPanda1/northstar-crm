@@ -25,9 +25,13 @@ try {
   const replay = await postJson('/api/catalog/import', { items }, token, 'catalog-bulk-test');
   const conflict = await postJson('/api/catalog/import', { items: [{ ...items[0], priceFrom: '$299' }] }, token, 'catalog-bulk-test');
   const invalid = await postJson('/api/catalog/import', { items: [{ ...items[0], durationMinutes: 5 }] }, token, 'catalog-bulk-invalid');
+  const ids = first.body.items.map((item) => item.id);
+  const archived = await postJson('/api/catalog/bulk-update', { ids, active: false }, token, 'catalog-bulk-archive');
+  const archivedReplay = await postJson('/api/catalog/bulk-update', { ids, active: false }, token, 'catalog-bulk-archive');
+  const archiveConflict = await postJson('/api/catalog/bulk-update', { ids, active: true }, token, 'catalog-bulk-archive');
   const exportResponse = await fetch(`${base}/api/export?type=catalog`, { headers: { authorization: `Bearer ${token}` } });
   const csv = await exportResponse.text();
-  if (first.response.status !== 201 || first.body.created !== 2 || replay.response.status !== 200 || replay.body.duplicate !== true || conflict.response.status !== 409 || invalid.response.status !== 422 || exportResponse.status !== 200 || !csv.includes('Bulk drain cleaning') || !csv.includes('Bulk faucet repair')) throw new Error('bulk catalog import/export contract failed');
+  if (first.response.status !== 201 || first.body.created !== 2 || replay.response.status !== 200 || replay.body.duplicate !== true || conflict.response.status !== 409 || invalid.response.status !== 422 || archived.response.status !== 200 || archived.body.updated !== 2 || archivedReplay.response.status !== 200 || archivedReplay.body.duplicate !== true || archiveConflict.response.status !== 409 || exportResponse.status !== 200 || !csv.includes('Bulk drain cleaning') || !csv.includes('Bulk faucet repair')) throw new Error('bulk catalog import/export/archive contract failed');
   console.log('Northstar bulk catalog import test passed');
 } finally {
   if (child && !child.killed) child.kill();
