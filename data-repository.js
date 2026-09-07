@@ -656,6 +656,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async listServices() {
+    if (!this.remote || !this.token) return [];
+    const response = await fetch('/api/session/services', { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('services unavailable');
+    return (await response.json()).items || [];
+  }
+
   async listAccountingSync(status = '') {
     if (!this.remote) throw new Error('API required for accounting queue');
     const query = status ? `?status=${encodeURIComponent(status)}` : '';

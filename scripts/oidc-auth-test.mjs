@@ -35,11 +35,14 @@ try {
   const unprovisioned = await fetch(`http://127.0.0.1:${port}/api/auth/oidc`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ idToken: tokenFor('not-provisioned') }) });
   const wrongService = await fetch(`http://127.0.0.1:${port}/api/auth/oidc`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ idToken: tokenFor('user-123'), service: 'other' }) });
   const wrongSessionService = await fetch(`http://127.0.0.1:${port}/api/session?service=other`, { headers: { authorization: `Bearer ${validBody.token}` } });
+  const services = await fetch(`http://127.0.0.1:${port}/api/session/services`, { headers: { authorization: `Bearer ${validBody.token}` } });
+  const servicesBody = await services.json();
   assert(valid.status === 200 && validBody.owner?.id === 'oidc-owner-123' && validBody.owner?.role === 'owner', 'valid OIDC token was not exchanged');
   assert(session.status === 200 && (await session.json()).tenant?.slug === 'johnson-service-co', 'OIDC session did not preserve tenant scope');
   assert(tampered.status === 401, 'tampered OIDC signature was accepted');
   assert(unprovisioned.status === 403, 'unprovisioned OIDC subject was accepted');
   assert(wrongService.status === 403, 'OIDC identity crossed service tenant boundary');
   assert(wrongSessionService.status === 403, 'session was accepted for a mismatched service');
+  assert(services.status === 200 && servicesBody.items?.map((item) => item.service).join(',') === 'default', 'tenant service discovery leaked or omitted service aliases');
   console.log('Northstar OIDC authentication test passed');
 } finally { cleanup(); }
