@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>Review service change</title>
+    <link rel="stylesheet" href="portal.css" />
+  </head>
+  <body class="public-page">
+    <main class="public-shell"><div class="public-brand">NORTHSTAR <span>SERVICE CLOUD</span></div><section class="public-card"><p class="eyebrow">SERVICE SCOPE UPDATE</p><h1 id="title">Reviewing your change order…</h1><p id="subtitle" class="lead">Please wait while we load the requested work.</p><div id="details" class="public-details"></div><div id="actions" class="workflow-actions" hidden><button class="primary-btn" id="approve">Approve change</button><button class="ghost-btn" id="decline">Decline</button></div><p id="message" class="form-message" role="status" aria-live="polite"></p></section></main>
+    <script>
+      const token = new URLSearchParams(location.search).get('token');
+      const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
+      const details = document.querySelector('#details'); const actions = document.querySelector('#actions'); const message = document.querySelector('#message');
+      const decide = async (decision) => { const note = decision === 'decline' ? (window.prompt('Optional note for the service team', '') || '') : ''; document.querySelectorAll('#actions button').forEach((button) => { button.disabled = true; }); try { const response = await fetch(`/api/public/change-order/decision?token=${encodeURIComponent(token)}`, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({ decision, note }) }); const body = await response.json().catch(() => ({})); if (!response.ok) throw new Error(body.error || 'decision_failed'); message.textContent = decision === 'approve' ? 'Approved. Your service team can now bill and schedule this additional work.' : 'Declined. Your service team has been notified.'; actions.hidden = true; } catch (error) { message.textContent = error.message === 'change_order_not_decidable' ? 'This change order has already been decided.' : 'We could not record your decision. Please contact the service team.'; document.querySelectorAll('#actions button').forEach((button) => { button.disabled = false; }); } };
+      const load = async () => { if (!token) { message.textContent = 'This approval link is missing or invalid.'; return; } try { const response = await fetch(`/api/public/change-order?token=${encodeURIComponent(token)}`, { cache: 'no-store' }); const item = await response.json(); if (!response.ok) throw new Error(item.error || 'load_failed'); document.querySelector('#title').textContent = `${item.service || 'Service'} · change order`; document.querySelector('#subtitle').textContent = `${item.business?.name || 'Your service team'} is requesting approval for additional work.`; details.innerHTML = `<p><strong>${escapeHtml(item.description)}</strong></p><p>Amount: <strong>$${Number(item.amount || 0).toFixed(2)}</strong></p><ul>${(item.lineItems || []).map((line) => `<li>${escapeHtml(line.description)} · ${Number(line.quantity || 0)} × $${Number(line.unitPrice || 0).toFixed(2)}</li>`).join('')}</ul><p>Status: ${escapeHtml(item.status)}</p>`; actions.hidden = !['Sent'].includes(item.status); if (!actions.hidden) { document.querySelector('#approve').onclick = () => decide('approve'); document.querySelector('#decline').onclick = () => decide('decline'); } } catch { document.querySelector('#title').textContent = 'Change order unavailable'; message.textContent = 'This link may have expired. Contact the service team for a new review link.'; } };
+      load();
+    </script>
+  </body>
+</html>

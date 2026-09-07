@@ -133,6 +133,96 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '409': { $ref: '#/components/responses/IdempotencyConflict' }
         '422': { $ref: '#/components/responses/ValidationError' }
+  /api/jobs/{jobId}/scope-changes:
+    post:
+      summary: Create a post-sale scope change for a job
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [description]
+              properties:
+                description: { type: string, minLength: 3, maxLength: 240 }
+                amount: { type: number, exclusiveMinimum: 0 }
+                lineItems: { type: array, maxItems: 20, items: { type: object } }
+      responses:
+        '201': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+  /api/public/change-order:
+    get:
+      summary: Read a signed customer change-order review
+      parameters:
+        - name: token
+          in: query
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/public/change-order/decision:
+    post:
+      summary: Approve or decline a signed customer change order
+      parameters:
+        - name: token
+          in: query
+          required: true
+          schema: { type: string }
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision]
+              properties:
+                decision: { type: string, enum: [approve, decline] }
+                note: { type: string, maxLength: 300 }
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /api/change-orders/{changeOrderId}/send:
+    post:
+      summary: Send a signed customer change-order approval link
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: changeOrderId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '201': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /api/change-orders/{changeOrderId}/invoice:
+    post:
+      summary: Create a progress invoice for an approved change order
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: changeOrderId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '201': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
   /api/settings/landing-pages:
     get:
       summary: List landing-page service keys for the authenticated tenant

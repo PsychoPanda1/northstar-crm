@@ -1519,6 +1519,27 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async createChangeOrder(jobId, description, amount, lineItems = [], idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for change orders');
+    const response = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/scope-changes`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ description, amount, ...(lineItems.length ? { lineItems } : {}) }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'change order creation failed');
+    return response.json();
+  }
+
+  async sendChangeOrder(id, channel = 'SMS') {
+    if (!this.remote) throw new Error('API required for change orders');
+    const response = await fetch(`/api/change-orders/${encodeURIComponent(id)}/send`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ channel }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'change order delivery failed');
+    return response.json();
+  }
+
+  async invoiceChangeOrder(id, due = 'Due on receipt') {
+    if (!this.remote) throw new Error('API required for change order billing');
+    const response = await fetch(`/api/change-orders/${encodeURIComponent(id)}/invoice`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ due }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'change order invoice failed');
+    return response.json();
+  }
+
   async createInvoice(estimateId, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for invoice creation');
     const response = await fetch('/api/invoices', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ estimateId }) });
