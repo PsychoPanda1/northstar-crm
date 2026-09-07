@@ -54,6 +54,16 @@
       if (drawer.dataset.view !== 'integration-health' || list.querySelector('[data-integration-recovery-card]')) return;
       try {
         const health = await repository.getIntegrationHealth();
+        const paymentSetup = repository.getPaymentSetupHealth ? await repository.getPaymentSetupHealth().catch(() => null) : null;
+        if (paymentSetup && drawer.dataset.view === 'integration-health' && !list.querySelector('[data-payment-setup-health]')) {
+          const card = document.createElement('article');
+          card.className = 'report-card';
+          card.dataset.paymentSetupHealth = 'true';
+          const setupStatus = paymentSetup.status === 'Ready' ? 'Ready for recurring autopay setup' : paymentSetup.status;
+          const setupDetail = `Payment provider: ${paymentSetup.checks?.paymentProvider ? 'configured' : 'missing'} · Hosted setup: ${paymentSetup.checks?.setupProvider ? 'configured' : 'missing'} · ${paymentSetup.activeMethods || 0} active method${paymentSetup.activeMethods === 1 ? '' : 's'}`;
+          card.innerHTML = `<div><span class="record-id">PAYMENT METHOD SETUP</span><h3>${escape(setupStatus)}</h3><p>${escape(setupDetail)}. Pending hosted sessions: ${escape(paymentSetup.pendingSessions || 0)}.</p></div>`;
+          list.querySelector('.report-period')?.after(card);
+        }
         const failures = await loadFailed(health);
         if (drawer.dataset.view !== 'integration-health' || list.querySelector('[data-integration-recovery-card]') || !failures.length) return;
         const card = document.createElement('article');

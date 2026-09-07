@@ -40,5 +40,10 @@ try {
   const status = await (await fetch(`${base}/api/public/customer-portal/payment-method/setup-status?token=${encodeURIComponent(token)}&setupSessionId=${encodeURIComponent(setupBody.setupSessionId)}`)).json();
   const methods = await (await fetch(`${base}/api/public/customer-portal/payment-methods?token=${encodeURIComponent(token)}`)).json();
   assert(webhook.status === 201 && webhookBody.paymentMethod?.last4 === '4242' && !JSON.stringify(webhookBody).includes('providerPaymentMethodId') && status.setupSession?.status === 'Completed' && status.setupSession.paymentMethod?.last4 === '4242' && methods.items?.[0]?.isDefault, 'hosted payment setup webhook did not attach safe method metadata');
+  const login = await fetch(`${base}/api/auth/demo-login?service=plumbing`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ service: 'plumbing', role: 'owner' }) });
+  const loginBody = await login.json();
+  const health = await fetch(`${base}/api/integrations/payment-setup/health`, { headers: { authorization: `Bearer ${loginBody.token}` } });
+  const healthBody = await health.json();
+  assert(login.ok && health.status === 200 && healthBody.status === 'Payment provider needed' && !healthBody.checks?.paymentProvider && healthBody.checks?.setupProvider && healthBody.activeMethods === 1, 'payment setup readiness was not visible to the owner health console');
   console.log('Northstar hosted payment setup test passed');
 } finally { server.kill(); await new Promise((resolve) => provider.close(resolve)); rmSync(tempDir, { recursive: true, force: true }); }

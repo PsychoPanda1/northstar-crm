@@ -656,6 +656,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async getPaymentSetupHealth() {
+    if (!this.remote) throw new Error('API required for payment setup health');
+    const response = await fetch('/api/integrations/payment-setup/health', { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('payment setup health unavailable');
+    return response.json();
+  }
+
   async optimizeRoutes(date, technicians = [], options = {}, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for route optimization');
     const response = await fetch('/api/dispatch/routes-optimize', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ date, technicians, ...options }) });

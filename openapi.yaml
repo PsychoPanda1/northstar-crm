@@ -1717,6 +1717,15 @@ paths:
         '409': { $ref: '#/components/responses/IdempotencyConflict' }
         '422': { $ref: '#/components/responses/ValidationError' }
         '429': { $ref: '#/components/responses/RateLimited' }
+  /api/integrations/payment-setup/health:
+    get:
+      summary: Read tenant-scoped payment-method setup health
+      security:
+        - bearerAuth: []
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
 components:
   securitySchemes:
     bearerAuth:
