@@ -656,6 +656,27 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async listPayrollRuns() {
+    if (!this.remote) throw new Error('API required for payroll runs');
+    const response = await fetch('/api/payroll/runs', { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('payroll runs unavailable');
+    return response.json();
+  }
+
+  async createPayrollRun(startDate = '', endDate = '', idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for payroll runs');
+    const response = await fetch('/api/payroll/runs', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ startDate: startDate || null, endDate: endDate || null }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'payroll run creation failed');
+    return response.json();
+  }
+
+  async approvePayrollRun(id) {
+    if (!this.remote) throw new Error('API required for payroll runs');
+    const response = await fetch(`/api/payroll/runs/${encodeURIComponent(id)}/approve`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': `approve:${id}` }, body: '{}' });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'payroll run approval failed');
+    return response.json();
+  }
+
   async listServices() {
     if (!this.remote || !this.token) return [];
     const response = await fetch('/api/session/services', { headers: { authorization: `Bearer ${this.token}` } });
