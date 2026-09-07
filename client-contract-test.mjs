@@ -10,6 +10,7 @@ const estimate = readFileSync(`${root}estimate.html`, 'utf8');
 const estimatePdf = readFileSync(`${root}estimate-pdf.mjs`, 'utf8');
 const status = readFileSync(`${root}status.html`, 'utf8');
 const invoice = readFileSync(`${root}invoice.html`, 'utf8');
+const review = readFileSync(`${root}review.html`, 'utf8');
 const booking = readFileSync(`${root}booking.html`, 'utf8');
 const landingClient = readFileSync(`${root}landing-page-client.js`, 'utf8');
 const productionBoundary = readFileSync(`${root}scripts/production-boundary-test.mjs`, 'utf8');
@@ -224,6 +225,7 @@ assert(server.includes("const rateLimited =") && server.includes("res.setHeader(
 assert(tenantConfig.includes('const unavailable =') && tenantConfig.includes('return fallback || unavailable') && !tenantConfig.includes('if (requested && !fallback) return unavailable') && app.includes('tenant.unavailable') && app.includes('Service configuration unavailable'), 'owner portal must fail closed when a service tenant is unknown or unavailable');
 assert(invoice.includes('id="breakdown"') && invoice.includes('Remaining $'), 'invoice payment page does not expose total, paid, and remaining balance');
 assert(invoice.includes('sessionStorage') && invoice.includes('idempotency-key') && invoice.includes('paymentKey'), 'invoice payment page does not preserve mobile retry identity');
+assert(review.includes('sessionStorage') && review.includes('reviewKey') && review.includes("'idempotency-key':reviewKey"), 'review page does not preserve mobile retry identity');
 assert(estimate.includes('pricing-breakdown') && estimate.includes('Subtotal') && estimate.includes('Discount') && estimate.includes('Tax'), 'public estimate page does not expose transparent pricing components');
 assert(estimate.includes("['Draft','Sent'].includes(body.status)") && estimate.includes('id="approve"'), 'delivered estimates cannot be approved from the public estimate page');
 assert(customer.includes('sessionStorage') && customer.includes('retryKey') && customer.includes('idempotency-key'), 'customer portal actions do not preserve mobile retry identity');
