@@ -12,4 +12,5 @@ if (!app.includes('data-document-operations-card') || !app.includes('metrics.que
 if (!app.includes('repository.getAvailability(serviceKey, 7, catalogSelect.value)') || app.includes('window.northstarRepository.getAvailability(service, 7);')) throw new Error('new-job scheduling must keep pricebook-aware availability without a stale default-duration listener');
 if (!repository.includes("async listServices()") || !repository.includes("fetch('/api/session/services'")) throw new Error('repository service discovery contract missing');
 if (!settings.includes('data-settings-service-cities') || !settings.includes('data-settings-service-zips') || !settings.includes('data-settings-save-service-area')) throw new Error('workspace settings must expose owner service-area qualification controls');
+if (!settings.includes('data-settings-intake-fields') || !settings.includes('data-settings-save-intake') || !settings.includes('JSON.parse(intakeFieldsInput.value)')) throw new Error('workspace settings must expose the guided intake editor');
 console.log('Northstar service workspace UI checks passed');

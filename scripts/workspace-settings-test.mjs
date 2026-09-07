@@ -44,6 +44,8 @@ try {
   assert(allowedLead.response.status === 201 && blockedLead.response.status === 422 && blockedLead.body.error === 'outside_service_area' && coverageAllowed.response.status === 200 && coverageAllowed.body.eligible === true && coverageBlocked.body.eligible === false && coverageBlocked.body.reason === 'outside_service_area', 'service area rules did not qualify public leads or coverage previews');
   const invalid = await request('/api/settings/workspace', { method: 'PATCH', headers: { ...headers, 'content-type': 'application/json' }, body: JSON.stringify({ appointmentMinutes: 5 }) });
   assert(invalid.response.status === 422, 'invalid workspace settings were accepted');
+  const invalidIntake = await request('/api/settings/workspace', { method: 'PATCH', headers: { ...headers, 'content-type': 'application/json' }, body: JSON.stringify({ intakeFields: [{ id: 'issue_type', type: 'select', label: 'Issue type' }] }) });
+  assert(invalidIntake.response.status === 422 && invalidIntake.body.error === 'invalid_intake_fields', 'invalid guided intake fields were accepted');
   console.log('Northstar workspace settings test passed');
 } finally {
   if (child && !child.killed) child.kill();
