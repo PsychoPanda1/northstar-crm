@@ -254,6 +254,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Dispatch assignment, status changes, and rescheduling are recorded in the customer timeline
 - Owner rescheduling uses the same capacity-aware, date-specific availability slots exposed to landing pages and customer portals
 - Dispatch priorities (`Low`, `Normal`, `High`, and `Emergency`) keep urgent jobs visible and auditable for owner/dispatcher teams
+- Dispatchers can assign a multi-technician crew from an accessible selector; the server validates skills, schedule conflicts, and idempotent job updates before changing the work order
 - Manual technician route ordering persists the real driving sequence and is shared by route manifests, CSV exports, and iCalendar feeds
 - Dispatch can open the saved, technician-filtered route in Google Maps as an ordered multi-stop navigation handoff; incomplete addresses fail visibly instead of silently creating a partial route
 - Route optimization reports estimated coordinate distance and uses a bounded 2-opt improvement pass while preserving non-overlapping appointment windows by default
