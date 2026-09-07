@@ -656,6 +656,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async optimizeRoutes(date, technicians = [], options = {}, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for route optimization');
+    const response = await fetch('/api/dispatch/routes-optimize', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ date, technicians, ...options }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'bulk route optimization failed');
+    return response.json();
+  }
+
   async getAnalyticsHistory(days = 30) {
     if (!this.remote) throw new Error('API required for analytics history');
     const response = await fetch(`/api/reports/analytics-history?days=${encodeURIComponent(days)}`, { headers: { authorization: `Bearer ${this.token}` } });
