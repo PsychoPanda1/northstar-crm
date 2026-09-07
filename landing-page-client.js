@@ -37,6 +37,18 @@
       return body;
     }
 
+    async requestBlob(path, options = {}) {
+      const response = await global.fetch(this.url(path), { ...options, headers: { ...(options.headers || {}) } });
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        const error = new Error(body.error || `northstar_request_failed_${response.status}`);
+        error.status = response.status;
+        error.requestId = body.requestId || response.headers.get('x-request-id') || null;
+        throw error;
+      }
+      return response.blob();
+    }
+
     async manifest() {
       if (!this.manifestPromise) this.manifestPromise = this.request(`/api/public/tenant?service=${encodeURIComponent(this.service)}`);
       return this.manifestPromise;

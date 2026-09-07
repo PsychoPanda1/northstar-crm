@@ -11,7 +11,7 @@ const sandbox = {
   crypto: { randomUUID: () => 'landing-test-key' },
   fetch: async (url, options) => {
     calls.push({ url, options });
-    return { ok: true, status: 200, headers: { get: () => 'landing-request-1' }, json: async () => ({ tenant: { slug: 'clearwater-plumbing', contactPhone: '(843) 555-0100', contactEmail: 'hello@example.test', serviceArea: 'Charleston area' }, service: 'plumbing', integration: { ownerPortalPath: '/portal?service=plumbing', ownerAuthEndpoint: '/api/auth/login', ownerAuthRefreshEndpoint: '/api/auth/refresh', ownerAuthLogoutEndpoint: '/api/auth/logout', ownerAuthMethods: ['password', 'oidc'], ownerOidcAuthEndpoint: '/api/auth/oidc', leadEndpoint: '/api/public/leads?service=plumbing', bookingEndpoint: '/api/public/bookings?service=plumbing', technicianEndpoints: { complete: '/api/public/technician-job/complete' }, capabilities: { technicianFieldOperations: true } } }) };
+    return { ok: true, status: 200, headers: { get: () => 'landing-request-1' }, json: async () => ({ tenant: { slug: 'clearwater-plumbing', contactPhone: '(843) 555-0100', contactEmail: 'hello@example.test', serviceArea: 'Charleston area' }, service: 'plumbing', integration: { ownerPortalPath: '/portal?service=plumbing', ownerAuthEndpoint: '/api/auth/login', ownerAuthRefreshEndpoint: '/api/auth/refresh', ownerAuthLogoutEndpoint: '/api/auth/logout', ownerAuthMethods: ['password', 'oidc'], ownerOidcAuthEndpoint: '/api/auth/oidc', leadEndpoint: '/api/public/leads?service=plumbing', bookingEndpoint: '/api/public/bookings?service=plumbing', technicianEndpoints: { complete: '/api/public/technician-job/complete' }, capabilities: { technicianFieldOperations: true } } }), blob: async () => 'landing-binary' };
   }
 };
 sandbox.globalThis = sandbox;
@@ -44,4 +44,5 @@ client.manifestPromise = Promise.resolve({ integration: { technicianEndpoints: {
 await client.signedGet('technicianEndpoints', 'complete', 'signed-field-token', { jobId: 'job-1' });
 await client.signedPost('technicianEndpoints', 'complete', 'signed-field-token', { completionNote: 'Done.' }, { idempotencyKey: 'reviewed-field-key' });
 if (calls[7].url !== 'https://crm.example.test/api/public/technician-job/complete?token=signed-field-token&jobId=job-1' || calls[8].url !== 'https://crm.example.test/api/public/technician-job/complete?token=signed-field-token' || calls[8].options.headers['idempotency-key'] !== 'reviewed-field-key') throw new Error('signed portal request helpers failed');
+if (await client.requestBlob('/api/public/estimate/pdf') !== 'landing-binary') throw new Error('landing binary response helper failed');
 console.log('Northstar landing client test passed');
