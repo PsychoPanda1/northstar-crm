@@ -175,6 +175,20 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
         '422': { $ref: '#/components/responses/ValidationError' }
+  /api/assets/{assetId}/history:
+    get:
+      summary: Read tenant-scoped equipment service history
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: assetId
+          in: path
+          required: true
+          schema: { type: string, maxLength: 120 }
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
   /api/vendor-bills:
     get:
       summary: List tenant-scoped vendor bills
