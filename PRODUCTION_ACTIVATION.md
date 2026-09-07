@@ -31,6 +31,7 @@ Set `NORTHSTAR_REQUIRE_LIVE_PROVIDERS=true` only after the corresponding provide
 - Estimate/invoice documents: `NORTHSTAR_DOCUMENT_PROVIDER_URL`, API key, and public HTTPS URLs.
 - Inventory/warehouse: `NORTHSTAR_INVENTORY_PROVIDER_URL`, API key, replay and rotation procedure.
 - Accounting/ERP: `NORTHSTAR_ACCOUNTING_PROVIDER_URL`, API key, replay and rotation procedure.
+- Payroll/ERP: `NORTHSTAR_PAYROLL_PROVIDER_URL`, API key, approved payroll-period replay and rotation procedure.
 - Telephony and GPS: provider-specific signed webhook contracts, replay protection, retention, and access controls.
 
 Never place provider credentials in tenant manifests, browser code, exported snapshots, or audit metadata.
