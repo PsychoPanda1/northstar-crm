@@ -21,7 +21,7 @@ for (const snippet of ['billingSchedule', 'Amount per billing period', 'Monthly'
 for (const snippet of ['billingSchedule', 'renewalAt', 'autoRenew', 'Auto-renew off']) {
   if (!customer.includes(snippet)) throw new Error(`customer agreement terms UI wiring missing: ${snippet}`);
 }
-for (const snippet of ['createPlanInvoice', 'data-plan-billing-action', 'Invoice current period']) {
+for (const snippet of ['createPlanInvoice', 'billPlanCycle', 'data-plan-billing-action', 'Invoice current period', 'plan-billing-cycle', 'Bill due plans']) {
   if (!owner.includes(snippet)) throw new Error(`owner service-plan invoicing UI wiring missing: ${snippet}`);
 }
 if (!repository.includes('billingSchedule = \'Monthly\'') || !repository.includes('options = {}') || !repository.includes('autoRenew: options.autoRenew') || !repository.includes('visitsIncluded: options.visitsIncluded')) throw new Error('repository service-plan agreement wiring missing');
