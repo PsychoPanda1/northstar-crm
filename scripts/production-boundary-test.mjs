@@ -31,6 +31,8 @@ const env = {
   NORTHSTAR_DATA_FILE: dataFile,
   NORTHSTAR_BACKUP_FILE: `${dataFile}.backup`,
   NORTHSTAR_SESSION_FILE: sessionFile,
+  NORTHSTAR_SQLITE_FILE: `${dataFile}.sqlite`,
+  NORTHSTAR_REQUIRE_SQLITE: 'true',
   NORTHSTAR_SESSION_SECRET: secret,
   NORTHSTAR_OWNER_EMAIL: 'owner@example.test',
   NORTHSTAR_OWNER_PASSWORD_DIGEST: createHmac('sha256', secret).update(password).digest('hex'),
@@ -49,22 +51,20 @@ const env = {
 writeFileSync(invalidDataFile, JSON.stringify({ 'johnson-service-co': { customers: [{ id: 'cross-tenant-record', tenantId: 'other-tenant', name: 'Invalid record' }] } }));
 
 const child = spawn(process.execPath, ['server.mjs'], { cwd: root, env, stdio: 'ignore' });
-const invalidChild = spawn(process.execPath, ['server.mjs'], { cwd: root, env: { ...env, PORT: String(invalidPort), NORTHSTAR_DATA_FILE: invalidDataFile, NORTHSTAR_SESSION_FILE: invalidSessionFile, NORTHSTAR_REQUEST_RESPONSE_SLA_HOURS: '0', NORTHSTAR_TENANTS_JSON: JSON.stringify([{ slug: 'johnson-service-co', businessName: 'Johnson Service Co.', serviceLabel: 'Home services', timeZone: 'America/New_York', bookingStartHour: 18, bookingEndHour: 8, bookingIntervalMinutes: 60 }]), NORTHSTAR_OIDC_ISSUER: 'https://issuer.example.test', NORTHSTAR_ALLOWED_ORIGINS: 'https://valid.example,not-an-origin', NORTHSTAR_SERVICE_ORIGINS_JSON: JSON.stringify({ plumbing: ['not a valid origin'] }) }, stdio: 'ignore' });
-const strictChild = spawn(process.execPath, ['server.mjs'], { cwd: root, env: { ...env, PORT: String(strictPort), NORTHSTAR_DATA_FILE: strictDataFile, NORTHSTAR_SESSION_FILE: strictSessionFile, NORTHSTAR_REQUIRE_LIVE_PROVIDERS: 'true' }, stdio: 'ignore' });
-const oidcOnlyChild = spawn(process.execPath, ['server.mjs'], { cwd: root, env: { ...env, PORT: String(oidcOnlyPort), NORTHSTAR_DATA_FILE: oidcOnlyDataFile, NORTHSTAR_SESSION_FILE: oidcOnlySessionFile, NORTHSTAR_OWNER_EMAIL: '', NORTHSTAR_OWNER_PASSWORD_DIGEST: '', NORTHSTAR_OWNERS_JSON: '[]', NORTHSTAR_STAFF_JSON: '[]', NORTHSTAR_OIDC_ISSUER: 'https://issuer.example.test', NORTHSTAR_OIDC_AUDIENCE: 'northstar-owner-portal', NORTHSTAR_OIDC_JWKS_URL: 'https://issuer.example.test/.well-known/jwks.json', NORTHSTAR_OIDC_ACCOUNTS_JSON: JSON.stringify([{ subject: 'oidc-owner', id: 'oidc-owner', name: 'OIDC Owner', role: 'owner', tenantId: 'johnson-service-co' }]) }, stdio: 'ignore' });
-const outboundUrlChild = spawn(process.execPath, ['server.mjs'], { cwd: root, env: { ...env, PORT: String(outboundUrlPort), NORTHSTAR_DATA_FILE: outboundUrlDataFile, NORTHSTAR_SESSION_FILE: outboundUrlSessionFile, NORTHSTAR_PUBLIC_URL: 'http://crm.example.test', NORTHSTAR_MESSAGE_PROVIDER_URL: 'https://provider.example.test/messages', NORTHSTAR_FLEET_WEBHOOK_SECRET: '' }, stdio: 'ignore' });
+const invalidChild = spawn(process.execPath, ['server.mjs'], { cwd: root, env: { ...env, PORT: String(invalidPort), NORTHSTAR_DATA_FILE: invalidDataFile, NORTHSTAR_SQLITE_FILE: '', NORTHSTAR_REQUIRE_SQLITE: 'false', NORTHSTAR_SESSION_FILE: invalidSessionFile, NORTHSTAR_REQUEST_RESPONSE_SLA_HOURS: '0', NORTHSTAR_TENANTS_JSON: JSON.stringify([{ slug: 'johnson-service-co', businessName: 'Johnson Service Co.', serviceLabel: 'Home services', timeZone: 'America/New_York', bookingStartHour: 18, bookingEndHour: 8, bookingIntervalMinutes: 60 }]), NORTHSTAR_OIDC_ISSUER: 'https://issuer.example.test', NORTHSTAR_ALLOWED_ORIGINS: 'https://valid.example,not-an-origin', NORTHSTAR_SERVICE_ORIGINS_JSON: JSON.stringify({ plumbing: ['not a valid origin'] }) }, stdio: 'ignore' });
+const strictChild = spawn(process.execPath, ['server.mjs'], { cwd: root, env: { ...env, PORT: String(strictPort), NORTHSTAR_DATA_FILE: strictDataFile, NORTHSTAR_SQLITE_FILE: `${strictDataFile}.sqlite`, NORTHSTAR_SESSION_FILE: strictSessionFile, NORTHSTAR_REQUIRE_LIVE_PROVIDERS: 'true' }, stdio: 'ignore' });
+const oidcOnlyChild = spawn(process.execPath, ['server.mjs'], { cwd: root, env: { ...env, PORT: String(oidcOnlyPort), NORTHSTAR_DATA_FILE: oidcOnlyDataFile, NORTHSTAR_SQLITE_FILE: `${oidcOnlyDataFile}.sqlite`, NORTHSTAR_SESSION_FILE: oidcOnlySessionFile, NORTHSTAR_OWNER_EMAIL: '', NORTHSTAR_OWNER_PASSWORD_DIGEST: '', NORTHSTAR_OWNERS_JSON: '[]', NORTHSTAR_STAFF_JSON: '[]', NORTHSTAR_OIDC_ISSUER: 'https://issuer.example.test', NORTHSTAR_OIDC_AUDIENCE: 'northstar-owner-portal', NORTHSTAR_OIDC_JWKS_URL: 'https://issuer.example.test/.well-known/jwks.json', NORTHSTAR_OIDC_ACCOUNTS_JSON: JSON.stringify([{ subject: 'oidc-owner', id: 'oidc-owner', name: 'OIDC Owner', role: 'owner', tenantId: 'johnson-service-co' }]) }, stdio: 'ignore' });
+const outboundUrlChild = spawn(process.execPath, ['server.mjs'], { cwd: root, env: { ...env, PORT: String(outboundUrlPort), NORTHSTAR_DATA_FILE: outboundUrlDataFile, NORTHSTAR_SQLITE_FILE: `${outboundUrlDataFile}.sqlite`, NORTHSTAR_SESSION_FILE: outboundUrlSessionFile, NORTHSTAR_PUBLIC_URL: 'http://crm.example.test', NORTHSTAR_MESSAGE_PROVIDER_URL: 'https://provider.example.test/messages', NORTHSTAR_FLEET_WEBHOOK_SECRET: '' }, stdio: 'ignore' });
 const base = `http://127.0.0.1:${port}`;
 const invalidBase = `http://127.0.0.1:${invalidPort}`;
 const strictBase = `http://127.0.0.1:${strictPort}`;
 const oidcOnlyBase = `http://127.0.0.1:${oidcOnlyPort}`;
 const outboundUrlBase = `http://127.0.0.1:${outboundUrlPort}`;
-const cleanup = () => {
-  child.kill();
-  invalidChild.kill();
-  strictChild.kill();
-  oidcOnlyChild.kill();
-  outboundUrlChild.kill();
-  for (const file of [dataFile, sessionFile, `${dataFile}.backup`, `${dataFile}.tmp`, invalidDataFile, invalidSessionFile, `${invalidDataFile}.backup`, `${invalidDataFile}.tmp`, strictDataFile, strictSessionFile, `${strictDataFile}.backup`, `${strictDataFile}.tmp`, oidcOnlyDataFile, oidcOnlySessionFile, `${oidcOnlyDataFile}.backup`, `${oidcOnlyDataFile}.tmp`, outboundUrlDataFile, outboundUrlSessionFile, `${outboundUrlDataFile}.backup`, `${outboundUrlDataFile}.tmp`]) {
+const cleanup = async () => {
+  const children = [child, invalidChild, strictChild, oidcOnlyChild, outboundUrlChild];
+  for (const process of children) if (!process.killed) process.kill();
+  await Promise.all(children.map((process) => process.exitCode !== null ? Promise.resolve() : new Promise((resolve) => process.once('exit', resolve))));
+  for (const file of [dataFile, sessionFile, `${dataFile}.sqlite`, `${dataFile}.sqlite-wal`, `${dataFile}.sqlite-shm`, `${dataFile}.backup`, `${dataFile}.tmp`, invalidDataFile, invalidSessionFile, `${invalidDataFile}.sqlite`, `${invalidDataFile}.sqlite-wal`, `${invalidDataFile}.sqlite-shm`, `${invalidDataFile}.backup`, `${invalidDataFile}.tmp`, strictDataFile, strictSessionFile, `${strictDataFile}.sqlite`, `${strictDataFile}.sqlite-wal`, `${strictDataFile}.sqlite-shm`, `${strictDataFile}.backup`, `${strictDataFile}.tmp`, oidcOnlyDataFile, oidcOnlySessionFile, `${oidcOnlyDataFile}.sqlite`, `${oidcOnlyDataFile}.sqlite-wal`, `${oidcOnlyDataFile}.sqlite-shm`, `${oidcOnlyDataFile}.backup`, `${oidcOnlyDataFile}.tmp`, outboundUrlDataFile, outboundUrlSessionFile, `${outboundUrlDataFile}.sqlite`, `${outboundUrlDataFile}.sqlite-wal`, `${outboundUrlDataFile}.sqlite-shm`, `${outboundUrlDataFile}.backup`, `${outboundUrlDataFile}.tmp`]) {
     if (existsSync(file)) unlinkSync(file);
   }
 };
@@ -85,7 +85,7 @@ try {
     try { ready = await getJson('/api/ready'); } catch {}
     if (!ready?.response?.ok) await new Promise((resolve) => setTimeout(resolve, 100));
   }
-  if (!ready?.response?.ok || ready.body.checks?.configuration !== true || ready.body.checks?.tenantDeploymentContract !== true || ready.body.checks?.backupConfiguration !== true || ready.body.checks?.backupStorage !== true || ready.body.checks?.requestResponseSlaConfiguration !== true || ready.body.checks?.documentRetryConfiguration !== true || ready.body.checks?.payrollRetryConfiguration !== true) throw new Error('production server did not become ready with valid configuration');
+  if (!ready?.response?.ok || ready.body.checks?.configuration !== true || ready.body.checks?.tenantDeploymentContract !== true || ready.body.checks?.backupConfiguration !== true || ready.body.checks?.backupStorage !== true || ready.body.checks?.storageConfiguration !== true || ready.body.checks?.requestResponseSlaConfiguration !== true || ready.body.checks?.documentRetryConfiguration !== true || ready.body.checks?.payrollRetryConfiguration !== true) throw new Error('production server did not become ready with valid configuration');
   const openapiResponse = await fetch(`${base}/api/openapi.yaml`);
   const openapiText = await openapiResponse.text();
   if (!openapiResponse.ok || !openapiResponse.headers.get('content-type')?.includes('application/yaml') || !openapiText.includes('openapi: 3.0.3') || !openapiText.includes('/api/public/bookings:') || !openapiText.includes('/api/session/services:') || !openapiText.includes('bearerAuth: []')) throw new Error('canonical OpenAPI endpoint was not served with authenticated workspace discovery');
@@ -139,5 +139,5 @@ try {
   if (demoLogin.response.status !== 404 || demoLogin.body.error !== 'demo_login_disabled') throw new Error('demo login remained enabled in production');
   console.log('Northstar production boundary test passed');
 } finally {
-  cleanup();
+  await cleanup();
 }

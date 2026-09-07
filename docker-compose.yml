@@ -23,6 +23,7 @@ services:
       NORTHSTAR_DATA_FILE: /app/data/state.json
       NORTHSTAR_SESSION_FILE: /app/data/state.json.sessions
       NORTHSTAR_SQLITE_FILE: /app/data/northstar.sqlite
+      NORTHSTAR_REQUIRE_SQLITE: "true"
       NORTHSTAR_BACKUP_FILE: /app/data/state.json.backup
     volumes:
       - northstar-data:/app/data
