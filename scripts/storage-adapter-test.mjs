@@ -15,6 +15,8 @@ try {
   first.writeState({ 'tenant-a': { customers: [{ id: 'customer-a' }] } });
   second.writeState({ 'tenant-b': { jobs: [{ id: 'job-b' }] } });
   second.writeSessions([{ sid: 'session-1' }]);
+  first.writeSessions(['session-2']);
+  second.writeSessions(['session-3']);
   first.backupTo(backupFile);
   const backupHealth = first.backupHealth(backupFile);
   const firstPragmas = first.getPragmas();
@@ -24,7 +26,8 @@ try {
   first.writeState({ 'tenant-a': { customers: [{ id: 'customer-a', name: 'first-writer' }] }, 'tenant-b': { jobs: [{ id: 'job-b' }] } });
   let conflictRejected = false;
   try { second.writeState({ 'tenant-a': { customers: [{ id: 'customer-a', name: 'second-writer' }] }, 'tenant-b': { jobs: [{ id: 'job-b' }] } }); } catch (error) { conflictRejected = String(error?.message || error).startsWith('sqlite_concurrent_write_conflict:'); }
-  if (String(firstPragmas.journalMode).toLowerCase() !== 'wal' || Number(firstPragmas.busyTimeout) !== 5000 || String(secondPragmas.journalMode).toLowerCase() !== 'wal' || Number(secondPragmas.busyTimeout) !== 5000 || !first.integrityCheck() || !second.integrityCheck() || !backupHealth.present || !backupHealth.valid || mergedState['tenant-a']?.customers?.[0]?.id !== 'customer-a' || mergedState['tenant-b']?.jobs?.[0]?.id !== 'job-b' || second.readSessions([])[0]?.sid !== 'session-1' || !conflictRejected) throw new Error('SQLite adapter did not configure WAL/busy timeout, pass integrity checks, create a valid backup, merge independent tenant writes, reject same-tenant conflicts, or persist sessions');
+  const mergedSessions = first.readSessions([]);
+  if (String(firstPragmas.journalMode).toLowerCase() !== 'wal' || Number(firstPragmas.busyTimeout) !== 5000 || String(secondPragmas.journalMode).toLowerCase() !== 'wal' || Number(secondPragmas.busyTimeout) !== 5000 || !first.integrityCheck() || !second.integrityCheck() || !backupHealth.present || !backupHealth.valid || mergedState['tenant-a']?.customers?.[0]?.id !== 'customer-a' || mergedState['tenant-b']?.jobs?.[0]?.id !== 'job-b' || second.readSessions([])[0]?.sid !== 'session-1' || !mergedSessions.includes('session-2') || !mergedSessions.includes('session-3') || !conflictRejected) throw new Error('SQLite adapter did not configure WAL/busy timeout, pass integrity checks, create a valid backup, merge independent tenant writes, reject same-tenant conflicts, union concurrent session revocations, or persist sessions');
   console.log('Northstar SQLite adapter test passed');
 } finally {
   first?.close();
