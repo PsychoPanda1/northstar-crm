@@ -974,6 +974,7 @@ paths:
       summary: Submit a signed completed-job review
       parameters:
         - $ref: '#/components/parameters/ReviewToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
