@@ -1397,6 +1397,20 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async getLandingPageKeys() {
+    if (!this.remote) return { serviceKeys: [this.tenant?.slug || 'default'], updatedAt: null };
+    const response = await fetch('/api/settings/landing-pages', { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('landing page settings unavailable');
+    return response.json();
+  }
+
+  async claimLandingPageKey(service, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for landing page settings');
+    const response = await fetch('/api/settings/landing-pages', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ service }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'landing page key update failed');
+    return response.json();
+  }
+
   async updateLeadStages(stages, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for lead stage configuration');
     const response = await fetch('/api/settings/lead-stages', { method: 'PATCH', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ stages }) });
