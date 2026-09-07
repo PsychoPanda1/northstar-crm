@@ -85,7 +85,7 @@ try {
   if (!ready?.response?.ok || ready.body.checks?.configuration !== true || ready.body.checks?.requestResponseSlaConfiguration !== true || ready.body.checks?.documentRetryConfiguration !== true) throw new Error('production server did not become ready with valid configuration');
   const openapiResponse = await fetch(`${base}/api/openapi.yaml`);
   const openapiText = await openapiResponse.text();
-  if (!openapiResponse.ok || !openapiResponse.headers.get('content-type')?.includes('application/yaml') || !openapiText.includes('openapi: 3.0.3') || !openapiText.includes('/api/public/bookings:')) throw new Error('canonical OpenAPI endpoint was not served');
+  if (!openapiResponse.ok || !openapiResponse.headers.get('content-type')?.includes('application/yaml') || !openapiText.includes('openapi: 3.0.3') || !openapiText.includes('/api/public/bookings:') || !openapiText.includes('/api/session/services:') || !openapiText.includes('bearerAuth: []')) throw new Error('canonical OpenAPI endpoint was not served with authenticated workspace discovery');
   let invalidReady = null;
   for (let attempt = 0; attempt < 200 && !invalidReady; attempt += 1) {
     try { invalidReady = await getJsonFrom(invalidBase, '/api/ready'); } catch {}

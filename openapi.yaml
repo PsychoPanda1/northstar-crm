@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Northstar CRM Public Integration API
-  version: 2.3.0
+  version: 2.4.0
   description: Public, tenant-routed contract for service landing pages. Owner records and credentials are never exposed by these endpoints.
 servers:
   - url: https://crm.example.com
@@ -495,7 +495,25 @@ paths:
         '409': { $ref: '#/components/responses/IdempotencyConflict' }
         '422': { $ref: '#/components/responses/ValidationError' }
         '429': { $ref: '#/components/responses/RateLimited' }
+  /api/session/services:
+    get:
+      summary: Discover authenticated service workspaces for the current tenant
+      description: Returns only configured service aliases mapped to the authenticated owner's tenant. Use the selected service key when starting or refreshing a session.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Tenant-scoped service workspace list
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SessionServices' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: OIDC
   parameters:
     Service:
       name: service
@@ -528,6 +546,22 @@ components:
       required: true
       schema: { type: string, minLength: 20, maxLength: 400 }
   schemas:
+    SessionServices:
+      type: object
+      required: [tenant, items]
+      properties:
+        tenant:
+          type: string
+          description: Authenticated tenant identifier.
+        items:
+          type: array
+          description: Service aliases available to the authenticated tenant.
+          items:
+            type: object
+            required: [service, tenant]
+            properties:
+              service: { type: string }
+              tenant: { type: string }
     TenantManifest:
       type: object
       required: [tenant, integration]
