@@ -113,6 +113,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Estimate delivery uses a structured SMS/email dialog with provider-pending status, duplicate protection, and retry-safe delivery requests
 - Service-plan renewal campaigns use a structured renewal-window and channel dialog with bounded inputs and customer-safe duplicate handling
 - Open-estimate follow-up campaigns use a structured age-window and channel dialog with bounded inputs and customer-safe duplicate handling
+- Customer reactivation campaigns use a structured inactivity window, channel, and optional tag audience dialog with the same duplicate-safe queueing path
 - Technician en-route ETA, job completion acknowledgment, and labor capture use accessible validated dialogs while reusing the encrypted offline queue and idempotent field-action boundary
 - Dispatch assignment uses an accessible roster picker for single and bulk jobs, while server-side skill, availability, and schedule-conflict checks remain authoritative
 - Multi-party invoice billing uses an accessible validated bill-to dialog with existing profile prefill, contact details, payment terms, and server-side tenant-scoped validation
