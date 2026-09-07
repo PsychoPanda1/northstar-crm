@@ -278,6 +278,10 @@ const publicMutationWindows = new Map();
 const ownerLoginWindows = new Map();
 const revokedTokens = new Set();
 const revokedSessionIds = new Set(sqliteStore ? sqliteStore.readSessions([]) : readPersistedJson(SESSION_FILE, []));
+const refreshPersistedSessionRevocations = () => {
+	if (!sqliteStore) return;
+	for (const sessionId of sqliteStore.readSessions([])) revokedSessionIds.add(sessionId);
+};
 const tenantIdForSaved = (saved) => Object.entries(tenants).find(([tenantId]) => state.get(tenantId) === saved)?.[0] || null;
 const auditHashFor = (entry) => createHash('sha256').update(JSON.stringify({ previousHash: entry.previousHash || null, id: entry.id, tenantId: entry.tenantId || null, actor: entry.actor, role: entry.role, action: entry.action, entityType: entry.entityType, entityId: entry.entityId, detail: entry.detail, at: entry.at })).digest('hex');
 const auditLedgerHealthyFor = (tenantId) => { const entries = state.get(tenantId)?.auditEvents || []; return entries.every((entry, index) => entry.hash && auditHashFor(entry) === entry.hash && (index === entries.length - 1 || entry.previousHash === entries[index + 1]?.hash)); };
@@ -487,6 +491,7 @@ const runtimeAccountsFor = (tenantId) => (state.get(tenantId).userAccounts || []
 const authenticate = (req) => {
   const raw = req.headers.authorization || '';
   const token = raw.startsWith('Bearer ') ? raw.slice(7) : sessionTokenFromCookie(req);
+  refreshPersistedSessionRevocations();
   if (revokedTokens.has(token)) return null;
   const [payload, signature] = token.split('.');
   if (!payload || !signature) return null;
