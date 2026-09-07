@@ -1,0 +1,12 @@
+import { readFileSync } from 'node:fs';
+const root = new URL('../', import.meta.url);
+const html = readFileSync(new URL('customer.html', root), 'utf8');
+const serviceWorker = readFileSync(new URL('northstar-sw.js', root), 'utf8');
+const source = readFileSync(new URL('customer-support-dialog.js', root), 'utf8');
+const assert = (condition, message) => { if (!condition) throw new Error(message); };
+assert(html.includes('/customer-support-dialog.js'), 'customer support dialog is not loaded');
+assert(serviceWorker.includes("'/customer-support-dialog.js'"), 'customer support dialog is not cached');
+assert(source.includes('customer-portal/request') && source.includes('customer-portal/location') && source.includes('customer-portal/preferences'), 'customer support endpoints are incomplete');
+assert(source.includes('showModal') && source.includes('stopImmediatePropagation') && source.includes('role="status"'), 'customer support dialog is not accessible or does not replace prompts');
+assert(source.includes('idempotency-key') && source.includes('retryKey'), 'customer support mutations are not retry-safe');
+console.log('Northstar customer support dialog checks passed');
