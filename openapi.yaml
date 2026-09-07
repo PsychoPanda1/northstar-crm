@@ -40,6 +40,33 @@ paths:
                       $ref: '#/components/schemas/CatalogItem'
         '404':
           $ref: '#/components/responses/UnknownService'
+  /api/settings/workspace:
+    get:
+      summary: Read the authenticated tenant service profile
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Safe tenant workspace configuration
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/WorkspaceSettingsResponse' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    patch:
+      summary: Update the owner-controlled landing-page service profile
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/WorkspaceSettingsUpdate' }
+      responses:
+        '200': { $ref: '#/components/responses/WorkspaceSettingsUpdated' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
   /api/public/availability:
     get:
       summary: List available appointment slots
@@ -1517,6 +1544,35 @@ components:
               id: { type: string }
               invoicePdfUrl: { type: string, format: uri }
               invoicePdfLinkExpiresInHours: { type: integer, example: 72 }
+    WorkspaceSettings:
+      type: object
+      required: [slug, businessName, serviceLabel, timeZone, appointmentMinutes, workingDays, blackoutDates, intakeFields]
+      properties:
+        slug: { type: string }
+        businessName: { type: string, minLength: 2, maxLength: 120 }
+        serviceLabel: { type: string, minLength: 2, maxLength: 80 }
+        timeZone: { type: string }
+        appointmentMinutes: { type: integer, minimum: 30, maximum: 480 }
+        bookingStartHour: { type: integer, minimum: 0, maximum: 23 }
+        bookingEndHour: { type: integer, minimum: 1, maximum: 24 }
+        bookingIntervalMinutes: { type: integer, minimum: 15, maximum: 240 }
+        workingDays: { type: array, maxItems: 7, items: { type: integer, minimum: 0, maximum: 6 } }
+        blackoutDates: { type: array, maxItems: 60, items: { type: string, format: date } }
+        accent: { type: [string, 'null'], pattern: '^#[0-9a-fA-F]{6}$' }
+        accentSoft: { type: [string, 'null'], pattern: '^#[0-9a-fA-F]{6}$' }
+        focus: { type: [string, 'null'], maxLength: 160 }
+        requestResponseSlaHours: { type: [integer, 'null'], minimum: 1, maximum: 168 }
+        autoAssignOnlineBookings: { type: boolean }
+        intakeFields: { type: array, maxItems: 8, items: { type: object, additionalProperties: true } }
+    WorkspaceSettingsUpdate:
+      allOf:
+        - $ref: '#/components/schemas/WorkspaceSettings'
+    WorkspaceSettingsResponse:
+      type: object
+      required: [workspace]
+      properties:
+        workspace: { $ref: '#/components/schemas/WorkspaceSettings' }
+        updatedAt: { type: [string, 'null'], format: date-time }
     Error:
       type: object
       required: [error]
@@ -1546,6 +1602,12 @@ components:
     IdempotencyConflict:
       description: Idempotency key was reused with a different payload
       content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    Forbidden:
+      description: Authenticated role is not allowed to perform this operation
+      content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    WorkspaceSettingsUpdated:
+      description: Workspace settings saved
+      content: { application/json: { schema: { allOf: [{ $ref: '#/components/schemas/WorkspaceSettingsResponse' }, { $ref: '#/components/schemas/Duplicate' }] } } }
     RateLimited:
       description: Client/service mutation rate limit exceeded; retry after the advertised delay.
       headers:

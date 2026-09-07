@@ -1383,6 +1383,20 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async getWorkspaceSettings() {
+    if (!this.remote) return { workspace: this.tenant || {}, updatedAt: null };
+    const response = await fetch('/api/settings/workspace', { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('workspace settings unavailable');
+    return response.json();
+  }
+
+  async updateWorkspaceSettings(update, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for workspace settings');
+    const response = await fetch('/api/settings/workspace', { method: 'PATCH', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify(update) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'workspace settings update failed');
+    return response.json();
+  }
+
   async updateLeadStages(stages, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for lead stage configuration');
     const response = await fetch('/api/settings/lead-stages', { method: 'PATCH', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ stages }) });
