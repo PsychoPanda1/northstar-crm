@@ -112,6 +112,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Repeat online bookings match the tenant customer by email or normalized phone so history is not fragmented across appointments
 - Reusable `booking.html` customer form for service-specific landing pages
 - Pricebook-linked estimates preserve the quoted service snapshot for reliable quote-to-cash records; optional expiration dates prevent stale quotes from being delivered or approved
+- Owners can save customer-specific pricebook overrides so negotiated rates flow into new estimates while preserving the effective price in the estimate snapshot
 - Multi-option estimates let customers select a clearly labeled service tier before approval
 - Signed estimate pages can download a tenant-scoped PDF artifact containing pricing, line items, and package inclusions
 - Estimates can calculate subtotal, discounts, tax, and final total on the server
