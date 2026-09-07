@@ -4,6 +4,10 @@ const source = await readFile(new URL('../app.js', import.meta.url), 'utf8');
 const required = [
   'data-integration-dispatch="messages"',
   'data-integration-dispatch="payments"',
+  'data-document-health-card',
+  'data-integration-document-dispatch',
+  'data-integration-document-queue',
+  'repository.dispatchDocuments(20)',
   'repository.dispatchMessages(20)',
   'repository.dispatchPayments(20)',
   'data-operations-dispatch',
