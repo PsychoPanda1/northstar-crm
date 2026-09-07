@@ -22,6 +22,8 @@ try {
   await waitForServer();
   const manifest = await request('/api/public/tenant?service=plumbing');
   assert(manifest.response.ok && manifest.body.tenant?.intakeFields?.some((field) => field.id === 'issue_type' && field.required), 'plumbing manifest did not expose required guided intake');
+  const catalog = await request('/api/public/catalog?service=plumbing');
+  assert(catalog.response.ok && catalog.body.items?.some((item) => item.name === 'Drain cleaning' && item.category === 'Repair' && item.durationMinutes === 90), 'plumbing public catalog did not expose the vertical-specific pricebook');
   const availability = await request('/api/public/availability?service=plumbing&days=7');
   const slot = availability.body.slotOptions?.[0];
   assert(slot, 'intake fields test did not receive an appointment slot');
