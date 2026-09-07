@@ -6,7 +6,7 @@ const [html, script, serviceWorker, repository] = await Promise.all([
   readFile(new URL('../northstar-sw.js', import.meta.url), 'utf8'),
   readFile(new URL('../data-repository.js', import.meta.url), 'utf8')
 ]);
-for (const snippet of ['integration-recovery-owner.js', 'data-integration-recovery-card', 'data-integration-recovery', 'retryLeadProvider', 'retryMessage', 'retryPaymentIntent', 'retryInventory', 'retryAccounting', 'retryDocumentDelivery', 'retryPayrollRun', 'failedItems']) {
+for (const snippet of ['integration-recovery-owner.js', 'data-integration-recovery-card', 'data-integration-recovery', 'retryLeadProvider', 'retryMessage', 'retryPaymentIntent', 'retryInventory', 'retryAccounting', 'retryDocumentDelivery', 'retryPayrollRun', 'failedItems', '/api/technician/offline-sync/review', '/api/technician/offline-sync/discard', "offline: ['owner', 'dispatcher']"]) {
   if (!html.includes(snippet) && !script.includes(snippet) && !repository.includes(snippet)) throw new Error(`integration recovery contract missing: ${snippet}`);
 }
 for (const role of ["lead: ['owner', 'dispatcher']", "message: ['owner', 'dispatcher']", "payment: ['owner', 'accountant']", "inventory: ['owner', 'dispatcher', 'accountant']", "accounting: ['owner', 'accountant']", "document: ['owner', 'dispatcher', 'accountant']", "payroll: ['owner', 'accountant']"]) {
