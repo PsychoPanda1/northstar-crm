@@ -29,9 +29,10 @@ try {
   const second = await post('/api/payments/refund-payment/refund', { amount: 75, reason: 'Remaining balance reversal' }, { authorization: headers.authorization, 'idempotency-key': 'refund-key-2' });
   const rotatedWebhookPayload = JSON.stringify({ tenantId, eventId: 'rotation-event-1', from: '843-555-0199', channel: 'SMS', message: 'Rotation verification' });
   const rotatedWebhook = await post('/api/webhooks/messages/inbound', JSON.parse(rotatedWebhookPayload), { 'x-northstar-signature': createHmac('sha256', previousMessageSecret).update(rotatedWebhookPayload).digest('hex') });
+  const health = await request('/api/integrations/health', { headers: { authorization: headers.authorization } });
   const saved = JSON.parse(readFileSync(dataFile, 'utf8'))[tenantId];
   const invoice = saved.invoices.find((item) => item.id === 'refund-invoice');
-  if (!login.response.ok || first.response.status !== 201 || first.body.invoice?.status !== 'Partially paid' || first.body.invoice?.balance !== 25 || duplicate.response.status !== 200 || !duplicate.body.duplicate || second.response.status !== 201 || rotatedWebhook.response.status !== 201 || invoice.status !== 'Due' || invoice.paidAmount !== 0 || invoice.balance !== 100 || saved.payments.filter((item) => item.refundOf === 'refund-payment').length !== 2) throw new Error('payment refund lifecycle, idempotency, or webhook secret rotation failed');
+  if (!login.response.ok || first.response.status !== 201 || first.body.invoice?.status !== 'Partially paid' || first.body.invoice?.balance !== 25 || duplicate.response.status !== 200 || !duplicate.body.duplicate || second.response.status !== 201 || rotatedWebhook.response.status !== 201 || health.response.status !== 200 || health.body.checks?.webhookRotation !== true || health.body.webhookRotation?.previousSecrets?.message !== true || invoice.status !== 'Due' || invoice.paidAmount !== 0 || invoice.balance !== 100 || saved.payments.filter((item) => item.refundOf === 'refund-payment').length !== 2) throw new Error('payment refund lifecycle, idempotency, or webhook secret rotation failed');
   console.log('Northstar payment refund test passed');
 } finally {
   if (child && !child.killed) child.kill();
