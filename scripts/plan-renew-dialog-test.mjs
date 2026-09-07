@@ -1,0 +1,12 @@
+import { readFileSync } from 'node:fs';
+const root = new URL('../', import.meta.url);
+const index = readFileSync(new URL('index.html', root), 'utf8');
+const serviceWorker = readFileSync(new URL('northstar-sw.js', root), 'utf8');
+const source = readFileSync(new URL('plan-renew-dialog.js', root), 'utf8');
+const assert = (condition, message) => { if (!condition) throw new Error(message); };
+assert(index.includes('/plan-renew-dialog.js'), 'plan renewal dialog is not loaded');
+assert(serviceWorker.includes("'/plan-renew-dialog.js'"), 'plan renewal dialog is not cached');
+assert(source.includes('repository.renewPlan') && source.includes('repository.getAvailability') && source.includes('getCustomerProfile'), 'plan renewal does not use live availability and customer locations');
+assert(source.includes('data-plan-action="renew"') && source.includes('stopImmediatePropagation') && source.includes('showModal'), 'plan renewal dialog does not replace the prompt flow');
+assert(source.includes('slotOptions') && source.includes('locationId') && source.includes('crypto.randomUUID'), 'plan renewal dialog does not preserve slot, address, and retry-safe renewal');
+console.log('Northstar plan renewal dialog checks passed');
