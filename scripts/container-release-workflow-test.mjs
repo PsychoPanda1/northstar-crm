@@ -25,5 +25,6 @@ for (const [path, label] of workflows) {
     if (!source.includes(marker)) throw new Error(`${label} readiness fixture missing ${secret}`);
   }
   if (label !== 'environment example' && !source.includes('/api/ready')) throw new Error(`${label} workflow readiness endpoint missing`);
+  if (label === 'compose' && (!source.includes('NORTHSTAR_OWNER_EMAIL: "${NORTHSTAR_OWNER_EMAIL:-}"') || !source.includes('NORTHSTAR_OWNER_PASSWORD_DIGEST: "${NORTHSTAR_OWNER_PASSWORD_DIGEST:-}"') || !source.includes('NORTHSTAR_OWNER_TENANT_ID: "${NORTHSTAR_OWNER_TENANT_ID:-}"'))) throw new Error('compose must allow OIDC-only owner activation without password-owner variables');
 }
 console.log('Northstar container release workflow checks passed');

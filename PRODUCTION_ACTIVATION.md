@@ -17,6 +17,7 @@ Northstar is implementation-complete for the checked local workflows, but a prod
 ## 2. Configure identity and data safety
 
 - Prefer the OIDC seam with a real issuer, audience, JWKS URL, and explicit tenant-scoped account mapping.
+- The included Compose handoff permits OIDC-only owner activation; leave the legacy `NORTHSTAR_OWNER_EMAIL`, `NORTHSTAR_OWNER_PASSWORD_DIGEST`, and `NORTHSTAR_OWNER_TENANT_ID` values empty when the deployment provisions a tenant-bound OIDC owner instead.
 - Use managed shared storage before running more than one application writer.
 - Keep `NORTHSTAR_EXPECTED_WRITERS=1` for the included SQLite deployment. Readiness fails closed if a production process claims multiple writers without a connected managed shared database adapter.
 - Configure automated backups, restore testing, retention, and secret rotation.
