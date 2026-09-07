@@ -677,6 +677,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async dispatchPayrollRuns(limit = 20) {
+    if (!this.remote) throw new Error('API required for payroll dispatch');
+    const response = await fetch('/api/integrations/payroll/dispatch', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ limit }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'payroll dispatch failed');
+    return response.json();
+  }
+
   async listServices() {
     if (!this.remote || !this.token) return [];
     const response = await fetch('/api/session/services', { headers: { authorization: `Bearer ${this.token}` } });

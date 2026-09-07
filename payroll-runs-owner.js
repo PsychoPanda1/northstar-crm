@@ -37,7 +37,14 @@
       button.disabled = true;
       try { await repository.createPayrollRun(startDate.trim(), endDate.trim()); showToast('Payroll period snapshot created.'); button.remove(); await refresh(); } catch (error) { showToast(error?.message || 'Could not create payroll period.'); button.disabled = false; }
     });
-    header.append(document.createElement('br'), button);
+    const dispatch = document.createElement('button');
+    dispatch.type = 'button';
+    dispatch.className = 'ghost-btn';
+    dispatch.dataset.payrollDispatch = 'true';
+    dispatch.textContent = 'Send approved periods';
+    dispatch.style.marginTop = '8px';
+    dispatch.addEventListener('click', async () => { dispatch.disabled = true; try { const result = await repository.dispatchPayrollRuns(20); showToast(`${Number(result.delivered || 0)} payroll period${Number(result.delivered || 0) === 1 ? '' : 's'} sent${result.failed ? ` · ${result.failed} failed` : ''}.`); } catch (error) { showToast(error?.message || 'Payroll provider is not configured.'); } finally { dispatch.disabled = false; } });
+    header.append(document.createElement('br'), button, document.createElement('br'), dispatch);
     refresh().catch(() => {});
   };
   new MutationObserver(decorate).observe(list, { childList: true, subtree: true });
