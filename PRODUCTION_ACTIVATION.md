@@ -31,7 +31,7 @@ Set `NORTHSTAR_REQUIRE_LIVE_PROVIDERS=true` only after the corresponding provide
 - Messaging and inbound replies: `NORTHSTAR_MESSAGE_PROVIDER_URL`, API key, and rotated webhook secret.
 - Payments and signed settlement webhooks: `NORTHSTAR_PAYMENT_PROVIDER_URL`, API key, and rotated webhook secret.
 - Financing: provider webhook secret and approved provider contract.
-- Estimate/invoice documents: `NORTHSTAR_DOCUMENT_PROVIDER_URL`, API key, and public HTTPS URLs.
+- Estimate/invoice documents: tenant document-provider override when businesses use separate delivery accounts, otherwise `NORTHSTAR_DOCUMENT_PROVIDER_URL`, plus API key and public HTTPS URLs.
 - Inventory/warehouse: `NORTHSTAR_INVENTORY_PROVIDER_URL`, API key, replay and rotation procedure.
 - Accounting/ERP: `NORTHSTAR_ACCOUNTING_PROVIDER_URL`, API key, replay and rotation procedure.
 - Payroll/ERP: `NORTHSTAR_PAYROLL_PROVIDER_URL`, API key, approved payroll-period replay and rotation procedure.

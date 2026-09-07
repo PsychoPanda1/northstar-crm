@@ -25,5 +25,6 @@ const runCase = async (label, providerConfig, expectedCheck, extraEnv = {}) => {
 await runCase('malformed', '{bad-json', 'tenantProviderConfiguration');
 await runCase('unknown-tenant', JSON.stringify({ 'unknown-tenant': { lead: { url: 'https://lead.example.test/ingest' } } }), 'tenantProviderConfiguration');
 await runCase('insecure-http', JSON.stringify({ 'johnson-service-co': { lead: { url: 'http://lead.example.test/ingest' } } }), 'tenantProviderConfiguration');
+await runCase('insecure-document-http', JSON.stringify({ 'johnson-service-co': { document: { url: 'http://document.example.test/deliver' } } }), 'tenantProviderConfiguration');
 await runCase('insecure-global-http', '{}', 'liveLeadProvider', { NORTHSTAR_REQUIRE_LIVE_PROVIDERS: 'true', NORTHSTAR_LEAD_PROVIDER_URL: 'http://external.example.test/ingest' });
 console.log('Northstar tenant provider configuration test passed');
