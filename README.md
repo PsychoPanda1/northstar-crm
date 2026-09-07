@@ -252,6 +252,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Owners and dispatchers can add tenant-specific technicians or staff members to the roster
 - Owners can create, suspend, reactivate, and reset passwords for tenant-scoped runtime login accounts for dispatchers, technicians, and accountants without editing deployment secrets; runtime passwords use salted scrypt hashes and reset invalidates prior sessions
 - Owners can use the Workspace setup editor to update the attached landing page's business identity, booking window, blackout dates, service-area allowlist, and guided intake fields from the authenticated CRM, with server validation, idempotent writes, and audit history
+- Service agreements support monthly, every-other-month, quarterly, biannual, annual, upfront, and time-of-service billing semantics; recurring automation only creates invoices for the selected cadence, while time-of-service agreements flow through completed-job invoicing
 - Customer assets support an optional validated warranty-through date, customer-portal visibility, and an auditable creation event
 - Warranty dates within 30 days automatically surface as owner follow-up notifications
 - Completed jobs can expose technician completion notes and bounded HTTPS photo evidence in the customer portal

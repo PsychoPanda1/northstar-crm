@@ -15,7 +15,7 @@ for (const snippet of [
 ]) {
   if (!customer.includes(snippet)) throw new Error(`customer plan visit UI wiring missing: ${snippet}`);
 }
-for (const snippet of ['billingSchedule', 'Amount per billing period', 'Monthly', 'Quarterly', 'Annual', 'renewalAt', 'visitsIncluded', 'autoRenew', 'Auto-renew agreement']) {
+for (const snippet of ['billingSchedule', 'Amount per billing period', 'Monthly', 'Every other month', 'Quarterly', 'Biannual', 'Annual', 'Upfront', 'Time of service', 'renewalAt', 'visitsIncluded', 'autoRenew', 'Auto-renew agreement']) {
   if (!owner.includes(snippet)) throw new Error(`owner service-plan billing UI wiring missing: ${snippet}`);
 }
 for (const snippet of ['billingSchedule', 'renewalAt', 'autoRenew', 'Auto-renew off']) {
