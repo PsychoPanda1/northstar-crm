@@ -66,7 +66,9 @@ npm run verify:deployment
 
 For a local loopback check only, add
 `NORTHSTAR_DEPLOYMENT_ALLOW_HTTP=true`. A passing verifier is necessary but not
-sufficient: it does not prove provider settlement, identity-provider behavior,
+sufficient: when `NORTHSTAR_DEPLOYMENT_SERVICE` is supplied, it also verifies the
+tenant manifest, customer-safe catalog, and at least one valid capacity slot for
+the attached landing page. It still does not prove provider settlement, identity-provider behavior,
 backup restoration, or the complete customer journey.
 
 The same check is available as the manual `Verify hosted Northstar deployment`

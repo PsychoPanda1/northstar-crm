@@ -60,7 +60,11 @@ try {
 }
 
 const service = String(process.env.NORTHSTAR_DEPLOYMENT_SERVICE || '').trim();
-if (service) await check('tenant manifest', `/api/public/tenant?service=${encodeURIComponent(service)}`, (body) => body?.tenant?.slug && body?.service === service);
+if (service) {
+  await check('tenant manifest', `/api/public/tenant?service=${encodeURIComponent(service)}`, (body) => body?.tenant?.slug && body?.service === service && body?.integration?.capabilities?.onlineBooking === true);
+  await check('public catalog', `/api/public/catalog?service=${encodeURIComponent(service)}`, (body) => Array.isArray(body?.items) && body.items.length > 0 && body.items.every((item) => item?.id && item?.name && item?.description && Number(item.durationMinutes) >= 15));
+  await check('public availability', `/api/public/availability?service=${encodeURIComponent(service)}&days=7`, (body) => Array.isArray(body?.slotOptions) && body.slotOptions.length > 0 && body.slotOptions.every((slot) => slot?.id && slot?.startsAt && slot?.endsAt && Date.parse(slot.endsAt) > Date.parse(slot.startsAt)));
+}
 
 if (failures.length) {
   console.error(`Deployment verification failed: ${failures.join(' · ')}`);
