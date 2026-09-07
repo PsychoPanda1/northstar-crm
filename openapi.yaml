@@ -90,6 +90,49 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '422': { $ref: '#/components/responses/ValidationError' }
+  /api/reports/payables:
+    get:
+      summary: Read tenant-scoped accounts-payable aging
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: asOf
+          in: query
+          schema: { type: string, format: date-time }
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /api/vendor-bills:
+    get:
+      summary: List tenant-scoped vendor bills
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+    post:
+      summary: Create a vendor bill for accounts payable
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [vendor, invoiceNumber, amount, due]
+              properties:
+                vendor: { type: string, minLength: 2, maxLength: 120 }
+                invoiceNumber: { type: string, minLength: 2, maxLength: 120 }
+                amount: { type: number, exclusiveMinimum: 0 }
+                due: { type: string, format: date-time }
+                purchaseOrderId: { type: string, nullable: true }
+      responses:
+        '201': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
   /api/settings/landing-pages:
     get:
       summary: List landing-page service keys for the authenticated tenant

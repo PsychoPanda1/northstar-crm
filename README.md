@@ -67,6 +67,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Installable owner and technician workspaces with an offline shell that never caches authenticated customer/job data or API responses
 - Tenant-scoped audit log with searchable CSV export for workflow and integration traceability
 - Three-way purchase reconciliation with vendor-invoice matching, quantity/price/vendor flags, and exception review
+- Accounts-payable workflow for vendor bills: draft submission, owner approval, three-way-match controls, partial/full payment ledger, aging report, and CSV export
 - Tenant-scoped fleet vehicles with license-plate uniqueness, idempotent creation, lifecycle status, schedule-conflict checks, and dispatch assignment controls
 - Provider-neutral signed fleet telemetry accepts GPS location events with replay protection and exposes a stale-aware owner fleet-location view without leaking telemetry to customers or landing pages
 - Stale fleet telemetry on active work creates an urgent, dismissible owner attention item so dispatch is warned before a vehicle disappears from the route
