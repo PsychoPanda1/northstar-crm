@@ -162,6 +162,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - The owner lead inbox supports stage, assigned-owner, and source/campaign filters that remain active while searching, so follow-up can be managed as a focused pipeline
 - Owners can configure 2–12 tenant-specific lead stages from Workspace settings; stage removal is blocked while existing leads still use that stage
 - Owners can configure the connected landing-page service profile from Workspace settings, including business identity, public contact metadata, service area, timezone, appointment length, and guided intake fields; validated changes persist to the tenant and flow into the public manifest with idempotent audit history
+- Owners can enforce a tenant-scoped service-area allowlist of postal codes and normalized cities; the shared landing-page lead and booking endpoints qualify the request before creating a CRM record and return a clear out-of-area response
 - Owners can claim additional tenant-scoped landing-page service keys from Workspace settings, allowing future service pages to reuse the manifest and owner-login contract without a deployment code change
 - Owners and dispatchers can queue an idempotent SMS/email follow-up directly from an open lead; the first follow-up advances a new lead to Contacted and provider credentials remain server-side
 - Owners, dispatchers, and accountants can inspect integration health and dispatch eligible message or payment queue items from the owner workspace; provider credentials remain server-side
