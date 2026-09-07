@@ -39,6 +39,7 @@ const servicePlanRequestOwner = readFileSync(`${root}service-plan-request-owner.
 const inventoryProviderRetryOwner = readFileSync(`${root}inventory-provider-retry-owner.js`, 'utf8');
 const accountingProviderRetryOwner = readFileSync(`${root}accounting-provider-retry-owner.js`, 'utf8');
 const payrollRunsOwner = readFileSync(`${root}payroll-runs-owner.js`, 'utf8');
+const serviceAgreementOwner = readFileSync(`${root}service-agreement-report-owner.js`, 'utf8');
 const deploymentWorkflow = readFileSync(`${root}.github/workflows/verify-deployment.yml`, 'utf8');
 const packageJson = JSON.parse(readFileSync(`${root}package.json`, 'utf8'));
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
@@ -328,6 +329,8 @@ assert(repository.includes('/api/reports/custom/preferences') && server.includes
 assert(app.includes('operations-metrics-view') && app.includes('Operations health') && app.includes('metrics.persistence?.auditLedgerHealthy') && app.includes('metrics.queues?.accounting'), 'owner workspace must expose sanitized operational health metrics');
 assert(packageJson.scripts?.['test:accounting-provider'] === 'node scripts/accounting-provider-test.mjs' && packageJson.scripts?.pretest.includes('node scripts/accounting-provider-test.mjs'), 'accounting provider synchronization must have a runnable regression contract');
 assert(packageJson.scripts?.['test:payroll-provider'] === 'node scripts/payroll-provider-test.mjs' && packageJson.scripts?.['test:payroll-runs']?.includes('payroll-provider-test.mjs'), 'payroll provider synchronization must have a runnable regression contract');
+assert(server.includes('serviceAgreementReportFor') && server.includes("'/api/reports/service-agreements'") && server.includes("'service-agreements'") && packageJson.scripts?.['test:service-agreement-report'] === 'node scripts/service-agreement-report-test.mjs' && packageJson.scripts?.pretest.includes('node scripts/service-agreement-report-test.mjs'), 'service-agreement coverage and material forecasting must have a runnable tenant-scoped report contract');
+assert(index.includes('service-agreement-report-owner.js') && repository.includes('getServiceAgreementReport') && serviceAgreementOwner.includes('Agreement health') && serviceAgreementOwner.includes('materialForecast'), 'owner workspace must expose service-agreement coverage and material forecast reporting');
 assert((server.includes('if (accountingProviderConfigured()) await dispatchAccountingRecords(saved, claims, 50)') || server.includes('if (accountingProviderConfigured(tenantId)) await dispatchAccountingRecords(saved, claims, 50)')) && packageJson.scripts?.['test:accounting-provider-automation'] === 'node scripts/accounting-provider-automation-test.mjs', 'scheduled automation must dispatch accounting-provider handoffs');
 assert(packageJson.scripts?.['test:operations-metrics'] === 'node scripts/operations-metrics-test.mjs' && server.includes('operationalMetricsFor') && server.includes("'/api/operations/metrics'"), 'operational metrics must have an executable isolation regression contract');
 assert(server.includes('accountingQueueStatsFor') && server.includes('const missing = records.filter'), 'accounting queue health must include unsynchronized canonical export records');

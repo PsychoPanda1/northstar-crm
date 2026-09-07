@@ -656,6 +656,14 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async getServiceAgreementReport(filters = {}, range = {}) {
+    if (!this.remote) throw new Error('API required for service-agreement reporting');
+    const query = new URLSearchParams(); if (filters?.status) query.set('status', String(filters.status)); if (filters?.customer) query.set('customer', String(filters.customer)); if (range?.startDate) query.set('startDate', String(range.startDate)); if (range?.endDate) query.set('endDate', String(range.endDate));
+    const response = await fetch(`/api/reports/service-agreements${query.toString() ? `?${query}` : ''}`, { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('service-agreement report unavailable');
+    return response.json();
+  }
+
   async listPayrollRuns() {
     if (!this.remote) throw new Error('API required for payroll runs');
     const response = await fetch('/api/payroll/runs', { headers: { authorization: `Bearer ${this.token}` } });

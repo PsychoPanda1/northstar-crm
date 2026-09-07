@@ -67,6 +67,29 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '409': { $ref: '#/components/responses/IdempotencyConflict' }
         '422': { $ref: '#/components/responses/ValidationError' }
+  /api/reports/service-agreements:
+    get:
+      summary: Read tenant-scoped service-agreement coverage and material forecast
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string, maxLength: 40 }
+        - name: customer
+          in: query
+          schema: { type: string, maxLength: 100 }
+        - name: startDate
+          in: query
+          schema: { type: string, format: date }
+        - name: endDate
+          in: query
+          schema: { type: string, format: date }
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/ValidationError' }
   /api/settings/landing-pages:
     get:
       summary: List landing-page service keys for the authenticated tenant
