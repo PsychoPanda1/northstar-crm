@@ -656,6 +656,20 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async getAnalyticsHistory(days = 30) {
+    if (!this.remote) throw new Error('API required for analytics history');
+    const response = await fetch(`/api/reports/analytics-history?days=${encodeURIComponent(days)}`, { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('analytics history unavailable');
+    return response.json();
+  }
+
+  async captureAnalyticsSnapshot() {
+    if (!this.remote) throw new Error('API required for analytics snapshot');
+    const response = await fetch('/api/reports/analytics-snapshot', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: '{}' });
+    if (!response.ok) throw new Error('analytics snapshot unavailable');
+    return response.json();
+  }
+
   async getServiceAgreementReport(filters = {}, range = {}) {
     if (!this.remote) throw new Error('API required for service-agreement reporting');
     const query = new URLSearchParams(); if (filters?.status) query.set('status', String(filters.status)); if (filters?.customer) query.set('customer', String(filters.customer)); if (range?.startDate) query.set('startDate', String(range.startDate)); if (range?.endDate) query.set('endDate', String(range.endDate));

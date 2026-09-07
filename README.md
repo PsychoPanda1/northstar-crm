@@ -164,6 +164,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Owners and accountants can inspect and dispatch approved payroll-provider handoffs from the Operations health view; delivery remains bounded, idempotent, and provider-pending until acknowledged by the external system
 - The Integration health view also exposes payroll queue counts and the same owner/accountant-scoped dispatch control, keeping provider activation and recovery visible in one place
 - Integration health also groups failed lead, message, payment, inventory, accounting, document, and payroll handoffs into one role-scoped recovery panel; each retry preserves the original record key and uses the existing audited retry endpoint
+- KPI history persists tenant-scoped daily snapshots of the core revenue, conversion, workload, and margin metrics, with an owner/accountant capture control and authenticated trend-history endpoint
 - The owner navigation exposes live Schedule, Inbox, and open Customer Requests counts so unresolved work remains visible across service verticals
 - Customer Requests are visible only to owner and dispatcher sessions through the explicit `requests:read` permission; technicians and accountants remain excluded from that queue
 - Customer request urgency uses optional tenant-level `requestResponseSlaHours` in `NORTHSTAR_TENANTS_JSON` (1–168 hours), falling back to the deployment-wide `NORTHSTAR_REQUEST_RESPONSE_SLA_HOURS` setting (default 24)
