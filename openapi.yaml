@@ -1815,6 +1815,10 @@ components:
         priceFrom: { type: string }
         durationMinutes: { type: integer, minimum: 15 }
         category: { type: string }
+        formNames:
+          type: array
+          maxItems: 12
+          items: { type: string, minLength: 2, maxLength: 120 }
     Slot:
       type: object
       required: [id, label, startsAt, endsAt, timeZone]
