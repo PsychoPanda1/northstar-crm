@@ -124,6 +124,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Technician availability uses accessible add/manage time-off dialogs with roster selection, bounded time ranges, active-block cancellation, and server-side conflict enforcement
 - Fleet status changes use a validated Active/Maintenance/Retired dialog backed by the tenant-authorized vehicle API
 - Fleet maintenance uses a bounded service-due date and odometer dialog with explicit clear-date behavior and tenant-authorized persistence
+- Dispatch vehicle assignment uses an active-fleet picker with tenant-authorized assignment and server-side lifecycle/conflict checks
 - Technician en-route ETA, job completion acknowledgment, and labor capture use accessible validated dialogs while reusing the encrypted offline queue and idempotent field-action boundary
 - Dispatch assignment uses an accessible roster picker for single and bulk jobs, while server-side skill, availability, and schedule-conflict checks remain authoritative
 - Multi-party invoice billing uses an accessible validated bill-to dialog with existing profile prefill, contact details, payment terms, and server-side tenant-scoped validation
