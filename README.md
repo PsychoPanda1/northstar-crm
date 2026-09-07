@@ -161,6 +161,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Owners can claim additional tenant-scoped landing-page service keys from Workspace settings, allowing future service pages to reuse the manifest and owner-login contract without a deployment code change
 - Owners and dispatchers can queue an idempotent SMS/email follow-up directly from an open lead; the first follow-up advances a new lead to Contacted and provider credentials remain server-side
 - Owners, dispatchers, and accountants can inspect integration health and dispatch eligible message or payment queue items from the owner workspace; provider credentials remain server-side
+- Owners and accountants can inspect and dispatch approved payroll-provider handoffs from the Operations health view; delivery remains bounded, idempotent, and provider-pending until acknowledged by the external system
 - The owner navigation exposes live Schedule, Inbox, and open Customer Requests counts so unresolved work remains visible across service verticals
 - Customer Requests are visible only to owner and dispatcher sessions through the explicit `requests:read` permission; technicians and accountants remain excluded from that queue
 - Customer request urgency uses optional tenant-level `requestResponseSlaHours` in `NORTHSTAR_TENANTS_JSON` (1–168 hours), falling back to the deployment-wide `NORTHSTAR_REQUEST_RESPONSE_SLA_HOURS` setting (default 24)
