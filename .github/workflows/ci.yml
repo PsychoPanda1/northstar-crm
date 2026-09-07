@@ -40,6 +40,7 @@ jobs:
             --env NORTHSTAR_SESSION_SECRET=ci-session-secret-32-character-key \
             --env NORTHSTAR_REQUIRE_SQLITE=true \
             --env NORTHSTAR_REQUIRE_LIVE_PROVIDERS=false \
+            --env NORTHSTAR_PUBLIC_URL=https://crm.example.test \
             --env NORTHSTAR_OWNER_EMAIL=owner@example.test \
             --env NORTHSTAR_OWNER_PASSWORD_DIGEST=0000000000000000000000000000000000000000000000000000000000000000 \
             --env NORTHSTAR_OWNER_TENANT_ID=johnson-service-co \
@@ -55,4 +56,7 @@ jobs:
             --env 'NORTHSTAR_CATALOG_JSON=[{"tenantId":"johnson-service-co","id":"ci-service","name":"CI service","description":"CI service","priceFrom":"$199","durationMinutes":60}]' \
             northstar-crm:ci)
           trap 'docker rm -f "$container_id" >/dev/null 2>&1 || true' EXIT
-          node -e "const deadline=Date.now()+30000; const poll=async()=>{try{const r=await fetch('http://127.0.0.1:4173/api/ready'); if(r.ok){const body=await r.json(); if(body.ok && Object.values(body.checks).every(Boolean)) process.exit(0);}}catch{} if(Date.now()>=deadline) process.exit(1); setTimeout(poll,250);}; poll();"
+          if ! node -e "const deadline=Date.now()+30000; let last=''; const poll=async()=>{try{const r=await fetch('http://127.0.0.1:4173/api/ready'); last=await r.text(); const body=JSON.parse(last); if(r.ok && body.ok && Object.values(body.checks).every(Boolean)) process.exit(0);}catch{} if(Date.now()>=deadline){console.error(last); process.exit(1);} setTimeout(poll,250);}; poll();"; then
+            docker logs "$container_id" || true
+            exit 1
+          fi
