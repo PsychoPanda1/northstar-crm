@@ -10,6 +10,7 @@ NORTHSTAR_ASSETS.push('/estimate-send-dialog.js');
 NORTHSTAR_ASSETS.push('/plan-reminder-dialog.js');
 NORTHSTAR_ASSETS.push('/estimate-reminder-dialog.js');
 NORTHSTAR_ASSETS.push('/reactivation-campaign-dialog.js');
+NORTHSTAR_ASSETS.push('/task-dialog.js');
 NORTHSTAR_ASSETS.push('/customer-tax-owner.js');
 NORTHSTAR_ASSETS.push('/customer-merge-owner.js');
 const NORTHSTAR_OWNER_PATHS = ['/portal', '/portal/', '/index.html'];
