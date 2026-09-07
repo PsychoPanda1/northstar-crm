@@ -4,3 +4,4 @@ for (const snippet of ['conversation-dialog.js', "id = 'conversation-message-dia
 console.log('Northstar conversation dialog checks passed');
 await import('./request-dialog-test.mjs');
 await import('./job-cost-dialog-test.mjs');
+await import('./lead-dialog-test.mjs');

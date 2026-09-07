@@ -1,0 +1,12 @@
+import { readFileSync } from 'node:fs';
+const root = new URL('../', import.meta.url);
+const index = readFileSync(new URL('index.html', root), 'utf8');
+const serviceWorker = readFileSync(new URL('northstar-sw.js', root), 'utf8');
+const owner = readFileSync(new URL('lead-dialog.js', root), 'utf8');
+const assert = (condition, message) => { if (!condition) throw new Error(message); };
+assert(index.includes('/lead-dialog.js'), 'lead dialog script is not loaded');
+assert(serviceWorker.includes("'/lead-dialog.js'"), 'lead dialog script is not cached');
+assert(owner.includes('#add-lead') && owner.includes('createLead'), 'lead dialog is not connected to lead creation');
+assert(owner.includes('utm_campaign') && owner.includes('reportValidity') && owner.includes('showModal'), 'lead dialog does not preserve attribution and accessible validation');
+assert(owner.includes('stopImmediatePropagation') && owner.includes('phone') && owner.includes('email'), 'lead dialog does not replace the prompt flow or validate contact options');
+console.log('Northstar lead dialog checks passed');
