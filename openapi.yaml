@@ -1125,6 +1125,23 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/SessionServices' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+  /api/public/technician-day:
+    get:
+      summary: Read a signed technician's tenant-scoped local-day route
+      parameters:
+        - $ref: '#/components/parameters/TechnicianToken'
+        - name: date
+          in: query
+          description: Local calendar date in the tenant timezone; defaults to today.
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: Assigned route stops with short-lived job links for the same technician
+          content:
+            application/json:
+              schema: { type: object, required: [date, timeZone, technician, jobs], properties: { date: { type: string, format: date }, timeZone: { type: string }, technician: { type: string }, jobs: { type: array, items: { type: object, required: [id, service, customer, location, status, url], properties: { id: { type: string }, service: { type: string }, customer: { type: string }, location: { type: string }, time: { type: string, nullable: true }, startsAt: { type: string, format: date-time, nullable: true }, endsAt: { type: string, format: date-time, nullable: true }, status: { type: string }, priority: { type: string }, url: { type: string } } } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/ValidationError' }
   /api/public/technician-job:
     get:
       summary: Read a signed technician field-service job

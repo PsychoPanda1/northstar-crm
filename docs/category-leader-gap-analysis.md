@@ -11,6 +11,7 @@ The repository already covers the core service-business loop:
 - service-agreement billing cadence support and an owner agreement-health report;
 - retry-safe public and field endpoints with idempotency, audit records, offline replay boundaries, and production configuration checks.
 - multi-technician dispatch assignment with server-side skill and schedule-conflict validation.
+- technician day agenda links that remain limited to the authenticated technician's assigned jobs, including crew membership and multi-day work-order coverage.
 
 ## Completed parity milestone: structured form definitions
 
