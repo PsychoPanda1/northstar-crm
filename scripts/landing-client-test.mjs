@@ -11,7 +11,7 @@ const sandbox = {
   crypto: { randomUUID: () => 'landing-test-key' },
   fetch: async (url, options) => {
     calls.push({ url, options });
-    return { ok: true, status: 200, headers: { get: () => 'landing-request-1' }, json: async () => ({ tenant: { contactPhone: '(843) 555-0100', contactEmail: 'hello@example.test', serviceArea: 'Charleston area' }, integration: { ownerPortalPath: '/portal?service=plumbing', ownerAuthEndpoint: '/api/auth/login', ownerAuthRefreshEndpoint: '/api/auth/refresh', ownerAuthLogoutEndpoint: '/api/auth/logout', ownerAuthMethods: ['password', 'oidc'], ownerOidcAuthEndpoint: '/api/auth/oidc', leadEndpoint: '/api/public/leads?service=plumbing', bookingEndpoint: '/api/public/bookings?service=plumbing' } }) };
+    return { ok: true, status: 200, headers: { get: () => 'landing-request-1' }, json: async () => ({ tenant: { slug: 'clearwater-plumbing', contactPhone: '(843) 555-0100', contactEmail: 'hello@example.test', serviceArea: 'Charleston area' }, service: 'plumbing', integration: { ownerPortalPath: '/portal?service=plumbing', ownerAuthEndpoint: '/api/auth/login', ownerAuthRefreshEndpoint: '/api/auth/refresh', ownerAuthLogoutEndpoint: '/api/auth/logout', ownerAuthMethods: ['password', 'oidc'], ownerOidcAuthEndpoint: '/api/auth/oidc', leadEndpoint: '/api/public/leads?service=plumbing', bookingEndpoint: '/api/public/bookings?service=plumbing' } }) };
   }
 };
 sandbox.globalThis = sandbox;

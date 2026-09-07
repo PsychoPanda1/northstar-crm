@@ -42,6 +42,13 @@
       return this.manifestPromise;
     }
 
+    async validateOwnerSession(result) {
+      const manifest = await this.manifest();
+      if (result?.service && result.service !== this.service) throw new Error('owner_session_service_mismatch');
+      if (result?.tenant?.slug && manifest?.tenant?.slug && result.tenant.slug !== manifest.tenant.slug) throw new Error('owner_session_tenant_mismatch');
+      return result;
+    }
+
     async tenant() {
       const manifest = await this.manifest();
       return manifest.tenant || {};
@@ -81,11 +88,11 @@
       if (typeof email !== 'string' || !email.trim() || typeof password !== 'string' || !password) throw new Error('owner_credentials_required');
       const endpoint = new URL(this.url(integration.ownerAuthEndpoint));
       endpoint.searchParams.set('service', this.service);
-      return this.request(`${endpoint.pathname}${endpoint.search}`, {
+      return this.validateOwnerSession(await this.request(`${endpoint.pathname}${endpoint.search}`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ email: email.trim(), password, service: this.service })
-      });
+      }));
     }
 
     async ownerOidcLogin(idToken) {
@@ -99,11 +106,11 @@
       if (typeof idToken !== 'string' || !idToken.trim() || idToken.length > 20_000) throw new Error('identity_token_required');
       const endpoint = new URL(this.url(integration.ownerOidcAuthEndpoint));
       endpoint.searchParams.set('service', this.service);
-      return this.request(`${endpoint.pathname}${endpoint.search}`, {
+      return this.validateOwnerSession(await this.request(`${endpoint.pathname}${endpoint.search}`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ idToken: idToken.trim(), service: this.service })
-      });
+      }));
     }
 
     async refreshOwnerSession(token) {
@@ -117,7 +124,7 @@
       if (typeof token !== 'string' || !token.trim() || token.length > 20_000) throw new Error('owner_session_token_required');
       const refreshUrl = new URL(this.url(endpoint));
       refreshUrl.searchParams.set('service', this.service);
-      return this.request(`${refreshUrl.pathname}${refreshUrl.search}`, { method: 'POST', headers: { authorization: `Bearer ${token.trim()}` } });
+      return this.validateOwnerSession(await this.request(`${refreshUrl.pathname}${refreshUrl.search}`, { method: 'POST', headers: { authorization: `Bearer ${token.trim()}` } }));
     }
 
     async logoutOwnerSession(token) {
