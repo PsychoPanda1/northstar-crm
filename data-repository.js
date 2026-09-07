@@ -1220,6 +1220,20 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async setCustomerDefaultPaymentMethod(customerId, paymentMethodId) {
+    if (!this.remote) throw new Error('API required for payment-method controls');
+    const response = await fetch(`/api/customers/${encodeURIComponent(customerId)}/payment-methods/${encodeURIComponent(paymentMethodId)}/default`, { method: 'POST', headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('default payment method update failed');
+    return response.json();
+  }
+
+  async removeCustomerPaymentMethod(customerId, paymentMethodId) {
+    if (!this.remote) throw new Error('API required for payment-method controls');
+    const response = await fetch(`/api/customers/${encodeURIComponent(customerId)}/payment-methods?id=${encodeURIComponent(paymentMethodId)}`, { method: 'DELETE', headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('payment method removal failed');
+    return response.json();
+  }
+
   async scheduleCustomerPlanVisit(planId, slotId, locationId = '', token = '', idempotencyKey = crypto.randomUUID()) {
     const query = token ? `?token=${encodeURIComponent(token)}` : '';
     const response = await fetch(`/api/public/customer-portal/service-plan-visit${query}`, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ planId, slotId, ...(locationId ? { locationId } : {}) }) });

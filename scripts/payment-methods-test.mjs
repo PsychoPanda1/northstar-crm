@@ -26,6 +26,15 @@ try {
   const makeDefault = await fetch(`${base}/api/public/customer-portal/payment-method/default?token=${encodeURIComponent(token)}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: secondBody.paymentMethod?.id }) });
   const defaultBody = await makeDefault.json();
   assert(secondSave.status === 201 && makeDefault.status === 200 && defaultBody.paymentMethod?.id === secondBody.paymentMethod?.id && defaultBody.paymentMethod?.isDefault && defaultBody.items?.filter((item) => item.isDefault).length === 1, 'customer could not switch the recurring default payment method safely');
+  const ownerLogin = await fetch(`${base}/api/auth/demo-login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ service: 'plumbing' }) });
+  const ownerLoginBody = await ownerLogin.json();
+  const ownerHeaders = { authorization: `Bearer ${ownerLoginBody.token}` };
+  const customers = await (await fetch(`${base}/api/customers`, { headers: ownerHeaders })).json();
+  const customer = customers.items?.find((item) => item.name === 'Payment Method Customer');
+  const ownerList = await fetch(`${base}/api/payment-methods?customerId=${encodeURIComponent(customer?.id || '')}`, { headers: ownerHeaders });
+  const ownerDefault = await fetch(`${base}/api/customers/${encodeURIComponent(customer?.id || '')}/payment-methods/${encodeURIComponent(secondBody.paymentMethod?.id || '')}/default`, { method: 'POST', headers: ownerHeaders });
+  const ownerRemove = await fetch(`${base}/api/customers/${encodeURIComponent(customer?.id || '')}/payment-methods?id=${encodeURIComponent(secondBody.paymentMethod?.id || '')}`, { method: 'DELETE', headers: ownerHeaders });
+  assert(ownerLogin.ok && customer?.id && ownerList.status === 200 && ownerDefault.status === 200 && ownerRemove.status === 200, 'owner customer profile payment-method controls were not tenant-safe');
   const rawCard = await fetch(`${base}/api/public/customer-portal/payment-method?token=${encodeURIComponent(token)}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ providerPaymentMethodId: '4242424242424242', type: 'Card', last4: '4242' }) });
   assert(rawCard.status === 422, 'raw card number was accepted');
   const removed = await fetch(`${base}/api/public/customer-portal/payment-method?token=${encodeURIComponent(token)}&id=${encodeURIComponent(saveBody.paymentMethod.id)}`, { method: 'DELETE' });

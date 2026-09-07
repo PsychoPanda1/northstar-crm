@@ -157,6 +157,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - When providers are configured, the worker also submits queued messages and payment intents automatically; invoice settlement still requires a signed provider webhook
 - The same opt-in worker can create tenant-local recurring-plan invoices after `NORTHSTAR_PLAN_BILLING_DAY` (1–28), with durable period guards; leave it at `0` for manual billing
 - Recurring-plan billing can create an auditable provider-pending Card/ACH intent from the customer's explicitly selected default vaulted payment-method token when `autoPay` is enabled; customers can switch that default from the portal, and settlement still requires the signed provider webhook. When `NORTHSTAR_PAYMENT_SETUP_PROVIDER_URL` (or a tenant `paymentSetup` override) is configured, the customer portal launches a provider-hosted setup session and stores the resulting method only after a signed `payment_method.attached` webhook; raw payment details never enter Northstar.
+- Owner customer profiles show only masked vaulted payment-method metadata and can select a default or remove a method; provider tokens remain server-only.
 - Signed inbound SMS/email replies can be matched to customers and optional jobs for two-way communication history
 - Exact inbound SMS STOP-style replies automatically record SMS opt-out consent changes with audit history
 - Owners and dispatchers can reply to inbound customer messages from the message ledger with idempotent provider-pending delivery
