@@ -1,5 +1,7 @@
 # Northstar CRM
 
+For the category-leader parity roadmap and the next implementation milestone, see [docs/category-leader-gap-analysis.md](docs/category-leader-gap-analysis.md).
+
 [![Northstar CRM checks](https://github.com/PsychoPanda1/northstar-crm/actions/workflows/ci.yml/badge.svg)](https://github.com/PsychoPanda1/northstar-crm/actions/workflows/ci.yml)
 
 Northstar is a polished, responsive CRM dashboard concept for field-service businesses. It is designed around the operator's real day: understand revenue, follow up on the right opportunities, see technician capacity, and keep every customer interaction connected.
