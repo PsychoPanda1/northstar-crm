@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const port = 8500 + Math.floor(Math.random() * 700);
+const port = 30000 + Math.floor(Math.random() * 20000);
 const dataFile = join(tmpdir(), `northstar-call-report-${process.pid}-${Date.now()}.json`);
 const env = { ...process.env, NODE_ENV: 'development', PORT: String(port), NORTHSTAR_DATA_FILE: dataFile, NORTHSTAR_SESSION_FILE: `${dataFile}.sessions` };
 const base = `http://127.0.0.1:${port}`;

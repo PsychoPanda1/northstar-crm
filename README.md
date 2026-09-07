@@ -66,7 +66,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Offline-capable technician field actions that queue locally with stable idempotency keys, replay when connectivity returns, and keep permanent conflicts or expired links in a persistent review panel with retry/discard controls
 - Installable owner and technician workspaces with an offline shell that never caches authenticated customer/job data or API responses
 - Tenant-scoped audit log with searchable CSV export for workflow and integration traceability
-- Owner-configurable 30–3650 day data-retention review reports show aged-record counts and bounded candidate IDs per tenant without silently deleting operational history
+- Owner-configurable 30–3650 day data-retention review reports show aged-record counts and bounded candidate IDs per tenant; explicit owner-confirmed archive/restore preserves provenance without silently deleting operational history
 - Three-way purchase reconciliation with vendor-invoice matching, quantity/price/vendor flags, and exception review
 - Accounts-payable workflow for vendor bills: draft submission, owner approval, three-way-match controls, partial/full payment ledger, aging report, and CSV export
 - Post-sale change orders with signed customer review links, approve/decline decisions, idempotent progress invoicing, and durable job/customer scope history

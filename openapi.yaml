@@ -110,6 +110,24 @@ paths:
         '200': { $ref: '#/components/responses/MutationAccepted' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
+  /api/reports/data-retention/archive:
+    post:
+      summary: Archive eligible tenant records with explicit owner confirmation
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+  /api/reports/data-retention/restore:
+    post:
+      summary: Restore explicitly archived tenant records
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
   /api/vendor-bills:
     get:
       summary: List tenant-scoped vendor bills

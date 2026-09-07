@@ -1423,6 +1423,20 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async archiveDataRetentionRecords(collection, ids, confirmation = 'ARCHIVE', idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for data retention archive');
+    const response = await fetch('/api/reports/data-retention/archive', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ collection, ids, confirmation }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'data retention archive failed');
+    return response.json();
+  }
+
+  async restoreDataRetentionRecords(archiveIds, confirmation = 'RESTORE', idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for data retention restore');
+    const response = await fetch('/api/reports/data-retention/restore', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ archiveIds, confirmation }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'data retention restore failed');
+    return response.json();
+  }
+
   async globalSearch(query) {
     return this.globalSearchPage(query);
   }
