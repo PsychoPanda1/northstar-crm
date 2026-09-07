@@ -42,19 +42,34 @@ const respectsTimeWindows = (ordered, start, speedKph) => {
   return true;
 };
 
+const compareStart = (a, b) => {
+  const aStart = Date.parse(a.job.startsAt || '');
+  const bStart = Date.parse(b.job.startsAt || '');
+  if (Number.isFinite(aStart) && Number.isFinite(bStart)) return aStart - bStart || a.job.id.localeCompare(b.job.id);
+  if (Number.isFinite(aStart)) return -1;
+  if (Number.isFinite(bStart)) return 1;
+  return a.job.id.localeCompare(b.job.id);
+};
+
 export const optimizeCoordinateRoute = (stops, start = null, options = {}) => {
   const respectTimeWindows = options.respectTimeWindows !== false;
   const travelSpeedKph = Number.isFinite(Number(options.travelSpeedKph)) && Number(options.travelSpeedKph) > 0 ? Number(options.travelSpeedKph) : null;
-  const remaining = stops.slice().sort((a, b) => Date.parse(a.job.startsAt || '') - Date.parse(b.job.startsAt || '') || a.job.id.localeCompare(b.job.id));
+  const remaining = stops.slice().sort(compareStart);
   const ordered = [];
-  let current = start || remaining[0]?.coordinates || null;
+  let current = start || null;
   while (remaining.length) {
-    remaining.sort((a, b) => {
+    const feasible = respectTimeWindows && travelSpeedKph && ordered.length
+      ? remaining.filter((candidate) => respectsTimeWindows([...ordered, candidate], start, travelSpeedKph))
+      : remaining;
+    const candidates = feasible.length ? feasible : remaining;
+    candidates.sort((a, b) => {
+      if (respectTimeWindows && travelSpeedKph && !ordered.length) return compareStart(a, b);
       const aDistance = current ? distanceKmBetween(current, a.coordinates) : 0;
       const bDistance = current ? distanceKmBetween(current, b.coordinates) : 0;
-      return aDistance - bDistance || Date.parse(a.job.startsAt || '') - Date.parse(b.job.startsAt || '') || a.job.id.localeCompare(b.job.id);
+      return aDistance - bDistance || compareStart(a, b);
     });
-    const next = remaining.shift();
+    const next = candidates[0];
+    remaining.splice(remaining.indexOf(next), 1);
     ordered.push(next);
     current = next.coordinates;
   }
@@ -78,5 +93,6 @@ export const optimizeCoordinateRoute = (stops, start = null, options = {}) => {
       if (improved) break;
     }
   }
-  return { ordered, distanceKm: Number(routeDistanceKm(ordered, start).toFixed(2)), estimatedTravelMinutes: estimatedTravelMinutes(ordered, start, travelSpeedKph || 32), passes, method: respectTimeWindows ? (travelSpeedKph ? 'coordinate_nearest_neighbor_2opt_travel_time_safe' : 'coordinate_nearest_neighbor_2opt_time_safe') : 'coordinate_nearest_neighbor_2opt' };
+  const timeWindowFeasible = !respectTimeWindows || respectsTimeWindows(ordered, start, travelSpeedKph);
+  return { ordered, distanceKm: Number(routeDistanceKm(ordered, start).toFixed(2)), estimatedTravelMinutes: estimatedTravelMinutes(ordered, start, travelSpeedKph || 32), passes, timeWindowFeasible, method: respectTimeWindows ? (travelSpeedKph ? 'coordinate_nearest_neighbor_2opt_travel_time_safe' : 'coordinate_nearest_neighbor_2opt_time_safe') : 'coordinate_nearest_neighbor_2opt' };
 };

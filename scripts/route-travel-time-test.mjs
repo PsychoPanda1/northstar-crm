@@ -5,4 +5,6 @@ const stops = [job('a', '2026-09-07T13:00:00.000Z', '2026-09-07T13:30:00.000Z', 
 const optimized = optimizeCoordinateRoute(stops, { latitude: 32.8000, longitude: -79.9000 }, { travelSpeedKph: 32 });
 if (optimized.method !== 'coordinate_nearest_neighbor_2opt_travel_time_safe' || !Number.isFinite(optimized.estimatedTravelMinutes) || optimized.ordered.map((item) => item.job.id).join(',') !== 'a,b,c') throw new Error('travel-time-safe route optimization failed');
 if (estimatedTravelMinutes(optimized.ordered, { latitude: 32.8000, longitude: -79.9000 }, 32) !== optimized.estimatedTravelMinutes) throw new Error('travel estimate is not deterministic');
+const windowed = optimizeCoordinateRoute([job('late-near', '2026-09-07T12:00:00.000Z', '2026-09-07T13:00:00.000Z', 0, 0.01), job('early-far', '2026-09-07T09:00:00.000Z', '2026-09-07T10:00:00.000Z', 0, 1)], { latitude: 0, longitude: 0 }, { travelSpeedKph: 60 });
+if (windowed.ordered.map((item) => item.job.id).join(',') !== 'early-far,late-near' || windowed.timeWindowFeasible !== true) throw new Error('time-window-safe route initialization did not preserve feasible appointment order');
 console.log('Northstar travel-time route test passed');
