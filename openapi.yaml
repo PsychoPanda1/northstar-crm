@@ -1215,7 +1215,23 @@ components:
                 location: { type: string }
             customerPortalEndpoints:
               type: object
-              additionalProperties: { type: string }
+              required: [availability, book, calendar, reschedule, cancel, confirm, estimatePdf, financingIntent, location, message, paymentIntent, preferences, referralLink, request, servicePlanRequest]
+              properties:
+                availability: { type: string }
+                book: { type: string }
+                calendar: { type: string }
+                reschedule: { type: string }
+                cancel: { type: string }
+                confirm: { type: string }
+                estimatePdf: { type: string }
+                financingIntent: { type: string }
+                location: { type: string }
+                message: { type: string }
+                paymentIntent: { type: string }
+                preferences: { type: string }
+                referralLink: { type: string }
+                request: { type: string }
+                servicePlanRequest: { type: string }
             statusEndpoints:
               type: object
               additionalProperties: { type: string }
