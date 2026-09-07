@@ -51,7 +51,8 @@
     const offlineQueueLimit = 50;
     const writeQueue = (items) => { if (items.length > offlineQueueLimit) return false; queueItems = items.slice(); if (queueHydrated) void persistQueue(queueKey, queueItems); return true; };
     const readReview = () => reviewItems;
-    const writeReview = (items) => { reviewItems = items.slice(-20); if (queueHydrated) void persistQueue(reviewKey, reviewItems); };
+    const offlineReviewLimit = 20;
+    const writeReview = (items) => { if (items.length > offlineReviewLimit) return false; reviewItems = items.slice(); if (queueHydrated) void persistQueue(reviewKey, reviewItems); return true; };
     const deriveQueueKey = async () => { if (!token || !window.crypto?.subtle) return null; const material = await crypto.subtle.importKey('raw', new TextEncoder().encode(token), 'PBKDF2', false, ['deriveKey']); return crypto.subtle.deriveKey({ name: 'PBKDF2', salt: new TextEncoder().encode(`northstar-offline:${queueKey}`), iterations: 100000, hash: 'SHA-256' }, material, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']); };
     const persistQueue = async (key, items) => { if (!queueCryptoKey) return; const iv = crypto.getRandomValues(new Uint8Array(12)); const data = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, queueCryptoKey, new TextEncoder().encode(JSON.stringify(items))); localStorage.setItem(key, JSON.stringify({ version: 1, iv: Array.from(iv), data: Array.from(new Uint8Array(data)) })); };
     const hydrateQueue = async (key) => { const raw = localStorage.getItem(key); if (!raw) return []; try { const parsed = JSON.parse(raw); if (parsed?.version !== 1 || !Array.isArray(parsed.iv) || !Array.isArray(parsed.data)) return Array.isArray(parsed) ? parsed : []; const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: new Uint8Array(parsed.iv) }, queueCryptoKey, new Uint8Array(parsed.data)); return JSON.parse(new TextDecoder().decode(plain)); } catch { return []; } };
@@ -74,8 +75,11 @@
         try { const response = await rawApi(item.path, item.options); if (!response.ok) { if ([400, 401, 403, 409, 422].includes(response.status)) conflicts.push({ ...item, conflictStatus: response.status, conflictError: String((await response.clone().json().catch(() => ({}))).error || 'server_rejected').slice(0, 120) }); else remaining.push(item); } }
         catch { remaining.push(item); }
       }
-      writeQueue(remaining); if (conflicts.length) writeReview([...readReview(), ...conflicts]); renderQueueState();
-      if (conflicts.length) message(`${conflicts.length} offline update${conflicts.length === 1 ? '' : 's'} need review after a conflict or expired link.`);
+      const reviewAccepted = conflicts.length ? writeReview([...readReview(), ...conflicts]) : true;
+      if (conflicts.length && !reviewAccepted) remaining.push(...conflicts);
+      writeQueue(remaining); renderQueueState();
+      if (conflicts.length && reviewAccepted) message(`${conflicts.length} offline update${conflicts.length === 1 ? '' : 's'} need review after a conflict or expired link.`);
+      else if (conflicts.length) message('Offline conflict review is full. Updates remain pending until existing conflicts are resolved.');
       else if (!remaining.length) message('Offline field updates synchronized.');
     };
     const api = async (path, options = {}) => {
