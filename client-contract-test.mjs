@@ -72,6 +72,8 @@ const technicianContractPaths = ['/api/public/technician-job', '/api/public/tech
 assert(technicianContractPaths.every((path) => server.includes(`'${path}'`) && openapi.includes(`  ${path}:`)), 'technician server routes and public OpenAPI contract have drifted');
 const publicServerPaths = [...server.matchAll(/pathname === '([^']+)'/g)].map((match) => match[1]).filter((path, index, paths) => path.startsWith('/api/public/') && paths.indexOf(path) === index);
 assert(publicServerPaths.every((path) => openapi.includes(`  ${path}:`)), `public server routes and OpenAPI contract have drifted: ${publicServerPaths.filter((path) => !openapi.includes(`  ${path}:`)).join(', ')}`);
+assert(openapi.includes('  /api/public/technician-job/media-upload:'), 'signed technician media upload route is missing from the OpenAPI contract');
+assert(server.includes("/api/public/technician-job/media-upload") && server.includes('media_provider_not_configured') && server.includes('valid_image_upload_metadata_required'), 'signed technician media upload server boundary is missing');
 assert(server.includes("pathname === '/api/openapi.yaml'") && server.includes("application/yaml; charset=utf-8"), 'canonical public OpenAPI endpoint is missing');
 assert(server.includes('tenantSnapshotFor') && server.includes('owner_required_for_tenant_snapshot') && server.includes('snapshotSafeValue'), 'owner-only tenant snapshot export is missing');
 assert(server.includes("/api/import/tenant-snapshot/validate") && server.includes('snapshotValidationFor') && server.includes('snapshot_tenant_mismatch'), 'non-mutating tenant snapshot validation is missing');
