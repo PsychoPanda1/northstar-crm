@@ -8,3 +8,4 @@ await import('./lead-dialog-test.mjs');
 await import('./lead-convert-dialog-test.mjs');
 await import('./estimate-schedule-dialog-test.mjs');
 await import('./plan-renew-dialog-test.mjs');
+await import('./dispatch-reschedule-dialog-test.mjs');

@@ -1,0 +1,12 @@
+import { readFileSync } from 'node:fs';
+const root = new URL('../', import.meta.url);
+const index = readFileSync(new URL('index.html', root), 'utf8');
+const serviceWorker = readFileSync(new URL('northstar-sw.js', root), 'utf8');
+const source = readFileSync(new URL('dispatch-reschedule-dialog.js', root), 'utf8');
+const assert = (condition, message) => { if (!condition) throw new Error(message); };
+assert(index.includes('/dispatch-reschedule-dialog.js'), 'dispatch reschedule dialog is not loaded');
+assert(serviceWorker.includes("'/dispatch-reschedule-dialog.js'"), 'dispatch reschedule dialog is not cached');
+assert(source.includes('repository.rescheduleJob') && source.includes('repository.getAvailability'), 'dispatch reschedule does not use the live job and availability contracts');
+assert(source.includes('data-job-action="reschedule"') && source.includes('stopImmediatePropagation') && source.includes('showModal'), 'dispatch reschedule dialog does not replace the prompt flow');
+assert(source.includes('slotOptions') && source.includes('crypto') === false, 'dispatch reschedule should rely on the repository slot contract');
+console.log('Northstar dispatch reschedule dialog checks passed');
