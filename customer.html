@@ -25,7 +25,8 @@
   const $ = (selector, root = document) => root.querySelector(selector);
   const esc = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[character]));
   const message = (value) => { $('#message').textContent = value; };
-  const retryKey = (scope, body) => { const storageKey = `northstar-portal-retry-${token}-${scope}-${JSON.stringify(body)}`; const stored = sessionStorage.getItem(storageKey); if (stored) return stored; const next = crypto.randomUUID(); sessionStorage.setItem(storageKey, next); return next; };
+  const retryKey = (scope, body) => { const fallback = () => `${Date.now()}-${Math.random().toString(36).slice(2)}`; const tokenFingerprint = Array.from(token || '').reduce((hash, character) => ((hash * 31) + character.charCodeAt(0)) >>> 0, 7).toString(36); const storageKey = `northstar-portal-retry-${tokenFingerprint}-${scope}-${JSON.stringify(body)}`; try { const stored = sessionStorage.getItem(storageKey); if (stored) return stored; const next = globalThis.crypto?.randomUUID?.() || fallback(); sessionStorage.setItem(storageKey, next); return next; } catch { return fallback(); } };
+  globalThis.northstarPortalRetryKey = retryKey;
   const post = async (path, body, key = retryKey(path, body)) => fetch(path + query, { method:'POST', headers:{ 'content-type':'application/json', 'idempotency-key':key }, body:JSON.stringify(body) });
   const postToken = async (path, value, body, key = retryKey(path, body)) => fetch(`${path}?token=${encodeURIComponent(value)}`, { method:'POST', headers:{ 'content-type':'application/json', 'idempotency-key':key }, body:JSON.stringify(body) });
   const section = (title, items, render) => items?.length ? `<section class="section"><h2>${esc(title)}</h2>${items.map(render).join('')}</section>` : '';
@@ -123,7 +124,8 @@
     event.preventDefault();
     const save = form.querySelector('#save-preferences'); save.disabled = true;
     try {
-      const response = await fetch('/api/public/customer-portal/preferences' + query, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({ smsOptOut: !form.elements.sms.checked, emailOptOut: !form.elements.email.checked }) });
+      const preferencePayload = { smsOptOut: !form.elements.sms.checked, emailOptOut: !form.elements.email.checked };
+      const response = await fetch('/api/public/customer-portal/preferences' + query, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': globalThis.northstarPortalRetryKey('preferences', preferencePayload) }, body: JSON.stringify(preferencePayload) });
       if (!response.ok) throw new Error('save_failed');
       dialog.close(); message('Messaging preferences updated.');
     } catch { form.querySelector('#preferences-error').textContent = 'Preferences could not be updated. Please try again.'; } finally { save.disabled = false; }
@@ -145,7 +147,8 @@
     if (!['SMS', 'Email'].includes(channel)) return;
     button.disabled = true;
     try {
-      const response = await fetch('/api/public/customer-portal/message?token=' + encodeURIComponent(token), { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({ channel, message: message.trim() }) });
+      const messagePayload = { channel, message: message.trim() };
+      const response = await fetch('/api/public/customer-portal/message?token=' + encodeURIComponent(token), { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': globalThis.northstarPortalRetryKey('message', messagePayload) }, body: JSON.stringify(messagePayload) });
       document.querySelector('#message').textContent = response.ok ? 'Message sent to the service office.' : 'That message could not be sent. Check your messaging preference.';
       if (response.ok) window.location.reload();
     } catch { document.querySelector('#message').textContent = 'That message could not be sent. Please try again.'; }
@@ -159,7 +162,7 @@
   const addPlanActions = () => {
     const portal = window.__northstarPortal; if (!portal?.plans?.length) return;
     const section = [...document.querySelectorAll('.section')].find((node) => node.querySelector('h2')?.textContent === 'Service plans'); if (!section) return;
-    section.querySelectorAll('.row').forEach((row, index) => { const plan = portal.plans[index]; if (!plan || row.querySelector('[data-plan-request]')) return; const button = document.createElement('button'); button.type = 'button'; button.dataset.planRequest = 'true'; button.dataset.service = plan.service; button.textContent = 'Request plan change'; button.addEventListener('click', async () => { const action = window.prompt('Request: pause, cancel, or change', 'pause'); if (!['pause', 'cancel', 'change'].includes(action)) return; const note = window.prompt('Tell the service office what you need'); if (!note?.trim()) return; button.disabled = true; try { const response = await fetch('/api/public/customer-portal/service-plan-request?token=' + encodeURIComponent(token), { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({ service: plan.service, action, note: note.trim() }) }); document.querySelector('#message').textContent = response.ok ? 'Plan request sent. Your service office will follow up.' : 'That plan request could not be sent.'; if (response.ok) window.location.reload(); } catch { document.querySelector('#message').textContent = 'That plan request could not be sent. Please try again.'; } finally { button.disabled = false; } }); row.querySelector('div')?.append(button); });
+    section.querySelectorAll('.row').forEach((row, index) => { const plan = portal.plans[index]; if (!plan || row.querySelector('[data-plan-request]')) return; const button = document.createElement('button'); button.type = 'button'; button.dataset.planRequest = 'true'; button.dataset.service = plan.service; button.textContent = 'Request plan change'; button.addEventListener('click', async () => { const action = window.prompt('Request: pause, cancel, or change', 'pause'); if (!['pause', 'cancel', 'change'].includes(action)) return; const note = window.prompt('Tell the service office what you need'); if (!note?.trim()) return; button.disabled = true; try { const planPayload = { service: plan.service, action, note: note.trim() }; const response = await fetch('/api/public/customer-portal/service-plan-request?token=' + encodeURIComponent(token), { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': globalThis.northstarPortalRetryKey('service-plan-request', planPayload) }, body: JSON.stringify(planPayload) }); document.querySelector('#message').textContent = response.ok ? 'Plan request sent. Your service office will follow up.' : 'That plan request could not be sent.'; if (response.ok) window.location.reload(); } catch { document.querySelector('#message').textContent = 'That plan request could not be sent. Please try again.'; } finally { button.disabled = false; } }); row.querySelector('div')?.append(button); });
   }; const timer = setInterval(() => { addPlanActions(); if (window.__northstarPortal?.plans) clearInterval(timer); }, 150);
 })();
 </script>
