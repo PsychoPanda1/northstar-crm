@@ -45,6 +45,7 @@ jobs:
           container_id=$(docker run -d --publish 4173:4173 \
             --env NORTHSTAR_SESSION_SECRET=release-ci-session-secret-32-character-key \
             --env NORTHSTAR_REQUIRE_SQLITE=true \
+            --env NORTHSTAR_REQUIRE_LIVE_PROVIDERS=false \
             --env NORTHSTAR_OWNER_EMAIL=owner@example.test \
             --env NORTHSTAR_OWNER_PASSWORD_DIGEST=0000000000000000000000000000000000000000000000000000000000000000 \
             --env NORTHSTAR_OWNER_TENANT_ID=johnson-service-co \
