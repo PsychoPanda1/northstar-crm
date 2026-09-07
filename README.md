@@ -104,7 +104,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Configurable online-booking auto-assignment selects the highest-scoring available qualified technician, while safely leaving unmatched bookings for dispatch review
 - Versioned, tenant-configurable guided intake fields render on the reusable booking page and persist validated answers on the resulting lead or job for service-specific triage
 - Environment-driven tenant and service routing supports adding new landing-page businesses without changing server source
-- Configured tenants can expose booking start/end hours, slot intervals, operating weekdays, blackout dates, and custom `leadStages` through `NORTHSTAR_TENANTS_JSON`; the landing manifest publishes the active booking window and tenant pipeline configuration
+- Configured tenants can expose booking start/end hours, slot intervals, operating weekdays, blackout dates, and custom `leadStages`, and a bounded `defaultTaxRate` (0–30%) through `NORTHSTAR_TENANTS_JSON`; the landing manifest publishes the active booking window and tenant pipeline configuration
 - Tenant-bound owner account configuration supports separate production logins for each attached landing-page business
 - Office-created jobs can carry normalized appointment ranges, with overlap-aware capacity conflict checks
 - The owner new-job workflow loads tenant-specific available slots and writes the selected normalized UTC range back into the work order
@@ -115,7 +115,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Owners can save customer-specific pricebook overrides so negotiated rates flow into new estimates while preserving the effective price in the estimate snapshot
 - Multi-option estimates let customers select a clearly labeled service tier before approval
 - Signed estimate pages can download a tenant-scoped PDF artifact containing pricing, line items, and package inclusions
-- Estimates can calculate subtotal, discounts, tax, and final total on the server
+- Estimates can calculate subtotal, discounts, tax, and final total on the server; owners can configure a tenant default tax rate for taxable pricebook services, with explicit estimate tax rates taking precedence
 - Customer estimate approvals capture the typed approver name in the estimate and audit ledger
 - Customer estimate change requests route directly into the owner action queue
 - Owners can revise change-requested estimates and resend the updated scope

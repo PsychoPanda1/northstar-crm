@@ -67,6 +67,38 @@ paths:
         '403': { $ref: '#/components/responses/Forbidden' }
         '409': { $ref: '#/components/responses/IdempotencyConflict' }
         '422': { $ref: '#/components/responses/ValidationError' }
+  /api/settings/tax:
+    get:
+      summary: Read the tenant default tax rate used for taxable pricebook estimates
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Tenant tax configuration
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TaxSettings' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    patch:
+      summary: Update the owner-controlled default tax rate for taxable pricebook estimates
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [defaultTaxRate]
+              properties:
+                defaultTaxRate: { type: number, minimum: 0, maximum: 30 }
+      responses:
+        '200': { $ref: '#/components/responses/TaxSettingsUpdated' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
   /api/reports/service-agreements:
     get:
       summary: Read tenant-scoped service-agreement coverage and material forecast
@@ -1931,6 +1963,7 @@ components:
         accentSoft: { type: [string, 'null'], pattern: '^#[0-9a-fA-F]{6}$' }
         focus: { type: [string, 'null'], maxLength: 160 }
         requestResponseSlaHours: { type: [integer, 'null'], minimum: 1, maximum: 168 }
+        defaultTaxRate: { type: number, minimum: 0, maximum: 30 }
         autoAssignOnlineBookings: { type: boolean }
         intakeFields: { type: array, maxItems: 8, items: { type: object, additionalProperties: true } }
     WorkspaceSettingsUpdate:
@@ -1942,6 +1975,12 @@ components:
       properties:
         workspace: { $ref: '#/components/schemas/WorkspaceSettings' }
         updatedAt: { type: [string, 'null'], format: date-time }
+    TaxSettings:
+      type: object
+      required: [defaultTaxRate]
+      properties:
+        defaultTaxRate: { type: number, minimum: 0, maximum: 30 }
+        duplicate: { type: boolean }
     LandingPageKeysResponse:
       type: object
       required: [serviceKeys]
@@ -1983,6 +2022,9 @@ components:
     WorkspaceSettingsUpdated:
       description: Workspace settings saved
       content: { application/json: { schema: { allOf: [{ $ref: '#/components/schemas/WorkspaceSettingsResponse' }, { $ref: '#/components/schemas/Duplicate' }] } } }
+    TaxSettingsUpdated:
+      description: Default tax rate saved
+      content: { application/json: { schema: { $ref: '#/components/schemas/TaxSettings' } } }
     LandingPageKeyCreated:
       description: Landing-page service key claimed
       content: { application/json: { schema: { type: object, required: [service, serviceKeys, duplicate], properties: { service: { type: string }, serviceKeys: { type: array, items: { type: string } }, duplicate: { type: boolean } } } } }

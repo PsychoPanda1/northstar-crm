@@ -1532,6 +1532,20 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async getTaxSettings() {
+    if (!this.remote) return { defaultTaxRate: Number(this.tenant?.defaultTaxRate || 0) };
+    const response = await fetch('/api/settings/tax', { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('tax settings unavailable');
+    return response.json();
+  }
+
+  async updateTaxSettings(defaultTaxRate, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for tax settings');
+    const response = await fetch('/api/settings/tax', { method: 'PATCH', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ defaultTaxRate }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'tax settings update failed');
+    return response.json();
+  }
+
   async getLandingPageKeys() {
     if (!this.remote) return { serviceKeys: [this.tenant?.slug || 'default'], updatedAt: null };
     const response = await fetch('/api/settings/landing-pages', { headers: { authorization: `Bearer ${this.token}` } });
