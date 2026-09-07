@@ -5,6 +5,7 @@ NORTHSTAR_ASSETS.push('/call-booking-dialog.js');
 NORTHSTAR_ASSETS.push('/job-invoice-dialog.js');
 NORTHSTAR_ASSETS.push('/call-outcome-dialog.js');
 NORTHSTAR_ASSETS.push('/receivables-reminder-dialog.js');
+NORTHSTAR_ASSETS.push('/estimate-line-items-dialog.js');
 const NORTHSTAR_OWNER_PATHS = ['/portal', '/portal/', '/index.html'];
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(NORTHSTAR_SHELL_CACHE).then((cache) => cache.addAll([...NORTHSTAR_SHELLS, ...NORTHSTAR_ASSETS])).then(() => self.skipWaiting()));

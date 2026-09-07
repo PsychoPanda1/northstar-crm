@@ -1,0 +1,10 @@
+import { readFileSync } from 'node:fs';
+const root = new URL('../', import.meta.url);
+const html = readFileSync(new URL('index.html', root), 'utf8');
+const source = readFileSync(new URL('estimate-line-items-dialog.js', root), 'utf8');
+const assert = (condition, message) => { if (!condition) throw new Error(message); };
+assert(html.includes('/estimate-line-items-dialog.js'), 'estimate line item dialog is not loaded');
+assert(source.includes('data-estimate-line-items') && source.includes('updateEstimateLineItems'), 'estimate line item trigger or API is missing');
+assert(source.includes('showModal') && source.includes('stopImmediatePropagation') && source.includes('role="status"'), 'estimate line item dialog is not accessible or does not replace prompts');
+assert(source.includes('discount') && source.includes('taxRate') && source.includes('crypto.randomUUID'), 'estimate pricing controls or retry safety are missing');
+console.log('Northstar estimate line item dialog checks passed');
