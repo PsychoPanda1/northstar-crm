@@ -11,18 +11,22 @@ The repository already covers the core service-business loop:
 - service-agreement billing cadence support and an owner agreement-health report;
 - retry-safe public and field endpoints with idempotency, audit records, offline replay boundaries, and production configuration checks.
 
-## Next parity milestone: form definitions, not just form names
+## Completed parity milestone: structured form definitions
 
-The current technician form contract intentionally stores a required form name, result, notes, and customer acknowledgment. That is a safe legacy baseline, but category-leading field software needs a form definition that travels with the job snapshot.
+Northstar now carries bounded structured form definitions with each job snapshot. This closes the most important gap between a named checklist and a category-leading field form workflow, while preserving the legacy payload for older services.
 
-The next implementation should add:
+The implementation now includes:
 
 1. `formDefinitions` to a catalog item and the corresponding pricebook snapshot. Each definition should contain a bounded list of fields with `id`, `label`, `type`, `required`, `options`, and an optional `showWhen` rule.
 2. Job creation that copies the sanitized definition into `requiredForms`, so later pricebook edits cannot change an active job.
 3. A technician renderer for text, number, date, select, and boolean fields. Conditional fields should be evaluated deterministically on the client for usability and again on the server for trust.
 4. Server validation that rejects missing visible required fields, invalid select values, invalid booleans/numbers, oversized answers, unknown field ids, and answers submitted for a form that is not required on the job.
 5. Backward compatibility: the existing `formName`, `result`, `notes`, and `customerSignature` payload remains valid for legacy forms with no field definition.
-6. Owner setup and pricebook UI for editing definitions, plus contract tests proving tenant isolation, snapshot behavior, conditional visibility, offline replay, and completion blocking.
+6. Owner setup and pricebook UI for editing definitions, plus contract tests proving tenant isolation, snapshot behavior, conditional visibility, configured-catalog booking, and completion blocking. The structured-form runtime suite is part of the main CI contract.
+
+## Next parity milestone: production activation
+
+The remaining category-leader boundary is operational activation rather than another local mock: managed shared storage, real identity and provider credentials, verified hosted deployment, monitoring, backups, and tested recovery procedures. The repository contains the server-side seams and readiness gates for those integrations; deployment evidence is still required before calling the system production-equivalent.
 
 ## Landing-page-specific guardrails
 
