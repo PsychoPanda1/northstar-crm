@@ -49,6 +49,10 @@ jobs:
             --env NORTHSTAR_FINANCING_WEBHOOK_SECRET=ci-financing-secret-32-character-key \
             --env NORTHSTAR_FLEET_WEBHOOK_SECRET=ci-fleet-secret-32-character-key \
             --env NORTHSTAR_BACKUP_FILE=/app/data/northstar.sqlite.backup \
+            --env 'NORTHSTAR_TENANTS_JSON=[{"slug":"johnson-service-co","businessName":"Johnson Service Co.","serviceLabel":"Home services","timeZone":"America/New_York","requestResponseSlaHours":48}]' \
+            --env 'NORTHSTAR_SERVICE_TENANTS_JSON={"default":"johnson-service-co"}' \
+            --env 'NORTHSTAR_SERVICE_ORIGINS_JSON={"default":["https://crm.example.test"]}' \
+            --env 'NORTHSTAR_CATALOG_JSON=[{"tenantId":"johnson-service-co","id":"ci-service","name":"CI service","description":"CI service","priceFrom":"$199","durationMinutes":60}]' \
             northstar-crm:ci)
           trap 'docker rm -f "$container_id" >/dev/null 2>&1 || true' EXIT
           node -e "const deadline=Date.now()+30000; const poll=async()=>{try{const r=await fetch('http://127.0.0.1:4173/api/ready'); if(r.ok){const body=await r.json(); if(body.ok && Object.values(body.checks).every(Boolean)) process.exit(0);}}catch{} if(Date.now()>=deadline) process.exit(1); setTimeout(poll,250);}; poll();"
