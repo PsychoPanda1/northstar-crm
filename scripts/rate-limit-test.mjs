@@ -15,9 +15,9 @@ const submit = async (service, suffix, forwardedFor) => fetch(`${base}/api/publi
 
 try {
   let ready = false;
-  for (let attempt = 0; attempt < 200; attempt += 1) {
+  for (let attempt = 0; attempt < 400; attempt += 1) {
     try { if ((await fetch(`${base}/api/health`)).ok) { ready = true; break; } } catch {}
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await new Promise((resolve) => setTimeout(resolve, 75));
   }
   if (!ready) throw new Error('rate limit test server did not start');
   const first = await submit('plumbing', 1, '203.0.113.10');
