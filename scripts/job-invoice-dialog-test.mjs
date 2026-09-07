@@ -1,0 +1,10 @@
+import { readFileSync } from 'node:fs';
+const root = new URL('../', import.meta.url);
+const html = readFileSync(new URL('index.html', root), 'utf8');
+const source = readFileSync(new URL('job-invoice-dialog.js', root), 'utf8');
+const assert = (condition, message) => { if (!condition) throw new Error(message); };
+assert(html.includes('/job-invoice-dialog.js'), 'job invoice dialog is not loaded');
+assert(source.includes('data-job-invoice') && source.includes('createJobInvoice'), 'job invoice trigger or API is missing');
+assert(source.includes('showModal') && source.includes('stopImmediatePropagation') && source.includes('role="status"'), 'job invoice dialog is not accessible or does not replace prompts');
+assert(source.includes('crypto.randomUUID') && source.includes('estimateLineItems'), 'job invoice creation is not retry-safe or does not preserve sold scope');
+console.log('Northstar job invoice dialog checks passed');
