@@ -71,10 +71,12 @@
       if (!pending.length || !navigator.onLine) { renderQueueState(); return; }
       const remaining = [];
       const conflicts = [];
-      for (const item of pending) {
-        try { const response = await rawApi(item.path, item.options); if (!response.ok) { if ([400, 401, 403, 409, 422].includes(response.status)) conflicts.push({ ...item, conflictStatus: response.status, conflictError: String((await response.clone().json().catch(() => ({}))).error || 'server_rejected').slice(0, 120) }); else remaining.push(item); } }
-        catch { remaining.push(item); }
-      }
+      const actions = pending.map((item, index) => { const headers = item.options?.headers || {}; let body = {}; try { body = item.options?.body ? JSON.parse(item.options.body) : {}; } catch { body = {}; } return { id: `${String(headers['idempotency-key'] || crypto.randomUUID())}-${index}`, path: item.path, method: item.options?.method || 'POST', body, idempotencyKey: headers['idempotency-key'] || crypto.randomUUID(), queuedAt: item.queuedAt }; });
+      try {
+        const response = await rawApi('/api/public/technician-job/offline-sync', { method: 'POST', headers: { 'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({ batchId: crypto.randomUUID(), actions }) });
+        if (!response.ok) { if ([400, 401, 403, 409, 422].includes(response.status)) { const error = String((await response.clone().json().catch(() => ({}))).error || 'server_rejected').slice(0, 120); pending.forEach((item) => conflicts.push({ ...item, conflictStatus: response.status, conflictError: error })); } else pending.forEach((item) => remaining.push(item)); }
+        else { const payload = await response.json().catch(() => ({})); const results = Array.isArray(payload.results) ? payload.results : []; pending.forEach((item, index) => { const result = results[index]; if (!result || result.ok) return; if ([400, 401, 403, 409, 422].includes(result.status)) conflicts.push({ ...item, conflictStatus: result.status, conflictError: String(result.body?.error || 'server_rejected').slice(0, 120) }); else remaining.push(item); }); }
+      } catch { pending.forEach((item) => remaining.push(item)); }
       const reviewAccepted = conflicts.length ? writeReview([...readReview(), ...conflicts]) : true;
       if (conflicts.length && !reviewAccepted) remaining.push(...conflicts);
       writeQueue(remaining); renderQueueState();

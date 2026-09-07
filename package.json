@@ -9,6 +9,7 @@
     "check": "node --check server.mjs && node --check app.js && node --check data-repository.js && node --check tenant-config.js && node client-contract-test.mjs",
     "test:html-scripts": "node scripts/html-script-test.mjs",
     "test:technician-brief": "node scripts/location-history-test.mjs",
+    "test:technician-offline-sync": "node scripts/technician-offline-sync-test.mjs",
     "test:multi-day-dispatch": "node scripts/multi-day-dispatch-test.mjs",
     "test:route-maps": "node scripts/route-maps-test.mjs",
     "test:landing-client": "node scripts/landing-client-test.mjs",

@@ -562,6 +562,61 @@ paths:
         '200': { $ref: '#/components/responses/MutationAccepted' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
+  /api/public/technician-job/offline-sync:
+    post:
+      summary: Replay a bounded idempotent technician offline batch
+      parameters:
+        - $ref: '#/components/parameters/TechnicianToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [batchId, actions]
+              properties:
+                batchId: { type: string, minLength: 8, maxLength: 120 }
+                actions:
+                  type: array
+                  minItems: 1
+                  maxItems: 20
+                  items:
+                    type: object
+                    required: [id, path, method, body, idempotencyKey]
+                    properties:
+                      id: { type: string, minLength: 8, maxLength: 120 }
+                      path: { type: string }
+                      method: { type: string, enum: [POST] }
+                      body: { type: object, additionalProperties: true }
+                      idempotencyKey: { type: string, minLength: 8, maxLength: 100 }
+                      queuedAt: { type: string, nullable: true }
+      responses:
+        '200':
+          description: Per-action replay statuses and durable batch receipt
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [batchId, duplicate, results]
+                properties:
+                  batchId: { type: string }
+                  duplicate: { type: boolean }
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      required: [id, path, status, ok]
+                      properties:
+                        id: { type: string }
+                        path: { type: string }
+                        status: { type: integer }
+                        ok: { type: boolean }
+                        body: { type: object, additionalProperties: true }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
   /api/public/technician-job/status:
     post:
       summary: Advance a signed technician job through field status
