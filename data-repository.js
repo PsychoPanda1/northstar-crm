@@ -1374,6 +1374,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async listAllTeamTimeOff() {
+    if (!this.remote) throw new Error('API required for time-off management');
+    const response = await fetch('/api/team/time-off', { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('team time-off listing failed');
+    return response.json();
+  }
+
   async createTeamTimeOff(teamMemberId, startsAt, endsAt, reason, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for time-off management');
     const response = await fetch(`/api/team/${encodeURIComponent(teamMemberId)}/time-off`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ startsAt, endsAt, reason }) });
