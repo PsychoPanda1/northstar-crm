@@ -102,6 +102,14 @@ paths:
         '200': { $ref: '#/components/responses/MutationAccepted' }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
+  /api/reports/data-retention:
+    get:
+      summary: Read the owner-only tenant data-retention review report
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
   /api/vendor-bills:
     get:
       summary: List tenant-scoped vendor bills

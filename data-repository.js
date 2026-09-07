@@ -1416,6 +1416,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async getDataRetentionReport() {
+    if (!this.remote) return { tenant: { slug: this.tenant?.slug || 'default', businessName: this.tenant?.businessName || '' }, policy: { retentionDays: this.tenant?.dataRetentionDays || 365, mode: 'review_only', deletionRequiresExplicitOwnerAction: true }, collections: [], candidateRecords: 0 };
+    const response = await fetch('/api/reports/data-retention', { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('data retention report unavailable');
+    return response.json();
+  }
+
   async globalSearch(query) {
     return this.globalSearchPage(query);
   }
