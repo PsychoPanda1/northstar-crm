@@ -1,0 +1,10 @@
+import { readFileSync } from 'node:fs';
+const root = new URL('../', import.meta.url);
+const html = readFileSync(new URL('index.html', root), 'utf8');
+const source = readFileSync(new URL('receivables-reminder-dialog.js', root), 'utf8');
+const assert = (condition, message) => { if (!condition) throw new Error(message); };
+assert(html.includes('/receivables-reminder-dialog.js'), 'receivables reminder dialog is not loaded');
+assert(source.includes('data-receivables-reminders') && source.includes('remindReceivables'), 'receivables reminder trigger or API is missing');
+assert(source.includes('showModal') && source.includes('stopImmediatePropagation') && source.includes('role="status"'), 'receivables reminder dialog is not accessible or does not replace prompts');
+assert(source.includes('minBalance') && source.includes('channel'), 'receivables reminder filters are missing');
+console.log('Northstar receivables reminder dialog checks passed');
