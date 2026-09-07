@@ -60,7 +60,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Technician offline updates use an encrypted AES-GCM local queue with token-derived key material, legacy migration, bounded server replay batches, encrypted failed-action envelopes, cross-device retry, durable sync receipts, owner-visible failure notifications, idempotent replay, and explicit conflict review
 - Equipment records support tenant-scoped lookup by barcode, serial number, or asset ID, returning the linked customer equipment history for fast field identification
 - Technicians can capture structured field findings with severity and recommended follow-up, preserving onsite upsell and safety context for owner review
-- Technician links now include a tenant-scoped local-day agenda, showing only assigned stops and issuing a short-lived job link for each stop so multi-job crews can move through the route without exposing other technicians' work
+- Technician links now include a tenant-scoped local-day agenda with date navigation, showing only assigned stops and issuing a short-lived job link for each stop so multi-job crews can move through the route without exposing other technicians' work
 - Field findings generate tenant-scoped owner action notifications, with safety findings marked urgent for dispatch follow-up
 - Technicians can add equipment records from the field, carrying model/serial, install, warranty, and source-job history into the customer profile
 - Technician job forms capture inspection results, notes, and optional customer acknowledgment for office review
