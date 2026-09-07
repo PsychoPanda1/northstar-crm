@@ -40,4 +40,8 @@ client.manifestPromise = Promise.resolve({ tenant: { slug: 'wrong-tenant' }, int
 try { await client.ownerPasswordLogin('owner@example.test', 'owner-password'); throw new Error('wrong-tenant owner session accepted'); } catch (error) { if (error.message !== 'owner_session_tenant_mismatch' || calls.length !== 7) throw error; }
 client.manifestPromise = Promise.resolve({ integration: { ownerAuthMethods: ['password'], ownerOidcAuthEndpoint: null } });
 try { await client.ownerOidcLogin('signed-id-token'); throw new Error('password-only tenant accepted OIDC'); } catch (error) { if (error.message !== 'oidc_owner_auth_unavailable' || error.status !== 404 || calls.length !== 7) throw error; }
+client.manifestPromise = Promise.resolve({ integration: { technicianEndpoints: { complete: '/api/public/technician-job/complete' } } });
+await client.signedGet('technicianEndpoints', 'complete', 'signed-field-token', { jobId: 'job-1' });
+await client.signedPost('technicianEndpoints', 'complete', 'signed-field-token', { completionNote: 'Done.' }, { idempotencyKey: 'reviewed-field-key' });
+if (calls[7].url !== 'https://crm.example.test/api/public/technician-job/complete?token=signed-field-token&jobId=job-1' || calls[8].url !== 'https://crm.example.test/api/public/technician-job/complete?token=signed-field-token' || calls[8].options.headers['idempotency-key'] !== 'reviewed-field-key') throw new Error('signed portal request helpers failed');
 console.log('Northstar landing client test passed');

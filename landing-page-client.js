@@ -74,6 +74,17 @@
       return integration.capabilities?.[name] === true;
     }
 
+    async signedGet(scope, name, token, params = {}) {
+      const endpoint = await this.endpointUrl(scope, name, { token, params });
+      return this.request(endpoint);
+    }
+
+    async signedPost(scope, name, token, payload = {}, { idempotencyKey } = {}) {
+      const endpoint = await this.endpointUrl(scope, name, { token });
+      const key = idempotencyKey || makeKey(this.service, `${scope}.${name}`, payload);
+      return this.request(endpoint, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': key }, body: JSON.stringify(payload) });
+    }
+
     async validateOwnerSession(result) {
       const manifest = await this.manifest();
       const tenantMismatch = result?.tenant?.slug && manifest?.tenant?.slug && result.tenant.slug !== manifest.tenant.slug;
