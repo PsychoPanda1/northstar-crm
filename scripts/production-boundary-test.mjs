@@ -35,6 +35,8 @@ const env = {
   NORTHSTAR_OWNER_PASSWORD_DIGEST: createHmac('sha256', secret).update(password).digest('hex'),
   NORTHSTAR_OWNER_TENANT_ID: 'johnson-service-co',
   NORTHSTAR_TENANTS_JSON: JSON.stringify([{ slug: 'johnson-service-co', businessName: 'Johnson Service Co.', serviceLabel: 'Home services', timeZone: 'America/New_York', requestResponseSlaHours: 48 }]),
+  NORTHSTAR_SERVICE_TENANTS_JSON: JSON.stringify({ default: 'johnson-service-co' }),
+  NORTHSTAR_SERVICE_ORIGINS_JSON: JSON.stringify({ default: ['https://crm.example.test'] }),
   NORTHSTAR_REQUEST_RESPONSE_SLA_HOURS: '48',
   NORTHSTAR_CATALOG_JSON: JSON.stringify([{ tenantId: 'johnson-service-co', id: 'configured-inspection', name: 'Configured inspection', description: 'A configured production service', priceFrom: '$199', category: 'Inspection', durationMinutes: 90, taxable: true }]),
   NORTHSTAR_PAYMENT_WEBHOOK_SECRET: 'payment-secret-32-characters-for-test',
@@ -82,7 +84,7 @@ try {
     try { ready = await getJson('/api/ready'); } catch {}
     if (!ready?.response?.ok) await new Promise((resolve) => setTimeout(resolve, 100));
   }
-  if (!ready?.response?.ok || ready.body.checks?.configuration !== true || ready.body.checks?.requestResponseSlaConfiguration !== true || ready.body.checks?.documentRetryConfiguration !== true) throw new Error('production server did not become ready with valid configuration');
+  if (!ready?.response?.ok || ready.body.checks?.configuration !== true || ready.body.checks?.tenantDeploymentContract !== true || ready.body.checks?.requestResponseSlaConfiguration !== true || ready.body.checks?.documentRetryConfiguration !== true) throw new Error('production server did not become ready with valid configuration');
   const openapiResponse = await fetch(`${base}/api/openapi.yaml`);
   const openapiText = await openapiResponse.text();
   if (!openapiResponse.ok || !openapiResponse.headers.get('content-type')?.includes('application/yaml') || !openapiText.includes('openapi: 3.0.3') || !openapiText.includes('/api/public/bookings:') || !openapiText.includes('/api/session/services:') || !openapiText.includes('bearerAuth: []')) throw new Error('canonical OpenAPI endpoint was not served with authenticated workspace discovery');
@@ -91,7 +93,7 @@ try {
     try { invalidReady = await getJsonFrom(invalidBase, '/api/ready'); } catch {}
     if (!invalidReady) await new Promise((resolve) => setTimeout(resolve, 100));
   }
-  if (!invalidReady || invalidReady.response.status !== 503 || invalidReady.body.checks?.requestResponseSlaConfiguration !== false || invalidReady.body.checks?.identityProviderConfiguration !== false || invalidReady.body.checks?.allowedOriginsConfiguration !== false || invalidReady.body.checks?.serviceOriginConfiguration !== false || invalidReady.body.checks?.tenantDataIntegrity !== false) throw new Error('invalid production configuration did not fail readiness');
+  if (!invalidReady || invalidReady.response.status !== 503 || invalidReady.body.checks?.requestResponseSlaConfiguration !== false || invalidReady.body.checks?.identityProviderConfiguration !== false || invalidReady.body.checks?.allowedOriginsConfiguration !== false || invalidReady.body.checks?.serviceOriginConfiguration !== false || invalidReady.body.checks?.tenantDeploymentContract !== false || invalidReady.body.checks?.tenantDataIntegrity !== false) throw new Error('invalid production configuration did not fail readiness');
   let strictReady = null;
   for (let attempt = 0; attempt < 200 && !strictReady; attempt += 1) {
     try { strictReady = await getJsonFrom(strictBase, '/api/ready'); } catch {}

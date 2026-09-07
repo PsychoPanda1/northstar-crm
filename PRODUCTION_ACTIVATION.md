@@ -9,6 +9,7 @@ Northstar is implementation-complete for the checked local workflows, but a prod
 - Configure `NORTHSTAR_PUBLIC_URL` to the final HTTPS CRM origin.
 - Set `NORTHSTAR_ALLOWED_ORIGINS` and, for multi-business deployments, `NORTHSTAR_SERVICE_ORIGINS_JSON` to the exact landing-page origins.
 - Set `NORTHSTAR_TENANTS_JSON`, `NORTHSTAR_SERVICE_TENANTS_JSON`, `NORTHSTAR_CATALOG_JSON`, and owner/staff authentication configuration from the deployment secret store.
+- In production, every attached service key must have an explicit tenant mapping, at least one tenant pricebook item, a configured owner or OIDC owner, and an HTTPS entry in `NORTHSTAR_SERVICE_ORIGINS_JSON`; `/api/ready` reports this as `tenantDeploymentContract`.
 - Keep `NORTHSTAR_ALLOW_DEMO_LOGIN` disabled in production.
 
 ## 2. Configure identity and data safety
