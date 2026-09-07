@@ -941,6 +941,7 @@ const server = createServer(async (req, res) => {
     applySecurityHeaders(res);
     const requestUrl = new URL(req.url, `http://${req.headers.host}`);
     const pathname = requestUrl.pathname;
+    if (pathname === '/api/public/customer-portal' && req.method === 'GET') { const claims = readCustomerToken(requestUrl.searchParams.get('token')); if (!claims) return json(res, 401, { error: 'invalid_customer_token' }); const portal = customerPortalResponseFor(claims.tenantId, claims.customerId); if (!portal) return json(res, 404, { error: 'customer_not_found' }); return json(res, 200, portal); }
     if (pathname === '/api/public/customer-portal/change-orders' && req.method === 'GET') {
       const claims = readCustomerToken(requestUrl.searchParams.get('token'));
       if (!claims) return json(res, 401, { error: 'invalid_customer_token' });
@@ -2345,3 +2346,29 @@ server.listen(PORT, () => console.log(`Northstar CRM running at http://localhost
 const shutdown = () => server.close(() => process.exit(0));
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
+
+function customerPortalResponseFor(tenantId, customerId) {
+  const portal = customerPortalFor(tenantId, customerId);
+  if (!portal) return null;
+  const saved = state.get(tenantId);
+  portal.locations = [{ id: `${customerId}_primary`, label: 'Primary service address', address: portal.customer.location || 'Address pending' }, ...(saved.locations || []).filter((item) => item.customerId === customerId).map((item) => ({ id: item.id, label: item.label, address: item.address }))];
+  portal.messages = customerMessagesFor(tenantId, customerId, portal.customer.name);
+  portal.requests = customerRequestsFor(tenantId, customerId);
+  portal.jobs = portal.jobs.map((job) => ({ ...job, visits: (saved.jobs.find((item) => item.id === job.id)?.visits || []).map((visit) => ({ id: visit.id, sequence: visit.sequence, time: visit.time, technician: visit.technician || null, status: visit.status })) }));
+  portal.estimates = portal.estimates.map((estimate) => {
+    const savedEstimate = saved.estimates.find((item) => item.id === estimate.id || (item.customer === portal.customer.name && item.service === estimate.service && item.value === estimate.value));
+    if (!savedEstimate || !['Draft', 'Sent'].includes(savedEstimate.status)) return savedEstimate?.subtotal !== undefined ? { ...estimate, subtotal: savedEstimate.subtotal, discount: savedEstimate.discount, taxRate: savedEstimate.taxRate, tax: savedEstimate.tax } : estimate;
+    const token = issueEstimateToken(savedEstimate);
+    return { ...estimate, id: savedEstimate.id, estimateApprovalToken: token, estimateUrl: `/estimate.html?token=${encodeURIComponent(token)}`, ...(savedEstimate.subtotal !== undefined ? { subtotal: savedEstimate.subtotal, discount: savedEstimate.discount, taxRate: savedEstimate.taxRate, tax: savedEstimate.tax } : {}) };
+  });
+  portal.invoices = portal.invoices.map((invoice) => {
+    const savedInvoice = saved.invoices.find((item) => item.id === invoice.id);
+    return savedInvoice && (savedInvoice.subtotal !== undefined || savedInvoice.lineItems?.length) ? { ...invoice, ...(savedInvoice.subtotal !== undefined ? { subtotal: savedInvoice.subtotal, discount: savedInvoice.discount, taxRate: savedInvoice.taxRate, tax: savedInvoice.tax } : {}), ...(savedInvoice.lineItems?.length ? { lineItems: savedInvoice.lineItems.map((item) => ({ description: item.description, quantity: item.quantity, unitPrice: item.unitPrice, amount: item.amount })) } : {}) } : invoice;
+  });
+  portal.invoices = portal.invoices.map((invoice) => invoice.balance > 0 && invoice.status !== 'Paid' ? { ...invoice, paymentUrl: `/invoice.html?token=${encodeURIComponent(issueInvoiceToken(saved.invoices.find((item) => item.id === invoice.id) || invoice))}`, paymentLinkExpiresInHours: 72 } : invoice);
+  portal.plans = portal.plans.map((plan) => {
+    const savedPlan = saved.plans.find((item) => item.id === plan.id);
+    return { ...plan, amount: Number.isFinite(Number(savedPlan?.amount)) ? Number(savedPlan.amount) : null, billingSchedule: savedPlan?.billingSchedule || null, renewalAt: savedPlan?.renewalAt || null, autoRenew: savedPlan?.autoRenew !== false };
+  });
+  return portal;
+}

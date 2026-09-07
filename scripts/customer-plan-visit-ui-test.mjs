@@ -18,5 +18,8 @@ for (const snippet of [
 for (const snippet of ['billingSchedule', 'Amount per billing period', 'Monthly', 'Quarterly', 'Annual', 'renewalAt', 'visitsIncluded', 'autoRenew', 'Auto-renew agreement']) {
   if (!owner.includes(snippet)) throw new Error(`owner service-plan billing UI wiring missing: ${snippet}`);
 }
+for (const snippet of ['billingSchedule', 'renewalAt', 'autoRenew', 'Auto-renew off']) {
+  if (!customer.includes(snippet)) throw new Error(`customer agreement terms UI wiring missing: ${snippet}`);
+}
 if (!repository.includes('billingSchedule = \'Monthly\'') || !repository.includes('options = {}') || !repository.includes('autoRenew: options.autoRenew') || !repository.includes('visitsIncluded: options.visitsIncluded')) throw new Error('repository service-plan agreement wiring missing');
 console.log('Northstar customer plan visit UI checks passed');
