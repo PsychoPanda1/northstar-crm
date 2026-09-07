@@ -101,6 +101,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Customers can schedule an available service-plan visit directly from the secure portal; the request is tenant-scoped, conflict-checked, idempotent, confirmation-notified, and audited, while pause/cancellation/change requests remain owner-reviewed
 - Customer portal payment and financing actions use accessible validated dialogs with explicit installment, amount, method, and term choices; card and bank details remain provider-hosted and never enter Northstar
 - Customer portal booking, rescheduling, and cancellation use accessible validated dialogs with tenant pricebook services, guided intake fields, saved service locations, availability slots, and explicit cancellation confirmation
+- Customer service-plan visits and pause/resume/change/cancel requests use accessible validated dialogs with tenant-scoped plans, saved locations, availability, idempotent submissions, and explicit service-office follow-up states
 - Owners and dispatchers can queue deduplicated appointment reminders before a visit
 - Automatic customer notifications when jobs are assigned, en route, or completed, with deduplication before provider delivery
 - Owner/dispatcher review requests can be queued by SMS or email after completion, honoring channel opt-outs and deduplicating signed 72-hour review links
