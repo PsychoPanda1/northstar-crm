@@ -438,6 +438,15 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/CustomerPortal' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+  /api/public/customer-portal/change-orders:
+    get:
+      summary: List customer-owned change orders
+      parameters:
+        - $ref: '#/components/parameters/CustomerToken'
+      responses:
+        '200':
+          description: Customer-owned scope changes and review links
+        '401': { $ref: '#/components/responses/Unauthorized' }
   /api/public/customer-portal/availability:
     get:
       summary: List customer portal booking availability

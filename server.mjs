@@ -8,6 +8,8 @@ import { estimatePdfFor } from './estimate-pdf.mjs';
 import { invoicePdfFor } from './invoice-pdf.mjs';
 import { customerDataExportFor } from './privacy-tools.mjs';
 
+const customerChangeOrdersFor = (tenantId, customerId) => (state.get(tenantId).changeOrders || []).filter((item) => item.customerId === customerId).slice(0, 50).map((item) => ({ id: item.id, jobId: item.jobId, service: item.service, description: item.description, amount: item.amount, lineItems: (item.lineItems || []).map((lineItem) => ({ description: lineItem.description, quantity: lineItem.quantity, unitPrice: lineItem.unitPrice, amount: lineItem.amount })), status: item.status, createdAt: item.createdAt, sentAt: item.sentAt || null, decidedAt: item.decidedAt || null, invoiceId: item.invoiceId || null, ...(item.status === 'Sent' ? { reviewUrl: `/change-order.html?token=${encodeURIComponent(issueChangeOrderToken(item))}`, reviewLinkExpiresInHours: 72 } : {}) }));
+
 const ROOT = fileURLToPath(new URL('.', import.meta.url)).replace(/[\\/]$/, '');
 const REAL_ROOT = realpathSync(ROOT);
 const PORT = Number(process.env.PORT || 4173);
@@ -849,6 +851,12 @@ const server = createServer(async (req, res) => {
     applySecurityHeaders(res);
     const requestUrl = new URL(req.url, `http://${req.headers.host}`);
     const pathname = requestUrl.pathname;
+    if (pathname === '/api/public/customer-portal/change-orders' && req.method === 'GET') {
+      const claims = readCustomerToken(requestUrl.searchParams.get('token'));
+      if (!claims) return json(res, 401, { error: 'invalid_customer_token' });
+      if (!customerProfileFor(claims.tenantId, claims.customerId)) return json(res, 404, { error: 'customer_not_found' });
+      return json(res, 200, { items: customerChangeOrdersFor(claims.tenantId, claims.customerId) });
+    }
     if (pathname === '/api/leads' && req.method === 'POST') {
       const claims = authenticate(req);
       if (!claims) return json(res, 401, { error: 'unauthorized' });
