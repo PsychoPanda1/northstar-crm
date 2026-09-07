@@ -25,7 +25,9 @@ try {
   const replay = await postJson('/api/catalog/import', { items }, token, 'catalog-bulk-test');
   const conflict = await postJson('/api/catalog/import', { items: [{ ...items[0], priceFrom: '$299' }] }, token, 'catalog-bulk-test');
   const invalid = await postJson('/api/catalog/import', { items: [{ ...items[0], durationMinutes: 5 }] }, token, 'catalog-bulk-invalid');
-  if (first.response.status !== 201 || first.body.created !== 2 || replay.response.status !== 200 || replay.body.duplicate !== true || conflict.response.status !== 409 || invalid.response.status !== 422) throw new Error('bulk catalog import contract failed');
+  const exportResponse = await fetch(`${base}/api/export?type=catalog`, { headers: { authorization: `Bearer ${token}` } });
+  const csv = await exportResponse.text();
+  if (first.response.status !== 201 || first.body.created !== 2 || replay.response.status !== 200 || replay.body.duplicate !== true || conflict.response.status !== 409 || invalid.response.status !== 422 || exportResponse.status !== 200 || !csv.includes('Bulk drain cleaning') || !csv.includes('Bulk faucet repair')) throw new Error('bulk catalog import/export contract failed');
   console.log('Northstar bulk catalog import test passed');
 } finally {
   if (child && !child.killed) child.kill();
