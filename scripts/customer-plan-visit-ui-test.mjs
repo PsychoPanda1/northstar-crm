@@ -1,6 +1,8 @@
 import { readFile } from 'node:fs/promises';
 
 const customer = await readFile(new URL('../customer.html', import.meta.url), 'utf8');
+const owner = await readFile(new URL('../app.js', import.meta.url), 'utf8');
+const repository = await readFile(new URL('../data-repository.js', import.meta.url), 'utf8');
 for (const snippet of [
   'visitsAvailableToSchedule',
   'No visits available',
@@ -13,4 +15,8 @@ for (const snippet of [
 ]) {
   if (!customer.includes(snippet)) throw new Error(`customer plan visit UI wiring missing: ${snippet}`);
 }
+for (const snippet of ['billingSchedule', 'Amount per billing period', 'Monthly', 'Quarterly', 'Annual']) {
+  if (!owner.includes(snippet)) throw new Error(`owner service-plan billing UI wiring missing: ${snippet}`);
+}
+if (!repository.includes('billingSchedule = \'Monthly\'') || !repository.includes('billingSchedule, ...(assetId')) throw new Error('repository service-plan billing cadence wiring missing');
 console.log('Northstar customer plan visit UI checks passed');
