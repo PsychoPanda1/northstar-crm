@@ -31,6 +31,7 @@
     "test:automation-worker": "node scripts/automation-worker-test.mjs",
     "test:message-retry": "node scripts/message-retry-test.mjs",
     "test:rate-limit": "node scripts/rate-limit-test.mjs",
+    "test:plan-status": "node scripts/plan-status-test.mjs",
     "test:search-pagination": "node scripts/search-pagination-test.mjs",
     "test:report-schedule": "node scripts/report-schedule-test.mjs",
     "test:call-report": "node scripts/call-report-test.mjs",
