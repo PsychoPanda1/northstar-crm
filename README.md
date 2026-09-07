@@ -52,7 +52,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - All API and static responses receive a browser security baseline; production mode additionally enables HSTS
 - CI runs a Node 20/22 verification matrix with a ten-minute timeout, stale-run cancellation, manual reruns, and a production-configured container readiness smoke check
 - Technician photo evidence with bounded HTTPS metadata, captions, timestamps, and owner-visible job records
-- Technician offline updates use an encrypted AES-GCM local queue with token-derived key material, legacy migration, bounded server replay batches, durable sync receipts, owner-visible failure notifications, idempotent replay, and explicit conflict review
+- Technician offline updates use an encrypted AES-GCM local queue with token-derived key material, legacy migration, bounded server replay batches, encrypted failed-action envelopes, cross-device retry, durable sync receipts, owner-visible failure notifications, idempotent replay, and explicit conflict review
 - Technicians can capture structured field findings with severity and recommended follow-up, preserving onsite upsell and safety context for owner review
 - Field findings generate tenant-scoped owner action notifications, with safety findings marked urgent for dispatch follow-up
 - Technicians can add equipment records from the field, carrying model/serial, install, warranty, and source-job history into the customer profile

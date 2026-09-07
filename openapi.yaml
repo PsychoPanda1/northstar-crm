@@ -633,6 +633,28 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/ValidationError' }
+  /api/public/technician-job/offline-sync/retry:
+    post:
+      summary: Retry encrypted failed technician offline actions from another device
+      parameters:
+        - $ref: '#/components/parameters/TechnicianToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [batchId, actionIds]
+              properties:
+                batchId: { type: string, minLength: 8, maxLength: 120 }
+                actionIds: { type: array, minItems: 1, maxItems: 20, items: { type: string } }
+      responses:
+        '200': { description: Retry batch result, content: { application/json: { schema: { type: object, additionalProperties: true } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '503': { $ref: '#/components/responses/ServiceUnavailable' }
   /api/public/technician-job/status:
     post:
       summary: Advance a signed technician job through field status
