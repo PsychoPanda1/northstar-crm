@@ -14,14 +14,15 @@ const secret = 'payment-setup-webhook-secret-32-characters';
 const root = fileURLToPath(new URL('..', import.meta.url));
 const tempDir = mkdtempSync(join(tmpdir(), 'northstar-payment-setup-'));
 let providerRequest = null;
+const setupProviderApiKey = 'payment-setup-provider-key-test';
 const provider = createServer(async (req, res) => {
   const chunks = [];
   for await (const chunk of req) chunks.push(chunk);
-  providerRequest = JSON.parse(Buffer.concat(chunks).toString() || '{}');
+  providerRequest = { ...JSON.parse(Buffer.concat(chunks).toString() || '{}'), authorization: req.headers.authorization || null };
   res.writeHead(201, { 'content-type': 'application/json' });
   res.end(JSON.stringify({ id: 'provider-setup-1', url: `http://127.0.0.1:${providerPort}/hosted/provider-setup-1` }));
 });
-const server = spawn(process.execPath, [join(root, 'server.mjs')], { cwd: root, env: { ...process.env, NODE_ENV: 'test', PORT: String(port), NORTHSTAR_DATA_FILE: join(tempDir, 'state.json'), NORTHSTAR_SESSION_SECRET: 'payment-setup-session-secret-32-character', NORTHSTAR_PAYMENT_WEBHOOK_SECRET: secret, NORTHSTAR_PAYMENT_SETUP_PROVIDER_URL: providerUrl, NORTHSTAR_ALLOW_DEMO_LOGIN: 'true' }, stdio: 'ignore' });
+const server = spawn(process.execPath, [join(root, 'server.mjs')], { cwd: root, env: { ...process.env, NODE_ENV: 'test', PORT: String(port), NORTHSTAR_DATA_FILE: join(tempDir, 'state.json'), NORTHSTAR_SESSION_SECRET: 'payment-setup-session-secret-32-character', NORTHSTAR_PAYMENT_WEBHOOK_SECRET: secret, NORTHSTAR_PAYMENT_SETUP_PROVIDER_URL: providerUrl, NORTHSTAR_PAYMENT_SETUP_PROVIDER_API_KEY: setupProviderApiKey, NORTHSTAR_ALLOW_DEMO_LOGIN: 'true' }, stdio: 'ignore' });
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 try {
   await new Promise((resolve, reject) => provider.listen(providerPort, '127.0.0.1', (error) => error ? reject(error) : resolve()));
@@ -32,7 +33,7 @@ try {
   const token = bookingBody.customerPortalAccessToken;
   const setup = await fetch(`${base}/api/public/customer-portal/payment-method/setup?token=${encodeURIComponent(token)}`, { method: 'POST' });
   const setupBody = await setup.json();
-  assert(setup.status === 201 && setupBody.url && setupBody.setupSessionId && providerRequest?.operation === 'payment_method_setup' && providerRequest?.setupSessionId === setupBody.setupSessionId && !JSON.stringify(setupBody).includes('providerPaymentMethodId'), 'hosted payment setup session did not stay provider-token-free');
+  assert(setup.status === 201 && setupBody.url && setupBody.setupSessionId && providerRequest?.operation === 'payment_method_setup' && providerRequest?.setupSessionId === setupBody.setupSessionId && providerRequest?.authorization === `Bearer ${setupProviderApiKey}` && !JSON.stringify(setupBody).includes('providerPaymentMethodId') && !JSON.stringify(setupBody).includes(setupProviderApiKey), 'hosted payment setup session did not stay provider-token-free');
   const event = { type: 'payment_method.attached', eventId: 'payment-method-attached-1', tenantId: 'clearwater-plumbing', setupSessionId: setupBody.setupSessionId, providerPaymentMethodId: 'pm_hosted_12345', methodType: 'Card', brand: 'Visa', last4: '4242', expMonth: 12, expYear: 2099 };
   const raw = JSON.stringify(event);
   const webhook = await fetch(`${base}/api/webhooks/payments`, { method: 'POST', headers: { 'content-type': 'application/json', 'x-northstar-signature': createHmac('sha256', secret).update(raw).digest('hex') }, body: raw });
