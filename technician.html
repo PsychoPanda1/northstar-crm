@@ -152,6 +152,7 @@ const send = (silent = false) => { if (!active()) { if (!silent) summary.textCon
     (() => { const token = new URLSearchParams(location.search).get('token'); const escape = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character])); const loadGuide = async () => { if (!token) return; try { const response = await fetch(`/api/public/technician-job/field-guide?token=${encodeURIComponent(token)}`, { headers: { 'x-request-id': crypto.randomUUID() } }); if (!response.ok) return; const guide = await response.json(); const target = document.querySelector('#field-guide'); if (!target) return; target.innerHTML = `<section style="margin:18px 0 4px;padding:14px;background:#eef7ff;border:1px solid #cfe1f2;border-radius:10px"><div style="font-weight:800;font-size:13px">${escape(guide.title || 'Field guide')}</div><div style="color:#2f5f7d;font-size:12px;margin-top:7px">Safety: ${escape(guide.safety)}</div><ul style="margin:8px 0 0;padding-left:18px">${(guide.steps || []).map((step) => `<li style="margin:4px 0">${escape(step)}</li>`).join('')}</ul></section>`; } catch {} }; loadGuide(); })();
   </script>
   <script src="/technician-payment-owner.js"></script>
+  <script src="/technician-material-owner.js"></script>
   <script>
     (() => {
       const token = new URLSearchParams(location.search).get('token');
