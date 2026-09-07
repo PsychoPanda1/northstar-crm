@@ -1,7 +1,9 @@
 const mobileNavToggle = document.querySelector('#mobile-nav-toggle');
 const workspaceSidebar = document.querySelector('#workspace-sidebar');
-const closeMobileNavigation = () => { workspaceSidebar?.classList.remove('mobile-open'); mobileNavToggle?.setAttribute('aria-expanded', 'false'); };
-mobileNavToggle?.addEventListener('click', () => { const open = workspaceSidebar?.classList.toggle('mobile-open') === true; mobileNavToggle.setAttribute('aria-expanded', String(open)); });
+const mobileNavBackdrop = document.querySelector('#mobile-nav-backdrop');
+const closeMobileNavigation = () => { workspaceSidebar?.classList.remove('mobile-open'); mobileNavBackdrop?.classList.remove('visible'); mobileNavToggle?.setAttribute('aria-expanded', 'false'); };
+mobileNavToggle?.addEventListener('click', () => { const open = workspaceSidebar?.classList.toggle('mobile-open') === true; mobileNavBackdrop?.classList.toggle('visible', open); mobileNavToggle.setAttribute('aria-expanded', String(open)); });
+mobileNavBackdrop?.addEventListener('click', closeMobileNavigation);
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeMobileNavigation(); });
 workspaceSidebar?.querySelectorAll('a').forEach((link) => link.addEventListener('click', closeMobileNavigation));
 
