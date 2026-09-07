@@ -1444,6 +1444,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async revokeCallRecording(callId, reason = 'Recording access revoked by an authorized operator.') {
+    if (!this.remote) throw new Error('API required for call recordings');
+    const response = await fetch(`/api/calls/${encodeURIComponent(callId)}/recording/revoke`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({ reason }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'call recording revocation failed');
+    return response.json();
+  }
+
   async bookCall(callId, details = {}, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for call booking');
     const response = await fetch(`/api/calls/${encodeURIComponent(callId)}/book`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify(details) });
