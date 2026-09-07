@@ -1249,10 +1249,11 @@ components:
             technicianEndpoints:
               type: object
               description: Copyable signed technician field-operation endpoints for the tenant's mobile workspace.
-              required: [job, fieldGuide, status, visitStatus, clock, customerContext, checklist, photo, finding, form, asset, labor, materials, estimate, paymentIntent, complete, location]
+              required: [job, fieldGuide, offlineSync, status, visitStatus, clock, customerContext, checklist, photo, finding, form, asset, labor, materials, estimate, paymentIntent, complete, location]
               properties:
                 job: { type: string }
                 fieldGuide: { type: string }
+                offlineSync: { type: string }
                 status: { type: string }
                 visitStatus: { type: string }
                 clock: { type: string }
