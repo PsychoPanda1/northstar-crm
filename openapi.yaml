@@ -1582,6 +1582,9 @@ components:
         slug: { type: string }
         businessName: { type: string, minLength: 2, maxLength: 120 }
         serviceLabel: { type: string, minLength: 2, maxLength: 80 }
+        contactPhone: { type: [string, 'null'], maxLength: 30 }
+        contactEmail: { type: [string, 'null'], format: email, maxLength: 160 }
+        serviceArea: { type: [string, 'null'], maxLength: 160 }
         timeZone: { type: string }
         appointmentMinutes: { type: integer, minimum: 30, maximum: 480 }
         bookingStartHour: { type: integer, minimum: 0, maximum: 23 }
