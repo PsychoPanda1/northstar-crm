@@ -563,6 +563,22 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
   /api/public/technician-job/offline-sync:
+    get:
+      summary: Read bounded technician offline-sync receipts for the assigned job
+      parameters:
+        - $ref: '#/components/parameters/TechnicianToken'
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 50, default: 20 }
+      responses:
+        '200':
+          description: Technician-scoped batch receipts without raw action payloads
+          content:
+            application/json:
+              schema: { type: object, required: [jobId, technician, batches], properties: { jobId: { type: string }, technician: { type: string }, batches: { type: array, items: { type: object } } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
     post:
       summary: Replay a bounded idempotent technician offline batch
       parameters:
