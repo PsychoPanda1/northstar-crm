@@ -3,10 +3,11 @@ import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawn } from 'node:child_process';
+import { createServer } from 'node:net';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const port = 6000 + Math.floor(Math.random() * 100);
+const port = await new Promise((resolve, reject) => { const probe = createServer(); probe.once('error', reject); probe.listen(0, '127.0.0.1', () => { const address = probe.address(); const selected = typeof address === 'object' && address ? address.port : 0; probe.close((error) => error ? reject(error) : resolve(selected)); }); });
 const tempDir = mkdtempSync(join(tmpdir(), 'northstar-operations-metrics-'));
 const env = { ...process.env, NODE_ENV: 'development', NORTHSTAR_ALLOW_DEMO_LOGIN: 'true', PORT: String(port), NORTHSTAR_DATA_FILE: join(tempDir, 'state.json'), NORTHSTAR_SESSION_FILE: join(tempDir, 'sessions.json') };
 const base = `http://127.0.0.1:${port}`;
