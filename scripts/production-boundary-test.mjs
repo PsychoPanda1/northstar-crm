@@ -32,7 +32,7 @@ const env = {
   NORTHSTAR_DATA_FILE: dataFile,
   NORTHSTAR_BACKUP_FILE: `${dataFile}.backup`,
   NORTHSTAR_SESSION_FILE: sessionFile,
-  NORTHSTAR_SQLITE_FILE: `${dataFile}.sqlite`,
+  NORTHSTAR_SQLITE_FILE: nativeSqliteAvailable ? `${dataFile}.sqlite` : '',
   NORTHSTAR_REQUIRE_SQLITE: nativeSqliteAvailable ? 'true' : 'false',
   NORTHSTAR_SESSION_SECRET: secret,
   NORTHSTAR_OWNER_EMAIL: 'owner@example.test',
