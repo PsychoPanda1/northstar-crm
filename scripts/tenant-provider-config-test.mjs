@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawn } from 'node:child_process';
 
-const runCase = async (label, providerConfig) => {
+const runCase = async (label, providerConfig, expectedCheck) => {
   const suffix = `${process.pid}-${Date.now()}-${label}`;
   const dataFile = join(tmpdir(), `northstar-tenant-provider-config-${suffix}.json`);
   const port = 10000 + ((process.pid + Date.now()) % 40000);
@@ -15,13 +15,14 @@ const runCase = async (label, providerConfig) => {
   try {
     let ready = null;
     for (let attempt = 0; attempt < 300 && !ready; attempt += 1) { try { const response = await fetch(`${base}/api/ready`); ready = { response, body: await response.json().catch(() => ({})) }; } catch {} if (!ready) await new Promise((resolve) => setTimeout(resolve, 50)); }
-    if (!ready || ready.response.status !== 503 || ready.body.checks?.tenantProviderConfiguration !== false || !ready.body.failedChecks?.includes('tenantProviderConfiguration')) throw new Error(`${label} provider configuration was not rejected with readiness evidence`);
+    if (!ready || ready.response.status !== 503 || ready.body.checks?.[expectedCheck] !== false || !ready.body.failedChecks?.includes(expectedCheck)) throw new Error(`${label} provider configuration was not rejected with readiness evidence`);
   } finally {
     if (!child.killed) child.kill();
     for (const file of [dataFile, `${dataFile}.sessions`, `${dataFile}.backup`, `${dataFile}.tmp`]) if (existsSync(file)) rmSync(file, { force: true });
   }
 };
 
-await runCase('malformed', '{bad-json');
-await runCase('unknown-tenant', JSON.stringify({ 'unknown-tenant': { lead: { url: 'https://lead.example.test/ingest' } } }));
+await runCase('malformed', '{bad-json', 'tenantProviderConfiguration');
+await runCase('unknown-tenant', JSON.stringify({ 'unknown-tenant': { lead: { url: 'https://lead.example.test/ingest' } } }), 'tenantProviderConfiguration');
+await runCase('insecure-http', JSON.stringify({ 'johnson-service-co': { lead: { url: 'http://lead.example.test/ingest' } } }), 'tenantProviderConfiguration');
 console.log('Northstar tenant provider configuration test passed');

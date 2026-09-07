@@ -44,12 +44,13 @@ const PAYMENT_PROVIDER_URL = String(process.env.NORTHSTAR_PAYMENT_PROVIDER_URL |
 const PAYMENT_PROVIDER_API_KEY = String(process.env.NORTHSTAR_PAYMENT_PROVIDER_API_KEY || '').trim();
 const PAYROLL_PROVIDER_URL = String(process.env.NORTHSTAR_PAYROLL_PROVIDER_URL || '').trim();
 const PAYROLL_PROVIDER_API_KEY = String(process.env.NORTHSTAR_PAYROLL_PROVIDER_API_KEY || '').trim();
+const providerUrlAllowed = (value) => { try { const url = new URL(String(value).trim()); const loopback = ['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname); const protocolAllowed = process.env.NODE_ENV !== 'production' ? ['http:', 'https:'].includes(url.protocol) : url.protocol === 'https:' || (url.protocol === 'http:' && loopback); return protocolAllowed && !url.username && !url.password; } catch { return false; } };
 let tenantProviderConfigurationValid = true;
 const TENANT_PROVIDER_CONFIG = (() => {
   try {
     const parsed = JSON.parse(String(process.env.NORTHSTAR_TENANT_PROVIDER_CONFIG_JSON || '{}'));
     const providerKinds = new Set(['lead', 'message', 'inventory', 'accounting', 'payment', 'payroll']);
-    const validUrl = (value) => { try { const url = new URL(String(value).trim()); return ['http:', 'https:'].includes(url.protocol) && !url.username && !url.password; } catch { return false; } };
+    const validUrl = (value) => providerUrlAllowed(value);
     const valid = parsed && !Array.isArray(parsed) && typeof parsed === 'object' && Object.keys(parsed).length <= 500 && Object.entries(parsed).every(([tenantId, config]) => {
       if (!/^[a-z0-9-]{2,80}$/.test(String(tenantId)) || !config || Array.isArray(config) || typeof config !== 'object') return false;
       return Object.entries(config).every(([kind, provider]) => {
@@ -79,13 +80,13 @@ const documentRetryConfigurationValid = (() => { const raw = process.env.NORTHST
 const PAYROLL_RETRY_LIMIT = (() => { const value = Number(process.env.NORTHSTAR_PAYROLL_RETRY_LIMIT || 0); return Number.isInteger(value) && value >= 0 && value <= 5 ? value : 0; })();
 const payrollRetryConfigurationValid = (() => { const raw = process.env.NORTHSTAR_PAYROLL_RETRY_LIMIT; return raw === undefined || raw === '' || /^\d+$/.test(String(raw)) && Number(raw) >= 0 && Number(raw) <= 5; })();
 const messageRetryDelayMs = (attempt) => Math.min(30 * 60 * 1000, [60 * 1000, 5 * 60 * 1000, 15 * 60 * 1000, 30 * 60 * 1000][Math.max(0, attempt - 1)] || 30 * 60 * 1000);
-const messageProviderConfigured = (tenantId = '') => { const check = (id) => { try { return ['http:', 'https:'].includes(new URL(providerFor('message', id, MESSAGE_PROVIDER_URL, MESSAGE_PROVIDER_API_KEY).url).protocol); } catch { return false; } }; return tenantId ? check(tenantId) : providerConfiguredForReadiness(check); };
+const messageProviderConfigured = (tenantId = '') => { const check = (id) => providerUrlAllowed(providerFor('message', id, MESSAGE_PROVIDER_URL, MESSAGE_PROVIDER_API_KEY).url); return tenantId ? check(tenantId) : providerConfiguredForReadiness(check); };
 const documentProviderConfigured = () => { try { return ['http:', 'https:'].includes(new URL(DOCUMENT_PROVIDER_URL).protocol); } catch { return false; } };
-const leadProviderConfigured = (tenantId = '') => { const check = (id) => { try { return ['http:', 'https:'].includes(new URL(providerFor('lead', id, LEAD_PROVIDER_URL, LEAD_PROVIDER_API_KEY).url).protocol); } catch { return false; } }; return tenantId ? check(tenantId) : providerConfiguredForReadiness(check); };
-const inventoryProviderConfigured = (tenantId = '') => { const check = (id) => { try { return ['http:', 'https:'].includes(new URL(providerFor('inventory', id, INVENTORY_PROVIDER_URL, INVENTORY_PROVIDER_API_KEY).url).protocol); } catch { return false; } }; return tenantId ? check(tenantId) : providerConfiguredForReadiness(check); };
-const accountingProviderConfigured = (tenantId = '') => { const check = (id) => { try { return ['http:', 'https:'].includes(new URL(providerFor('accounting', id, ACCOUNTING_PROVIDER_URL, ACCOUNTING_PROVIDER_API_KEY).url).protocol); } catch { return false; } }; return tenantId ? check(tenantId) : providerConfiguredForReadiness(check); };
-const paymentProviderConfigured = (tenantId = '') => { const check = (id) => { try { return ['http:', 'https:'].includes(new URL(providerFor('payment', id, PAYMENT_PROVIDER_URL, PAYMENT_PROVIDER_API_KEY).url).protocol); } catch { return false; } }; return tenantId ? check(tenantId) : providerConfiguredForReadiness(check); };
-const payrollProviderConfigured = (tenantId = '') => { const check = (id) => { try { return ['http:', 'https:'].includes(new URL(providerFor('payroll', id, PAYROLL_PROVIDER_URL, PAYROLL_PROVIDER_API_KEY).url).protocol); } catch { return false; } }; return tenantId ? check(tenantId) : providerConfiguredForReadiness(check); };
+const leadProviderConfigured = (tenantId = '') => { const check = (id) => providerUrlAllowed(providerFor('lead', id, LEAD_PROVIDER_URL, LEAD_PROVIDER_API_KEY).url); return tenantId ? check(tenantId) : providerConfiguredForReadiness(check); };
+const inventoryProviderConfigured = (tenantId = '') => { const check = (id) => providerUrlAllowed(providerFor('inventory', id, INVENTORY_PROVIDER_URL, INVENTORY_PROVIDER_API_KEY).url); return tenantId ? check(tenantId) : providerConfiguredForReadiness(check); };
+const accountingProviderConfigured = (tenantId = '') => { const check = (id) => providerUrlAllowed(providerFor('accounting', id, ACCOUNTING_PROVIDER_URL, ACCOUNTING_PROVIDER_API_KEY).url); return tenantId ? check(tenantId) : providerConfiguredForReadiness(check); };
+const paymentProviderConfigured = (tenantId = '') => { const check = (id) => providerUrlAllowed(providerFor('payment', id, PAYMENT_PROVIDER_URL, PAYMENT_PROVIDER_API_KEY).url); return tenantId ? check(tenantId) : providerConfiguredForReadiness(check); };
+const payrollProviderConfigured = (tenantId = '') => { const check = (id) => providerUrlAllowed(providerFor('payroll', id, PAYROLL_PROVIDER_URL, PAYROLL_PROVIDER_API_KEY).url); return tenantId ? check(tenantId) : providerConfiguredForReadiness(check); };
 const publicUrlConfigurationValid = (() => { const requiresPublicUrl = REQUIRE_LIVE_PROVIDERS || messageProviderConfigured() || paymentProviderConfigured(); if (!requiresPublicUrl) return true; if (!PUBLIC_URL) return false; try { const parsed = new URL(PUBLIC_URL); return parsed.protocol === 'https:' && !parsed.username && !parsed.password; } catch { return false; } })();
 const ALLOW_DEMO_LOGIN = process.env.NODE_ENV !== 'production' || String(process.env.NORTHSTAR_ALLOW_DEMO_LOGIN || '').toLowerCase() === 'true';
 const OWNER_LOGIN_EMAIL = String(process.env.NORTHSTAR_OWNER_EMAIL || '').trim().toLowerCase();
