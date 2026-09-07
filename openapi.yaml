@@ -128,6 +128,53 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '409': { $ref: '#/components/responses/IdempotencyConflict' }
+  /api/calls:
+    get:
+      summary: List tenant-scoped inbound call records with recording URLs redacted
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+  /api/calls/{callId}/recording:
+    get:
+      summary: Read an owner or dispatcher call-recording handoff while the provider URL is valid
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: callId
+          in: path
+          required: true
+          schema: { type: string, maxLength: 120 }
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '410': { $ref: '#/components/responses/Expired' }
+  /api/calls/{callId}/recording/revoke:
+    post:
+      summary: Revoke call-recording access and remove the stored provider URL
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: callId
+          in: path
+          required: true
+          schema: { type: string, maxLength: 120 }
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason: { type: string, minLength: 3, maxLength: 300 }
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
   /api/vendor-bills:
     get:
       summary: List tenant-scoped vendor bills
