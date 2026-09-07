@@ -20,6 +20,42 @@ paths:
                 $ref: '#/components/schemas/TenantManifest'
         '404':
           $ref: '#/components/responses/UnknownService'
+  /api/public/coverage:
+    get:
+      summary: Preflight a public service-area request
+      parameters:
+        - $ref: '#/components/parameters/Service'
+        - name: city
+          in: query
+          schema: { type: string, maxLength: 80 }
+        - name: postalCode
+          in: query
+          schema: { type: string, pattern: '^\\d{5}$' }
+        - name: location
+          in: query
+          schema: { type: string, maxLength: 120 }
+      responses:
+        '200':
+          description: Safe service-area qualification result
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [service, eligible, reason, rules]
+                properties:
+                  service: { type: string }
+                  eligible: { type: boolean }
+                  reason: { type: string, nullable: true }
+                  serviceArea: { type: string, nullable: true }
+                  rules:
+                    type: object
+                    required: [enforce, cities, postalCodes]
+                    properties:
+                      enforce: { type: boolean }
+                      cities: { type: array, items: { type: string } }
+                      postalCodes: { type: array, items: { type: string } }
+        '404':
+          $ref: '#/components/responses/UnknownService'
   /api/public/catalog:
     get:
       summary: List customer-safe services

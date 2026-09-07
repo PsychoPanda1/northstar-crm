@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
 const source = readFileSync(new URL('../landing-page-client.js', import.meta.url), 'utf8');
+if (!source.includes('async coverage') || !source.includes('/api/public/coverage?')) throw new Error('landing client coverage helper missing');
 const storage = new Map();
 const calls = [];
 const sandbox = {

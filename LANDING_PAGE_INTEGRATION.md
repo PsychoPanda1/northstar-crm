@@ -1,6 +1,6 @@
 # Landing page integration
 
-The tenant manifest may include optional public `contactPhone`, `contactEmail`, and `serviceArea` values for call-to-action and coverage copy. Treat them as display metadata only; owner authentication and customer records remain protected by their respective server-side boundaries.
+The tenant manifest may include optional public `contactPhone`, `contactEmail`, and `serviceArea` values for call-to-action and coverage copy. When `tenant.serviceAreaRules.enforce` is true, use the shared `GET /api/public/coverage?service=<key>&city=...&postalCode=...` preflight to qualify a location before submitting a lead or booking. Treat all returned metadata as display/qualification data only; owner authentication and customer records remain protected by their respective server-side boundaries.
 
 The reusable booking page consumes `contactPhone`, `contactEmail`, and `serviceArea` when present, rendering click-to-call, email, and coverage details without requiring service-specific page edits.
 

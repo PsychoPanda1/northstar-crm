@@ -39,7 +39,9 @@ try {
   assert(updated.body.workspace?.serviceAreaRules?.enforce === true && updated.body.workspace?.serviceAreaRules?.cities?.includes('charleston') && manifest.body.tenant?.serviceAreaRules?.postalCodes?.includes('29401'), 'service area rules were not normalized or exposed safely');
   const allowedLead = await postJson('/api/public/leads?service=plumbing', { name: 'In-area customer', phone: '843-555-0111', city: 'charleston', location: '1 King Street, Charleston, SC 29401' });
   const blockedLead = await postJson('/api/public/leads?service=plumbing', { name: 'Out-of-area customer', phone: '843-555-0112', city: 'Savannah', location: '1 River Street, Savannah, GA 31401' });
-  assert(allowedLead.response.status === 201 && blockedLead.response.status === 422 && blockedLead.body.error === 'outside_service_area', 'service area rules did not qualify public leads');
+  const coverageAllowed = await request('/api/public/coverage?service=plumbing&city=Charleston');
+  const coverageBlocked = await request('/api/public/coverage?service=plumbing&postalCode=31401');
+  assert(allowedLead.response.status === 201 && blockedLead.response.status === 422 && blockedLead.body.error === 'outside_service_area' && coverageAllowed.response.status === 200 && coverageAllowed.body.eligible === true && coverageBlocked.body.eligible === false && coverageBlocked.body.reason === 'outside_service_area', 'service area rules did not qualify public leads or coverage previews');
   const invalid = await request('/api/settings/workspace', { method: 'PATCH', headers: { ...headers, 'content-type': 'application/json' }, body: JSON.stringify({ appointmentMinutes: 5 }) });
   assert(invalid.response.status === 422, 'invalid workspace settings were accepted');
   console.log('Northstar workspace settings test passed');

@@ -214,6 +214,14 @@
         body: JSON.stringify({ ...payload, service: this.service })
       });
     }
+
+    async coverage({ city = '', postalCode = '', location = '' } = {}) {
+      const params = new URLSearchParams({ service: this.service });
+      if (city) params.set('city', city);
+      if (postalCode) params.set('postalCode', postalCode);
+      if (location) params.set('location', location);
+      return this.request(`/api/public/coverage?${params}`);
+    }
   }
 
   global.NorthstarLandingClient = NorthstarLandingClient;
