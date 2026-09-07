@@ -19,7 +19,7 @@
   form.addEventListener('submit', async (event) => {
     event.preventDefault(); const selected = slots.find((item) => item.id === slotSelect.value); if (!selected) { message.textContent = 'Choose an available appointment slot.'; return; }
     submit.disabled = true; message.textContent = 'Rescheduling…';
-    try { await repository.rescheduleJob(jobId, selected.id); dialog.close(); document.querySelector('[data-view="dispatch"]')?.click(); }
+    try { await repository.rescheduleJob(jobId, selected.id, crypto.randomUUID()); dialog.close(); document.querySelector('[data-view="dispatch"]')?.click(); }
     catch (error) { message.textContent = error?.message || 'Could not reschedule this job. The selected slot may no longer be available.'; submit.disabled = false; }
   });
   document.addEventListener('click', (event) => { const button = event.target.closest('[data-job-action="reschedule"]'); if (!button) return; event.preventDefault(); event.stopImmediatePropagation(); void open(button); }, true);

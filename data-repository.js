@@ -498,9 +498,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async rescheduleJob(id, slotId) {
+  async rescheduleJob(id, slotId, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for dispatch rescheduling');
-    const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/reschedule`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ slotId }) });
+    const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/reschedule`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ slotId }) });
     if (!response.ok) throw new Error('job reschedule failed');
     return response.json();
   }
