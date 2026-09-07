@@ -6,7 +6,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const port = 4700 + Math.floor(Math.random() * 150);
+const port = 30000 + Math.floor(Math.random() * 20000);
 const secret = 'northstar-user-invite-test-secret-32';
 const dataFile = join(tmpdir(), `northstar-user-invite-${process.pid}-${Date.now()}.json`);
 const sessionFile = `${dataFile}.sessions`;
