@@ -5,7 +5,7 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const app = readFileSync(`${root}/app.js`, 'utf8');
 const repository = readFileSync(`${root}/data-repository.js`, 'utf8');
 
-if (!app.includes("id = 'data-retention-view'") || !app.includes("button.hidden = sessionRole !== 'owner'") || !app.includes('data-retention-archive') || !app.includes('This is reversible from the retention archive.') || !repository.includes('async getDataRetentionReport()') || !repository.includes('async archiveDataRetentionRecords(')) {
+if (!app.includes("id = 'data-retention-view'") || !app.includes("id = 'retention-archive-view'") || !app.includes("button.hidden = sessionRole !== 'owner'") || !app.includes('data-retention-archive') || !app.includes('data-retention-restore') || !app.includes('This is reversible from the retention archive.') || !repository.includes('async getDataRetentionReport()') || !repository.includes('async archiveDataRetentionRecords(') || !repository.includes('async restoreDataRetentionRecords(')) {
   throw new Error('data retention owner UI contract failed');
 }
 
