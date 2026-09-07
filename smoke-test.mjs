@@ -280,7 +280,8 @@ try {
   idempotentJobOptions.headers['idempotency-key'] = 'smoke-job-create';
   const idempotentJob = await request('/api/jobs', idempotentJobOptions);
   const idempotentJobRetry = await request('/api/jobs', { ...idempotentJobOptions, headers: { ...idempotentJobOptions.headers } });
-  assert(idempotentJob.response.status === 201 && idempotentJobRetry.response.status === 200 && idempotentJobRetry.body.duplicate === true && idempotentJobRetry.body.id === idempotentJob.body.id, 'job creation idempotency failed');
+  const conflictingJobRetry = await request('/api/jobs', { ...idempotentJobOptions, headers: { ...idempotentJobOptions.headers }, body: JSON.stringify({ customerId: createdCustomer.body.id, service: 'Different retry payload', time: 'Next Friday 2:00 PM' }) });
+  assert(idempotentJob.response.status === 201 && idempotentJobRetry.response.status === 200 && idempotentJobRetry.body.duplicate === true && idempotentJobRetry.body.id === idempotentJob.body.id && conflictingJobRetry.response.status === 409 && conflictingJobRetry.body.error === 'idempotency_key_reused', 'job creation idempotency failed');
   const jobCreationAudit = await request('/api/audit?search=Scheduled%20repair', { headers: { authorization: `Bearer ${token}` } });
   const structuredJob = await request('/api/jobs', jsonOptions('POST', { customerId: createdCustomer.body.id, service: 'Structured appointment', time: 'Saturday 9:00 AM', startsAt: '2026-09-12T13:00:00.000Z', endsAt: '2026-09-12T14:00:00.000Z', timeZone: 'America/New_York' }, token));
   const freshExtendedAvailability = await request('/api/public/availability?service=plumbing&days=7');
