@@ -107,6 +107,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Multi-party invoice billing uses an accessible validated bill-to dialog with existing profile prefill, contact details, payment terms, and server-side tenant-scoped validation
 - Customer conversation replies and outbound SMS/email messages use an accessible composer with tenant-scoped customer selection, channel choice, provider-pending status, and auditable delivery
 - Conversation threads persist owner read acknowledgments with tenant-scoped audit events, so unread customer messages remain visible until an authorized workspace user opens the thread
+- Customer request queues use an accessible workflow dialog for replies, assignment, priority changes, and resolution while preserving server-side tenant and role validation
 - Owners and dispatchers can queue deduplicated appointment reminders before a visit
 - Automatic customer notifications when jobs are assigned, en route, or completed, with deduplication before provider delivery
 - Owner/dispatcher review requests can be queued by SMS or email after completion, honoring channel opt-outs and deduplicating signed 72-hour review links

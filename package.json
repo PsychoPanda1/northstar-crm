@@ -41,6 +41,7 @@
     "test:automation-worker": "node scripts/automation-worker-test.mjs",
     "test:message-retry": "node scripts/message-retry-test.mjs",
     "test:message-read": "node scripts/message-read-test.mjs",
+    "test:request-dialog": "node scripts/request-dialog-test.mjs",
     "test:rate-limit": "node scripts/rate-limit-test.mjs",
     "test:plan-status": "node scripts/plan-status-test.mjs",
     "test:search-pagination": "node scripts/search-pagination-test.mjs",

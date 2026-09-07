@@ -2,3 +2,4 @@ import { readFile } from 'node:fs/promises';
 const [html, source] = await Promise.all([readFile(new URL('../index.html', import.meta.url), 'utf8'), readFile(new URL('../conversation-dialog.js', import.meta.url), 'utf8')]);
 for (const snippet of ['conversation-dialog.js', "id = 'conversation-message-dialog'", '[data-conversation-reply], [data-message-reply]', '[data-conversation-compose]', "'#send-message'", 'repository.replyToMessage', 'repository.sendMessage', 'provider delivery', 'stopImmediatePropagation()']) if (![html, source].some((text) => text.includes(snippet))) throw new Error(`Missing conversation dialog contract: ${snippet}`);
 console.log('Northstar conversation dialog checks passed');
+await import('./request-dialog-test.mjs');
