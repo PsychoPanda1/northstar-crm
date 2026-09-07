@@ -21,6 +21,7 @@ const FINANCING_WEBHOOK_SECRET = process.env.NORTHSTAR_FINANCING_WEBHOOK_SECRET 
 const MESSAGE_WEBHOOK_SECRET = process.env.NORTHSTAR_MESSAGE_WEBHOOK_SECRET || `${SECRET}-message-webhook`;
 const CALL_WEBHOOK_SECRET = process.env.NORTHSTAR_CALL_WEBHOOK_SECRET || `${SECRET}-call-webhook`;
 const FLEET_WEBHOOK_SECRET = process.env.NORTHSTAR_FLEET_WEBHOOK_SECRET || (process.env.NODE_ENV === 'production' ? '' : `${SECRET}-fleet-webhook`);
+const METRICS_SECRET = String(process.env.NORTHSTAR_METRICS_SECRET || '').trim();
 const PAYMENT_WEBHOOK_SECRET_PREVIOUS = String(process.env.NORTHSTAR_PAYMENT_WEBHOOK_SECRET_PREVIOUS || '');
 const FINANCING_WEBHOOK_SECRET_PREVIOUS = String(process.env.NORTHSTAR_FINANCING_WEBHOOK_SECRET_PREVIOUS || '');
 const MESSAGE_WEBHOOK_SECRET_PREVIOUS = String(process.env.NORTHSTAR_MESSAGE_WEBHOOK_SECRET_PREVIOUS || '');
@@ -667,6 +668,32 @@ const operationalMetricsFor = (tenantId) => {
   const latestAutomation = (saved.automationRuns || []).slice().sort((a, b) => Date.parse(b.createdAt || 0) - Date.parse(a.createdAt || 0))[0];
   const backup = backupSnapshotHealth();
   return { service: 'northstar-api', version: '0.3.0', tenantId, generatedAt: new Date().toISOString(), process: { uptimeSeconds: Math.floor(process.uptime()), storage: sqliteStore ? 'sqlite' : 'json' }, persistence: { backup, integrityHealthy: persistentStorageHealthy(), auditLedgerHealthy: auditLedgerHealthyFor(tenantId) }, records: { customers: count('customers'), leads: count('leads'), jobs: count('jobs'), estimates: count('estimates'), invoices: count('invoices'), payments: count('payments'), messages: count('messages'), inventoryTransactions: count('inventoryTransactions'), accountingSync: count('accountingSync'), payrollRuns: count('payrollRuns') }, queues: { leads: health.leads, inventory: health.inventory, accounting: accountingQueueStatsFor(tenantId), messages: health.messages, payments: health.payments, documents: health.documents, payroll: health.payroll }, nextActions: nextActionsFor(tenantId, 10), automation: { lastRunAt: latestAutomation?.createdAt || null, runsRecorded: count('automationRuns') } };
+};
+const metricsCredentialMatches = (req) => {
+  if (!isStrongSecret(METRICS_SECRET)) return false;
+  const authorization = String(req.headers.authorization || '');
+  const supplied = authorization.startsWith('Bearer ') ? authorization.slice(7) : '';
+  const expected = Buffer.from(METRICS_SECRET);
+  const actual = Buffer.from(supplied);
+  return actual.length === expected.length && nodeTimingSafeEqual(actual, expected);
+};
+const prometheusMetricsFor = () => {
+  const lines = ['# HELP northstar_up Northstar process availability.', '# TYPE northstar_up gauge', 'northstar_up 1', '# HELP northstar_process_uptime_seconds Process uptime in seconds.', '# TYPE northstar_process_uptime_seconds gauge', `northstar_process_uptime_seconds ${Math.floor(process.uptime())}`];
+  const label = (value) => String(value).replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\n/g, '\\n');
+  const queueNames = ['leads', 'inventory', 'accounting', 'messages', 'payments', 'documents', 'payroll'];
+  for (const tenantId of Object.keys(tenants)) {
+    const metrics = operationalMetricsFor(tenantId);
+    const tenant = label(tenantId);
+    lines.push(`northstar_storage_integrity{tenant="${tenant}"} ${metrics.persistence.integrityHealthy ? 1 : 0}`);
+    lines.push(`northstar_audit_ledger_healthy{tenant="${tenant}"} ${metrics.persistence.auditLedgerHealthy ? 1 : 0}`);
+    lines.push(`northstar_backup_valid{tenant="${tenant}"} ${metrics.persistence.backup.valid ? 1 : 0}`);
+    for (const [record, value] of Object.entries(metrics.records)) lines.push(`northstar_records{tenant="${tenant}",record="${label(record)}"} ${Number(value) || 0}`);
+    for (const queue of queueNames) {
+      const value = metrics.queues[queue] || {};
+      for (const field of ['pending', 'retrying', 'failed', 'stale']) if (value[field] !== undefined) lines.push(`northstar_queue_${field}{tenant="${tenant}",queue="${queue}"} ${Number(value[field]) || 0}`);
+    }
+  }
+  return `${lines.join('\n')}\n`;
 };
 const dispatchPayrollRuns = async (saved, claims, limit = 20) => {
   let provider;
@@ -1803,6 +1830,7 @@ if (pathname === '/api/public/technician-job/estimate' && req.method === 'POST')
     if (pathname === '/api/session' && req.method === 'GET') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); const requestedService = requestUrl.searchParams.get('service'); if (requestedService && (!Object.prototype.hasOwnProperty.call(serviceTenant, requestedService) || serviceTenant[requestedService] !== claims.tenantId)) return json(res, 403, { error: 'service_tenant_mismatch' }); if (claims.service && requestedService && requestedService !== claims.service) return json(res, 403, { error: 'service_context_mismatch' }); const service = claims.service || requestedService || Object.entries(serviceTenant).find(([, tenantId]) => tenantId === claims.tenantId)?.[0] || 'default'; return json(res, 200, { owner: { id: claims.sub, name: claims.name || demoStaff[claims.role].name, role: claims.role }, tenant: tenants[claims.tenantId], permissions: rolePermissions[claims.role], expiresAt: claims.exp, service }); }
     if (pathname === '/api/dashboard' && req.method === 'GET') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); return json(res, 200, dashboardFor(claims.tenantId)); }
     if (pathname === '/api/integrations/health' && req.method === 'GET') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); return json(res, 200, { ...integrationHealthForPortal(claims.tenantId), accounting: accountingQueueStatsFor(claims.tenantId) }); }
+    if (pathname === '/api/metrics' && req.method === 'GET') { if (!metricsCredentialMatches(req)) { res.setHeader('www-authenticate', 'Bearer'); return json(res, 401, { error: 'metrics_authorization_required' }); } res.writeHead(200, { 'content-type': 'text/plain; version=0.0.4; charset=utf-8', 'cache-control': 'no-store' }); return res.end(prometheusMetricsFor()); }
     if (pathname === '/api/operations/metrics' && req.method === 'GET') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); if (!['owner', 'dispatcher', 'accountant'].includes(claims.role)) return json(res, 403, { error: 'forbidden' }); return json(res, 200, operationalMetricsFor(claims.tenantId)); }
     if (pathname === '/api/reports/analytics-history' && req.method === 'GET') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); if (!['owner', 'dispatcher', 'accountant'].includes(claims.role)) return json(res, 403, { error: 'forbidden' }); const days = Number(requestUrl.searchParams.get('days') || 30); if (!Number.isInteger(days) || days < 1 || days > 3650) return json(res, 422, { error: 'valid_analytics_history_days_required' }); return json(res, 200, analyticsHistoryFor(claims.tenantId, days)); }
     if (pathname === '/api/reports/analytics-snapshot' && req.method === 'POST') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); if (!['owner', 'accountant'].includes(claims.role)) return json(res, 403, { error: 'forbidden' }); const saved = state.get(claims.tenantId); const result = captureAnalyticsSnapshot(claims.tenantId, 'manual'); recordAudit(saved, claims, 'analytics.snapshot.captured', 'analytics', result.snapshot.id, result.snapshot.period); persist(); return json(res, 200, { snapshot: result.snapshot, duplicate: !result.changed }); }

@@ -11,7 +11,8 @@ const requiredSecrets = [
   'NORTHSTAR_MESSAGE_WEBHOOK_SECRET',
   'NORTHSTAR_CALL_WEBHOOK_SECRET',
   'NORTHSTAR_FINANCING_WEBHOOK_SECRET',
-  'NORTHSTAR_FLEET_WEBHOOK_SECRET'
+  'NORTHSTAR_FLEET_WEBHOOK_SECRET',
+  'NORTHSTAR_METRICS_SECRET'
 ];
 
 const dockerfile = await readFile(new URL('../Dockerfile', import.meta.url), 'utf8');
