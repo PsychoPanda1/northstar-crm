@@ -1533,7 +1533,7 @@ components:
               items: { $ref: '#/components/schemas/IntakeField' }
         integration:
           type: object
-            required: [version, leadEndpoint, bookingEndpoint, availabilityEndpoint, ownerAuthMethods]
+          required: [version, leadEndpoint, bookingEndpoint, availabilityEndpoint, ownerAuthMethods]
           properties:
             version: { type: integer, example: 2 }
             leadEndpoint: { type: string }
