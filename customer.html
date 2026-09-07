@@ -177,5 +177,48 @@
 <script>
 (()=>{const addAgreementTerms=()=>{const portal=window.__northstarPortal;if(!portal?.plans?.length)return;const section=[...document.querySelectorAll('.section')].find((node)=>node.querySelector('h2')?.textContent==='Service plans');if(!section)return;section.querySelectorAll('.row').forEach((row,index)=>{const plan=portal.plans[index];if(!plan||row.dataset.agreementTerms==='true')return;const detail=row.querySelector('div');if(!detail)return;const terms=[plan.billingSchedule?`${plan.billingSchedule} billing`:null,plan.renewalAt?`Renews ${new Date(plan.renewalAt).toLocaleDateString()}`:null,plan.autoRenew===false?'Auto-renew off':null].filter(Boolean).join(' · ');if(terms)detail.append(document.createTextNode(` · ${terms}`));row.dataset.agreementTerms='true';});};const timer=setInterval(()=>{addAgreementTerms();if(window.__northstarPortal?.plans)clearInterval(timer)},150);})();
 </script>
+<script>
+(() => {
+  const token = new URLSearchParams(location.search).get('token');
+  if (!token) return;
+  const query = `?token=${encodeURIComponent(token)}`;
+  const message = (value) => { const target = document.querySelector('#message'); if (target) target.textContent = value; };
+  const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[character]));
+  const render = () => {
+    const portal = window.__northstarPortal;
+    const content = document.querySelector('#content');
+    if (!portal || !content || content.querySelector('[data-payment-method-section]')) return Boolean(portal);
+    const section = document.createElement('section'); section.className = 'section'; section.dataset.paymentMethodSection = 'true';
+    const methods = portal.paymentMethods || [];
+    section.innerHTML = `<h2>Payment methods</h2><p class="intro">Saved methods are managed by your payment provider. Northstar stores only masked details and an opaque provider reference.</p>${methods.length ? methods.map((item) => `<div class="row"><div><strong>${escapeHtml(item.brand || item.type)}</strong><small>${escapeHtml(item.type)} ending ${escapeHtml(item.last4)}${item.expMonth && item.expYear ? ` · Expires ${escapeHtml(item.expMonth)}/${escapeHtml(item.expYear)}` : ''}</small></div><span class="pill">${item.isDefault ? 'Default' : ''}<button type="button" data-action="remove-payment-method" data-payment-method-id="${escapeHtml(item.id)}">Remove</button></span></div>`).join('') : '<div class="detail">No saved payment methods.</div>'}<div class="actions"><button type="button" data-action="add-payment-method">Add provider-vaulted method</button></div><small>Use your provider’s hosted setup form to obtain the opaque token. Do not enter a card number, bank account, routing number, CVV, or CVC here.</small>`;
+    content.append(section);
+    return true;
+  };
+  document.addEventListener('click', async (event) => {
+    const button = event.target.closest('[data-action="add-payment-method"], [data-action="remove-payment-method"]');
+    if (!button) return;
+    event.preventDefault(); button.disabled = true;
+    try {
+      if (button.dataset.action === 'add-payment-method') {
+        const providerPaymentMethodId = window.prompt('Paste the opaque provider token from the hosted payment setup. Do not enter card or bank details.');
+        if (!providerPaymentMethodId?.trim()) return;
+        const type = window.prompt('Method type: Card or ACH', 'Card');
+        const last4 = window.prompt('Last four digits shown by the provider', '');
+        const brand = window.prompt('Provider display brand', type === 'ACH' ? 'Bank' : 'Card');
+        if (!['Card', 'ACH'].includes(type) || !/^\d{4}$/.test(last4 || '') || !brand?.trim()) { message('Enter provider metadata only: type, brand, and four digits.'); return; }
+        const payload = { providerPaymentMethodId: providerPaymentMethodId.trim(), type, brand: brand.trim(), last4 };
+        const response = await fetch('/api/public/customer-portal/payment-method' + query, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': globalThis.northstarPortalRetryKey('payment-method', payload) }, body: JSON.stringify(payload) });
+        message(response.ok ? 'Payment method saved securely.' : 'Payment method could not be saved. Use a provider token, not payment credentials.');
+      } else {
+        if (!window.confirm('Remove this saved payment method?')) return;
+        const response = await fetch('/api/public/customer-portal/payment-method' + query + '&id=' + encodeURIComponent(button.dataset.paymentMethodId), { method: 'DELETE' });
+        message(response.ok ? 'Payment method removed.' : 'Payment method could not be removed.');
+      }
+      if (message && (button.dataset.action === 'add-payment-method' || button.dataset.action === 'remove-payment-method')) window.location.reload();
+    } catch { message('Payment method action could not be completed.'); } finally { button.disabled = false; }
+  });
+  const timer = setInterval(() => { if (render()) clearInterval(timer); }, 150);
+})();
+</script>
 </body>
 </html>
