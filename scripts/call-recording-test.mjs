@@ -9,7 +9,7 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const port = 9100 + Math.floor(Math.random() * 500);
 const secret = 'call-recording-test-secret-32-characters';
 const dataFile = join(tmpdir(), `northstar-call-recording-${process.pid}-${Date.now()}.json`);
-const env = { ...process.env, NODE_ENV: 'development', PORT: String(port), NORTHSTAR_DATA_FILE: dataFile, NORTHSTAR_SESSION_FILE: `${dataFile}.sessions`, NORTHSTAR_CALL_WEBHOOK_SECRET: secret };
+const env = { ...process.env, NODE_ENV: 'development', PORT: String(port), NORTHSTAR_DATA_FILE: dataFile, NORTHSTAR_SESSION_FILE: `${dataFile}.sessions`, NORTHSTAR_CALL_WEBHOOK_SECRET: secret, NORTHSTAR_CATALOG_JSON: JSON.stringify([{ id: 'CAT-CALL-90', tenantId: 'clearwater-plumbing', name: 'Camera inspection', description: 'Camera inspection with findings report', priceFrom: '$249', durationMinutes: 90, formNames: ['Inspection report'] }]) };
 const base = `http://127.0.0.1:${port}`;
 let child;
 const request = async (path, options = {}) => { const response = await fetch(`${base}${path}`, options); return { response, body: await response.json().catch(() => ({})) }; };
@@ -27,6 +27,9 @@ try {
   const listed = await request('/api/calls', { headers: ownerHeaders });
   const call = listed.body.items?.find((item) => item.id === created.body.call?.id);
   const recording = await request(`/api/calls/${encodeURIComponent(created.body.call?.id)}/recording`, { headers: ownerHeaders });
+  const availability = await request('/api/public/availability?service=plumbing&days=7&catalogItemId=CAT-CALL-90');
+  const bookableCall = await signedWebhook({ eventId: randomUUID(), tenantId: 'clearwater-plumbing', from: '843-555-0195', durationSeconds: 42, service: 'Camera inspection' });
+  const callBooking = await post(`/api/calls/${encodeURIComponent(bookableCall.body.call?.id)}/book`, { catalogItemId: 'CAT-CALL-90', slotId: availability.body.slotOptions?.[0]?.id, location: '123 Test Street, Charleston SC' }, ownerHeaders);
   const revoked = await post(`/api/calls/${encodeURIComponent(created.body.call?.id)}/recording/revoke`, { reason: 'Retention policy test.' }, ownerHeaders);
   const revokedAgain = await post(`/api/calls/${encodeURIComponent(created.body.call?.id)}/recording/revoke`, { reason: 'Duplicate revoke.' }, ownerHeaders);
   const afterRevoke = await request(`/api/calls/${encodeURIComponent(created.body.call?.id)}/recording`, { headers: ownerHeaders });
@@ -38,7 +41,8 @@ try {
   const reportExpiredRecording = await request(`/api/calls/${encodeURIComponent(reportExpiredCreated.body.call?.id)}/recording`, { headers: ownerHeaders });
   const accountantLogin = await post('/api/auth/demo-login?service=plumbing', { service: 'plumbing', role: 'accountant' });
   const accountantRecording = await request(`/api/calls/${encodeURIComponent(created.body.call?.id)}/recording`, { headers: { authorization: `Bearer ${accountantLogin.body.token}` } });
-  if (!created.response.ok || !call?.recordingAvailable || Object.prototype.hasOwnProperty.call(call, 'recordingUrl') || recording.response.status !== 200 || recording.body.recording?.url !== 'https://recordings.example.test/call/abc' || revoked.response.status !== 200 || revoked.body.revoked !== true || revokedAgain.response.status !== 200 || revokedAgain.body.duplicate !== true || afterRevoke.response.status !== 404 || invalid.response.status !== 422 || expiredCreated.response.status !== 201 || expiredRecording.response.status !== 410 || reportExpiredCreated.response.status !== 201 || retentionReport.body.expiredRecordingUrlsRemoved !== 1 || reportExpiredRecording.response.status !== 404 || accountantRecording.response.status !== 403) throw new Error('call recording metadata, protected access, URL validation, expiry cleanup, revocation, or list redaction failed');
+  const bookedDuration = (Date.parse(callBooking.body.job?.endsAt) - Date.parse(callBooking.body.job?.startsAt)) / 60000;
+  if (!created.response.ok || !call?.recordingAvailable || Object.prototype.hasOwnProperty.call(call, 'recordingUrl') || recording.response.status !== 200 || recording.body.recording?.url !== 'https://recordings.example.test/call/abc' || availability.response.status !== 200 || availability.body.catalogItem?.durationMinutes !== 90 || callBooking.response.status !== 201 || callBooking.body.job?.catalogItemId !== 'CAT-CALL-90' || callBooking.body.job?.pricebookDurationAtCreation !== 90 || bookedDuration !== 90 || !callBooking.body.job?.requiredForms?.some((form) => form.formName === 'Inspection report') || revoked.response.status !== 200 || revoked.body.revoked !== true || revokedAgain.response.status !== 200 || revokedAgain.body.duplicate !== true || afterRevoke.response.status !== 404 || invalid.response.status !== 422 || expiredCreated.response.status !== 201 || expiredRecording.response.status !== 410 || reportExpiredCreated.response.status !== 201 || retentionReport.body.expiredRecordingUrlsRemoved !== 1 || reportExpiredRecording.response.status !== 404 || accountantRecording.response.status !== 403) throw new Error('call recording metadata, protected access, URL validation, expiry cleanup, revocation, list redaction, or catalog-duration booking failed');
   console.log('Northstar call recording checks passed');
 } finally {
   if (child && !child.killed) child.kill();
