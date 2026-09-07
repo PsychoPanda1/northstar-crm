@@ -118,6 +118,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Duplicate customers can be merged through an explicit same-tenant selector and confirmation dialog while preserving the existing reassignment and audit safeguards
 - Owner tasks use a structured title, detail, and optional due-date dialog with bounded inputs and idempotent tenant-scoped creation
 - Customer equipment uses a structured customer selector, asset identity, install date, and warranty-date dialog that feeds service history and warranty context
+- Customer timeline notes use a structured customer selector and bounded note editor with tenant-scoped, idempotent activity logging
 - Technician en-route ETA, job completion acknowledgment, and labor capture use accessible validated dialogs while reusing the encrypted offline queue and idempotent field-action boundary
 - Dispatch assignment uses an accessible roster picker for single and bulk jobs, while server-side skill, availability, and schedule-conflict checks remain authoritative
 - Multi-party invoice billing uses an accessible validated bill-to dialog with existing profile prefill, contact details, payment terms, and server-side tenant-scoped validation
