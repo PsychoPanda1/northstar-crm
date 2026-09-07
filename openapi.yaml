@@ -669,6 +669,25 @@ paths:
         '409': { $ref: '#/components/responses/IdempotencyConflict' }
         '422': { $ref: '#/components/responses/ValidationError' }
         '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/customer-portal/service-plan-visit:
+    post:
+      summary: Schedule a customer-owned service-plan visit
+      parameters:
+        - $ref: '#/components/parameters/CustomerToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CustomerPlanVisit' }
+      responses:
+        '201': { $ref: '#/components/responses/MutationAccepted' }
+        '200': { $ref: '#/components/responses/Duplicate' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
   /api/public/customer-portal/confirm:
     post:
       summary: Confirm a customer-owned appointment
@@ -1704,6 +1723,13 @@ components:
         service: { type: string, maxLength: 120 }
         action: { type: string, enum: [pause, cancel, change] }
         note: { type: string, minLength: 3, maxLength: 500 }
+    CustomerPlanVisit:
+      type: object
+      required: [planId, slotId]
+      properties:
+        planId: { type: string, maxLength: 120 }
+        slotId: { type: string, maxLength: 160 }
+        locationId: { type: string, maxLength: 120 }
     PaymentIntentRequest:
       type: object
       required: [invoiceId, amount, method]

@@ -1164,6 +1164,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async scheduleCustomerPlanVisit(planId, slotId, locationId = '', token = '', idempotencyKey = crypto.randomUUID()) {
+    const query = token ? `?token=${encodeURIComponent(token)}` : '';
+    const response = await fetch(`/api/public/customer-portal/service-plan-visit${query}`, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ planId, slotId, ...(locationId ? { locationId } : {}) }) });
+    if (!response.ok) throw new Error('customer plan visit scheduling failed');
+    return response.json();
+  }
+
   async createLead({ name, phone = '', email = '', service = '', source = 'Owner workspace', location = '', note = '', attribution = {} }, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for lead creation');
     const response = await fetch('/api/leads', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ name, phone, email, service, source, location, note, ...attribution }) });

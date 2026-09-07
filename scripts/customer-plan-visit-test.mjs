@@ -1,0 +1,27 @@
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { spawn } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+
+const port = 30000 + Math.floor(Math.random() * 20000);
+const base = `http://127.0.0.1:${port}`;
+const tempDir = mkdtempSync(join(tmpdir(), 'northstar-customer-plan-visit-'));
+const server = spawn(process.execPath, [fileURLToPath(new URL('../server.mjs', import.meta.url))], { cwd: fileURLToPath(new URL('..', import.meta.url)), env: { ...process.env, NODE_ENV: 'test', PORT: String(port), NORTHSTAR_DATA_FILE: join(tempDir, 'state.json'), NORTHSTAR_SESSION_SECRET: 'customer-plan-visit-test-secret-32', NORTHSTAR_ALLOW_DEMO_LOGIN: 'true' }, stdio: 'ignore' });
+const assert = (condition, message) => { if (!condition) throw new Error(message); };
+try {
+  for (let attempt = 0; attempt < 120; attempt += 1) { try { if ((await fetch(`${base}/api/health`)).ok) break; } catch {} await new Promise((resolve) => setTimeout(resolve, 50)); if (attempt === 119) throw new Error('server did not start'); }
+  const availability = await (await fetch(`${base}/api/public/availability?service=plumbing&days=7`)).json();
+  const firstSlot = availability.slotOptions?.[0]; assert(firstSlot, 'booking slot unavailable');
+  const bookingResponse = await fetch(`${base}/api/public/bookings?service=plumbing`, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': 'plan-visit-seed' }, body: JSON.stringify({ name: 'Plan Visit Customer', phone: '8435550198', location: '1 Plan Way', slotId: firstSlot.id }) });
+  const booking = await bookingResponse.json(); assert(bookingResponse.status === 201 && booking.customerPortalAccessToken, 'seed booking failed');
+  const loginResponse = await fetch(`${base}/api/auth/demo-login?service=plumbing`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' }); const login = await loginResponse.json(); assert(loginResponse.ok && login.token, 'demo login failed');
+  const customersResponse = await fetch(`${base}/api/customers`, { headers: { authorization: `Bearer ${login.token}` } }); const customers = await customersResponse.json(); const customer = customers.items?.find((item) => item.name === 'Plan Visit Customer'); assert(customer?.id, 'seed customer not found');
+  const planResponse = await fetch(`${base}/api/plans`, { method: 'POST', headers: { authorization: `Bearer ${login.token}`, 'content-type': 'application/json', 'idempotency-key': 'plan-visit-plan' }, body: JSON.stringify({ customerId: customer.id, service: 'Annual plumbing care', amount: 199, renewal: 'Annual', visitsIncluded: 2 }) }); const planBody = await planResponse.json(); assert(planResponse.status === 201 && planBody.id, 'plan creation failed');
+  const nextAvailability = await (await fetch(`${base}/api/public/availability?service=plumbing&days=14`)).json(); const nextSlot = nextAvailability.slotOptions?.find((slot) => slot.id !== firstSlot.id) || nextAvailability.slotOptions?.[0]; assert(nextSlot, 'plan visit slot unavailable');
+  const schedule = () => fetch(`${base}/api/public/customer-portal/service-plan-visit?token=${encodeURIComponent(booking.customerPortalAccessToken)}`, { method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': 'plan-visit-repeatable' }, body: JSON.stringify({ planId: planBody.id, slotId: nextSlot.id }) });
+  const response = await schedule(); const body = await response.json(); const duplicate = await schedule(); const duplicateBody = await duplicate.json();
+  const portal = await (await fetch(`${base}/api/public/customer-portal?token=${encodeURIComponent(booking.customerPortalAccessToken)}`)).json();
+  assert(response.status === 201 && body.job?.planId === planBody.id && body.notification?.template === 'confirmation' && duplicate.status === 200 && duplicateBody.duplicate && duplicateBody.id === body.id && portal.plans?.some((item) => item.id === planBody.id && item.visitsScheduled === 1 && item.nextVisit?.startsAt === nextSlot.startsAt), 'customer plan visit workflow failed');
+  console.log('Northstar customer plan visit test passed');
+} finally { server.kill(); rmSync(tempDir, { recursive: true, force: true }); }
