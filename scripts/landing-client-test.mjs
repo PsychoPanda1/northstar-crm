@@ -31,6 +31,8 @@ await client.logoutOwnerSession('owner-session-token');
 if (calls[4].url !== 'https://crm.example.test/api/auth/logout' || calls[4].options.method !== 'POST' || calls[4].options.headers.authorization !== 'Bearer owner-session-token') throw new Error('landing owner session logout helper failed');
 await client.submitLead({ name: 'Landing Test', phone: '8435550100' });
 if (calls.length !== 6 || calls[5].options.headers['idempotency-key'] !== 'landing-test-key') throw new Error('landing lead retry contract failed');
+client.manifestPromise = Promise.resolve({ tenant: { slug: 'wrong-tenant' }, integration: { ownerAuthMethods: ['password'], ownerAuthEndpoint: '/api/auth/login' } });
+try { await client.ownerPasswordLogin('owner@example.test', 'owner-password'); throw new Error('wrong-tenant owner session accepted'); } catch (error) { if (error.message !== 'owner_session_tenant_mismatch' || calls.length !== 7) throw error; }
 client.manifestPromise = Promise.resolve({ integration: { ownerAuthMethods: ['password'], ownerOidcAuthEndpoint: null } });
-try { await client.ownerOidcLogin('signed-id-token'); throw new Error('password-only tenant accepted OIDC'); } catch (error) { if (error.message !== 'oidc_owner_auth_unavailable' || error.status !== 404 || calls.length !== 6) throw error; }
+try { await client.ownerOidcLogin('signed-id-token'); throw new Error('password-only tenant accepted OIDC'); } catch (error) { if (error.message !== 'oidc_owner_auth_unavailable' || error.status !== 404 || calls.length !== 7) throw error; }
 console.log('Northstar landing client test passed');
