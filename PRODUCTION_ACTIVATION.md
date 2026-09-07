@@ -7,6 +7,7 @@ Northstar is implementation-complete for the checked local workflows, but a prod
 - Use a managed HTTPS host with a persistent volume or managed SQLite-compatible storage.
 - Set `NORTHSTAR_REQUIRE_SQLITE=true` for production containers and confirm `/api/ready` reports `storageConfiguration: true`; keep JSON storage limited to local development or an explicitly isolated recovery environment.
 - Set `NODE_ENV=production`, a unique `NORTHSTAR_SESSION_SECRET`, and all five webhook secrets.
+- Set a unique `NORTHSTAR_METRICS_SECRET`; production readiness fails closed without the authenticated monitoring scrape credential.
 - Configure `NORTHSTAR_PUBLIC_URL` to the final HTTPS CRM origin.
 - Set `NORTHSTAR_ALLOWED_ORIGINS` and, for multi-business deployments, `NORTHSTAR_SERVICE_ORIGINS_JSON` to the exact landing-page origins.
 - Set `NORTHSTAR_TENANTS_JSON`, `NORTHSTAR_SERVICE_TENANTS_JSON`, `NORTHSTAR_CATALOG_JSON`, and owner/staff authentication configuration from the deployment secret store.

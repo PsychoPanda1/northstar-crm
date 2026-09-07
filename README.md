@@ -290,7 +290,7 @@ For multi-business deployments, `NORTHSTAR_TENANT_PROVIDER_CONFIG_JSON` can over
 
 Set `NORTHSTAR_PUBLIC_URL` to the deployed HTTPS origin so provider-delivered review, estimate, estimate-PDF, and payment links are clickable outside the CRM host. In production, readiness rejects a missing or non-HTTPS public origin whenever live messaging or payment delivery is configured. Estimate delivery keeps relative `estimateUrl` and `estimatePdfUrl` fields for browser routing and includes resolved `publicEstimateUrl` and `publicEstimatePdfUrl` fields for outbound providers.
 
-Configure `NORTHSTAR_METRICS_SECRET` with a unique 32-character-or-longer secret for external monitoring. `GET /api/metrics` accepts only that bearer secret and returns Prometheus-compatible, tenant-safe process, persistence, backup, record, and queue gauges; it does not expose customer data or provider credentials.
+Configure `NORTHSTAR_METRICS_SECRET` with a unique 32-character-or-longer secret for external monitoring. Production readiness fails closed until it is set. `GET /api/metrics` accepts only that bearer secret and returns Prometheus-compatible, tenant-safe process, persistence, backup, record, and queue gauges; it does not expose customer data or provider credentials.
 
 Set `NORTHSTAR_LEAD_PROVIDER_URL` and optional `NORTHSTAR_LEAD_PROVIDER_API_KEY` to enable the authenticated owner/dispatcher lead handoff at `POST /api/integrations/leads/dispatch`. The provider receives a stable `leadId` idempotency key and attribution context; delivery remains explicitly `Delivered`, `Retry scheduled`, or `Failed` in the tenant record. `NORTHSTAR_LEAD_RETRY_LIMIT` accepts `0`–`5` bounded retries using the same 1/5/15/30-minute backoff as message delivery.
 

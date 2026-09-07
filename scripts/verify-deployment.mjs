@@ -34,7 +34,7 @@ const fetchJson = async (path) => {
 };
 
 const failures = [];
-const requiredReadinessChecks = ['configuration', 'storageConfiguration', 'persistentState', 'persistentStorage', 'backupConfiguration', 'backupStorage', 'backupSnapshot', 'tenantDataIntegrity', 'auditLedger'];
+const requiredReadinessChecks = ['configuration', 'storageConfiguration', 'persistentState', 'persistentStorage', 'backupConfiguration', 'backupStorage', 'backupSnapshot', 'tenantDataIntegrity', 'auditLedger', 'monitoringConfiguration'];
 const check = async (label, path, validator) => {
   try {
     const result = await fetchJson(path);

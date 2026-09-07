@@ -19,6 +19,7 @@ const env = {
   NORTHSTAR_DATA_FILE: dataFile,
   NORTHSTAR_SESSION_FILE: sessionFile,
   NORTHSTAR_SESSION_SECRET: secret,
+  NORTHSTAR_METRICS_SECRET: 'metrics-secret-32-characters-for-test',
   NORTHSTAR_OWNER_EMAIL: 'owner@mapped.example',
   NORTHSTAR_OWNER_PASSWORD_DIGEST: createHmac('sha256', secret).update(password).digest('hex'),
   NORTHSTAR_OWNER_TENANT_ID: 'unmapped-service-co',
