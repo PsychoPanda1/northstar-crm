@@ -20,14 +20,16 @@ try {
   const auth = { authorization: `Bearer ${login.body.token}`, 'content-type': 'application/json' };
   const customer = await request('/api/customers', { method: 'POST', headers: { ...auth, 'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({ name: 'History Customer', phone: '843-555-0197', location: '12 History Lane' }) });
   if (customer.response.status !== 201) throw new Error('asset history customer failed');
-  const asset = await request('/api/assets', { method: 'POST', headers: { ...auth, 'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({ customerId: customer.body.id, name: 'Heat pump', serial: 'HP-42', installed: '2023-06-01' }) });
+  const asset = await request('/api/assets', { method: 'POST', headers: { ...auth, 'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({ customerId: customer.body.id, name: 'Heat pump', serial: 'HP-42', barcode: 'EQUIP-HP-42', installed: '2023-06-01' }) });
   if (asset.response.status !== 201) throw new Error('asset history asset failed');
   const job = await request('/api/jobs', { method: 'POST', headers: { ...auth, 'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({ customerId: customer.body.id, service: 'Heat pump maintenance', time: 'Tomorrow 9:00 AM' }) });
   if (job.response.status !== 201) throw new Error('asset history job failed');
   const linked = await request(`/api/jobs/${encodeURIComponent(job.body.id)}/asset`, { method: 'POST', headers: { ...auth, 'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({ assetId: asset.body.id }) });
   if (!linked.response.ok) throw new Error('asset history link failed');
   const history = await request(`/api/assets/${encodeURIComponent(asset.body.id)}/history`, { headers: auth });
+  const lookup = await request('/api/assets/lookup?code=EQUIP-HP-42', { headers: auth });
+  const lookupBySerial = await request('/api/assets/lookup?code=HP-42', { headers: auth });
   const forbidden = await request(`/api/assets/${encodeURIComponent(asset.body.id)}/history`, { headers: { authorization: 'Bearer invalid' } });
-  if (history.response.status !== 200 || history.body.asset?.id !== asset.body.id || history.body.summary?.visits !== 1 || history.body.jobs?.[0]?.id !== job.body.id || forbidden.response.status !== 401) throw new Error('asset service history contract failed');
+  if (history.response.status !== 200 || history.body.asset?.id !== asset.body.id || history.body.summary?.visits !== 1 || history.body.jobs?.[0]?.id !== job.body.id || lookup.response.status !== 200 || lookup.body.asset?.barcode !== 'EQUIP-HP-42' || lookup.body.history?.[0]?.id !== job.body.id || lookupBySerial.response.status !== 200 || forbidden.response.status !== 401) throw new Error('asset service history or equipment lookup contract failed');
   console.log('Northstar asset history test passed');
 } finally { cleanup(); }

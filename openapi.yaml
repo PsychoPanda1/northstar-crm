@@ -189,6 +189,21 @@ paths:
         '401': { $ref: '#/components/responses/Unauthorized' }
         '403': { $ref: '#/components/responses/Forbidden' }
         '404': { $ref: '#/components/responses/NotFound' }
+  /api/assets/lookup:
+    get:
+      summary: Find tenant-scoped equipment by barcode, serial, or asset ID
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema: { type: string, minLength: 2, maxLength: 80 }
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/ValidationError' }
   /api/vendor-bills:
     get:
       summary: List tenant-scoped vendor bills
