@@ -7,7 +7,7 @@ const [html, script, integrationScript, repository, serviceWorker] = await Promi
   readFile(new URL('../data-repository.js', import.meta.url), 'utf8'),
   readFile(new URL('../northstar-sw.js', import.meta.url), 'utf8')
 ]);
-for (const snippet of ['payroll-operations-owner.js', 'data-payroll-operations-card', 'data-payroll-operations-dispatch', 'dispatchPayrollRuns']) {
+for (const snippet of ['payroll-operations-owner.js', 'data-payroll-operations-card', 'data-payroll-operations-dispatch', 'data-payroll-operations-retry', 'retryPayrollRun', 'dispatchPayrollRuns']) {
   if (!html.includes(snippet) && !script.includes(snippet) && !repository.includes(snippet)) throw new Error(`payroll operations UI contract missing: ${snippet}`);
 }
 if (!script.includes("['owner', 'accountant']")) throw new Error('payroll operations must remain owner/accountant scoped');
