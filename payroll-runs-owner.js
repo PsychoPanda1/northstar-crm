@@ -10,10 +10,12 @@
     const section = document.createElement('section');
     section.className = 'profile-section';
     section.dataset.payrollRuns = 'true';
-    section.innerHTML = `<span class="record-id">PAYROLL PERIODS</span>${runs.length ? runs.map((run) => `<article class="record-card"><div><h3>${escape(run.period)}</h3><p>${escape(run.status)} · ${Number(run.totals?.completedJobs || 0)} completed jobs · $${Number(run.totals?.commissionDue || 0).toFixed(2)} commission due</p></div>${run.status === 'Draft' ? `<button class="ghost-btn" data-payroll-approve="${escape(run.id)}">Approve handoff</button>` : '<span class="record-status">Approved</span>'}</article>`).join('') : '<div class="empty-state">No payroll periods have been created.</div>'}`;
+    section.innerHTML = `<span class="record-id">PAYROLL PERIODS</span>${runs.length ? runs.map((run) => { const provider = run.providerSyncState ? ` · Provider ${run.providerSyncState}` : ''; const action = run.status === 'Draft' ? `<button class="ghost-btn" data-payroll-approve="${escape(run.id)}">Approve handoff</button>` : run.providerSyncState === 'Failed' ? `<button class="ghost-btn" data-payroll-retry="${escape(run.id)}">Retry handoff</button>` : `<span class="record-status">${run.status === 'Approved' ? 'Approved' : escape(run.status)}</span>`; return `<article class="record-card"><div><h3>${escape(run.period)}</h3><p>${escape(run.status)}${escape(provider)} · ${Number(run.totals?.completedJobs || 0)} completed jobs · $${Number(run.totals?.commissionDue || 0).toFixed(2)} commission due</p></div>${action}</article>`; }).join('') : '<div class="empty-state">No payroll periods have been created.</div>'}`;
     list.append(section);
     section.addEventListener('click', async (event) => {
       const button = event.target.closest('[data-payroll-approve]');
+      const retry = event.target.closest('[data-payroll-retry]');
+      if (retry) { retry.disabled = true; try { await repository.retryPayrollRun(retry.dataset.payrollRetry); showToast('Payroll provider handoff requeued.'); section.remove(); await refresh(); } catch (error) { showToast(error?.message || 'Could not requeue payroll handoff.'); retry.disabled = false; } return; }
       if (!button) return;
       button.disabled = true;
       try { await repository.approvePayrollRun(button.dataset.payrollApprove); showToast('Payroll period approved for handoff.'); section.remove(); await refresh(); } catch (error) { showToast(error?.message || 'Could not approve payroll period.'); button.disabled = false; }
