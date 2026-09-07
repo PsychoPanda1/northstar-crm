@@ -6,7 +6,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const port = 4480 + Math.floor(Math.random() * 100);
+const port = 45000 + (process.pid % 1000);
 const dataFile = join(tmpdir(), `northstar-service-mapping-${process.pid}-${Date.now()}.json`);
 const sessionFile = `${dataFile}.sessions`;
 const secret = 'northstar-service-mapping-test-secret-32';

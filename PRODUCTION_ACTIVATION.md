@@ -18,6 +18,7 @@ Northstar is implementation-complete for the checked local workflows, but a prod
 - Prefer the OIDC seam with a real issuer, audience, JWKS URL, and explicit tenant-scoped account mapping.
 - Use managed shared storage before running more than one application writer.
 - Configure automated backups, restore testing, retention, and secret rotation.
+- Run `npm run test:sqlite-backup` during the release drill and record the restored database verification result before accepting traffic.
 - Set a distinct `NORTHSTAR_BACKUP_FILE` (or deployment-managed equivalent) and confirm `/api/ready` reports `backupConfiguration: true` before accepting traffic.
 - Confirm audit-ledger and tenant-integrity checks remain healthy after a restart.
 

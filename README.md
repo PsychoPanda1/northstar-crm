@@ -277,6 +277,8 @@ Set `NORTHSTAR_MESSAGE_RETRY_LIMIT` from `0` to `5` to enable bounded automatic 
 
 Set `NORTHSTAR_BACKUP_FILE` to a separate path on the same persistent volume. SQLite mode creates a real `VACUUM INTO` backup after each state write and `/api/ready` requires the backup to be present and integrity-valid in production; authenticated operational metrics report whether the backup is present, parseable, tenant-safe, and its last-write timestamp without revealing the path. The container's SQLite mode uses WAL, normal synchronous durability, a bounded busy timeout, and readiness-time integrity checks for safer single-host concurrent readers/writers; horizontally scaled production deployments still require a managed shared database and coordinated session strategy.
 
+Run `npm run test:sqlite-backup` for a local restore drill that opens the backup as a fresh SQLite database and verifies state plus session revocations survive the round trip.
+
 ### Publish a release image
 
 Create a semantic-version tag such as `v0.2.0` and push it to GitHub. The `Publish Northstar container` workflow publishes both the versioned image and `latest` to `ghcr.io/psychopanda1/northstar-crm`, and attaches GitHub build provenance to the published digest; configure the required production environment variables in the service that runs the image, not in GitHub or the image itself. The workflow can also be started manually from Actions for an explicitly requested image publication. A manual run may provide `base_url` to add a post-publish live deployment verification; the workflow requires an HTTPS origin whose `/api/ready` response is HTTP 200 with every readiness check true, and it does not treat image publication alone as a live release.
