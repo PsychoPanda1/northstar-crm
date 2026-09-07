@@ -1218,6 +1218,17 @@ components:
             statusEndpoints:
               type: object
               additionalProperties: { type: string }
+            estimateEndpoints:
+              type: object
+              required: [view, pdf, media, approve, decline, requestChange]
+              properties:
+                view: { type: string }
+                pdf: { type: string }
+                media: { type: string }
+                approve: { type: string }
+                decline: { type: string }
+                requestChange: { type: string }
+            reviewEndpoint: { type: string }
             capabilities:
               type: object
               additionalProperties: { type: boolean }
