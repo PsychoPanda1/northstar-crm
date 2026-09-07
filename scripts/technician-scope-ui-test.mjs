@@ -8,4 +8,7 @@ for (const snippet of ['const approvedScope = job.estimateSnapshot', 'approvedSc
 for (const snippet of ['const scope = brief.approvedScope', 'Approved sold scope', 'scope.options?.length']) {
   if (!technician.includes(snippet)) throw new Error(`technician sold-scope UI wiring missing: ${snippet}`);
 }
+for (const snippet of ['const offlineDbName =', 'indexedDB.open', 'writeStoredQueue', 'readStoredQueue']) {
+  if (!technician.includes(snippet)) throw new Error(`technician durable offline queue wiring missing: ${snippet}`);
+}
 console.log('Northstar technician sold-scope checks passed');
