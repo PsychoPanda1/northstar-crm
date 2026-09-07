@@ -3,50 +3,57 @@
   const list = document.querySelector('#record-list');
   if (!repository || !list) return;
   const escape = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
+  const fieldTypes = ['text', 'number', 'select', 'boolean', 'date'];
   const example = [{ formName: 'Safety inspection', fields: [{ id: 'panel_condition', label: 'Panel condition', type: 'select', required: true, options: ['Good', 'Needs repair'] }, { id: 'repair_note', label: 'Repair note', type: 'text', required: true, showWhen: { fieldId: 'panel_condition', equals: 'Needs repair' } }] }];
   const toast = (message) => { const node = document.querySelector('#toast'); if (!node) return; node.textContent = message; node.classList.add('show'); window.setTimeout(() => node.classList.remove('show'), 2800); };
   const dialog = document.createElement('dialog');
-  dialog.id = 'structured-form-editor';
-  dialog.className = 'workflow-dialog';
-  dialog.innerHTML = `<button class="dialog-close" type="button" data-close-structured-form aria-label="Close">×</button><div class="dialog-kicker">PRICEBOOK WORKFLOW</div><h2>Configure technician forms</h2><p>Define bounded fields that travel with new jobs. Conditional fields use <code>showWhen</code> and are enforced again on the server.</p><form><label>Form definitions (JSON)<textarea name="formDefinitions" rows="16" spellcheck="false" required></textarea></label><p class="form-message" role="status" aria-live="polite"></p><div class="workflow-actions"><button class="ghost-btn" type="button" data-close-structured-form>Cancel</button><button class="primary-btn" type="submit">Save forms</button></div></form>`;
+  dialog.id = 'structured-form-editor'; dialog.className = 'workflow-dialog';
+  dialog.innerHTML = `<button class="dialog-close" type="button" data-close-structured-form aria-label="Close">×</button><div class="dialog-kicker">PRICEBOOK WORKFLOW</div><h2>Configure technician forms</h2><p>Build bounded field forms that travel with new jobs. Conditional fields appear only when their rule is satisfied and are enforced again on the server.</p><form><div data-form-builder></div><div class="workflow-actions"><button class="ghost-btn" type="button" data-add-form>Add form</button><button class="ghost-btn" type="button" data-toggle-form-json>Advanced JSON</button></div><details data-form-json-panel><summary>Advanced JSON editor</summary><label>Form definitions <textarea name="formDefinitions" rows="10" spellcheck="false" required></textarea></label></details><p class="form-message" role="status" aria-live="polite"></p><div class="workflow-actions"><button class="ghost-btn" type="button" data-close-structured-form>Cancel</button><button class="primary-btn" type="submit">Save forms</button></div></form>`;
   document.body.append(dialog);
   dialog.querySelectorAll('[data-close-structured-form]').forEach((button) => button.addEventListener('click', () => dialog.close()));
-  let activeId = '';
+  const builder = dialog.querySelector('[data-form-builder]'); const jsonPanel = dialog.querySelector('[data-form-json-panel]'); const jsonInput = dialog.querySelector('[name="formDefinitions"]');
+  let activeId = ''; let definitions = []; let jsonEdited = false;
+  const normalized = (value) => (Array.isArray(value) ? value : []).slice(0, 12).map((form, formIndex) => ({ formName: String(form?.formName || form?.name || `Form ${formIndex + 1}`).trim().slice(0, 120), fields: (Array.isArray(form?.fields) ? form.fields : []).slice(0, 20).map((field, fieldIndex) => ({ id: String(field?.id || `field_${fieldIndex + 1}`).trim().slice(0, 80), label: String(field?.label || '').trim().slice(0, 120), type: fieldTypes.includes(field?.type) ? field.type : 'text', required: Boolean(field?.required), options: Array.isArray(field?.options) ? field.options.map((option) => String(option).trim()).filter(Boolean).slice(0, 12) : [], showWhen: field?.showWhen?.fieldId ? { fieldId: String(field.showWhen.fieldId).trim(), equals: String(field.showWhen.equals ?? '') } : null })) })) .filter((form) => form.formName.length >= 2);
+  const cleanForSave = () => normalized(definitions).map((form) => ({ formName: form.formName, fields: form.fields.map((field) => ({ id: field.id, label: field.label, type: field.type, required: field.required, ...(field.type === 'select' && field.options.length ? { options: field.options } : {}), ...(field.showWhen?.fieldId ? { showWhen: field.showWhen } : {}) })) }));
+  const formOptions = (form, currentId) => form.fields.filter((field) => field.id && field.id !== currentId).map((field) => `<option value="${escape(field.id)}">${escape(field.label || field.id)}</option>`).join('');
+  const syncJson = () => { jsonInput.value = JSON.stringify(cleanForSave(), null, 2); };
+  const render = () => {
+    builder.innerHTML = definitions.length ? definitions.map((form, formIndex) => `<section class="profile-section" data-builder-form="${formIndex}"><div class="workflow-actions"><label style="flex:1">Form name<input data-form-name value="${escape(form.formName)}" maxlength="120" required /></label><button class="ghost-btn" type="button" data-remove-form>Remove form</button></div><div data-builder-fields>${form.fields.map((field, fieldIndex) => `<article class="record-card" data-builder-field="${fieldIndex}"><div class="workflow-actions"><strong>Field ${fieldIndex + 1}</strong><button class="ghost-btn" type="button" data-remove-field>Remove field</button></div><div class="workflow-actions"><label>ID<input data-field-id value="${escape(field.id)}" maxlength="80" required /></label><label>Label<input data-field-label value="${escape(field.label)}" maxlength="120" required /></label><label>Type<select data-field-type>${fieldTypes.map((type) => `<option value="${type}"${field.type === type ? ' selected' : ''}>${type}</option>`).join('')}</select></label><label><input data-field-required type="checkbox"${field.required ? ' checked' : ''} /> Required</label></div><label data-field-options-wrap${field.type === 'select' ? '' : ' hidden'}>Options, comma separated<input data-field-options value="${escape(field.options.join(', '))}" maxlength="960" /></label><div class="workflow-actions"><label>Show when field<select data-field-show-field><option value="">Always visible</option>${formOptions(form, field.id)}</select></label><label>Equals<input data-field-show-value value="${escape(field.showWhen?.equals || '')}" maxlength="120" /></label></div></article>`).join('')}</div><button class="ghost-btn" type="button" data-add-field>Add field</button></section>`).join('') : '<div class="empty-state">No forms yet. Add a form to define the technician workflow.</div>';
+    builder.querySelectorAll('[data-builder-form]').forEach((formNode, formIndex) => {
+      const form = definitions[formIndex];
+      formNode.querySelector('[data-form-name]').addEventListener('input', (event) => { form.formName = event.target.value; syncJson(); });
+      formNode.querySelector('[data-remove-form]').addEventListener('click', () => { definitions.splice(formIndex, 1); render(); });
+      formNode.querySelector('[data-add-field]').addEventListener('click', () => { if (form.fields.length >= 20) return toast('A form can contain at most 20 fields.'); form.fields.push({ id: `field_${form.fields.length + 1}`, label: 'New field', type: 'text', required: false, options: [], showWhen: null }); render(); });
+      formNode.querySelectorAll('[data-builder-field]').forEach((fieldNode, fieldIndex) => {
+        const field = form.fields[fieldIndex];
+        const input = (selector, handler) => fieldNode.querySelector(selector)?.addEventListener('input', handler);
+        input('[data-field-id]', (event) => { field.id = event.target.value; syncJson(); });
+        input('[data-field-label]', (event) => { field.label = event.target.value; syncJson(); });
+        input('[data-field-options]', (event) => { field.options = event.target.value.split(',').map((item) => item.trim()).filter(Boolean); syncJson(); });
+        input('[data-field-show-value]', (event) => { field.showWhen = { ...(field.showWhen || {}), equals: event.target.value }; syncJson(); });
+        fieldNode.querySelector('[data-field-type]').addEventListener('change', (event) => { field.type = event.target.value; if (field.type !== 'select') field.options = []; render(); });
+        fieldNode.querySelector('[data-field-required]').addEventListener('change', (event) => { field.required = event.target.checked; syncJson(); });
+        const showField = fieldNode.querySelector('[data-field-show-field]'); showField.value = field.showWhen?.fieldId || ''; showField.addEventListener('change', (event) => { field.showWhen = event.target.value ? { fieldId: event.target.value, equals: field.showWhen?.equals || '' } : null; render(); });
+        fieldNode.querySelector('[data-remove-field]').addEventListener('click', () => { form.fields.splice(fieldIndex, 1); render(); });
+      });
+    });
+    syncJson();
+  };
+  dialog.querySelector('[data-add-form]').addEventListener('click', () => { if (definitions.length >= 12) return toast('You can configure at most 12 forms.'); definitions.push({ formName: `Form ${definitions.length + 1}`, fields: [] }); render(); });
+  dialog.querySelector('[data-toggle-form-json]').addEventListener('click', () => { jsonPanel.open = !jsonPanel.open; if (jsonPanel.open) jsonInput.focus(); });
+  jsonInput.addEventListener('input', () => { jsonEdited = true; });
   const open = async (button) => {
-    activeId = button.dataset.catalogForms;
-    const form = dialog.querySelector('form');
-    const message = form.querySelector('.form-message');
-    const textarea = form.elements.formDefinitions;
-    button.disabled = true; message.textContent = 'Loading current definitions…';
-    try {
-      const response = await fetch(`/api/catalog/${encodeURIComponent(activeId)}/forms`, { headers: { authorization: `Bearer ${repository.token || ''}` } });
-      if (!response.ok) throw new Error('load_failed');
-      const current = await response.json();
-      textarea.value = JSON.stringify(current.formDefinitions?.length ? current.formDefinitions : example, null, 2);
-      message.textContent = 'Use text, number, select, boolean, or date fields. Save validates the server contract.';
-      dialog.showModal(); textarea.focus(); textarea.select();
-    } catch { toast('Could not load the pricebook forms.'); }
-    finally { button.disabled = false; }
+    activeId = button.dataset.catalogForms; const message = dialog.querySelector('.form-message'); button.disabled = true; message.textContent = 'Loading current definitions…';
+    try { const response = await fetch(`/api/catalog/${encodeURIComponent(activeId)}/forms`, { headers: { authorization: `Bearer ${repository.token || ''}` } }); if (!response.ok) throw new Error('load_failed'); const current = await response.json(); definitions = normalized(current.formDefinitions?.length ? current.formDefinitions : example); jsonEdited = false; render(); message.textContent = 'Add fields, choose types, and optionally reveal a field only when another answer matches.'; dialog.showModal(); }
+    catch { toast('Could not load the pricebook forms.'); } finally { button.disabled = false; }
   };
   dialog.querySelector('form').addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const form = event.currentTarget; const message = form.querySelector('.form-message'); const button = form.querySelector('[type="submit"]');
-    let definitions;
-    try { definitions = JSON.parse(form.elements.formDefinitions.value); } catch { message.textContent = 'Enter valid JSON before saving.'; return; }
-    if (!Array.isArray(definitions)) { message.textContent = 'The top-level value must be an array of form definitions.'; return; }
-    button.disabled = true; message.textContent = 'Saving…';
-    try {
-      const response = await fetch(`/api/catalog/${encodeURIComponent(activeId)}/forms`, { method: 'PATCH', headers: { authorization: `Bearer ${repository.token || ''}`, 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({ formDefinitions: definitions }) });
-      if (!response.ok) throw new Error('save_failed');
-      dialog.close(); toast('Structured technician forms saved.');
-      document.querySelector('[data-view="catalog"]')?.click();
-    } catch { message.textContent = 'The server rejected these definitions. Check field ids, types, options, and conditional rules.'; }
-    finally { button.disabled = false; }
+    event.preventDefault(); const form = event.currentTarget; const message = form.querySelector('.form-message'); const submit = form.querySelector('[type="submit"]'); let payload;
+    try { payload = jsonEdited ? JSON.parse(jsonInput.value) : cleanForSave(); } catch { message.textContent = 'Advanced JSON is not valid.'; jsonPanel.open = true; return; }
+    payload = normalized(payload); const duplicateField = payload.flatMap((item) => item.fields.map((field) => `${item.formName}:${field.id}`)).find((value, index, values) => values.indexOf(value) !== index); if (payload.some((item) => item.formName.length < 2 || item.fields.some((field) => field.id.length < 1 || field.label.length < 2)) || duplicateField) { message.textContent = duplicateField ? 'Field IDs must be unique within each form.' : 'Every form needs a name, and every field needs an ID and label.'; return; }
+    submit.disabled = true; message.textContent = 'Saving…';
+    try { const response = await fetch(`/api/catalog/${encodeURIComponent(activeId)}/forms`, { method: 'PATCH', headers: { authorization: `Bearer ${repository.token || ''}`, 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({ formDefinitions: payload }) }); if (!response.ok) throw new Error('save_failed'); dialog.close(); toast('Structured technician forms saved.'); document.querySelector('[data-view="catalog"]')?.click(); }
+    catch { message.textContent = 'The server rejected these definitions. Check field IDs, labels, options, and conditional rules.'; } finally { submit.disabled = false; }
   });
-  list.addEventListener('click', (event) => {
-    const button = event.target.closest('[data-catalog-forms]');
-    if (!button) return;
-    event.preventDefault(); event.stopImmediatePropagation();
-    open(button);
-  }, true);
+  list.addEventListener('click', (event) => { const button = event.target.closest('[data-catalog-forms]'); if (!button) return; event.preventDefault(); event.stopImmediatePropagation(); open(button); }, true);
 })();
