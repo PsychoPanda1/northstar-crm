@@ -842,6 +842,150 @@ paths:
         '409': { $ref: '#/components/responses/IdempotencyConflict' }
         '422': { $ref: '#/components/responses/ValidationError' }
         '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/customer-portal/estimate/pdf:
+    get:
+      summary: Download a customer-owned estimate PDF
+      parameters:
+        - $ref: '#/components/parameters/CustomerToken'
+        - name: estimateId
+          in: query
+          required: true
+          schema: { type: string, maxLength: 120 }
+      responses:
+        '200':
+          description: Non-cacheable estimate PDF artifact
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/public/customer-portal/location:
+    post:
+      summary: Add or update a customer-owned service location
+      parameters:
+        - $ref: '#/components/parameters/CustomerToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CustomerLocationRequest' }
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/estimate:
+    get:
+      summary: Read a signed customer estimate
+      parameters:
+        - $ref: '#/components/parameters/EstimateToken'
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/public/estimate/pdf:
+    get:
+      summary: Download a signed customer estimate PDF
+      parameters:
+        - $ref: '#/components/parameters/EstimateToken'
+      responses:
+        '200':
+          description: Non-cacheable estimate PDF artifact
+          content:
+            application/pdf:
+              schema: { type: string, format: binary }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/public/estimate/media:
+    get:
+      summary: Read signed estimate media attachments
+      parameters:
+        - $ref: '#/components/parameters/EstimateToken'
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/public/estimate/approve:
+    post:
+      summary: Approve a signed customer estimate
+      parameters:
+        - $ref: '#/components/parameters/EstimateToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EstimateDecisionRequest' }
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/estimate/decline:
+    post:
+      summary: Decline a signed customer estimate
+      parameters:
+        - $ref: '#/components/parameters/EstimateToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EstimateDecisionRequest' }
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/estimate/request-change:
+    post:
+      summary: Request changes to a signed customer estimate
+      parameters:
+        - $ref: '#/components/parameters/EstimateToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EstimateDecisionRequest' }
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/review:
+    get:
+      summary: Read a signed completed-job review prompt
+      parameters:
+        - $ref: '#/components/parameters/ReviewToken'
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      summary: Submit a signed completed-job review
+      parameters:
+        - $ref: '#/components/parameters/ReviewToken'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ReviewRequest' }
+      responses:
+        '201': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
 components:
   securitySchemes:
     bearerAuth:
@@ -875,6 +1019,16 @@ components:
       required: true
       schema: { type: string, minLength: 20, maxLength: 400 }
     TechnicianToken:
+      name: token
+      in: query
+      required: true
+      schema: { type: string, minLength: 20, maxLength: 400 }
+    EstimateToken:
+      name: token
+      in: query
+      required: true
+      schema: { type: string, minLength: 20, maxLength: 400 }
+    ReviewToken:
       name: token
       in: query
       required: true
@@ -917,6 +1071,25 @@ components:
       type: object
       description: Action-specific technician payload. The server validates each field workflow and keeps it tenant-scoped.
       additionalProperties: true
+    CustomerLocationRequest:
+      type: object
+      required: [address]
+      properties:
+        address: { type: string, minLength: 5, maxLength: 180 }
+        label: { type: string, minLength: 2, maxLength: 80 }
+        mode: { type: string, enum: [primary, additional] }
+    EstimateDecisionRequest:
+      type: object
+      properties:
+        approverName: { type: string, maxLength: 100 }
+        optionId: { type: string, maxLength: 120 }
+        reason: { type: string, maxLength: 500 }
+    ReviewRequest:
+      type: object
+      required: [rating]
+      properties:
+        rating: { type: integer, minimum: 1, maximum: 5 }
+        comment: { type: string, maxLength: 500 }
     InvoicePaymentIntentRequest:
       type: object
       required: [amount, method]
