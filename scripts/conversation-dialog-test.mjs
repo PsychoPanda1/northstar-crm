@@ -5,3 +5,4 @@ console.log('Northstar conversation dialog checks passed');
 await import('./request-dialog-test.mjs');
 await import('./job-cost-dialog-test.mjs');
 await import('./lead-dialog-test.mjs');
+await import('./lead-convert-dialog-test.mjs');

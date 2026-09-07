@@ -1,0 +1,12 @@
+import { readFileSync } from 'node:fs';
+const root = new URL('../', import.meta.url);
+const index = readFileSync(new URL('index.html', root), 'utf8');
+const serviceWorker = readFileSync(new URL('northstar-sw.js', root), 'utf8');
+const source = readFileSync(new URL('lead-convert-dialog.js', root), 'utf8');
+const assert = (condition, message) => { if (!condition) throw new Error(message); };
+assert(index.includes('/lead-convert-dialog.js'), 'lead conversion dialog is not loaded');
+assert(serviceWorker.includes("'/lead-convert-dialog.js'"), 'lead conversion dialog is not cached');
+assert(source.includes('repository.convertLead') && source.includes('repository.getAvailability'), 'lead conversion does not schedule against live availability');
+assert(source.includes('data-lead-action="convert"') && source.includes('stopImmediatePropagation') && source.includes('showModal'), 'lead conversion dialog does not replace the prompt flow');
+assert(source.includes('slotOptions') && source.includes('crypto.randomUUID'), 'lead conversion dialog does not preserve slot and retry-safe scheduling');
+console.log('Northstar lead conversion dialog checks passed');

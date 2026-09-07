@@ -111,6 +111,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Request-to-job conversion uses an accessible availability picker and preserves server-side slot conflict, customer-link, priority, and idempotency rules
 - Job details use an accessible cost-entry dialog for labor and material usage, with live technician/inventory choices and repository-level validation
 - Owner lead creation uses an accessible intake dialog that preserves service, source, campaign attribution, and validated contact details for landing-page follow-up
+- Qualified leads convert through an accessible availability dialog that creates the scheduled job with a selected slot and retry-safe idempotency key
 - Owners and dispatchers can queue deduplicated appointment reminders before a visit
 - Automatic customer notifications when jobs are assigned, en route, or completed, with deduplication before provider delivery
 - Owner/dispatcher review requests can be queued by SMS or email after completion, honoring channel opt-outs and deduplicating signed 72-hour review links
