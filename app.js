@@ -69,7 +69,7 @@ document.querySelectorAll('nav a').forEach((link) => {
 });
 document.querySelector('#open-calendar').addEventListener('click', () => openRecords('dispatch'));
 document.querySelector('#open-activity').addEventListener('click', () => openRecords('activities'));
-document.querySelector('#workspace-switcher').addEventListener('click', () => loginDialog.showModal());
+document.querySelector('#workspace-switcher').addEventListener('click', async () => { if (!repository.remote || !repository.listServices) { loginDialog.showModal(); return; } try { const services = await repository.listServices(); if (services.length < 2) { loginDialog.showModal(); return; } const selected = window.prompt(`Switch service workspace:\n${services.map((item, index) => `${index + 1}. ${item.service}`).join('\n')}`, serviceKey); const index = Number(selected) - 1; if (Number.isInteger(index) && services[index]?.service && services[index].service !== serviceKey) window.location.href = `/?service=${encodeURIComponent(services[index].service)}`; } catch { loginDialog.showModal(); } });
 document.querySelector('#owner-account').addEventListener('click', () => loginDialog.showModal());
 document.querySelector('#close-login').addEventListener('click', () => loginDialog.close());
 const demoLogin = document.querySelector('#demo-login');
