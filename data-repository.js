@@ -664,6 +664,42 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async getPayablesReport(asOf = '') {
+    if (!this.remote) throw new Error('API required for payables reporting');
+    const query = asOf ? `?asOf=${encodeURIComponent(asOf)}` : '';
+    const response = await fetch(`/api/reports/payables${query}`, { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('payables report unavailable');
+    return response.json();
+  }
+
+  async createVendorBill(vendor, invoiceNumber, amount, due, purchaseOrderId = '', idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for vendor bills');
+    const response = await fetch('/api/vendor-bills', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ vendor, invoiceNumber, amount, due, ...(purchaseOrderId ? { purchaseOrderId } : {}) }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'vendor bill creation failed');
+    return response.json();
+  }
+
+  async submitVendorBill(id) {
+    if (!this.remote) throw new Error('API required for vendor bills');
+    const response = await fetch(`/api/vendor-bills/${encodeURIComponent(id)}/submit`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: '{}' });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'vendor bill submission failed');
+    return response.json();
+  }
+
+  async approveVendorBill(id, overrideReason = '') {
+    if (!this.remote) throw new Error('API required for vendor bills');
+    const response = await fetch(`/api/vendor-bills/${encodeURIComponent(id)}/approve`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify(overrideReason ? { overrideReason } : {}) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'vendor bill approval failed');
+    return response.json();
+  }
+
+  async payVendorBill(id, amount, reference, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for vendor bills');
+    const response = await fetch(`/api/vendor-bills/${encodeURIComponent(id)}/pay`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ amount, reference }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'vendor bill payment failed');
+    return response.json();
+  }
+
   async listPayrollRuns() {
     if (!this.remote) throw new Error('API required for payroll runs');
     const response = await fetch('/api/payroll/runs', { headers: { authorization: `Bearer ${this.token}` } });
