@@ -5,7 +5,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
-const port = 6100 + Math.floor(Math.random() * 1500);
+const port = 30000 + Math.floor(Math.random() * 20000);
 const dataFile = join(tmpdir(), `northstar-rate-limit-${process.pid}-${Date.now()}.json`);
 const env = { ...process.env, NODE_ENV: 'development', PORT: String(port), NORTHSTAR_DATA_FILE: dataFile, NORTHSTAR_SESSION_FILE: `${dataFile}.sessions`, NORTHSTAR_PUBLIC_LEAD_RATE_LIMIT: '2', NORTHSTAR_PUBLIC_MUTATION_RATE_LIMIT: '3', NORTHSTAR_TRUST_PROXY: 'true' };
 const child = spawn(process.execPath, ['server.mjs'], { cwd: root, env, stdio: 'ignore' });
