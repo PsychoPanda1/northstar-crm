@@ -26,6 +26,8 @@ try {
   const first = await request('/api/customers', jsonOptions({ name: 'Recovered Customer', phone: '843-555-0141' }, token, 'recovery-customer-1'));
   const second = await request('/api/customers', jsonOptions({ name: 'Backup Trigger Customer', phone: '843-555-0142' }, token, 'recovery-customer-2'));
   if (first.response.status !== 201 || second.response.status !== 201 || !existsSync(backupFile)) throw new Error('backup snapshot was not created before the second write');
+  const backupMetrics = await request('/api/operations/metrics', { headers: { authorization: `Bearer ${token}` } });
+  if (!backupMetrics.response.ok || backupMetrics.body.persistence?.backup?.present !== true || backupMetrics.body.persistence?.backup?.valid !== true) throw new Error('backup health did not report a valid recoverable snapshot');
   stop();
   writeFileSync(dataFile, '{ malformed primary snapshot');
   start();

@@ -191,6 +191,19 @@ const revokedSessionIds = new Set(sqliteStore ? sqliteStore.readSessions([]) : r
 const tenantIdForSaved = (saved) => Object.entries(tenants).find(([tenantId]) => state.get(tenantId) === saved)?.[0] || null;
 const auditHashFor = (entry) => createHash('sha256').update(JSON.stringify({ previousHash: entry.previousHash || null, id: entry.id, tenantId: entry.tenantId || null, actor: entry.actor, role: entry.role, action: entry.action, entityType: entry.entityType, entityId: entry.entityId, detail: entry.detail, at: entry.at })).digest('hex');
 const auditLedgerHealthyFor = (tenantId) => { const entries = state.get(tenantId)?.auditEvents || []; return entries.every((entry, index) => entry.hash && auditHashFor(entry) === entry.hash && (index === entries.length - 1 || entry.previousHash === entries[index + 1]?.hash)); };
+const backupSnapshotHealth = () => {
+	if (sqliteStore) return { configured: Boolean(BACKUP_FILE), present: false, valid: null, updatedAt: null };
+	if (!BACKUP_FILE) return { configured: false, present: false, valid: false, updatedAt: null };
+	let stats;
+	try { stats = statSync(BACKUP_FILE); } catch { return { configured: true, present: false, valid: false, updatedAt: null }; }
+	if (!stats.isFile()) return { configured: true, present: false, valid: false, updatedAt: null };
+	const snapshot = readPersistedJson(BACKUP_FILE, null);
+	const valid = Boolean(snapshot && typeof snapshot === 'object' && !Array.isArray(snapshot) && Object.keys(tenants).every((tenantId) => {
+		const saved = snapshot[tenantId];
+		return saved && typeof saved === 'object' && Object.values(saved).every((value) => !Array.isArray(value) || value.every((item) => !item || typeof item !== 'object' || !item.tenantId || item.tenantId === tenantId));
+	}));
+	return { configured: true, present: true, valid, updatedAt: stats.mtime.toISOString() };
+};
 const hydrateAuditChains = () => { for (const saved of state.values()) { const entries = saved.auditEvents || []; if (!entries.length || entries.every((entry) => entry.hash)) continue; let previousHash = null; for (let index = entries.length - 1; index >= 0; index -= 1) { const entry = entries[index]; entry.previousHash = previousHash; entry.hash = auditHashFor(entry); previousHash = entry.hash; } } };
 const syncTenantIds = () => { const collections = ['leads', 'jobs', 'estimates', 'estimateRevisions', 'estimateChangeNotifications', 'invoices', 'payments', 'paymentIntents', 'paymentEvents', 'paymentSchedules', 'financingApplications', 'financingEvents', 'teamMembers', 'teamTimeOff', 'plans', 'planBillingCycles', 'activities', 'customers', 'assets', 'locations', 'reviews', 'requests', 'materials', 'inventoryLocations', 'inventoryTransactions', 'purchaseOrders', 'purchaseApprovalRequests', 'laborEntries', 'messages', 'messageEvents', 'calls', 'callEvents', 'catalogItems', 'auditEvents', 'routeOrderRequests', 'capacityTargets', 'automationRuns']; for (const saved of state.values()) { const tenantId = tenantIdForSaved(saved); for (const collection of collections) for (const item of saved[collection] || []) if (item && !item.tenantId && tenantId) item.tenantId = tenantId; } };
 syncTenantIds();
@@ -450,7 +463,7 @@ const operationalMetricsFor = (tenantId) => {
   const health = integrationHealthWithDocumentsFor(tenantId);
   const count = (collection) => Array.isArray(saved[collection]) ? saved[collection].length : 0;
   const latestAutomation = (saved.automationRuns || []).slice().sort((a, b) => Date.parse(b.createdAt || 0) - Date.parse(a.createdAt || 0))[0];
-  const backup = (() => { if (!BACKUP_FILE || sqliteStore) return { configured: Boolean(BACKUP_FILE), present: false, updatedAt: null }; try { const stats = statSync(BACKUP_FILE); return { configured: true, present: stats.isFile(), updatedAt: stats.isFile() ? stats.mtime.toISOString() : null }; } catch { return { configured: true, present: false, updatedAt: null }; } })();
+  const backup = backupSnapshotHealth();
   return { service: 'northstar-api', version: '0.3.0', tenantId, generatedAt: new Date().toISOString(), process: { uptimeSeconds: Math.floor(process.uptime()), storage: sqliteStore ? 'sqlite' : 'json' }, persistence: { backup, integrityHealthy: persistentStorageHealthy(), auditLedgerHealthy: auditLedgerHealthyFor(tenantId) }, records: { customers: count('customers'), leads: count('leads'), jobs: count('jobs'), estimates: count('estimates'), invoices: count('invoices'), payments: count('payments'), messages: count('messages'), inventoryTransactions: count('inventoryTransactions'), accountingSync: count('accountingSync') }, queues: { leads: health.leads, inventory: health.inventory, accounting: accountingQueueStatsFor(tenantId), messages: health.messages, payments: health.payments, documents: health.documents }, automation: { lastRunAt: latestAutomation?.createdAt || null, runsRecorded: count('automationRuns') } };
 };
 const dispatchLeads = async (saved, claims, limit = 20) => {
