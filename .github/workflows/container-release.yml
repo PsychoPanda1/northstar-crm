@@ -52,7 +52,7 @@ jobs:
             --env NORTHSTAR_OWNER_TENANT_ID=johnson-service-co \
             --env NORTHSTAR_PAYMENT_WEBHOOK_SECRET=release-payment-secret-32-character-key \
             --env NORTHSTAR_MESSAGE_WEBHOOK_SECRET=release-message-secret-32-character-key \
-            --env NORTHSTAR_CALL_WEBHOOK_SECRET=release-call-secret-32-character-key \
+            --env NORTHSTAR_CALL_WEBHOOK_SECRET=release-call-webhook-secret-32-character-key \
             --env NORTHSTAR_FINANCING_WEBHOOK_SECRET=release-financing-secret-32-character-key \
             --env NORTHSTAR_FLEET_WEBHOOK_SECRET=release-fleet-secret-32-character-key \
             --env NORTHSTAR_BACKUP_FILE=/app/data/northstar.sqlite.backup \
