@@ -11,7 +11,7 @@ const sandbox = {
   crypto: { randomUUID: () => 'landing-test-key' },
   fetch: async (url, options) => {
     calls.push({ url, options });
-    return { ok: true, status: 200, headers: { get: () => 'landing-request-1' }, json: async () => ({ tenant: { slug: 'clearwater-plumbing', contactPhone: '(843) 555-0100', contactEmail: 'hello@example.test', serviceArea: 'Charleston area' }, service: 'plumbing', integration: { ownerPortalPath: '/portal?service=plumbing', ownerAuthEndpoint: '/api/auth/login', ownerAuthRefreshEndpoint: '/api/auth/refresh', ownerAuthLogoutEndpoint: '/api/auth/logout', ownerAuthMethods: ['password', 'oidc'], ownerOidcAuthEndpoint: '/api/auth/oidc', leadEndpoint: '/api/public/leads?service=plumbing', bookingEndpoint: '/api/public/bookings?service=plumbing' } }) };
+    return { ok: true, status: 200, headers: { get: () => 'landing-request-1' }, json: async () => ({ tenant: { slug: 'clearwater-plumbing', contactPhone: '(843) 555-0100', contactEmail: 'hello@example.test', serviceArea: 'Charleston area' }, service: 'plumbing', integration: { ownerPortalPath: '/portal?service=plumbing', ownerAuthEndpoint: '/api/auth/login', ownerAuthRefreshEndpoint: '/api/auth/refresh', ownerAuthLogoutEndpoint: '/api/auth/logout', ownerAuthMethods: ['password', 'oidc'], ownerOidcAuthEndpoint: '/api/auth/oidc', leadEndpoint: '/api/public/leads?service=plumbing', bookingEndpoint: '/api/public/bookings?service=plumbing', technicianEndpoints: { complete: '/api/public/technician-job/complete' }, capabilities: { technicianFieldOperations: true } } }) };
   }
 };
 sandbox.globalThis = sandbox;
@@ -21,6 +21,7 @@ const ownerUrl = await client.ownerPortalUrl();
 if (ownerUrl !== 'https://crm.example.test/portal?service=plumbing') throw new Error(`owner URL resolution failed: ${ownerUrl}`);
 const contact = await client.publicContact();
 if (contact.phone !== '(843) 555-0100' || contact.email !== 'hello@example.test' || contact.serviceArea !== 'Charleston area') throw new Error('public contact helper failed');
+if (await client.endpoint('technicianEndpoints', 'complete') !== '/api/public/technician-job/complete' || !(await client.capability('technicianFieldOperations'))) throw new Error('manifest endpoint and capability helpers failed');
 await client.ownerPasswordLogin('owner@example.test', 'owner-password');
 if (calls[1].url !== 'https://crm.example.test/api/auth/login?service=plumbing' || calls[1].options.method !== 'POST' || JSON.parse(calls[1].options.body).email !== 'owner@example.test' || JSON.parse(calls[1].options.body).service !== 'plumbing') throw new Error('landing password owner login helper failed');
 await client.ownerOidcLogin('signed-id-token');

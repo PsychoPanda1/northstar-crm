@@ -42,6 +42,27 @@
       return this.manifestPromise;
     }
 
+    async integration() {
+      const manifest = await this.manifest();
+      return manifest.integration || {};
+    }
+
+    async endpoint(scope, name) {
+      const integration = await this.integration();
+      const endpoint = integration?.[scope]?.[name];
+      if (typeof endpoint !== 'string' || !endpoint) {
+        const error = new Error('manifest_endpoint_unavailable');
+        error.status = 404;
+        throw error;
+      }
+      return endpoint;
+    }
+
+    async capability(name) {
+      const integration = await this.integration();
+      return integration.capabilities?.[name] === true;
+    }
+
     async validateOwnerSession(result) {
       const manifest = await this.manifest();
       const tenantMismatch = result?.tenant?.slug && manifest?.tenant?.slug && result.tenant.slug !== manifest.tenant.slug;
