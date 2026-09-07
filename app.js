@@ -55,10 +55,19 @@ Object.entries(dashboard.metrics).forEach(([key, value]) => {
   if (node) node.textContent = value;
 });
 document.querySelector('[data-estimate-followup]').textContent = `${dashboard.actions.estimates} need follow-up`;
-Object.entries(dashboard.actions).forEach(([key, value]) => {
+Object.entries(dashboard.actions).filter(([key]) => key !== 'nextActions').forEach(([key, value]) => {
   document.querySelectorAll(`[data-action-count="${key}"]`).forEach((node) => { node.textContent = value; });
   document.querySelectorAll(`[data-action-value="${key}"]`).forEach((node) => { node.textContent = value; });
 });
+const nextActionsTarget = document.querySelector('[data-next-actions]');
+const nextActionCount = document.querySelector('[data-next-action-count]');
+const nextActionRoute = (route) => ({ leads: 'leads', estimates: 'estimates', invoices: 'invoices', requests: 'requests', messages: 'messages', payments: 'payments', plans: 'plans', assets: 'assets', materials: 'materials', dispatch: 'dispatch' }[route] || 'notifications');
+if (nextActionsTarget) {
+  const nextActions = Array.isArray(dashboard.actions?.nextActions) ? dashboard.actions.nextActions : [];
+  if (nextActionCount) nextActionCount.textContent = String(nextActions.length);
+  nextActionsTarget.innerHTML = nextActions.length ? nextActions.map((item) => `<article class="next-action-card ${item.status === 'Urgent' ? 'urgent' : ''}"><div class="next-action-rank">${item.status === 'Urgent' ? '!' : '→'}</div><div class="next-action-copy"><strong>${escapeHtml(item.title)}</strong><span>${escapeHtml(item.detail || '')}</span><small>${escapeHtml(item.reason || 'Recommended next step')}</small></div><button class="ghost-btn" type="button" data-next-action-route="${escapeHtml(nextActionRoute(item.route))}">${escapeHtml(item.action || 'Review')}</button></article>`).join('') : '<div class="empty-state">No outstanding actions. Your team is caught up.</div>';
+  nextActionsTarget.querySelectorAll('[data-next-action-route]').forEach((button) => button.addEventListener('click', () => openRecords(button.dataset.nextActionRoute)));
+}
 const toast = document.querySelector('#toast');
 const loginDialog = document.querySelector('#login-dialog');
 const showToast = (message) => { toast.textContent = message; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 2800); };

@@ -16,6 +16,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Configuration-driven service verticals for plumbing, power washing, electrical, and mobile car wash
 - Configurable secure owner-portal handoff with a local demo fallback and explicit production auth boundary
 - Owner action cards for estimate recovery, overdue cash, and recurring-service retention
+- Explainable next-best-action cards rank tenant-scoped alerts by urgency, give the reason, and open the relevant lead, estimate, invoice, request, message, payment, plan, asset, inventory, or dispatch queue
 - Signed inbound call tracking with customer/job matching, unknown-caller lead creation, missed-call handling, owner call ledger, and CSV export
 - Provider-supplied call recordings are stored as HTTPS-only metadata, redacted from call list payloads, and available through an owner/dispatcher-only recording handoff until the provider URL expires
 - Dispatch capacity planning with technician/day targets, planned minutes, remaining capacity, and utilization

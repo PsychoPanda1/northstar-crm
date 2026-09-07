@@ -1,0 +1,10 @@
+.next-actions-panel{margin-bottom:17px}
+.next-action-list{display:grid;gap:0;margin-top:14px}
+.next-action-card{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #f0f1f2}
+.next-action-card:last-child{border-bottom:0}
+.next-action-rank{width:25px;height:25px;border-radius:7px;display:grid;place-items:center;background:#e9f7f0;color:#2d9d73;font-weight:800;flex-shrink:0}
+.next-action-card.urgent .next-action-rank{background:#fff0df;color:#d47d39}
+.next-action-copy{display:grid;gap:3px;min-width:0;flex:1}
+.next-action-copy strong{font-size:11px}
+.next-action-copy span,.next-action-copy small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#89939d;font-size:10px}
+.next-action-copy small{color:#b08755}

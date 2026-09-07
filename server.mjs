@@ -427,6 +427,45 @@ const verifyOidcToken = async (token) => {
 }
   const permissionFor = (pathname, method) => { if (method === 'GET' && pathname === '/api/dashboard') return 'dashboard:read'; if (method === 'GET' && pathname === '/api/job-costs') return 'reports:read'; if (method === 'GET' && ['/api/materials', '/api/inventory-locations', '/api/purchase-orders', '/api/inventory-transactions'].includes(pathname)) return 'inventory:read'; if (method === 'GET' && (pathname === '/api/reports/overview' || pathname === '/api/reports/receivables' || pathname === '/api/reports/payroll' || pathname === '/api/reports/data-retention')) return 'reports:read'; if (method === 'GET' && pathname === '/api/export') return 'exports:read'; if (method === 'GET' && /^\/api\/jobs\/[^/]+$/.test(pathname)) return 'records:read'; if (method === 'GET' && /^\/api\/(customers|leads|estimates|invoices|payments|financing-applications|plans|activities|dispatch|team|catalog|notifications|assets|vehicles|reviews|requests|materials|inventory-locations|purchase-orders|inventory-transactions|messages)$/.test(pathname)) return 'records:read'; if (pathname === '/api/invoices' || /^\/api\/invoices\/[^/]+\/pay$/.test(pathname) || /^\/api\/plans\/[^/]+\/invoice$/.test(pathname) || pathname === '/api/plans/billing-cycle') return method === 'GET' ? 'records:read' : 'invoices:write'; if (pathname === '/api/payments' || /^\/api\/payments\/[^/]+\/refund$/.test(pathname)) return method === 'GET' ? 'records:read' : 'invoices:write'; if (pathname === '/api/tasks' || /^\/api\/tasks\//.test(pathname)) return 'tasks:write'; if (pathname === '/api/actions') return 'activities:write'; if (pathname === '/api/customers' || pathname === '/api/customers/import' || /^\/api\/customers\/[^/]+\/(locations|preferences)$/.test(pathname) || pathname === '/api/assets' || pathname === '/api/assets/import' || /^\/api\/assets\/[^/]+$/.test(pathname)) return 'customers:write'; if (pathname === '/api/leads' || /^\/api\/leads\//.test(pathname)) return 'leads:write'; if (pathname === '/api/estimates' || /^\/api\/estimates\//.test(pathname)) return 'estimates:write'; if (/^\/api\/jobs\/[^/]+\/(labor|materials|notes|asset)$/.test(pathname)) return 'field:write'; if (pathname === '/api/dispatch/bulk-assign' || pathname === '/api/dispatch/bulk-status' || pathname === '/api/dispatch/bulk-invoice' || pathname === '/api/jobs' || /^\/api\/jobs\//.test(pathname) || pathname === '/api/plans' || /^\/api\/plans\//.test(pathname)) return 'jobs:write'; if (pathname === '/api/activities' || pathname === '/api/messages') return 'activities:write'; if (/^\/api\/purchase-orders\/[^/]+\/match$/.test(pathname)) return method === 'POST' ? 'purchasing:write' : 'records:read'; if (pathname === '/api/inventory-locations' || /^\/api\/inventory-locations\/[^/]+\/transfer$/.test(pathname) || pathname === '/api/materials' || /^\/api\/jobs\/[^/]+\/materials$/.test(pathname) || pathname === '/api/purchase-orders' || /^\/api\/purchase-orders\//.test(pathname)) return method === 'GET' ? 'records:read' : 'inventory:write'; return null; };
 const allowed = (claims, permission) => !permission || rolePermissions[claims.role]?.includes(permission);
+const nextActionsFor = (tenantId, limit = 5) => {
+  const rank = { Urgent: 400, 'Action needed': 300, Review: 200, 'Follow up': 100 };
+  const routeFor = (item) => {
+    if (item.leadId || /lead/i.test(item.title)) return 'leads';
+    if (item.estimateId || /estimate/i.test(item.title)) return 'estimates';
+    if (item.invoiceId || /invoice/i.test(item.title)) return 'invoices';
+    if (item.requestId || /request/i.test(item.title)) return 'requests';
+    if (item.messageId || /message/i.test(item.title)) return 'messages';
+    if (item.paymentIntentId || /payment/i.test(item.title)) return 'payments';
+    if (item.planId || /plan|warranty/i.test(item.title)) return item.planId ? 'plans' : 'assets';
+    if (item.materialId || /stock|material/i.test(item.title)) return 'materials';
+    if (item.assetId) return 'assets';
+    return 'dispatch';
+  };
+  const actionFor = (item, route) => ({
+    leads: 'Open lead', estimates: 'Open estimate', invoices: 'Open invoice', requests: 'Open request',
+    messages: 'Reply to customer', payments: 'Review payment', plans: 'Review plan', assets: 'Review asset',
+    materials: 'Order stock', dispatch: 'Open dispatch'
+  }[route] || 'Review');
+  return actionableNotificationsFor(tenantId)
+    .filter((item) => item.read !== true)
+    .map((item, index) => {
+      const route = routeFor(item);
+      const urgency = rank[item.status] || 0;
+      return {
+        id: item.id,
+        title: item.title,
+        detail: item.detail,
+        status: item.status,
+        score: urgency + Math.max(0, 50 - index),
+        reason: item.status === 'Urgent' ? 'Time-sensitive risk' : item.status === 'Action needed' ? 'Customer or revenue work is waiting' : 'Prevent a missed follow-up',
+        route,
+        action: actionFor(item, route),
+        sourceId: item.leadId || item.estimateId || item.invoiceId || item.requestId || item.messageId || item.paymentIntentId || item.planId || item.materialId || item.assetId || item.jobId || item.callId || null
+      };
+    })
+    .sort((a, b) => b.score - a.score || a.title.localeCompare(b.title) || a.id.localeCompare(b.id))
+    .slice(0, Math.max(1, Math.min(10, Number(limit) || 5)));
+};
 const dashboardFor = (tenantId) => {
   const base = ALLOW_DEMO_LOGIN ? { 'johnson-service-co': ['$84,290', '184', '32', '$42,680', '4.9', '$52,100', 9, '$12,480', 7, '$3,940', 14], 'clearwater-plumbing': ['$61,840', '142', '21', '$28,460', '4.8', '$38,720', 6, '$9,180', 4, '$2,860', 11], 'lowcountry-wash-co': ['$47,290', '216', '18', '$16,940', '4.9', '$22,180', 5, '$4,920', 8, '$2,140', 19], 'palmetto-electric': ['$93,480', '118', '27', '$64,820', '4.9', '$71,440', 8, '$19,320', 3, '$5,280', 8], 'harbor-shine': ['$39,620', '284', '16', '$12,740', '5.0', '$18,650', 4, '$3,180', 5, '$1,420', 26] }[tenantId] : ['$0', '0', '0', '$0', 'No reviews', '$0', 0, '$0', 0, '$0', 0];
   const saved = state.get(tenantId);
@@ -441,7 +480,7 @@ const dashboardFor = (tenantId) => {
   const estimatesAtRisk = saved.estimates.filter((item) => !['Accepted', 'Declined', 'Expired'].includes(item.status) && Number.isFinite(Date.parse(item.createdAt || '')) && Date.now() - Date.parse(item.createdAt) >= ESTIMATE_FOLLOWUP_DAYS * 24 * 60 * 60 * 1000).length;
   const unbilledCompletedJobs = saved.jobs.filter((item) => item.status === 'Completed' && item.customerId && !invoiceForJob(saved, item)).length;
   const satisfaction = saved.reviews.length ? (saved.reviews.reduce((sum, item) => sum + item.rating, 0) / saved.reviews.length).toFixed(1) : base[4];
-  return { tenant: tenants[tenantId], metrics: { revenue: money(amount(base[0]) + paid), jobs: String(Number(base[1]) + completedJobs), estimates: String(Number(base[2]) + saved.estimates.length), estimateValue: money(amount(base[3]) + estimateValue), leadSlaBreaches: String(leadSlaBreaches), lateAppointments: String(lateAppointments), estimatesAtRisk: String(estimatesAtRisk), openCustomerRequests: String(saved.requests.filter((item) => item.status === 'Open').length), unbilledCompletedJobs: String(unbilledCompletedJobs), satisfaction, pipeline: money(amount(base[5]) + estimateValue) }, actions: { estimates: base[6] + saved.estimates.filter((item) => item.status !== 'Accepted').length, estimateValue: money(amount(base[7]) + estimateValue), invoices: base[8] + saved.invoices.filter((item) => item.status !== 'Paid').length, invoiceValue: money(amount(base[9]) + dueValue), renewals: base[10] + saved.plans.filter((item) => item.status === 'Renewing soon').length }, completedTasks: saved.completedTasks, lastAction: saved.lastAction };
+  return { tenant: tenants[tenantId], metrics: { revenue: money(amount(base[0]) + paid), jobs: String(Number(base[1]) + completedJobs), estimates: String(Number(base[2]) + saved.estimates.length), estimateValue: money(amount(base[3]) + estimateValue), leadSlaBreaches: String(leadSlaBreaches), lateAppointments: String(lateAppointments), estimatesAtRisk: String(estimatesAtRisk), openCustomerRequests: String(saved.requests.filter((item) => item.status === 'Open').length), unbilledCompletedJobs: String(unbilledCompletedJobs), satisfaction, pipeline: money(amount(base[5]) + estimateValue) }, actions: { estimates: base[6] + saved.estimates.filter((item) => item.status !== 'Accepted').length, estimateValue: money(amount(base[7]) + estimateValue), invoices: base[8] + saved.invoices.filter((item) => item.status !== 'Paid').length, invoiceValue: money(amount(base[9]) + dueValue), renewals: base[10] + saved.plans.filter((item) => item.status === 'Renewing soon').length, nextActions: nextActionsFor(tenantId) }, completedTasks: saved.completedTasks, lastAction: saved.lastAction };
 };
 const invoiceForJob = (saved, job) => saved.invoices.find((item) => item.jobId === job.id || (job.estimateId && item.estimateId === job.estimateId));
 const estimateScopeForJob = (saved, job) => { const primary = job.estimateId ? saved.estimates.find((item) => item.id === job.estimateId) : null; const changes = saved.estimates.filter((item) => item.jobId === job.id && item.status === 'Accepted' && item.id !== primary?.id); return [primary, ...changes].filter(Boolean); };
@@ -533,7 +572,7 @@ const operationalMetricsFor = (tenantId) => {
   const count = (collection) => Array.isArray(saved[collection]) ? saved[collection].length : 0;
   const latestAutomation = (saved.automationRuns || []).slice().sort((a, b) => Date.parse(b.createdAt || 0) - Date.parse(a.createdAt || 0))[0];
   const backup = backupSnapshotHealth();
-  return { service: 'northstar-api', version: '0.3.0', tenantId, generatedAt: new Date().toISOString(), process: { uptimeSeconds: Math.floor(process.uptime()), storage: sqliteStore ? 'sqlite' : 'json' }, persistence: { backup, integrityHealthy: persistentStorageHealthy(), auditLedgerHealthy: auditLedgerHealthyFor(tenantId) }, records: { customers: count('customers'), leads: count('leads'), jobs: count('jobs'), estimates: count('estimates'), invoices: count('invoices'), payments: count('payments'), messages: count('messages'), inventoryTransactions: count('inventoryTransactions'), accountingSync: count('accountingSync'), payrollRuns: count('payrollRuns') }, queues: { leads: health.leads, inventory: health.inventory, accounting: accountingQueueStatsFor(tenantId), messages: health.messages, payments: health.payments, documents: health.documents, payroll: health.payroll }, automation: { lastRunAt: latestAutomation?.createdAt || null, runsRecorded: count('automationRuns') } };
+  return { service: 'northstar-api', version: '0.3.0', tenantId, generatedAt: new Date().toISOString(), process: { uptimeSeconds: Math.floor(process.uptime()), storage: sqliteStore ? 'sqlite' : 'json' }, persistence: { backup, integrityHealthy: persistentStorageHealthy(), auditLedgerHealthy: auditLedgerHealthyFor(tenantId) }, records: { customers: count('customers'), leads: count('leads'), jobs: count('jobs'), estimates: count('estimates'), invoices: count('invoices'), payments: count('payments'), messages: count('messages'), inventoryTransactions: count('inventoryTransactions'), accountingSync: count('accountingSync'), payrollRuns: count('payrollRuns') }, queues: { leads: health.leads, inventory: health.inventory, accounting: accountingQueueStatsFor(tenantId), messages: health.messages, payments: health.payments, documents: health.documents, payroll: health.payroll }, nextActions: nextActionsFor(tenantId, 10), automation: { lastRunAt: latestAutomation?.createdAt || null, runsRecorded: count('automationRuns') } };
 };
 const dispatchPayrollRuns = async (saved, claims, limit = 20) => {
   let provider;
