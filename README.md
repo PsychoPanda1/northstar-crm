@@ -102,6 +102,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Customer portal payment and financing actions use accessible validated dialogs with explicit installment, amount, method, and term choices; card and bank details remain provider-hosted and never enter Northstar
 - Customer portal booking, rescheduling, cancellation, service requests, location updates, and communication preferences use accessible validated dialogs with tenant pricebook services, guided intake fields, saved service locations, availability slots, and explicit cancellation confirmation
 - Customer service-plan visits and pause/resume/change/cancel requests use accessible validated dialogs with tenant-scoped plans, saved locations, availability, idempotent submissions, and explicit service-office follow-up states
+- Field-team creation uses an accessible role-and-skill dialog while preserving idempotent tenant-scoped roster creation for dispatch recommendations
 - Technician en-route ETA, job completion acknowledgment, and labor capture use accessible validated dialogs while reusing the encrypted offline queue and idempotent field-action boundary
 - Dispatch assignment uses an accessible roster picker for single and bulk jobs, while server-side skill, availability, and schedule-conflict checks remain authoritative
 - Multi-party invoice billing uses an accessible validated bill-to dialog with existing profile prefill, contact details, payment terms, and server-side tenant-scoped validation

@@ -9,7 +9,7 @@
     "check": "node --check server.mjs && node --check app.js && node --check data-repository.js && node --check tenant-config.js && node client-contract-test.mjs",
     "test:html-scripts": "node scripts/html-script-test.mjs",
     "test:technician-brief": "node scripts/location-history-test.mjs && node scripts/technician-offline-sync-test.mjs",
-    "test:structured-forms": "node scripts/form-definitions-test.mjs && node scripts/structured-form-ui-test.mjs && node scripts/structured-form-runtime-test.mjs && node scripts/customer-appointment-ui-test.mjs && node scripts/customer-service-plan-ui-test.mjs && node scripts/customer-support-dialog-test.mjs && node scripts/technician-workflow-ui-test.mjs && node scripts/dispatch-assignment-dialog-test.mjs && node scripts/invoice-bill-to-dialog-test.mjs && node scripts/conversation-dialog-test.mjs",
+    "test:structured-forms": "node scripts/form-definitions-test.mjs && node scripts/structured-form-ui-test.mjs && node scripts/structured-form-runtime-test.mjs && node scripts/customer-appointment-ui-test.mjs && node scripts/customer-service-plan-ui-test.mjs && node scripts/customer-support-dialog-test.mjs && node scripts/team-member-dialog-test.mjs && node scripts/technician-workflow-ui-test.mjs && node scripts/dispatch-assignment-dialog-test.mjs && node scripts/invoice-bill-to-dialog-test.mjs && node scripts/conversation-dialog-test.mjs",
     "test:technician-offline-sync": "node scripts/technician-offline-sync-test.mjs",
     "test:technician-day": "node scripts/technician-day-test.mjs",
     "test:multi-day-dispatch": "node scripts/multi-day-dispatch-test.mjs",
