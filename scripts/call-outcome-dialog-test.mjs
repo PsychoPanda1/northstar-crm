@@ -1,0 +1,10 @@
+import { readFileSync } from 'node:fs';
+const root = new URL('../', import.meta.url);
+const html = readFileSync(new URL('index.html', root), 'utf8');
+const source = readFileSync(new URL('call-outcome-dialog.js', root), 'utf8');
+const assert = (condition, message) => { if (!condition) throw new Error(message); };
+assert(html.includes('/call-outcome-dialog.js'), 'call outcome dialog is not loaded');
+assert(source.includes('data-call-outcome') && source.includes('updateCallOutcome'), 'call outcome trigger or API is missing');
+assert(source.includes('showModal') && source.includes('stopImmediatePropagation') && source.includes('role="status"'), 'call outcome dialog is not accessible or does not replace prompts');
+assert(source.includes('crypto.randomUUID'), 'call outcome mutation is not retry-safe');
+console.log('Northstar call outcome dialog checks passed');
