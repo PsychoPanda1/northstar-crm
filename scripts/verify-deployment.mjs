@@ -34,6 +34,7 @@ const fetchJson = async (path) => {
 };
 
 const failures = [];
+const requiredReadinessChecks = ['configuration', 'storageConfiguration', 'persistentState', 'persistentStorage', 'backupConfiguration', 'backupStorage', 'backupSnapshot', 'tenantDataIntegrity', 'auditLedger'];
 const check = async (label, path, validator) => {
   try {
     const result = await fetchJson(path);
@@ -46,7 +47,7 @@ const check = async (label, path, validator) => {
 };
 
 await check('health', '/api/health', (body) => body?.ok === true);
-await check('readiness', '/api/ready', (body) => body?.ok === true && Object.values(body.checks || {}).every(Boolean));
+await check('readiness', '/api/ready', (body) => body?.ok === true && requiredReadinessChecks.every((key) => Object.prototype.hasOwnProperty.call(body.checks || {}, key) && body.checks[key] === true) && Object.values(body.checks || {}).every(Boolean));
 
 try {
   const response = await fetch(new URL('/api/openapi.yaml', origin), { headers: { accept: 'text/yaml' } });
