@@ -540,6 +540,109 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/SessionServices' }
         '401': { $ref: '#/components/responses/Unauthorized' }
+  /api/public/technician-job:
+    get:
+      summary: Read a signed technician field-service job
+      parameters:
+        - $ref: '#/components/parameters/TechnicianToken'
+      responses:
+        '200':
+          description: Technician-scoped job, checklist, clock, and field-work context
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TechnicianJobView' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/public/technician-job/field-guide:
+    get:
+      summary: Read signed technician job field guidance
+      parameters:
+        - $ref: '#/components/parameters/TechnicianToken'
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/public/technician-job/status:
+    post:
+      summary: Advance a signed technician job through field status
+      parameters:
+        - $ref: '#/components/parameters/TechnicianToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TechnicianStatusUpdate' }
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/technician-job/clock:
+    get:
+      summary: Read signed technician time-clock state
+      parameters:
+        - $ref: '#/components/parameters/TechnicianToken'
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    post:
+      summary: Clock a technician into or out of a signed job
+      parameters:
+        - $ref: '#/components/parameters/TechnicianToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TechnicianClockRequest' }
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '201': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/technician-job/complete:
+    post:
+      summary: Complete a signed technician job with customer acknowledgment
+      parameters:
+        - $ref: '#/components/parameters/TechnicianToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TechnicianCompletionRequest' }
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/technician-job/location:
+    post:
+      summary: Record a signed technician location ping
+      parameters:
+        - $ref: '#/components/parameters/TechnicianToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TechnicianLocationRequest' }
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
 components:
   securitySchemes:
     bearerAuth:
@@ -572,12 +675,45 @@ components:
       in: query
       required: true
       schema: { type: string, minLength: 20, maxLength: 400 }
+    TechnicianToken:
+      name: token
+      in: query
+      required: true
+      schema: { type: string, minLength: 20, maxLength: 400 }
     ReferralToken:
       name: token
       in: query
       required: true
       schema: { type: string, minLength: 20, maxLength: 400 }
   schemas:
+    TechnicianStatusUpdate:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [En route, In progress] }
+        note: { type: string, maxLength: 500 }
+    TechnicianClockRequest:
+      type: object
+      required: [action]
+      properties:
+        action: { type: string, enum: [in, out] }
+    TechnicianCompletionRequest:
+      type: object
+      required: [completionNote]
+      properties:
+        completionNote: { type: string, minLength: 3, maxLength: 1000 }
+        customerAcknowledgedBy: { type: string, maxLength: 120 }
+    TechnicianLocationRequest:
+      type: object
+      required: [latitude, longitude, accuracy]
+      properties:
+        latitude: { type: number, minimum: -90, maximum: 90 }
+        longitude: { type: number, minimum: -180, maximum: 180 }
+        accuracy: { type: number, minimum: 0, maximum: 10000 }
+    TechnicianJobView:
+      type: object
+      description: Tenant-safe field-service payload; no owner credentials are returned.
+      additionalProperties: true
     InvoicePaymentIntentRequest:
       type: object
       required: [amount, method]
