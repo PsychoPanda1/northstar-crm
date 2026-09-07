@@ -45,10 +45,11 @@ class NorthstarDemoRepository {
     if (!this.apiAvailable) return;
     try {
       if (!this.token) { const login = await fetch('/api/auth/demo-login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ service: new URLSearchParams(window.location.search).get('service') || 'default' }) }); if (!login.ok) throw new Error('login failed'); this.token = (await login.json()).token; sessionStorage.setItem(this.tokenKey, this.token); }
+      const service = new URLSearchParams(window.location.search).get('service') || 'default';
       const response = await fetch('/api/dashboard', { headers: { authorization: `Bearer ${this.token}` } });
       if (!response.ok) throw new Error('dashboard unavailable');
       this.remote = await response.json();
-      const session = await fetch('/api/session', { headers: { authorization: `Bearer ${this.token}` } });
+      const session = await fetch(`/api/session?service=${encodeURIComponent(service)}`, { headers: { authorization: `Bearer ${this.token}` } });
       if (!session.ok) throw new Error('session unavailable');
       this.session = await session.json();
       if (this.session.expiresAt && this.session.expiresAt - Date.now() < 30 * 60 * 1000) await this.refreshSession();
@@ -65,14 +66,16 @@ class NorthstarDemoRepository {
 
   async loginWithOidcToken(idToken) {
     if (!this.apiAvailable) throw new Error('api unavailable');
-    const response = await fetch('/api/auth/oidc', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ idToken }) });
+    const service = new URLSearchParams(window.location.search).get('service') || 'default';
+    const response = await fetch('/api/auth/oidc', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ idToken, service }) });
     if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'identity login failed');
     const result = await response.json(); this.token = result.token; sessionStorage.setItem(this.tokenKey, this.token); return result;
   }
 
   async refreshSession() {
     if (!this.apiAvailable || !this.token) throw new Error('session unavailable');
-    const response = await fetch('/api/auth/refresh', { method: 'POST', headers: { authorization: `Bearer ${this.token}` }, __northstarRefresh: true });
+    const service = new URLSearchParams(window.location.search).get('service') || 'default';
+    const response = await fetch(`/api/auth/refresh?service=${encodeURIComponent(service)}`, { method: 'POST', headers: { authorization: `Bearer ${this.token}` }, __northstarRefresh: true });
     if (!response.ok) throw new Error('session refresh failed');
     const result = await response.json();
     this.token = result.token;
