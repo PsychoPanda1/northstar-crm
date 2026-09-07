@@ -276,6 +276,51 @@ paths:
         '404': { $ref: '#/components/responses/NotFound' }
         '409': { $ref: '#/components/responses/Conflict' }
         '422': { $ref: '#/components/responses/ValidationError' }
+  /api/customers/{customerId}/tax-status:
+    get:
+      summary: Read a customer's tax exemption status
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          schema: { type: string, maxLength: 120 }
+      responses:
+        '200':
+          description: Customer tax status
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CustomerTaxStatus' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      summary: Record or remove a customer tax exemption
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: customerId
+          in: path
+          required: true
+          schema: { type: string, maxLength: 120 }
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [taxExempt]
+              properties:
+                taxExempt: { type: boolean }
+                exemptionNumber: { type: string, minLength: 2, maxLength: 100 }
+                exemptionExpiresAt: { type: string, format: date-time }
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
   /api/vendor-bills:
     get:
       summary: List tenant-scoped vendor bills
@@ -1865,6 +1910,15 @@ components:
         type: { type: string, enum: [Reschedule request, Cancellation request, Question] }
         priority: { type: string, enum: [Low, Normal, High, Urgent], default: Normal }
         message: { type: string, minLength: 3, maxLength: 500 }
+    CustomerTaxStatus:
+      type: object
+      required: [customerId, taxExempt, exemptionNumber, exemptionExpiresAt]
+      properties:
+        customerId: { type: string }
+        taxExempt: { type: boolean }
+        exemptionNumber: { type: string, nullable: true }
+        exemptionExpiresAt: { type: string, format: date-time, nullable: true }
+        duplicate: { type: boolean }
     ServicePlanRequest:
       type: object
       required: [action, note]

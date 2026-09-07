@@ -1409,6 +1409,20 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async getCustomerTaxStatus(customerId) {
+    if (!this.remote) throw new Error('API required for customer tax status');
+    const response = await fetch(`/api/customers/${encodeURIComponent(customerId)}/tax-status`, { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('customer tax status unavailable');
+    return response.json();
+  }
+
+  async updateCustomerTaxStatus(customerId, taxExempt, exemptionNumber = '', exemptionExpiresAt = '', idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for customer tax status');
+    const response = await fetch(`/api/customers/${encodeURIComponent(customerId)}/tax-status`, { method: 'PATCH', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ taxExempt, ...(exemptionNumber ? { exemptionNumber } : {}), ...(exemptionExpiresAt ? { exemptionExpiresAt } : {}) }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'customer tax status update failed');
+    return response.json();
+  }
+
   async listAllTeamTimeOff() {
     if (!this.remote) throw new Error('API required for time-off management');
     const response = await fetch('/api/team/time-off', { headers: { authorization: `Bearer ${this.token}` } });
