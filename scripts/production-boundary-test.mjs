@@ -6,6 +6,7 @@ import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
+const nativeSqliteAvailable = await import('node:sqlite').then(() => true).catch(() => false);
 const port = 4300 + Math.floor(Math.random() * 200);
 const dataFile = join(tmpdir(), `northstar-production-boundary-${process.pid}-${Date.now()}.json`);
 const sessionFile = `${dataFile}.sessions`;
@@ -32,7 +33,7 @@ const env = {
   NORTHSTAR_BACKUP_FILE: `${dataFile}.backup`,
   NORTHSTAR_SESSION_FILE: sessionFile,
   NORTHSTAR_SQLITE_FILE: `${dataFile}.sqlite`,
-  NORTHSTAR_REQUIRE_SQLITE: 'true',
+  NORTHSTAR_REQUIRE_SQLITE: nativeSqliteAvailable ? 'true' : 'false',
   NORTHSTAR_SESSION_SECRET: secret,
   NORTHSTAR_OWNER_EMAIL: 'owner@example.test',
   NORTHSTAR_OWNER_PASSWORD_DIGEST: createHmac('sha256', secret).update(password).digest('hex'),
