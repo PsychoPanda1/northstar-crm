@@ -203,6 +203,23 @@
         const response = await fetch('/api/public/customer-portal/payment-method/default' + query, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id: button.dataset.paymentMethodId }) });
         message(response.ok ? 'Default payment method updated.' : 'Payment method could not be made default.');
       } else if (button.dataset.action === 'add-payment-method') {
+        const popup = window.open('about:blank', '_blank', 'noopener');
+        const setupResponse = await fetch('/api/public/customer-portal/payment-method/setup' + query, { method: 'POST', headers: { 'content-type': 'application/json' } });
+        const setupBody = await setupResponse.json().catch(() => ({}));
+        if (setupResponse.ok && setupBody.url && setupBody.setupSessionId) {
+          if (popup) popup.location.href = setupBody.url;
+          message('Complete payment setup in the provider window. Northstar will refresh when it is attached.');
+          for (let attempt = 0; attempt < 20; attempt += 1) {
+            await new Promise((resolve) => setTimeout(resolve, 3000));
+            const statusResponse = await fetch('/api/public/customer-portal/payment-method/setup-status' + query + '&setupSessionId=' + encodeURIComponent(setupBody.setupSessionId));
+            const statusBody = await statusResponse.json().catch(() => ({}));
+            if (statusBody.setupSession?.status === 'Completed') { if (popup && !popup.closed) popup.close(); window.location.reload(); return; }
+            if (statusBody.setupSession?.status === 'Failed') { message('The payment provider could not attach this method.'); return; }
+          }
+          message('Payment setup is still pending. Return here after the provider confirms the method.'); return;
+        }
+        if (popup && !popup.closed) popup.close();
+        if (setupResponse.status !== 503) { message('Hosted payment setup is unavailable.'); return; }
         const providerPaymentMethodId = window.prompt('Paste the opaque provider token from the hosted payment setup. Do not enter card or bank details.');
         if (!providerPaymentMethodId?.trim()) return;
         const type = window.prompt('Method type: Card or ACH', 'Card');

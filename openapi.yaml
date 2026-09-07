@@ -879,6 +879,28 @@ paths:
         '409': { $ref: '#/components/responses/IdempotencyConflict' }
         '422': { $ref: '#/components/responses/ValidationError' }
         '429': { $ref: '#/components/responses/RateLimited' }
+  /api/public/customer-portal/payment-method/setup:
+    post:
+      summary: Create a provider-hosted customer payment-method setup session
+      parameters:
+        - $ref: '#/components/parameters/CustomerToken'
+      responses:
+        '201': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+        '503': { $ref: '#/components/responses/ProviderFailure' }
+  /api/public/customer-portal/payment-method/setup-status:
+    get:
+      summary: Read safe status for a hosted payment-method setup session
+      parameters:
+        - $ref: '#/components/parameters/CustomerToken'
+        - { name: setupSessionId, in: query, required: true, schema: { type: string, maxLength: 120 } }
+      responses:
+        '200': { $ref: '#/components/responses/MutationAccepted' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '429': { $ref: '#/components/responses/RateLimited' }
   /api/public/customer-portal/payment-methods:
     get:
       summary: List safe customer payment-method metadata
