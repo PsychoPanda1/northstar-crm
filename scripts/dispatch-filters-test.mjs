@@ -11,6 +11,9 @@ const required = [
   'refreshFilteredDispatch()',
   "dispatchFilters.status = ''; dispatchFilters.priority = ''; dispatchFilters.technician = ''",
   "dispatchFilters.technician === 'Unassigned' && !item.technician"
+  ,"id = 'dispatch-date-picker'"
+  ,'type="date"'
+  ,'listDispatchForRange(date, end)'
 ];
 for (const snippet of required) {
   if (!source.includes(snippet)) throw new Error(`dispatch filter wiring missing: ${snippet}`);
