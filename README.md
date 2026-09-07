@@ -352,6 +352,8 @@ Recurring plans can be scheduled as idempotent 1–12 visit series through `POST
 
 Landing pages can discover the version 2 integration manifest, including owner authentication, customer portal reschedule, cancellation, request, payment-intent, and financing-intent endpoints, without hard-coding service-specific routes. Financing requests remain provider-pending until a real financing partner is connected; Northstar never claims a credit decision locally. Provider status callbacks use `POST /api/webhooks/financing` with `NORTHSTAR_FINANCING_WEBHOOK_SECRET` and remain separate from invoice settlement.
 
+Owners can also retrieve a tenant-safe handoff package through `GET /api/settings/landing-pages/handoff?service=...`, which provides copyable service-key, origin, manifest, booking, and owner-portal configuration for the next attached plumbing, electrical, washing, or other landing page. The package contains no credentials or private CRM records.
+
 Inbound call providers may include an HTTPS recording URL and optional expiry in `POST /api/webhooks/calls/inbound`. Northstar stores the provider handoff server-side, redacts the URL from ordinary call lists and webhook responses, and exposes it only through `GET /api/calls/:id/recording` to owner or dispatcher sessions. Expired recordings return HTTP 410; the provider remains responsible for retention, playback authorization, and recording deletion.
 
 The public landing-page boundary is also described in [openapi.yaml](openapi.yaml), covering tenant discovery, customer-safe catalog, capacity-aware availability, idempotent lead capture, and idempotent booking. Replace the example server URL before sharing it with an integration team.

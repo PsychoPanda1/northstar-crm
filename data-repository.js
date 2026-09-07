@@ -1595,6 +1595,14 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async getLandingPageHandoff(service = '') {
+    if (!this.remote) { const key = service || this.tenant?.slug || 'default'; const encoded = encodeURIComponent(key); return { handoff: { version: 2, service: key, tenant: { slug: this.tenant?.slug || key, businessName: this.tenant?.businessName || '', serviceLabel: this.tenant?.serviceLabel || '' }, origin: window.location.origin, urls: {}, clientConfig: { apiBase: window.location.origin, service: key, manifestPath: `/api/public/tenant?service=${encoded}`, bookingPath: `/booking.html?service=${encoded}`, ownerPortalPath: `/portal?service=${encoded}` } } }; }
+    const query = service ? `?service=${encodeURIComponent(service)}` : '';
+    const response = await fetch(`/api/settings/landing-pages/handoff${query}`, { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'landing page handoff unavailable');
+    return response.json();
+  }
+
   async updateLeadStages(stages, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for lead stage configuration');
     const response = await fetch('/api/settings/lead-stages', { method: 'PATCH', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ stages }) });
