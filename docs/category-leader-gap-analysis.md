@@ -28,6 +28,8 @@ The implementation now includes:
 
 The remaining category-leader boundary is operational activation rather than another local mock: managed shared storage, real identity and provider credentials, verified hosted deployment, monitoring, backups, and tested recovery procedures. The repository contains the server-side seams and readiness gates for those integrations; deployment evidence is still required before calling the system production-equivalent.
 
+The owner settings workspace now makes the landing-page activation path explicit with a tenant-scoped launch checklist. It combines the business profile, public contact, active pricebook, field team, attached service key, guided intake, service-area review, and deployment readiness gate without exposing credentials or treating local preview data as production evidence.
+
 ## Landing-page-specific guardrails
 
 - Never let a public landing page choose a tenant by trusting an arbitrary tenant id. Continue deriving the tenant from the configured service slug and enforce allowed origins in production.

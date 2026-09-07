@@ -11,4 +11,9 @@ assert(app.includes('repository.getWorkspaceSettings()'), 'workspace setup does 
 assert(app.includes('repository.updateWorkspaceSettings(update, crypto.randomUUID())'), 'workspace setup does not persist tenant settings safely');
 assert(app.includes('serviceAreaRules'), 'workspace setup omits service-area controls');
 assert(app.includes('parseIntakeFields'), 'workspace setup omits guided intake controls');
+const settings = readFileSync(`${root}/settings.js`, 'utf8');
+assert(settings.includes('data-settings-launch-checklist'), 'owner launch checklist is missing');
+assert(settings.includes('At least one active service in the pricebook'), 'launch checklist omits pricebook readiness');
+assert(settings.includes('Deployment readiness gate passing'), 'launch checklist omits deployment readiness');
+assert(settings.includes('repository.getLandingPageKeys()'), 'launch checklist does not inspect connected landing pages');
 console.log('Northstar workspace settings UI contract passed');
