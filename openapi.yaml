@@ -1719,8 +1719,9 @@ components:
         message: { type: string, minLength: 3, maxLength: 500 }
     ServicePlanRequest:
       type: object
-      required: [service, action, note]
+      required: [action, note]
       properties:
+        planId: { type: string, maxLength: 120, description: Preferred durable plan identifier. }
         service: { type: string, maxLength: 120 }
         action: { type: string, enum: [pause, cancel, change] }
         note: { type: string, minLength: 3, maxLength: 500 }
