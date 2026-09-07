@@ -37,6 +37,8 @@ New landing pages can include the reusable landing-page-client.js browser helper
 
 The customer portal exposes `POST /api/public/customer-portal/message?token=...` for authenticated customer messages. Send `{ channel: 'SMS' | 'Email', message }` with an `Idempotency-Key`; the message is tenant-scoped, honors the customer's opt-out preference, appears in the owner conversation workspace and action queue, and returns `duplicate: true` on a safe retry. Provider delivery remains server-side and provider-pending until `NORTHSTAR_MESSAGE_PROVIDER_URL` is configured.
 
+Secure invoice links use `GET /api/public/invoice?token=...` to read the customer-safe balance, line items, payment history, and payment-plan state. Submit `{ amount, method: 'Card' | 'ACH', installmentId? }` to `POST /api/public/invoice/payment-intent?token=...` with an `Idempotency-Key`; the response is provider-pending until the server-side payment provider confirms settlement. Use the manifest's invoice or payment paths when provided, and never put card or bank credentials in Northstar requests.
+
 ## Attach a new service page
 
 Use this handoff sequence for plumbing, power washing, electrical, car wash, or a configured vertical:

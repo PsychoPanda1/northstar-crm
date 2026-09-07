@@ -180,6 +180,38 @@ paths:
               schema: { type: string, format: binary }
         '401': { $ref: '#/components/responses/Unauthorized' }
         '404': { $ref: '#/components/responses/NotFound' }
+  /api/public/invoice:
+    get:
+      summary: Read a customer-safe invoice from a signed invoice link
+      parameters:
+        - $ref: '#/components/parameters/InvoiceToken'
+      responses:
+        '200':
+          description: Invoice balance, line items, payment history, and payment-plan status
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/InvoicePaymentView' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+  /api/public/invoice/payment-intent:
+    post:
+      summary: Create a provider-pending payment intent from a signed invoice link
+      parameters:
+        - $ref: '#/components/parameters/InvoiceToken'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/InvoicePaymentIntentRequest' }
+      responses:
+        '201': { $ref: '#/components/responses/MutationAccepted' }
+        '200': { $ref: '#/components/responses/Duplicate' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+        '429': { $ref: '#/components/responses/RateLimited' }
   /api/public/customer-portal:
     get:
       summary: Read a customer-safe service portal
@@ -546,6 +578,50 @@ components:
       required: true
       schema: { type: string, minLength: 20, maxLength: 400 }
   schemas:
+    InvoicePaymentIntentRequest:
+      type: object
+      required: [amount, method]
+      properties:
+        installmentId: { type: string, maxLength: 120 }
+        amount: { type: number, exclusiveMinimum: 0 }
+        method: { type: string, enum: [Card, ACH] }
+    InvoicePaymentView:
+      type: object
+      required: [customer, value, amount, paidAmount, balance, status, lineItems, payments, paymentAttempts, schedule]
+      properties:
+        customer: { type: string }
+        billTo:
+          type: object
+          nullable: true
+          properties:
+            name: { type: string }
+            email: { type: string, format: email }
+            phone: { type: string }
+            address: { type: string }
+            terms: { type: string }
+        value: { type: string }
+        amount: { type: number }
+        paidAmount: { type: number }
+        balance: { type: number }
+        status: { type: string }
+        due: { type: string, nullable: true }
+        subtotal: { type: number }
+        discount: { type: number }
+        taxRate: { type: number }
+        tax: { type: number }
+        lineItems:
+          type: array
+          items:
+            type: object
+            required: [description, quantity, unitPrice, amount]
+            properties:
+              description: { type: string }
+              quantity: { type: number }
+              unitPrice: { type: number }
+              amount: { type: number }
+        payments: { type: array, items: { type: object, additionalProperties: true } }
+        paymentAttempts: { type: array, items: { type: object, additionalProperties: true } }
+        schedule: { type: array, items: { type: object, additionalProperties: true } }
     SessionServices:
       type: object
       required: [tenant, items]
