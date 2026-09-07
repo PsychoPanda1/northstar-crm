@@ -7,6 +7,8 @@ for (const snippet of [
   'service-plan-visit',
   'locationId',
   'Choose a service location',
+  'customer-portal/availability',
+  'catalogItemId',
   'northstarPortalRetryKey'
 ]) {
   if (!customer.includes(snippet)) throw new Error(`customer plan visit UI wiring missing: ${snippet}`);
