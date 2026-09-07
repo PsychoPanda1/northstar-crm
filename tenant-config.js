@@ -17,6 +17,6 @@ async function resolveTenant() {
     const body = await response.json();
     if (response.ok && body.tenant) return { ...fallback, ...body.tenant };
     if (response.status === 404) return unavailable;
-  } catch {}
-  return fallback || unavailable;
+  } catch { if (window.location.protocol === 'file:') return fallback || unavailable; }
+  return unavailable;
 }

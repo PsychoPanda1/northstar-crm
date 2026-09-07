@@ -10,4 +10,5 @@ for (const snippet of required) {
   if (!source.includes(snippet)) throw new Error(`tenant configuration contract missing: ${snippet}`);
 }
 if (source.includes("if (requested && !fallback) return unavailable;")) throw new Error('custom service keys are still rejected before the tenant manifest request');
+if (!source.includes("if (window.location.protocol === 'file:') return fallback || unavailable;") || !source.includes('return unavailable;')) throw new Error('hosted tenant resolution must fail closed when the manifest is unavailable');
 console.log('Northstar tenant config checks passed');
