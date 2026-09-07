@@ -1,0 +1,12 @@
+import { readFileSync } from 'node:fs';
+const root = new URL('../', import.meta.url);
+const index = readFileSync(new URL('index.html', root), 'utf8');
+const serviceWorker = readFileSync(new URL('northstar-sw.js', root), 'utf8');
+const source = readFileSync(new URL('estimate-schedule-dialog.js', root), 'utf8');
+const assert = (condition, message) => { if (!condition) throw new Error(message); };
+assert(index.includes('/estimate-schedule-dialog.js'), 'estimate scheduling dialog is not loaded');
+assert(serviceWorker.includes("'/estimate-schedule-dialog.js'"), 'estimate scheduling dialog is not cached');
+assert(source.includes('repository.convertEstimate') && source.includes('repository.getAvailability') && source.includes('getCustomerProfile'), 'estimate scheduling does not use live availability and customer locations');
+assert(source.includes('data-estimate-action="schedule"') && source.includes('stopImmediatePropagation') && source.includes('showModal'), 'estimate scheduling dialog does not replace the prompt flow');
+assert(source.includes('slotOptions') && source.includes('locationId') && source.includes('crypto.randomUUID'), 'estimate scheduling dialog does not preserve slot, address, and retry-safe conversion');
+console.log('Northstar estimate scheduling dialog checks passed');
