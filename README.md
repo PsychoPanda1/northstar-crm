@@ -99,6 +99,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Global operator search includes fleet vehicles by name, model, plate, lifecycle status, maintenance date, or odometer, with tenant-scoped pagination
 - Inventory supports exact barcode/SKU/material-ID lookup with active warehouse and truck balances, plus audited owner/dispatcher barcode assignment
 - Inventory cycle counts use a material-aware location picker with current-stock context, whole-number validation, and audited reconciliation
+- Replenishment plans use a validated vendor dialog and show the recommended material count before creating owner-approved purchase orders
 - Technician scorecards rank field performance using transparent completion, margin, reliability, and time-capture components over a selected reporting period
 - Multi-technician job crews with primary-technician compatibility, skill validation, schedule-conflict checks, and audit history
 - Configurable tenant pricebook items for consistent service quoting across landing pages and the owner portal, including category, default duration, and taxable metadata
