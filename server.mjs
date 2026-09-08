@@ -1038,6 +1038,25 @@ const server = createServer(async (req, res) => {
     applySecurityHeaders(res);
     const requestUrl = new URL(req.url, `http://${req.headers.host}`);
     const pathname = requestUrl.pathname;
+    const retryableJobVisitStatusMatch = pathname.match(/^\/api\/jobs\/([^/]+)\/visits\/([^/]+)\/status$/);
+    if (retryableJobVisitStatusMatch && req.method === 'POST') {
+      const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' });
+      const saved = state.get(claims.tenantId); const job = saved.jobs.find((item) => item.id === retryableJobVisitStatusMatch[1]);
+      if (!job) return json(res, 404, { error: 'job_not_found' });
+      const visit = (job.visits || []).find((item) => item.id === retryableJobVisitStatusMatch[2]);
+      if (!visit) return json(res, 404, { error: 'visit_not_found' });
+      const body = await readBody(req); const nextStatus = String(body.status || ''); const idempotencyKey = String(req.headers['idempotency-key'] || '').trim().slice(0, 100); const fingerprint = payloadFingerprint({ status: nextStatus });
+      if (idempotencyKey && visit.statusIdempotencyKey === idempotencyKey) { if (visit.statusIdempotencyFingerprint !== fingerprint) return json(res, 409, { error: 'idempotency_key_reused' }); return json(res, 200, { ...visit, duplicate: true }); }
+      const transitions = { Scheduled: ['En route', 'Canceled'], 'En route': ['In progress', 'Canceled'], 'In progress': ['Completed', 'Canceled'] };
+      if (visit.status === nextStatus) return json(res, 200, { ...visit, duplicate: true });
+      if (!transitions[visit.status]?.includes(nextStatus)) return json(res, 409, { error: 'invalid_visit_transition', from: visit.status, to: nextStatus });
+      if (claims.role === 'technician' && visit.technician && visit.technician !== claims.name) return json(res, 403, { error: 'visit_not_assigned_to_technician' });
+      visit.status = nextStatus; visit.updatedAt = new Date().toISOString();
+      if (idempotencyKey) { visit.statusIdempotencyKey = idempotencyKey; visit.statusIdempotencyFingerprint = fingerprint; }
+      recordActivity(saved, job.customer || job.customerId, 'Dispatch', `Visit ${visit.sequence} for ${job.service} marked ${visit.status}.`, visit.status);
+      recordAudit(saved, claims, 'job.visit.status', 'visit', visit.id, `${job.id} · ${visit.status}`);
+      persist(); return json(res, 200, { ...visit, duplicate: false });
+    }
     const retryableJobCrewMatch = pathname.match(/^\/api\/jobs\/([^/]+)\/crew$/);
     if (retryableJobCrewMatch && req.method === 'POST') {
       const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' });

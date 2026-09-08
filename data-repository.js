@@ -526,9 +526,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async updateJobVisitStatus(jobId, visitId, status) {
+  async updateJobVisitStatus(jobId, visitId, status, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for visit status updates');
-    const response = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/visits/${encodeURIComponent(visitId)}/status`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ status }) });
+    const response = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/visits/${encodeURIComponent(visitId)}/status`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ status }) });
     if (!response.ok) throw new Error('visit status update failed');
     return response.json();
   }
