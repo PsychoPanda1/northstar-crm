@@ -16,7 +16,7 @@ const requiredSecrets = [
 ];
 
 const dockerfile = await readFile(new URL('../Dockerfile', import.meta.url), 'utf8');
-if (!dockerfile.includes('ENV NORTHSTAR_SQLITE_FILE=/app/data/northstar.sqlite') || !dockerfile.includes('ENV NORTHSTAR_REQUIRE_SQLITE=true') || !dockerfile.includes('ENV NORTHSTAR_REQUIRE_LIVE_PROVIDERS=true') || !dockerfile.includes('USER node') || !dockerfile.includes('VOLUME ["/app/data"]')) throw new Error('container image must default to unprivileged SQLite-backed storage with live providers required');
+if (!dockerfile.includes('ENV NORTHSTAR_SQLITE_FILE=/app/data/northstar.sqlite') || !dockerfile.includes('ENV NORTHSTAR_REQUIRE_SQLITE=true') || !dockerfile.includes('ENV NORTHSTAR_REQUIRE_LIVE_PROVIDERS=true') || !dockerfile.includes('USER node') || !dockerfile.includes('VOLUME ["/app/data"]') || !dockerfile.includes('body.ok !== true || Object.values(body.checks || {}).some(value => value !== true)')) throw new Error('container image must default to unprivileged SQLite-backed storage with live providers required and full readiness healthcheck');
 
 for (const [path, label] of workflows) {
   const source = await readFile(new URL(`../${path}`, import.meta.url), 'utf8');
