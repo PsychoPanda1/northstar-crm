@@ -508,6 +508,7 @@ const authenticate = (req) => {
 };
 let oidcJwksCache = { expiresAt: 0, keys: [] };
 const base64Json = (value) => JSON.parse(Buffer.from(String(value), 'base64url').toString('utf8'));
+const fetchWithTimeout = async (url, options = {}, timeoutMs = 5000) => { const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), timeoutMs); try { return await fetch(url, { ...options, signal: controller.signal }); } finally { clearTimeout(timeout); } };
 const verifyOidcToken = async (token) => {
   if (!oidcConfigurationPresent || !oidcConfigurationValid) return null;
   const [encodedHeader, encodedPayload, encodedSignature] = String(token || '').split('.');
@@ -516,7 +517,7 @@ const verifyOidcToken = async (token) => {
   try { header = base64Json(encodedHeader); claims = base64Json(encodedPayload); } catch { return null; }
   if (header.alg !== 'RS256' || !header.kid || claims.iss !== OIDC_ISSUER || claims.aud !== OIDC_AUDIENCE && !(Array.isArray(claims.aud) && claims.aud.includes(OIDC_AUDIENCE)) || !claims.sub || !Number.isFinite(Number(claims.exp)) || Number(claims.exp) <= Math.floor(Date.now() / 1000)) return null;
   try {
-    if (oidcJwksCache.expiresAt <= Date.now()) { const response = await fetch(OIDC_JWKS_URL, { headers: { accept: 'application/json' } }); if (!response.ok) return null; const body = await response.json(); if (!Array.isArray(body.keys)) return null; oidcJwksCache = { expiresAt: Date.now() + 5 * 60 * 1000, keys: body.keys.slice(0, 50) }; }
+    if (oidcJwksCache.expiresAt <= Date.now()) { const response = await fetchWithTimeout(OIDC_JWKS_URL, { headers: { accept: 'application/json' } }); if (!response.ok) return null; const body = await response.json(); if (!Array.isArray(body.keys)) return null; oidcJwksCache = { expiresAt: Date.now() + 5 * 60 * 1000, keys: body.keys.slice(0, 50) }; }
     const jwk = oidcJwksCache.keys.find((key) => key.kid === header.kid && key.kty === 'RSA' && key.n && key.e); if (!jwk) return null;
     const verifier = createVerify('RSA-SHA256'); verifier.update(`${encodedHeader}.${encodedPayload}`); verifier.end(); if (!verifier.verify(createPublicKey({ key: jwk, format: 'jwk' }), Buffer.from(encodedSignature, 'base64url'))) return null;
     return claims;
