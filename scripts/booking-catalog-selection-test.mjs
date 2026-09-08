@@ -13,12 +13,13 @@ const select = {
   setAttribute: (name, value) => { attributes[name] = value; }
 };
 const calls = [];
+let catalogItems = [{ id: 'drain-cleaning', name: 'Drain cleaning' }];
 class MutationObserver {
   constructor(callback) { observerCallback = callback; }
   observe() {}
 }
 class LandingClient {
-  async catalog() { return { items: [{ id: 'drain-cleaning', name: 'Drain cleaning' }] }; }
+  async catalog() { return { items: catalogItems }; }
   availability(options) { calls.push(options); return Promise.resolve(options); }
 }
 const sandbox = {
@@ -38,4 +39,9 @@ observerCallback();
 assert.equal(select.value, 'drain-cleaning');
 assert.equal(attributes['aria-describedby'], 'service-selection-help');
 assert.equal(helpNodes.length, 1);
+catalogItems = [];
+const invalidClient = new sandbox.NorthstarLandingClient();
+await invalidClient.catalog();
+await invalidClient.availability({ days: 7 });
+assert.equal(JSON.stringify(calls), JSON.stringify([{ days: 7, catalogItemId: 'drain-cleaning' }, { days: 7 }]));
 console.log('Northstar catalog booking deep-link runtime test passed');
