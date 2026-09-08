@@ -27,6 +27,11 @@ try {
   const sourceResult = await post('/api/customers', { name: 'Merge Duplicate', phone: '843-555-0312', email: 'duplicate@example.test', location: '1 Main Street' }, token, 'merge-source');
   assert(targetResult.response.status === 201 && sourceResult.response.status === 201, 'customer merge test setup failed');
   const targetId = targetResult.body.id; const sourceId = sourceResult.body.id;
+  const profileHeaders = { authorization: `Bearer ${token}`, 'content-type': 'application/json', 'idempotency-key': 'customer-profile-retry' };
+  const profileBody = { name: 'Merge Primary Updated', phone: '843-555-0311', email: 'primary@example.test', location: '2 Main Street' };
+  const profileUpdate = await request(`/api/customers/${encodeURIComponent(targetId)}`, { method: 'PATCH', headers: profileHeaders, body: JSON.stringify(profileBody) });
+  const profileDuplicate = await request(`/api/customers/${encodeURIComponent(targetId)}`, { method: 'PATCH', headers: profileHeaders, body: JSON.stringify(profileBody) });
+  const profileConflict = await request(`/api/customers/${encodeURIComponent(targetId)}`, { method: 'PATCH', headers: profileHeaders, body: JSON.stringify({ ...profileBody, name: 'Different Retry Payload' }) });
   const activity = await post('/api/activities', { customerId: sourceId, channel: 'Note', note: 'Historical duplicate note' }, token, 'merge-source-activity');
   assert(activity.response.status === 201, 'customer merge test linked record setup failed');
   const key = 'merge-customer-operation';
@@ -35,6 +40,7 @@ try {
   const targetProfile = await request(`/api/customers/${encodeURIComponent(targetId)}`, { headers: { authorization: `Bearer ${token}` } });
   const sourceProfile = await request(`/api/customers/${encodeURIComponent(sourceId)}`, { headers: { authorization: `Bearer ${token}` } });
   assert(merged.response.ok && merged.body.duplicate === false && merged.body.reassigned >= 1, 'customer merge did not reassign linked records');
+  assert(profileUpdate.response.status === 200 && profileUpdate.body.duplicate === false && profileDuplicate.response.status === 200 && profileDuplicate.body.duplicate === true && profileConflict.response.status === 409 && profileConflict.body.error === 'idempotency_key_reused', 'customer profile retry was not fingerprint-safe');
   assert(duplicate.response.ok && duplicate.body.duplicate === true, 'customer merge retry was not idempotent');
   assert(targetProfile.response.ok && targetProfile.body.activities.some((item) => item.note === 'Historical duplicate note' && item.customerId === targetId), 'merged history was not visible on canonical customer');
   assert(sourceProfile.response.ok && sourceProfile.body.customer.status === 'Merged' && sourceProfile.body.customer.mergedInto === targetId, 'duplicate customer was not retained as merged');
