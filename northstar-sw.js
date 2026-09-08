@@ -63,6 +63,7 @@ NORTHSTAR_ASSETS.push('/service-plan-request-dialog.js');
 NORTHSTAR_ASSETS.push('/technician-scorecard-period-dialog.js');
 NORTHSTAR_ASSETS.push('/automation-run-dialog.js');
 NORTHSTAR_ASSETS.push('/dispatch-route-summary-dialog.js');
+NORTHSTAR_ASSETS.push('/invoice-receipt-dialog.js');
 NORTHSTAR_ASSETS.push('/technician-scorecard-config-dialog.js');
 NORTHSTAR_ASSETS.push('/change-order-dialog.js');
 NORTHSTAR_ASSETS.push('/task-dialog.js');

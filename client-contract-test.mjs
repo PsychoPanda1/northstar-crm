@@ -34,6 +34,7 @@ const scorecardConfig = readFileSync(`${root}technician-scorecard-config-dialog.
 const scorecardPeriod = readFileSync(`${root}technician-scorecard-period-dialog.js`, 'utf8');
 const automationRun = readFileSync(`${root}automation-run-dialog.js`, 'utf8');
 const routeSummary = readFileSync(`${root}dispatch-route-summary-dialog.js`, 'utf8');
+const invoiceReceipt = readFileSync(`${root}invoice-receipt-dialog.js`, 'utf8');
 const changeOrder = readFileSync(`${root}change-order-dialog.js`, 'utf8');
 const taskDialog = readFileSync(`${root}task-dialog.js`, 'utf8');
 const replenishmentDialog = readFileSync(`${root}replenishment-order-dialog.js`, 'utf8');
@@ -312,6 +313,7 @@ assert(index.includes('technician-scorecard-config-dialog.js') && northstarServi
 assert(index.includes('technician-scorecard-period-dialog.js') && northstarServiceWorker.includes("'/technician-scorecard-period-dialog.js'") && scorecardPeriod.includes('getTechnicianScorecards') && scorecardPeriod.includes('getTechnicianScorecardConfig') && scorecardPeriod.includes('End date must be on or after the start date.') && scorecardPeriod.includes('stopImmediatePropagation()'), 'technician scorecard period workflow is not safely wired');
 assert(index.includes('automation-run-dialog.js') && northstarServiceWorker.includes("'/automation-run-dialog.js'") && automationRun.includes('runAutomations') && automationRun.includes('lookaheadHours') && automationRun.includes('stopImmediatePropagation()'), 'customer automation run workflow is not safely wired');
 assert(index.includes('dispatch-route-summary-dialog.js') && northstarServiceWorker.includes("'/dispatch-route-summary-dialog.js'") && routeSummary.includes('getRouteSummary') && routeSummary.includes('TECHNICIAN WORKLOAD') && routeSummary.includes('stopImmediatePropagation()'), 'route summary workflow is not safely wired');
+assert(index.includes('invoice-receipt-dialog.js') && northstarServiceWorker.includes("'/invoice-receipt-dialog.js'") && invoiceReceipt.includes('getInvoiceReceipt') && invoiceReceipt.includes('clipboard.writeText') && invoiceReceipt.includes('stopImmediatePropagation()'), 'invoice receipt workflow is not safely wired');
 assert(index.includes('change-order-dialog.js') && northstarServiceWorker.includes("'/change-order-dialog.js'") && changeOrder.includes('createChangeOrder') && changeOrder.includes('Line-item totals must match') && changeOrder.includes('stopImmediatePropagation()'), 'owner change orders are not safely wired');
 assert(index.includes('task-dialog.js') && northstarServiceWorker.includes("'/task-dialog.js'") && taskDialog.includes('createTask') && taskDialog.includes('data-task-message') && taskDialog.includes('stopImmediatePropagation()'), 'owner task creation is not safely wired');
 assert(index.includes('replenishment-order-dialog.js') && northstarServiceWorker.includes("'/replenishment-order-dialog.js'") && replenishmentDialog.includes('getInventoryReplenishment') && replenishmentDialog.includes('createReplenishmentOrders') && replenishmentDialog.includes('stopImmediatePropagation()'), 'owner replenishment ordering is not safely wired');
