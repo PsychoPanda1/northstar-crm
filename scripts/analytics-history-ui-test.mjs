@@ -10,6 +10,6 @@ const [html, script, serviceWorker, repository, server] = await Promise.all([
 for (const snippet of ['analytics-history-owner.js', 'analytics-history-view', 'data-analytics-capture', 'getAnalyticsHistory', 'captureAnalyticsSnapshot', '/api/reports/analytics-history', '/api/reports/analytics-snapshot', 'analyticsSnapshots']) {
   if (![html, script, repository, server].some((source) => source.includes(snippet))) throw new Error(`analytics history contract missing: ${snippet}`);
 }
-if (!serviceWorker.includes("'/analytics-history-owner.js'") || !serviceWorker.includes('northstar-shell-v6')) throw new Error('analytics history asset must remain installable offline');
+if (!serviceWorker.includes("'/analytics-history-owner.js'") || !serviceWorker.includes('northstar-shell-v7')) throw new Error('analytics history asset must remain installable offline');
 if (!script.includes("['owner', 'accountant']")) throw new Error('analytics snapshot capture must remain owner/accountant scoped');
 console.log('Northstar analytics history UI checks passed');
