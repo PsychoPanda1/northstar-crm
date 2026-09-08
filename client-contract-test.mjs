@@ -20,6 +20,7 @@ const ownerManifest = readFileSync(`${root}northstar.webmanifest`, 'utf8');
 const northstarServiceWorker = readFileSync(`${root}northstar-sw.js`, 'utf8');
 const releaseReadiness = readFileSync(`${root}release-readiness-owner.js`, 'utf8');
 const catalogEditor = readFileSync(`${root}catalog-editor-dialog.js`, 'utf8');
+const customerEdit = readFileSync(`${root}customer-edit-dialog.js`, 'utf8');
 const planStatusOwner = readFileSync(`${root}plan-status-owner.js`, 'utf8');
 const server = readFileSync(`${root}server.mjs`, 'utf8');
 const portal = readFileSync(`${root}PORTAL_CONTRACT.md`, 'utf8');
@@ -280,6 +281,7 @@ assert(index.includes('request-bulk-dialog.js') && northstarServiceWorker.includ
 assert(index.includes('request-bulk-resolve-dialog.js') && northstarServiceWorker.includes("'/request-bulk-resolve-dialog.js'") && northstarServiceWorker.includes("'northstar-shell-v38'"), 'owner bulk request resolution is not safely wired');
 assert(index.includes('request-reply-dialog.js') && northstarServiceWorker.includes("'/request-reply-dialog.js'") && northstarServiceWorker.includes("'northstar-shell-v39'"), 'owner request reply is not safely wired');
 assert(index.includes('job-status-dialog.js') && northstarServiceWorker.includes("'/job-status-dialog.js'") && northstarServiceWorker.includes("'northstar-shell-v40'"), 'owner job status is not safely wired');
+assert(index.includes('customer-edit-dialog.js') && northstarServiceWorker.includes("'/customer-edit-dialog.js'") && customerEdit.includes('updateCustomer') && customerEdit.includes('stopImmediatePropagation()'), 'owner customer editing is not safely wired');
 assert(index.includes('asset-lookup-dialog.js') && northstarServiceWorker.includes("'/asset-lookup-dialog.js'") && northstarServiceWorker.includes("'northstar-shell-v32'"), 'owner equipment lookup is not safely wired');
 assert(index.includes('review-request-dialog.js') && northstarServiceWorker.includes("'/review-request-dialog.js'") && northstarServiceWorker.includes("'northstar-shell-v33'"), 'owner review requests are not safely wired');
 assert(index.includes('asset-service-due-dialog.js') && northstarServiceWorker.includes("'/asset-service-due-dialog.js'") && northstarServiceWorker.includes("'northstar-shell-v34'"), 'owner equipment service reminders are not safely wired');
