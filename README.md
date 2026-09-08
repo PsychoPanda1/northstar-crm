@@ -63,7 +63,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Workspace setup round-trips guided landing-page intake fields, including select choices, so owners can edit connected service qualification without silently dropping booking options
 - Owners and dispatchers can revise a job checklist before field work begins, with audit history and server-enforced locking after start
 - All API and static responses receive a browser security baseline; production mode additionally enables HSTS
-- CI runs a Node 20/22 verification matrix with a ten-minute timeout, stale-run cancellation, manual reruns, and a production-configured container readiness smoke check
+- CI runs a supported Node 22/24 verification matrix with a ten-minute timeout, stale-run cancellation, manual reruns, and a production-configured container readiness smoke check
 - A production Compose handoff runs the pinned GHCR image behind Caddy-managed HTTPS with persistent SQLite state, backup volume, readiness-gated startup, and a secret-safe `.env.production.example` template
 - A secret-safe production configuration preflight validates tenant/service/catalog alignment, HTTPS origin bindings, identity setup, secret strength, and live-provider coverage before startup
 - The production Compose profile includes an internal, authenticated Prometheus scraper with durable retention and alerts for readiness, storage integrity, backups, and failed provider queues
