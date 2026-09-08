@@ -240,9 +240,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async updateCustomReportSchedule(id, updates) {
+  async updateCustomReportSchedule(id, updates, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for report schedules');
-    const response = await fetch(`/api/reports/custom/schedules/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify(updates) });
+    const response = await fetch(`/api/reports/custom/schedules/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify(updates) });
     if (!response.ok) throw new Error('report schedule update failed');
     return response.json();
   }
