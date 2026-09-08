@@ -16,6 +16,7 @@ const REAL_ROOT = realpathSync(ROOT);
 const PORT = Number(process.env.PORT || 4173);
 const DEFAULT_SESSION_SECRET = 'northstar-local-demo-secret-change-me';
 const SECRET = process.env.NORTHSTAR_SESSION_SECRET || DEFAULT_SESSION_SECRET;
+const SESSION_SECRET_PREVIOUS = String(process.env.NORTHSTAR_SESSION_SECRET_PREVIOUS || '').trim();
 const PAYMENT_WEBHOOK_SECRET = process.env.NORTHSTAR_PAYMENT_WEBHOOK_SECRET || `${SECRET}-payment-webhook`;
 const FINANCING_WEBHOOK_SECRET = process.env.NORTHSTAR_FINANCING_WEBHOOK_SECRET || `${SECRET}-financing-webhook`;
 const MESSAGE_WEBHOOK_SECRET = process.env.NORTHSTAR_MESSAGE_WEBHOOK_SECRET || `${SECRET}-message-webhook`;
@@ -29,8 +30,8 @@ const CALL_WEBHOOK_SECRET_PREVIOUS = String(process.env.NORTHSTAR_CALL_WEBHOOK_S
 const FLEET_WEBHOOK_SECRET_PREVIOUS = String(process.env.NORTHSTAR_FLEET_WEBHOOK_SECRET_PREVIOUS || '');
 let lastHmacContext = null;
 const createHmac = (algorithm, key) => { const hmac = nodeCreateHmac(algorithm, key); const chunks = []; return { update(value) { chunks.push(Buffer.isBuffer(value) ? value : Buffer.from(String(value))); hmac.update(value); return this; }, digest(encoding) { lastHmacContext = { algorithm, key: String(key), raw: Buffer.concat(chunks) }; return hmac.digest(encoding); } }; };
-const previousWebhookSecretFor = (current) => current === PAYMENT_WEBHOOK_SECRET ? PAYMENT_WEBHOOK_SECRET_PREVIOUS : current === FINANCING_WEBHOOK_SECRET ? FINANCING_WEBHOOK_SECRET_PREVIOUS : current === MESSAGE_WEBHOOK_SECRET ? MESSAGE_WEBHOOK_SECRET_PREVIOUS : current === CALL_WEBHOOK_SECRET ? CALL_WEBHOOK_SECRET_PREVIOUS : current === FLEET_WEBHOOK_SECRET ? FLEET_WEBHOOK_SECRET_PREVIOUS : '';
-const timingSafeEqual = (left, right) => { const context = lastHmacContext; lastHmacContext = null; if (left.length === right.length && nodeTimingSafeEqual(left, right)) return true; const previous = context ? previousWebhookSecretFor(context.key) : ''; if (!previous || !context || context.algorithm !== 'sha256' || left.length !== 64) return false; const expected = nodeCreateHmac('sha256', previous).update(context.raw).digest('hex'); return left.length === expected.length && nodeTimingSafeEqual(left, Buffer.from(expected)); };
+const previousWebhookSecretFor = (current) => current === SECRET ? SESSION_SECRET_PREVIOUS : current === PAYMENT_WEBHOOK_SECRET ? PAYMENT_WEBHOOK_SECRET_PREVIOUS : current === FINANCING_WEBHOOK_SECRET ? FINANCING_WEBHOOK_SECRET_PREVIOUS : current === MESSAGE_WEBHOOK_SECRET ? MESSAGE_WEBHOOK_SECRET_PREVIOUS : current === CALL_WEBHOOK_SECRET ? CALL_WEBHOOK_SECRET_PREVIOUS : current === FLEET_WEBHOOK_SECRET ? FLEET_WEBHOOK_SECRET_PREVIOUS : '';
+const timingSafeEqual = (left, right) => { const context = lastHmacContext; lastHmacContext = null; if (left.length === right.length && nodeTimingSafeEqual(left, right)) return true; const previous = context ? previousWebhookSecretFor(context.key) : ''; if (!previous || !context || context.algorithm !== 'sha256') return false; if (context.key === SECRET) { const expected = Buffer.from(nodeCreateHmac('sha256', previous).update(context.raw).digest('base64url')); return left.length === expected.length && nodeTimingSafeEqual(left, expected); } if (left.length !== 64) return false; const expected = nodeCreateHmac('sha256', previous).update(context.raw).digest('hex'); return left.length === expected.length && nodeTimingSafeEqual(left, Buffer.from(expected)); };
 const PUBLIC_URL = String(process.env.NORTHSTAR_PUBLIC_URL || '').trim().replace(/\/$/, '');
 const MESSAGE_PROVIDER_URL = String(process.env.NORTHSTAR_MESSAGE_PROVIDER_URL || '').trim();
 const MESSAGE_PROVIDER_API_KEY = String(process.env.NORTHSTAR_MESSAGE_PROVIDER_API_KEY || '').trim();

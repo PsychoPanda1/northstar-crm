@@ -62,6 +62,7 @@
     "test:inventory-replenishment": "node scripts/inventory-replenishment-test.mjs",
     "test:technician-scorecard": "node scripts/technician-scorecard-test.mjs",
     "test:reports": "node scripts/technician-scorecard-test.mjs && node scripts/inventory-replenishment-test.mjs",
+    "test:session-rotation": "node scripts/session-secret-rotation-test.mjs",
     "test:accounting-provider": "node scripts/accounting-provider-test.mjs",
     "test:accounting-provider-automation": "node scripts/accounting-provider-automation-test.mjs",
     "test:operations-metrics": "node scripts/operations-metrics-test.mjs",
