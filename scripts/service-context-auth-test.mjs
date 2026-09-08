@@ -24,7 +24,12 @@ try {
   const otherTenant = await request('/api/session?service=plumbing', { headers: auth });
   const refreshed = await post('/api/auth/refresh?service=alpha', {}, auth);
   const refreshedOther = await post('/api/auth/refresh?service=beta', {}, { authorization: `Bearer ${refreshed.body.token}` });
-  if (!login.response.ok || login.body.service !== 'alpha' || sameService.response.status !== 200 || sameService.body.service !== 'alpha' || otherService.response.status !== 403 || otherService.body.error !== 'service_context_mismatch' || otherTenant.response.status !== 403 || refreshed.response.status !== 200 || refreshed.body.service !== 'alpha' || refreshedOther.response.status !== 403 || refreshedOther.body.error !== 'service_context_mismatch') throw new Error('authenticated service context was not preserved or isolated across landing pages');
+  const invite = await post('/api/users/invites', { name: 'Context Dispatcher', email: 'context-dispatcher@example.test', role: 'dispatcher' }, { authorization: `Bearer ${refreshed.body.token}`, 'idempotency-key': 'context-invite-1' });
+  const inviteToken = new URL(invite.body.inviteUrl, base).searchParams.get('token');
+  const accepted = await post('/api/auth/invites/accept', { token: inviteToken, password: 'context-password-123', service: 'alpha' });
+  const acceptedAlpha = await request('/api/session?service=alpha', { headers: { authorization: `Bearer ${accepted.body.token}` } });
+  const acceptedBeta = await request('/api/session?service=beta', { headers: { authorization: `Bearer ${accepted.body.token}` } });
+  if (!login.response.ok || login.body.service !== 'alpha' || sameService.response.status !== 200 || sameService.body.service !== 'alpha' || otherService.response.status !== 403 || otherService.body.error !== 'service_context_mismatch' || otherTenant.response.status !== 403 || refreshed.response.status !== 200 || refreshed.body.service !== 'alpha' || refreshedOther.response.status !== 403 || refreshedOther.body.error !== 'service_context_mismatch' || invite.response.status !== 201 || accepted.response.status !== 201 || accepted.body.service !== 'alpha' || acceptedAlpha.response.status !== 200 || acceptedAlpha.body.service !== 'alpha' || acceptedBeta.response.status !== 403 || acceptedBeta.body.error !== 'service_context_mismatch') throw new Error('authenticated service context was not preserved or isolated across landing pages');
   console.log('Northstar service context auth test passed');
 } finally {
   if (child && !child.killed) child.kill();

@@ -12,7 +12,7 @@ form.addEventListener('submit', async (event) => {
   if (password !== confirmPassword) { message.textContent = 'Passwords do not match.'; return; }
   message.textContent = 'Creating your secure account…';
   try {
-    const response = await fetch('/api/auth/invites/accept', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token, password }) });
+    const response = await fetch('/api/auth/invites/accept', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token, password, ...(params.get('service') ? { service: params.get('service') } : {}) }) });
     const body = await response.json();
     if (!response.ok) throw new Error(body.error || 'invite_accept_failed');
     sessionStorage.setItem('northstar_session_token', body.token);

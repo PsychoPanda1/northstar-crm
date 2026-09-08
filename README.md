@@ -197,7 +197,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Customer portal users can manage SMS/email contact preferences without exposing those flags in the general portal payload
 - Customer portal users can send an idempotent SMS/email message to the office; the inbound message appears in the owner conversation workspace and action queue
 - Customer portals can save and remove provider-vaulted Card or ACH methods using opaque provider tokens; Northstar stores only payment metadata and last four digits, rejects raw card/account payloads, and exposes a tenant-scoped default-method view
-- Owners can onboard dispatchers, technicians, and accountants with expiring, one-time setup links; invite tokens are hashed at rest and accepted users choose their own salted-scrypt password
+- Owners can onboard dispatchers, technicians, and accountants with expiring, one-time setup links; invite tokens are hashed at rest, links preserve the originating landing-page service context, mismatched acceptance is rejected, and accepted users choose their own salted-scrypt password
 - Signed post-job review links with one-time 1–5 rating and timeline capture
 - Owner review workspace with searchable review history and CSV export
 - Review ratings feed dashboard satisfaction and owner reporting

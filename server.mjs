@@ -1938,6 +1938,7 @@ if (pathname === '/api/ready' && req.method === 'GET') { const checks = { config
     if (pathname === '/api/auth/invites/accept' && req.method === 'POST') {
       const body = await readBody(req);
       const token = String(body.token || '').trim();
+      const requestedService = String(body.service || requestUrl.searchParams.get('service') || '').trim().toLowerCase();
       const password = String(body.password || '');
       if (!token || token.length > 200 || password.length < 10) return json(res, 422, { error: 'invite_token_and_password_required' });
       const inviteHash = inviteTokenHash(token);
@@ -1948,6 +1949,7 @@ if (pathname === '/api/ready' && req.method === 'GET') { const checks = { config
       }
       if (!match || !match.invite.expiresAt || Date.parse(match.invite.expiresAt) <= Date.now()) return json(res, 410, { error: 'invite_expired_or_invalid' });
       const { tenantId, saved, invite } = match;
+      if (requestedService && (!Object.prototype.hasOwnProperty.call(serviceTenant, requestedService) || serviceTenant[requestedService] !== tenantId)) return json(res, 403, { error: 'service_context_mismatch' });
       if (runtimeAccountsFor(tenantId).some((item) => item.email === invite.email) || configuredStaff.some((item) => item.tenantId === tenantId && item.email === invite.email) || configuredOwners.some((item) => item.tenantId === tenantId && item.email === invite.email)) return json(res, 409, { error: 'user_email_already_exists' });
       const now = new Date().toISOString();
       const account = { id: `USER-${Date.now()}`, tenantId, name: invite.name, email: invite.email, role: invite.role, passwordDigest: hashRuntimePassword(password), passwordUpdatedAt: now, status: 'Active', createdAt: now, invitedAt: invite.createdAt, inviteId: invite.id };
@@ -1958,8 +1960,9 @@ if (pathname === '/api/ready' && req.method === 'GET') { const checks = { config
       delete invite.tokenHash;
       recordAudit(saved, { name: invite.email, role: 'system' }, 'user.invite.accepted', 'user', account.id, `${account.email} · ${account.role}`);
       persist();
-      const sessionAccount = { id: account.id, name: account.name, role: account.role, tenantId: account.tenantId, authVersion: account.passwordUpdatedAt };
-      return json(res, 201, { token: issueToken(sessionAccount), owner: { id: account.id, name: account.name, role: account.role }, tenant: tenants[tenantId], permissions: rolePermissions[account.role] });
+      const service = requestedService || Object.entries(serviceTenant).find(([, mappedTenantId]) => mappedTenantId === tenantId)?.[0] || 'default';
+      const sessionAccount = { id: account.id, name: account.name, role: account.role, tenantId: account.tenantId, service, authVersion: account.passwordUpdatedAt };
+      return json(res, 201, { token: issueToken(sessionAccount), owner: { id: account.id, name: account.name, role: account.role }, tenant: tenants[tenantId], permissions: rolePermissions[account.role], service });
     }
     if (pathname === '/api/auth/login' && req.method === 'POST') {
       if ((!OWNER_LOGIN_EMAIL || !OWNER_PASSWORD_DIGEST) && !configuredOwners.length && !configuredStaff.length && !Object.keys(tenants).some((tenantId) => runtimeAccountsFor(tenantId).length)) return json(res, 503, { error: 'auth_not_configured' });
@@ -1998,7 +2001,7 @@ if (pathname === '/api/ready' && req.method === 'GET') { const checks = { config
       const rawToken = randomBytes(32).toString('base64url');
       const createdAt = new Date().toISOString();
       const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
-      const service = Object.entries(serviceTenant).find(([, tenantId]) => tenantId === claims.tenantId)?.[0] || 'default';
+      const service = claims.service && serviceTenant[claims.service] === claims.tenantId ? claims.service : Object.entries(serviceTenant).find(([, tenantId]) => tenantId === claims.tenantId)?.[0] || 'default';
       const inviteUrl = publicUrlFor(req, `/accept-invite.html?service=${encodeURIComponent(service)}&token=${encodeURIComponent(rawToken)}`);
       const invite = { id: `INVITE-${Date.now()}`, tenantId: claims.tenantId, name, email, role, tokenHash: inviteTokenHash(rawToken), status: 'Pending', createdAt, expiresAt, ...(idempotencyKey ? { idempotencyKey } : {}) };
       saved.userInvites.unshift(invite);
@@ -2022,7 +2025,7 @@ if (pathname === '/api/ready' && req.method === 'GET') { const checks = { config
       const rawToken = randomBytes(32).toString('base64url');
       const now = new Date().toISOString();
       const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
-      const service = Object.entries(serviceTenant).find(([, tenantId]) => tenantId === claims.tenantId)?.[0] || 'default';
+      const service = claims.service && serviceTenant[claims.service] === claims.tenantId ? claims.service : Object.entries(serviceTenant).find(([, tenantId]) => tenantId === claims.tenantId)?.[0] || 'default';
       const inviteUrl = publicUrlFor(req, `/accept-invite.html?service=${encodeURIComponent(service)}&token=${encodeURIComponent(rawToken)}`);
       invite.tokenHash = inviteTokenHash(rawToken);
       invite.status = 'Pending';
