@@ -30,6 +30,7 @@ const estimateMedia = readFileSync(`${root}estimate-media-dialog.js`, 'utf8');
 const planStatus = readFileSync(`${root}plan-status-dialog.js`, 'utf8');
 const vehicleMaintenance = readFileSync(`${root}vehicle-maintenance-dialog.js`, 'utf8');
 const servicePlanRequest = readFileSync(`${root}service-plan-request-dialog.js`, 'utf8');
+const scorecardConfig = readFileSync(`${root}technician-scorecard-config-dialog.js`, 'utf8');
 const replenishmentDialog = readFileSync(`${root}replenishment-order-dialog.js`, 'utf8');
 const dispatchRecovery = readFileSync(`${root}dispatch-recovery-dialog.js`, 'utf8');
 const planStatusOwner = readFileSync(`${root}plan-status-owner.js`, 'utf8');
@@ -302,6 +303,7 @@ assert(index.includes('estimate-media-dialog.js') && northstarServiceWorker.incl
 assert(index.includes('plan-status-dialog.js') && northstarServiceWorker.includes("'/plan-status-dialog.js'") && planStatus.includes('updatePlanStatus') && planStatus.includes('data-plan-status-action') && planStatus.includes('stopImmediatePropagation()'), 'owner service plan lifecycle is not safely wired');
 assert(index.includes('vehicle-maintenance-dialog.js') && northstarServiceWorker.includes("'/vehicle-maintenance-dialog.js'") && vehicleMaintenance.includes('updateVehicleMaintenance') && vehicleMaintenance.includes('odometer') && vehicleMaintenance.includes('stopImmediatePropagation()'), 'owner vehicle maintenance is not safely wired');
 assert(index.includes('service-plan-request-dialog.js') && northstarServiceWorker.includes("'/service-plan-request-dialog.js'") && servicePlanRequest.includes('fulfillServicePlanRequest') && servicePlanRequest.includes('resolution note') && servicePlanRequest.includes('stopImmediatePropagation()'), 'owner service plan request fulfillment is not safely wired');
+assert(index.includes('technician-scorecard-config-dialog.js') && northstarServiceWorker.includes("'/technician-scorecard-config-dialog.js'") && scorecardConfig.includes('getTechnicianScorecardConfig') && scorecardConfig.includes('setTechnicianScorecardConfig') && scorecardConfig.includes('totaling exactly 100') && scorecardConfig.includes('stopImmediatePropagation()'), 'owner scorecard configuration is not safely wired');
 assert(index.includes('replenishment-order-dialog.js') && northstarServiceWorker.includes("'/replenishment-order-dialog.js'") && replenishmentDialog.includes('getInventoryReplenishment') && replenishmentDialog.includes('createReplenishmentOrders') && replenishmentDialog.includes('stopImmediatePropagation()'), 'owner replenishment ordering is not safely wired');
 assert(index.includes('dispatch-recovery-dialog.js') && northstarServiceWorker.includes("'/dispatch-recovery-dialog.js'") && dispatchRecovery.includes('markJobNoShow') && dispatchRecovery.includes('rebookJob') && dispatchRecovery.includes('getAvailability') && dispatchRecovery.includes('stopImmediatePropagation()'), 'owner dispatch recovery is not safely wired');
 assert(index.includes('asset-lookup-dialog.js') && northstarServiceWorker.includes("'/asset-lookup-dialog.js'") && northstarServiceWorker.includes("'northstar-shell-v32'"), 'owner equipment lookup is not safely wired');
