@@ -128,7 +128,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Customer reactivation campaigns use a structured inactivity window, channel, and optional tag audience dialog with the same duplicate-safe queueing path
 - Customer tax status uses an owner-authorized dialog for taxable or exempt treatment, exemption numbers, and optional expiration dates without altering workspace defaults
 - Duplicate customers can be merged through an explicit same-tenant selector and confirmation dialog while preserving the existing reassignment and audit safeguards
-- Owner tasks use a structured title, detail, and optional due-date dialog with bounded inputs and idempotent tenant-scoped creation
+- Owner tasks use a structured title, detail, and optional due-date dialog with bounded inputs and idempotent tenant-scoped creation and completion/reopen updates
 - Customer equipment uses a structured customer selector, asset identity, install date, and warranty-date dialog that feeds service history and warranty context
 - Customer timeline notes use a structured customer selector and bounded note editor with tenant-scoped, idempotent activity logging
 - Technician commission rates use a structured team-member selector and 0–100% bounded payroll-settings dialog backed by the owner-authorized API

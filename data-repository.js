@@ -798,9 +798,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async updateCustomTask(id, status) {
+  async updateCustomTask(id, status, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) { const task = (this.state.customTasks || []).find((item) => item.id === id); if (!task) throw new Error('task not found'); task.status = status; localStorage.setItem(this.key, JSON.stringify(this.state)); return { task, duplicate: false }; }
-    const response = await fetch(`/api/tasks/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ status }) });
+    const response = await fetch(`/api/tasks/${encodeURIComponent(id)}`, { method: 'PATCH', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ status }) });
     if (!response.ok) throw new Error('task update failed');
     return response.json();
   }
