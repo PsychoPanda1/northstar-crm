@@ -9,6 +9,7 @@
   </head>
   <body class="public-page">
     <main class="public-shell"><div class="public-brand">NORTHSTAR <span>SERVICE CLOUD</span></div><section class="public-card"><p class="eyebrow">SERVICE SCOPE UPDATE</p><h1 id="title">Reviewing your change order…</h1><p id="subtitle" class="lead">Please wait while we load the requested work.</p><div id="details" class="public-details"></div><div id="actions" class="workflow-actions" hidden><button class="primary-btn" id="approve">Approve change</button><button class="ghost-btn" id="decline">Decline</button></div><p id="message" class="form-message" role="status" aria-live="polite"></p></section></main>
+    <script src="/northstar-public-fetch.js"></script>
     <script>
       const token = new URLSearchParams(location.search).get('token');
       const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
