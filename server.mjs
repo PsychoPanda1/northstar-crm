@@ -456,7 +456,7 @@ const bookingCustomerFor = (saved, body, tenantId) => { const email = String(bod
 const sessionCookie = (token) => `northstar_session=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax; Max-Age=28800${process.env.NODE_ENV === 'production' ? '; Secure' : ''}`;
 const json = (res, status, body) => { if (body?.integration?.technicianEndpoints) { if (!body.integration.technicianEndpoints.day) body.integration.technicianEndpoints.day = '/api/public/technician-day'; if (!body.integration.technicianEndpoints.offlineSync) body.integration.technicianEndpoints.offlineSync = '/api/public/technician-job/offline-sync'; if (!body.integration.technicianEndpoints.mediaUpload) body.integration.technicianEndpoints.mediaUpload = '/api/public/technician-job/media-upload'; } if (body?.integration?.capabilities && body?.tenant?.slug) body.integration.capabilities.technicianMediaUpload = mediaProviderConfigured(body.tenant.slug); if (body && body.token) res.setHeader('set-cookie', sessionCookie(body.token)); const responseBody = status >= 400 && body && typeof body === 'object' ? { ...body, requestId: res.getHeader('x-request-id') || undefined } : body; res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' }); res.end(JSON.stringify(responseBody)); };
 const rateLimited = (res, error, retryAfterSeconds = 60) => { res.setHeader('retry-after', String(retryAfterSeconds)); return json(res, 429, { error }); };
-const readBody = async (req) => { let body = ''; for await (const chunk of req) { body += chunk; if (Buffer.byteLength(body, 'utf8') > 64 * 1024) throw new Error('request_body_too_large'); } return body ? JSON.parse(body) : {}; };
+const readBody = async (req) => { if (req.northstarParsedBody) return req.northstarParsedBody; let body = ''; for await (const chunk of req) { body += chunk; if (Buffer.byteLength(body, 'utf8') > 64 * 1024) throw new Error('request_body_too_large'); } req.northstarParsedBody = body ? JSON.parse(body) : {}; return req.northstarParsedBody; };
 const readRawBody = async (req) => { let body = ''; for await (const chunk of req) { body += chunk; if (Buffer.byteLength(body, 'utf8') > 64 * 1024) throw new Error('request_body_too_large'); } return body; };
 const pruneRateLimitWindows = (windows, now, maxEntries = 5000) => { for (const [key, window] of windows) if (now - window.startedAt >= 15 * 60_000) windows.delete(key); if (windows.size <= maxEntries) return; const oldest = [...windows.entries()].sort((left, right) => left[1].startedAt - right[1].startedAt); for (let index = 0; index < oldest.length - maxEntries; index += 1) windows.delete(oldest[index][0]); };
 const clientAddress = (req) => TRUST_PROXY ? String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || req.socket.remoteAddress || 'unknown' : req.socket.remoteAddress || 'unknown';
@@ -1082,11 +1082,45 @@ const sendStatic = (req, res) => {
   res.writeHead(200, { 'content-type': MIME[extname(publicFile)] || 'application/octet-stream', 'cache-control': 'no-store' }); createReadStream(publicFile).pipe(res);
 };
 
+const bulkRescheduleCapacityConflictFor = (tenantId, plans, selected) => {
+  const saved = state.get(tenantId);
+  const tenant = tenants[tenantId];
+  const targetsByDate = new Map();
+  for (const target of saved.capacityTargets || []) {
+    const minutes = Number(target.targetMinutes || 0);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(String(target.date || '')) && minutes > 0) targetsByDate.set(target.date, (targetsByDate.get(target.date) || 0) + minutes);
+  }
+  for (const [date, targetMinutes] of targetsByDate) {
+    const plannedMinutes = saved.jobs.filter((job) => !selected.has(job.id) && !['Completed', 'Canceled', 'No-show'].includes(job.status) && localDateFor(job.startsAt, tenant.timeZone)).filter((job) => localDateFor(job.startsAt, tenant.timeZone) === date).reduce((sum, job) => {
+      const start = Date.parse(job.startsAt || ''); const end = Date.parse(job.endsAt || '');
+      return Number.isFinite(start) && Number.isFinite(end) && end > start ? sum + Math.round((end - start) / 60000) : sum;
+    }, 0);
+    const requestedMinutes = plans.filter((plan) => localDateFor(plan.slot.startsAt, tenant.timeZone) === date).reduce((sum, plan) => sum + Math.max(1, Math.round((Date.parse(plan.slot.endsAt) - Date.parse(plan.slot.startsAt)) / 60000)), 0);
+    if (plannedMinutes + requestedMinutes > targetMinutes) return { date, targetMinutes, plannedMinutes, requestedMinutes };
+  }
+  return null;
+};
+
 const server = createServer(async (req, res) => {
   try {
     applySecurityHeaders(res);
     const requestUrl = new URL(req.url, `http://${req.headers.host}`);
     const pathname = requestUrl.pathname;
+    if (pathname === '/api/dispatch/bulk-reschedule' && req.method === 'POST') {
+      const claims = authenticate(req);
+      if (!claims) return json(res, 401, { error: 'unauthorized' });
+      if (!['owner', 'dispatcher'].includes(claims.role)) return json(res, 403, { error: 'forbidden' });
+      const body = await readBody(req);
+      const changes = Array.isArray(body.changes) ? body.changes.map((item) => ({ jobId: String(item?.jobId || '').trim(), slotId: String(item?.slotId || '').trim() })).filter((item) => item.jobId && item.slotId) : [];
+      const saved = state.get(claims.tenantId);
+      const selected = new Set(changes.map((item) => item.jobId));
+      const jobs = changes.map((item) => saved.jobs.find((job) => job.id === item.jobId));
+      const plans = changes.map((change, index) => ({ job: jobs[index], slot: jobs[index] ? bookingSlotRecordsFor(claims.tenantId, { days: 14, durationMinutes: jobs[index].pricebookDurationAtCreation || tenants[claims.tenantId].appointmentMinutes }).find((candidate) => candidate.id === change.slotId) : null }));
+      if (changes.length && changes.length <= 50 && jobs.every(Boolean) && plans.every((plan) => plan.slot) && !jobs.some((job) => ['Completed', 'Canceled'].includes(job.status))) {
+        const conflict = bulkRescheduleCapacityConflictFor(claims.tenantId, plans, selected);
+        if (conflict) return json(res, 409, { error: 'capacity_target_conflict', ...conflict });
+      }
+    }
     if (pathname === '/api/ready' && req.method === 'GET' && process.env.NODE_ENV === 'production' && !sessionRotationConfigurationValid) return json(res, 503, { ok: false, service: 'northstar-api', version: '0.3.0', checks: { sessionRotationConfiguration: false }, failedChecks: ['sessionRotationConfiguration'], issues: [{ key: 'sessionRotationConfiguration', message: 'NORTHSTAR_SESSION_SECRET_PREVIOUS must be empty or a distinct 32-character-or-longer prior secret.' }] });
     if (pathname === '/api/purchase-orders/replenishment' && req.method === 'POST' && req.headers['idempotency-key']) { const replayClaims = authenticate(req); if (replayClaims) { const replayKey = String(req.headers['idempotency-key']).trim().slice(0, 100); const replayOrders = state.get(replayClaims.tenantId).purchaseOrders.filter((item) => item.replenishmentBatchIdempotencyKey === replayKey); if (replayOrders.length) return json(res, 200, { orders: replayOrders.map((item) => recordsFor(replayClaims.tenantId, 'purchaseOrders').find((record) => record.id === item.id)).filter(Boolean), duplicate: true }); } }
     const retrySafeEstimateReminderMatch = pathname.match(/^\/api\/estimates\/(EST-[^/]+)\/remind$/);
