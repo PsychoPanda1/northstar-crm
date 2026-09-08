@@ -59,6 +59,7 @@
     "test:lead-provider-automation": "node scripts/lead-provider-automation-test.mjs",
     "test:lead-followup-automation": "node scripts/lead-followup-automation-test.mjs",
     "test:inventory-provider": "node scripts/inventory-provider-test.mjs",
+    "test:inventory-replenishment": "node scripts/inventory-replenishment-test.mjs",
     "test:accounting-provider": "node scripts/accounting-provider-test.mjs",
     "test:accounting-provider-automation": "node scripts/accounting-provider-automation-test.mjs",
     "test:operations-metrics": "node scripts/operations-metrics-test.mjs",

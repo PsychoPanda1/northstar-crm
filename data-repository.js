@@ -1101,6 +1101,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async getInventoryReplenishment() {
+    if (!this.remote) throw new Error('API required for inventory replenishment');
+    const response = await fetch('/api/inventory-replenishment', { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('inventory replenishment unavailable');
+    return response.json();
+  }
+
   async createInventoryLocation(name, type = 'Warehouse', idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for inventory locations');
     const response = await fetch('/api/inventory-locations', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ name, type }) });
