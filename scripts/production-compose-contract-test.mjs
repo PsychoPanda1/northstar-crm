@@ -16,6 +16,7 @@ for (const snippet of [
   './deploy/Caddyfile:/etc/caddy/Caddyfile:ro',
   '443:443'
 ]) assert(compose.includes(snippet), `production compose contract missing: ${snippet}`);
+assert(compose.includes('body.ok !== true || Object.values(body.checks || {}).some(value => value !== true)'), 'production Compose healthcheck must verify every readiness check');
 for (const snippet of ['NORTHSTAR_HOST=', 'NORTHSTAR_IMAGE=', 'NORTHSTAR_TENANTS_JSON=', 'NORTHSTAR_SERVICE_TENANTS_JSON=', 'NORTHSTAR_SERVICE_ORIGINS_JSON=', 'NORTHSTAR_REQUIRE_LIVE_PROVIDERS']) assert(envExample.includes(snippet), `production env template missing: ${snippet}`);
 assert(caddy.includes('reverse_proxy northstar:4173') && caddy.includes('encode gzip'), 'Caddy HTTPS proxy contract missing');
 console.log('Northstar production compose contract passed');
