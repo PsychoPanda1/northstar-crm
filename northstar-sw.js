@@ -5,7 +5,7 @@ NORTHSTAR_ASSETS.push('/call-booking-dialog.js');
 NORTHSTAR_ASSETS.push('/capacity-plan-dialog.js');
 NORTHSTAR_ASSETS.push('/team-time-off-dialog.js');
 NORTHSTAR_ASSETS.push('/vehicle-status-dialog.js');
-NORTHSTAR_ASSETS.push('/vehicle-maintenance-dialog.js', '/dispatch-bulk-dialog.js', '/dispatch-route-order-dialog.js');
+NORTHSTAR_ASSETS.push('/vehicle-maintenance-dialog.js', '/dispatch-bulk-dialog.js', '/dispatch-bulk-invoice-dialog.js', '/dispatch-route-order-dialog.js');
 NORTHSTAR_ASSETS.push('/vehicle-assignment-dialog.js');
 NORTHSTAR_ASSETS.push('/job-invoice-dialog.js');
 NORTHSTAR_ASSETS.push('/call-outcome-dialog.js');
