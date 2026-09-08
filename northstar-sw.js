@@ -60,6 +60,7 @@ NORTHSTAR_ASSETS.push('/estimate-media-dialog.js');
 NORTHSTAR_ASSETS.push('/plan-status-dialog.js');
 NORTHSTAR_ASSETS.push('/vehicle-maintenance-dialog.js');
 NORTHSTAR_ASSETS.push('/service-plan-request-dialog.js');
+NORTHSTAR_ASSETS.push('/technician-scorecard-period-dialog.js');
 NORTHSTAR_ASSETS.push('/technician-scorecard-config-dialog.js');
 NORTHSTAR_ASSETS.push('/change-order-dialog.js');
 NORTHSTAR_ASSETS.push('/task-dialog.js');
