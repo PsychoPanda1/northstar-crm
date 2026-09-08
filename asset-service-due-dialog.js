@@ -1,0 +1,13 @@
+(() => {
+  const repository = window.northstarRepository;
+  if (!repository || document.querySelector('#asset-service-due-dialog')) return;
+  const dialog = document.createElement('dialog'); dialog.id = 'asset-service-due-dialog'; dialog.className = 'workflow-dialog';
+  dialog.innerHTML = '<button class="dialog-close" type="button" data-close-asset-due aria-label="Close">×</button><div class="dialog-kicker">PREVENTIVE MAINTENANCE</div><h2 id="asset-due-title">Set next service date</h2><p id="asset-due-help">Keep the next maintenance date attached to the equipment record so the office can follow up before service is overdue.</p><form><label>Next service date <span>(optional)</span><input name="due" type="date" /></label><p class="form-hint">Leave the date blank to clear the existing reminder.</p><div class="workflow-actions"><button class="ghost-btn" type="button" data-clear-asset-due>Clear reminder</button><button class="ghost-btn" type="button" data-close-asset-due>Cancel</button><button class="primary-btn" type="submit">Save date</button></div><p class="form-message" data-asset-due-message role="status" aria-live="polite"></p></form>';
+  document.body.append(dialog); dialog.setAttribute('aria-labelledby', 'asset-due-title'); dialog.setAttribute('aria-describedby', 'asset-due-help');
+  const form = dialog.querySelector('form'); const message = dialog.querySelector('[data-asset-due-message]'); let assetId = '';
+  dialog.querySelectorAll('[data-close-asset-due]').forEach((button) => button.addEventListener('click', () => dialog.close()));
+  const save = async (due) => { const buttons = form.querySelectorAll('button'); buttons.forEach((button) => { button.disabled = true; }); message.textContent = 'Saving service reminder…'; try { await repository.updateAsset(assetId, { nextServiceDue: due }); message.textContent = due ? 'Service reminder date saved.' : 'Service reminder date cleared.'; setTimeout(() => { dialog.close(); openRecords('assets'); }, 500); } catch { message.textContent = 'Could not update the service reminder. Use a valid date.'; buttons.forEach((button) => { button.disabled = false; }); } };
+  form.addEventListener('submit', (event) => { event.preventDefault(); if (!form.reportValidity() || !assetId) return; void save(form.elements.due.value); });
+  dialog.querySelector('[data-clear-asset-due]').addEventListener('click', () => { if (assetId) void save(''); });
+  document.addEventListener('click', (event) => { const button = event.target.closest('[data-asset-service-due]'); if (!button) return; event.preventDefault(); event.stopImmediatePropagation(); assetId = button.dataset.assetServiceDue || ''; form.reset(); message.textContent = ''; dialog.showModal(); form.elements.due.focus(); }, true);
+})();
