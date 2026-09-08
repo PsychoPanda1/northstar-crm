@@ -18,9 +18,13 @@ const placeholder = (value) => !value || /^(replace-with|your-|owner@example\.co
 const required = (key) => { if (placeholder(values[key])) errors.push(`${key} is missing or still a placeholder`); return values[key] || ''; };
 const parseJson = (key, fallback) => { try { return JSON.parse(values[key] || JSON.stringify(fallback)); } catch { errors.push(`${key} is not valid JSON`); return fallback; } };
 const httpsUrl = (key, value) => { if (!value) return; try { if (new URL(value).protocol !== 'https:') errors.push(`${key} must use HTTPS`); } catch { errors.push(`${key} is not a valid URL`); } };
+const boundedInteger = (key, fallback, minimum, maximum) => { const raw = values[key]; const value = raw === undefined || raw === '' ? fallback : Number(raw); if (!/^\d+$/.test(String(raw ?? fallback)) || !Number.isInteger(value) || value < minimum || value > maximum) errors.push(`${key} must be an integer between ${minimum} and ${maximum}`); return value; };
 
 required('NORTHSTAR_HOST');
 httpsUrl('NORTHSTAR_PUBLIC_URL', values.NORTHSTAR_PUBLIC_URL || `https://${values.NORTHSTAR_HOST || ''}`);
+boundedInteger('NORTHSTAR_BACKUP_MAX_AGE_HOURS', 24, 1, 720);
+boundedInteger('NORTHSTAR_EXPECTED_WRITERS', 1, 1, 100);
+if (String(values.NORTHSTAR_REQUIRE_SQLITE || '').toLowerCase() === 'true' && Number(values.NORTHSTAR_EXPECTED_WRITERS || 1) !== 1) errors.push('NORTHSTAR_EXPECTED_WRITERS must be 1 when NORTHSTAR_REQUIRE_SQLITE=true');
 for (const key of ['NORTHSTAR_SESSION_SECRET', 'NORTHSTAR_METRICS_SECRET', 'NORTHSTAR_PAYMENT_WEBHOOK_SECRET', 'NORTHSTAR_MESSAGE_WEBHOOK_SECRET', 'NORTHSTAR_CALL_WEBHOOK_SECRET', 'NORTHSTAR_FINANCING_WEBHOOK_SECRET', 'NORTHSTAR_FLEET_WEBHOOK_SECRET']) {
   const value = required(key);
   if (value && value.length < 32) errors.push(`${key} must be at least 32 characters`);
@@ -58,6 +62,12 @@ if (String(values.NORTHSTAR_REQUIRE_LIVE_PROVIDERS).toLowerCase() === 'true') fo
   const url = values[globalKey] || overrides?.[tenantId]?.[kind]?.url || '';
   if (!url) errors.push(`${kind} provider is missing for tenant ${tenantId}`);
   httpsUrl(`${kind} provider for ${tenantId}`, url);
+}
+if (String(values.NORTHSTAR_REQUIRE_LIVE_PROVIDERS).toLowerCase() === 'true') for (const tenantId of tenantIds) {
+  const paymentUrl = values.NORTHSTAR_PAYMENT_PROVIDER_URL || overrides?.[tenantId]?.payment?.url || '';
+  const setupUrl = values.NORTHSTAR_PAYMENT_SETUP_PROVIDER_URL || overrides?.[tenantId]?.paymentSetup?.url || '';
+  if (paymentUrl && !setupUrl) errors.push(`payment setup provider is missing for tenant ${tenantId}`);
+  httpsUrl(`payment setup provider for ${tenantId}`, setupUrl);
 }
 
 if (errors.length) { console.error(['Production configuration preflight failed:', ...errors.map((item) => `- ${item}`)].join('\n')); process.exit(1); }

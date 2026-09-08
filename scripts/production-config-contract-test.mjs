@@ -9,6 +9,9 @@ for (const snippet of [
   'unknown tenant',
   'must use HTTPS',
   'NORTHSTAR_TENANT_PROVIDER_CONFIG_JSON',
-  'NORTHSTAR_REQUIRE_LIVE_PROVIDERS'
+  'NORTHSTAR_REQUIRE_LIVE_PROVIDERS',
+  'NORTHSTAR_BACKUP_MAX_AGE_HOURS',
+  'NORTHSTAR_EXPECTED_WRITERS',
+  'payment setup provider is missing'
 ]) assert(source.includes(snippet), `production config contract missing: ${snippet}`);
 console.log('Northstar production config contract passed');
