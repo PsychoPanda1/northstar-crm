@@ -1017,6 +1017,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async importLeads(leads, { dryRun = false, idempotencyKey = crypto.randomUUID() } = {}) {
+    if (!this.remote) throw new Error('API required for lead import');
+    const response = await fetch('/api/leads/import', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ leads, dryRun }) });
+    if (!response.ok) throw new Error('lead import failed');
+    return response.json();
+  }
+
   async importJobs(jobs, { dryRun = false, idempotencyKey = crypto.randomUUID() } = {}) {
     if (!this.remote) throw new Error('API required for job import');
     const response = await fetch('/api/jobs/import', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ jobs, dryRun }) });

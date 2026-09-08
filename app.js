@@ -538,3 +538,40 @@ new MutationObserver(() => { void decorateAccountingIntegrationHealth(); }).obse
     input.click();
   });
 })();
++(() => {
+  const button = document.querySelector('#import-leads');
+  const repository = window.northstarRepository;
+  if (!button || !repository?.importLeads) return;
+  const parseCsv = (text) => {
+    const rows = []; let row = [], cell = '', quoted = false;
+    for (let index = 0; index < text.length; index += 1) {
+      const character = text[index];
+      if (character === '"' && quoted && text[index + 1] === '"') { cell += '"'; index += 1; }
+      else if (character === '"') quoted = !quoted;
+      else if (character === ',' && !quoted) { row.push(cell); cell = ''; }
+      else if ((character === '\n' || character === '\r') && !quoted) { if (character === '\r' && text[index + 1] === '\n') index += 1; row.push(cell); if (row.some((value) => value.trim())) rows.push(row); row = []; cell = ''; }
+      else cell += character;
+    }
+    if (cell || row.length) { row.push(cell); if (row.some((value) => value.trim())) rows.push(row); }
+    const headers = (rows.shift() || []).map((value) => value.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, ''));
+    const aliases = { external_id: 'externalId', externalid: 'externalId', lead_id: 'externalId', leadid: 'externalId', id: 'externalId', requested_service: 'service', requestedservice: 'service', assigned_to: 'assignedTo', assignee: 'assignedTo', created_at: 'receivedAt', received_at: 'receivedAt', message: 'note', utm_source: 'utm_source', utm_medium: 'utm_medium', utm_campaign: 'utm_campaign', utm_content: 'utm_content', gclid: 'gclid', fbclid: 'fbclid' };
+    return rows.map((values) => Object.fromEntries(headers.map((header, index) => [aliases[header] || header, values[index] || ''])));
+  };
+  button.addEventListener('click', () => {
+    const input = document.createElement('input'); input.type = 'file'; input.accept = '.csv,text/csv';
+    input.addEventListener('change', async () => {
+      const file = input.files?.[0]; if (!file) return;
+      button.disabled = true; const key = crypto.randomUUID();
+      try {
+        const rows = parseCsv(await file.text()); if (!rows.length) throw new Error('empty');
+        const preview = await repository.importLeads(rows, { dryRun: true, idempotencyKey: key });
+        if (!window.confirm('Preview: ' + preview.created + ' valid leads, ' + preview.invalid + ' invalid. Import valid rows?')) return;
+        const result = await repository.importLeads(rows, { dryRun: false, idempotencyKey: key });
+        showToast('Imported ' + result.created + ' historical lead' + (result.created === 1 ? '' : 's') + '; ' + result.invalid + ' invalid row' + (result.invalid === 1 ? '' : 's') + ' skipped.');
+        openRecords('leads');
+      } catch { showToast('Could not import leads. Use name, source, optional contact, status, and attribution columns.'); }
+      finally { button.disabled = false; input.remove(); }
+    });
+    input.click();
+  });
+})();
