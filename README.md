@@ -109,6 +109,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Service-plan request fulfillment uses a structured resolution-note dialog with request context and preserved audit history
 - Technician scorecard configuration uses a live total-100 weight editor with bounded inputs and owner-only persistence
 - Technician scorecard periods use an accessible date-range dialog with validation, loading, empty, and retry states
+- Customer automation runs use a bounded channel and window dialog while preserving opt-outs, deduplication, and provider-pending delivery controls
 - Bulk dispatch assignment uses a roster-backed technician selector with selected-job context and atomic server validation
 - Bulk dispatch status changes use explicit lifecycle choices, cancellation notes, and complete-batch server validation
 - Change orders use a structured scope, amount, and line-item dialog with customer-approval semantics and idempotent repository persistence
