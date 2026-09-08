@@ -1,5 +1,14 @@
 (function attachNorthstarLandingClient(global) {
   const json = (value) => JSON.stringify(value, Object.keys(value || {}).sort());
+  const requestWithTimeout = async (input, init = {}) => {
+    const timeoutMs = Number(init.timeoutMs ?? 20000);
+    const controller = typeof global.AbortController === 'function' ? new global.AbortController() : null;
+    const timerApi = typeof global.setTimeout === 'function' && typeof global.clearTimeout === 'function' ? global : null;
+    if (!controller || !timerApi) return global.fetch(input, init);
+    const timeout = timerApi.setTimeout(() => controller.abort(), Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : 20000);
+    const { timeoutMs: _timeoutMs, ...requestInit } = init;
+    try { return await global.fetch(input, { ...requestInit, signal: controller.signal }); } finally { timerApi.clearTimeout(timeout); }
+  };
   const makeKey = (service, scope, payload) => {
     const storageKey = `northstar-landing-retry-${service}-${scope}-${json(payload)}`;
     try {
@@ -26,7 +35,7 @@
     }
 
     async request(path, options = {}) {
-      const response = await global.fetch(this.url(path), { ...options, headers: { accept: 'application/json', ...(options.headers || {}) } });
+      const response = await requestWithTimeout(this.url(path), { ...options, headers: { accept: 'application/json', ...(options.headers || {}) } });
       const body = await response.json().catch(() => ({}));
       if (!response.ok) {
         const error = new Error(body.error || `northstar_request_failed_${response.status}`);
@@ -38,7 +47,7 @@
     }
 
     async requestBlob(path, options = {}) {
-      const response = await global.fetch(this.url(path), { ...options, headers: { ...(options.headers || {}) } });
+      const response = await requestWithTimeout(this.url(path), { ...options, headers: { ...(options.headers || {}) } });
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
         const error = new Error(body.error || `northstar_request_failed_${response.status}`);
