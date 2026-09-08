@@ -519,9 +519,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async addJobVisit(id, time, technician = '', appointment = {}) {
+  async addJobVisit(id, time, technician = '', appointment = {}, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for multi-visit scheduling');
-    const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/visits`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ time, ...(technician ? { technician } : {}) }) });
+    const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/visits`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ time, ...(technician ? { technician } : {}), ...(appointment.slotId ? { slotId: appointment.slotId } : {}), ...(appointment.startsAt ? { startsAt: appointment.startsAt } : {}), ...(appointment.endsAt ? { endsAt: appointment.endsAt } : {}), ...(appointment.timeZone ? { timeZone: appointment.timeZone } : {}) }) });
     if (!response.ok) throw new Error('job visit creation failed');
     return response.json();
   }

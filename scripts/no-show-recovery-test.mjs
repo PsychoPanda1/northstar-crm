@@ -27,6 +27,11 @@ try {
   const rescheduled = await post(`/api/jobs/${jobId}/reschedule`, { slotId: rescheduleSlot?.id }, rescheduleHeaders);
   const rescheduleDuplicate = await post(`/api/jobs/${jobId}/reschedule`, { slotId: rescheduleSlot?.id }, rescheduleHeaders);
   const rescheduleConflict = await post(`/api/jobs/${jobId}/reschedule`, { slotId: availability.body.slotOptions?.[1]?.id }, rescheduleHeaders);
+  const visitHeaders = { authorization: `Bearer ${login.body.token}`, 'idempotency-key': 'visit-create-retry-1' };
+  const visitTime = rescheduled.body.job?.time || rescheduled.body.time;
+  const visitCreated = await post(`/api/jobs/${jobId}/visits`, { time: visitTime, technician: 'Alex Rivera' }, visitHeaders);
+  const visitDuplicate = await post(`/api/jobs/${jobId}/visits`, { time: visitTime, technician: 'Alex Rivera' }, visitHeaders);
+  const visitConflict = await post(`/api/jobs/${jobId}/visits`, { time: 'Different visit time', technician: 'Alex Rivera' }, visitHeaders);
   const headers = { authorization: `Bearer ${login.body.token}`, 'idempotency-key': 'no-show-recovery-1' };
   const marked = await post(`/api/jobs/${jobId}/no-show`, { reason: 'Customer unavailable at arrival' }, headers);
   const duplicate = await post(`/api/jobs/${jobId}/no-show`, { reason: 'Customer unavailable at arrival' }, headers);
@@ -35,7 +40,7 @@ try {
   const rebook = await post(`/api/jobs/${jobId}/rebook`, { slotId: slot?.id }, { authorization: `Bearer ${login.body.token}`, 'idempotency-key': 'rebook-after-no-show-1' });
   const saved = JSON.parse(readFileSync(dataFile, 'utf8'))[tenantId];
   const savedJob = saved.jobs.find((item) => item.id === jobId);
-  if (!login.response.ok || availability.response.status !== 200 || !rescheduleSlot || rescheduled.response.status !== 200 || !rescheduleDuplicate.body.duplicate || rescheduleConflict.response.status !== 409 || marked.response.status !== 200 || marked.body.status !== 'No-show' || duplicate.response.status !== 200 || !duplicate.body.duplicate || conflict.response.status !== 409 || !slot || rebook.response.status !== 200 || rebook.body.status !== 'Confirmed' || !savedJob?.rebookedAt || !saved.auditEvents?.some((entry) => entry.action === 'job.rescheduled') || !saved.auditEvents?.some((entry) => entry.action === 'job.no_show') || !saved.auditEvents?.some((entry) => entry.action === 'job.rebooked')) throw new Error('no-show recovery did not reschedule, deduplicate, audit, or rebook safely');
+  if (!login.response.ok || availability.response.status !== 200 || !rescheduleSlot || rescheduled.response.status !== 200 || !rescheduleDuplicate.body.duplicate || rescheduleConflict.response.status !== 409 || visitCreated.response.status !== 201 || visitCreated.body.duplicate || visitDuplicate.response.status !== 200 || !visitDuplicate.body.duplicate || visitConflict.response.status !== 409 || visitConflict.body.error !== 'idempotency_key_reused' || marked.response.status !== 200 || marked.body.status !== 'No-show' || duplicate.response.status !== 200 || !duplicate.body.duplicate || conflict.response.status !== 409 || !slot || rebook.response.status !== 200 || rebook.body.status !== 'Confirmed' || !savedJob?.rebookedAt || !savedJob?.visits?.some((visit) => visit.idempotencyKey === 'visit-create-retry-1') || !saved.auditEvents?.some((entry) => entry.action === 'job.rescheduled') || !saved.auditEvents?.some((entry) => entry.action === 'job.no_show') || !saved.auditEvents?.some((entry) => entry.action === 'job.rebooked')) throw new Error('no-show recovery did not reschedule, deduplicate, audit, or rebook safely');
   console.log('Northstar no-show recovery test passed');
 } finally {
   if (child && !child.killed) child.kill();

@@ -299,6 +299,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Multi-visit work orders with per-visit scheduling, technician assignment, and conflict checks
 - Parent work orders expose derived visit progress so multi-visit execution stays visible without closing the job early
 - Per-visit lifecycle transitions for multi-visit work orders use idempotent status retries and preserve technician authorization
+- Multi-visit scheduling creates retry-safe visit records with payload fingerprints, preventing duplicate appointments when an owner connection retries
 - Server-enforced job lifecycle transitions prevent invalid field states and bypassing completion requirements
 - Service-plan renewal can schedule the next recurring visit using the same timezone-aware capacity slots as public booking, and normalized renewal dates can drive deduplicated SMS/email reminder campaigns
 - Service plans support auditable pause, resume, cancellation, idempotent recurring visit-series scheduling, and individual or batch due membership-invoice generation by billing period; the agreement-health dashboard filters by status/customer/date, exposes billed/collected/cost/margin details, exports CSV, and preserves Monthly, Every other month, Quarterly, Biannual, Annual, Upfront, and Time of service cadence semantics
