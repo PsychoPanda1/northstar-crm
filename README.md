@@ -116,6 +116,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Owner-configurable, tenant-scoped confirmation, reschedule, en-route, and completion message templates with bounded `{service}`, `{time}`, `{technician}`, and `{arrival}` placeholders; safe defaults remain active when a template is omitted
 - Owner/dispatcher no-show recording with reason, timeline, and audit evidence
 - No-show recovery from the dispatch board and owner action queue with available-slot and technician-conflict checks
+- No-show recording and rebooking use accessible validated dialogs with bounded reasons and live availability choices
 - Rescheduling an appointment queues a customer-facing reschedule notification and timeline event
 - Customers can self-service a new appointment after a no-show through their signed status or portal link
 - Customers can schedule an available service-plan visit directly from the secure portal; the request is tenant-scoped, conflict-checked, idempotent, confirmation-notified, and audited, while pause/cancellation/change requests remain owner-reviewed
