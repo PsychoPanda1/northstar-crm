@@ -1758,9 +1758,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async payInvoice(id) {
+  async payInvoice(id, amount, method = 'Other', reference = '', idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for payment');
-    const response = await fetch(`/api/invoices/${encodeURIComponent(id)}/pay`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: '{}' });
+    const response = await fetch(`/api/invoices/${encodeURIComponent(id)}/pay`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ ...(amount === undefined ? {} : { amount }), method, ...(reference ? { reference } : {}) }) });
     if (!response.ok) throw new Error('payment failed');
     return response.json();
   }
