@@ -883,9 +883,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async completeJob(id, note) {
+  async completeJob(id, note, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for job completion');
-    const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/complete`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ note }) });
+    const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/complete`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ note }) });
     if (!response.ok) throw new Error('job completion failed');
     return response.json();
   }
