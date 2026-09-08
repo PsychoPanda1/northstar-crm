@@ -10,8 +10,9 @@ const NORTHSTAR_DEMO_DATA = {
 
 const browserFetch = window.fetch.bind(window);
 let activeRepository = null;
+const requestWithTimeout = async (input, init = {}) => { const timeoutMs = Number(init.timeoutMs ?? 20000); const controller = new AbortController(); const timeout = setTimeout(() => controller.abort(), Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : 20000); const { timeoutMs: _timeoutMs, ...requestInit } = init; try { return await browserFetch(input, { ...requestInit, signal: controller.signal }); } finally { clearTimeout(timeout); } };
 const fetch = async (input, init = {}) => {
-  const response = await browserFetch(input, init);
+  const response = await requestWithTimeout(input, init);
   if (response.status !== 401 || !activeRepository || init.__northstarRetry || init.__northstarRefresh) return response;
   const refreshPromise = activeRepository.refreshPromise || (activeRepository.refreshPromise = activeRepository.refreshSession());
   try {
@@ -23,7 +24,7 @@ const fetch = async (input, init = {}) => {
   }
   const headers = new Headers(init.headers || {});
   headers.set('authorization', `Bearer ${activeRepository.token}`);
-  return browserFetch(input, { ...init, headers, __northstarRetry: true });
+  return requestWithTimeout(input, { ...init, headers, __northstarRetry: true });
 };
 
 class NorthstarDemoRepository {
