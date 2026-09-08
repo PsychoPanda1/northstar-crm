@@ -12,5 +12,5 @@ for (const snippet of ['payroll-operations-owner.js', 'data-payroll-operations-c
 }
 if (!script.includes("['owner', 'accountant']")) throw new Error('payroll operations must remain owner/accountant scoped');
 if (!html.includes('payroll-integration-owner.js') || !integrationScript.includes('data-payroll-health-card') || !integrationScript.includes('data-payroll-health-dispatch') || !integrationScript.includes("['owner', 'accountant']")) throw new Error('payroll integration health UI contract missing');
-if (!serviceWorker.includes("'/payroll-operations-owner.js'") || !serviceWorker.includes("'/payroll-integration-owner.js'") || !serviceWorker.includes("'/next-actions.css'") || !serviceWorker.includes("northstar-shell-v15")) throw new Error('payroll operations assets must remain installable offline');
+if (!serviceWorker.includes("'/payroll-operations-owner.js'") || !serviceWorker.includes("'/payroll-integration-owner.js'") || !serviceWorker.includes("'/next-actions.css'") || !serviceWorker.includes("northstar-shell-v16")) throw new Error('payroll operations assets must remain installable offline');
 console.log('Northstar payroll operations UI checks passed');
