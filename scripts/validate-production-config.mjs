@@ -17,7 +17,8 @@ const errors = [];
 const placeholder = (value) => !value || /^(replace-with|your-|owner@example\.com|crm\.example\.com|example\.com)/i.test(value);
 const required = (key) => { if (placeholder(values[key])) errors.push(`${key} is missing or still a placeholder`); return values[key] || ''; };
 const parseJson = (key, fallback) => { try { return JSON.parse(values[key] || JSON.stringify(fallback)); } catch { errors.push(`${key} is not valid JSON`); return fallback; } };
-const httpsUrl = (key, value) => { if (!value) return; try { if (new URL(value).protocol !== 'https:') errors.push(`${key} must use HTTPS`); } catch { errors.push(`${key} is not a valid URL`); } };
+const httpsUrl = (key, value) => { if (!value) return; try { const url = new URL(value); if (url.protocol !== 'https:' || url.username || url.password) errors.push(`${key} must use HTTPS without credentials`); } catch { errors.push(`${key} is not a valid URL`); } };
+const httpsOrigin = (key, value) => { httpsUrl(key, value); try { const url = new URL(value); if (url.origin !== value) errors.push(`${key} must be an HTTPS origin without a path`); } catch {} };
 const boundedInteger = (key, fallback, minimum, maximum) => { const raw = values[key]; const value = raw === undefined || raw === '' ? fallback : Number(raw); if (!/^\d+$/.test(String(raw ?? fallback)) || !Number.isInteger(value) || value < minimum || value > maximum) errors.push(`${key} must be an integer between ${minimum} and ${maximum}`); return value; };
 
 required('NORTHSTAR_HOST');
@@ -34,26 +35,36 @@ const serviceTenants = parseJson('NORTHSTAR_SERVICE_TENANTS_JSON', {});
 const serviceOrigins = parseJson('NORTHSTAR_SERVICE_ORIGINS_JSON', {});
 const catalog = parseJson('NORTHSTAR_CATALOG_JSON', []);
 const validDigest = (value) => /^[0-9a-f]{64}$/i.test(String(value || '')) || /^scrypt\$[0-9a-f]{32}\$[0-9a-f]{128}$/i.test(String(value || ''));
+const validEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || '').trim());
 const configuredOwners = parseJson('NORTHSTAR_OWNERS_JSON', []);
 const oidcAccounts = parseJson('NORTHSTAR_OIDC_ACCOUNTS_JSON', []);
 const ownerTenantIds = new Set([
-  ...(Array.isArray(configuredOwners) ? configuredOwners.filter((item) => validDigest(item?.passwordDigest)).map((item) => String(item?.tenantId || '')) : []),
-  ...(Array.isArray(oidcAccounts) ? oidcAccounts.filter((item) => String(item?.role || '').toLowerCase() === 'owner').map((item) => String(item?.tenantId || '')) : []),
-  ...(values.NORTHSTAR_OWNER_EMAIL && validDigest(values.NORTHSTAR_OWNER_PASSWORD_DIGEST) ? [String(values.NORTHSTAR_OWNER_TENANT_ID || '')] : [])
+  ...(Array.isArray(configuredOwners) ? configuredOwners.filter((item) => item?.id && validEmail(item?.email) && validDigest(item?.passwordDigest)).map((item) => String(item?.tenantId || '')) : []),
+  ...(Array.isArray(oidcAccounts) ? oidcAccounts.filter((item) => String(item?.subject || '').trim() && String(item?.name || '').trim() && String(item?.role || '').toLowerCase() === 'owner').map((item) => String(item?.tenantId || '')) : []),
+  ...(validEmail(values.NORTHSTAR_OWNER_EMAIL) && validDigest(values.NORTHSTAR_OWNER_PASSWORD_DIGEST) ? [String(values.NORTHSTAR_OWNER_TENANT_ID || '')] : [])
 ].filter(Boolean));
 if (!Array.isArray(tenants) || !tenants.length) errors.push('NORTHSTAR_TENANTS_JSON must contain at least one tenant');
 if (!serviceTenants || Array.isArray(serviceTenants) || !Object.keys(serviceTenants).length) errors.push('NORTHSTAR_SERVICE_TENANTS_JSON must map at least one service key');
 if (!Array.isArray(catalog) || !catalog.length) errors.push('NORTHSTAR_CATALOG_JSON must contain at least one catalog item');
 const tenantIds = new Set((Array.isArray(tenants) ? tenants : []).map((item) => String(item?.slug || '')));
+if (tenantIds.size !== (Array.isArray(tenants) ? tenants.length : 0)) errors.push('NORTHSTAR_TENANTS_JSON must contain unique non-empty tenant slugs');
+for (const tenant of Array.isArray(tenants) ? tenants : []) {
+  const slug = String(tenant?.slug || '');
+  if (!/^[a-z0-9-]{2,80}$/.test(slug) || String(tenant?.businessName || '').trim().length < 2 || String(tenant?.serviceLabel || '').trim().length < 2 || !String(tenant?.timeZone || '').trim()) errors.push(`tenant ${slug || '(unnamed)'} has invalid identity or service metadata`);
+}
 const mappedTenantIds = new Set();
 for (const [service, tenantId] of Object.entries(serviceTenants || {})) {
+  if (!/^[a-z0-9-]{2,80}$/.test(String(service))) errors.push(`service ${service} has an invalid service key`);
   if (!tenantIds.has(String(tenantId))) errors.push(`service ${service} maps to an unknown tenant`);
   else mappedTenantIds.add(String(tenantId));
   const origins = serviceOrigins?.[service];
   if (!Array.isArray(origins) || !origins.length) errors.push(`service ${service} has no HTTPS origin binding`);
-  for (const origin of origins || []) httpsUrl(`origin for ${service}`, origin);
+  for (const origin of origins || []) httpsOrigin(`origin for ${service}`, origin);
 }
-for (const item of Array.isArray(catalog) ? catalog : []) if (!tenantIds.has(String(item?.tenantId || ''))) errors.push(`catalog item ${item?.id || '(unnamed)'} maps to an unknown tenant`);
+for (const item of Array.isArray(catalog) ? catalog : []) {
+  if (!tenantIds.has(String(item?.tenantId || ''))) errors.push(`catalog item ${item?.id || '(unnamed)'} maps to an unknown tenant`);
+  if (String(item?.name || '').trim().length < 2 || String(item?.description || '').trim().length < 3 || !String(item?.priceFrom || '').trim() || !Number.isInteger(Number(item?.durationMinutes ?? 60)) || Number(item?.durationMinutes ?? 60) < 15 || Number(item?.durationMinutes ?? 60) > 1440) errors.push(`catalog item ${item?.id || '(unnamed)'} has invalid service details`);
+}
 for (const tenantId of tenantIds) {
   if (!mappedTenantIds.has(tenantId)) errors.push(`tenant ${tenantId} has no service mapping`);
   if (!Array.isArray(catalog) || !catalog.some((item) => String(item?.tenantId || '') === tenantId)) errors.push(`tenant ${tenantId} has no catalog item`);

@@ -14,6 +14,9 @@ for (const snippet of [
   'NORTHSTAR_EXPECTED_WRITERS',
   'payment setup provider is missing',
   'has no service mapping',
-  'has no valid owner account'
+  'has no valid owner account',
+  'invalid service key',
+  'invalid service details',
+  'unique non-empty tenant slugs'
 ]) assert(source.includes(snippet), `production config contract missing: ${snippet}`);
 console.log('Northstar production config contract passed');
