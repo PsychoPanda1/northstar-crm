@@ -14,7 +14,7 @@
     "test:technician-day": "node scripts/technician-day-test.mjs",
     "test:multi-day-dispatch": "node scripts/multi-day-dispatch-test.mjs",
     "test:route-maps": "node scripts/route-maps-test.mjs",
-    "test:landing-client": "node scripts/landing-client-test.mjs",
+    "test:landing-client": "node scripts/landing-client-test.mjs && node scripts/booking-catalog-selection-test.mjs",
     "test:smoke": "node smoke-test.mjs",
     "test:production-boundary": "node scripts/production-boundary-test.mjs && node scripts/production-config-scope-test.mjs",
     "test:deployment-verifier": "node scripts/verify-deployment-test.mjs",
