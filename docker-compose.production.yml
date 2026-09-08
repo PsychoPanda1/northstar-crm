@@ -1,0 +1,55 @@
+services:
+  northstar:
+    image: ${NORTHSTAR_IMAGE:-ghcr.io/psychopanda1/northstar-crm:latest}
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    environment:
+      NODE_ENV: production
+      PORT: 4173
+      NORTHSTAR_DATA_FILE: /app/data/state.json
+      NORTHSTAR_SESSION_FILE: /app/data/state.json.sessions
+      NORTHSTAR_SQLITE_FILE: /app/data/northstar.sqlite
+      NORTHSTAR_REQUIRE_SQLITE: "true"
+      NORTHSTAR_EXPECTED_WRITERS: "1"
+      NORTHSTAR_BACKUP_FILE: /app/data/northstar.sqlite.backup
+      NORTHSTAR_PUBLIC_URL: https://${NORTHSTAR_HOST:?Set NORTHSTAR_HOST in .env.production}
+      NORTHSTAR_SESSION_SECRET: ${NORTHSTAR_SESSION_SECRET:?Set NORTHSTAR_SESSION_SECRET in .env.production}
+      NORTHSTAR_METRICS_SECRET: ${NORTHSTAR_METRICS_SECRET:?Set NORTHSTAR_METRICS_SECRET in .env.production}
+      NORTHSTAR_PAYMENT_WEBHOOK_SECRET: ${NORTHSTAR_PAYMENT_WEBHOOK_SECRET:?Set payment webhook secret in .env.production}
+      NORTHSTAR_MESSAGE_WEBHOOK_SECRET: ${NORTHSTAR_MESSAGE_WEBHOOK_SECRET:?Set message webhook secret in .env.production}
+      NORTHSTAR_CALL_WEBHOOK_SECRET: ${NORTHSTAR_CALL_WEBHOOK_SECRET:?Set call webhook secret in .env.production}
+      NORTHSTAR_FINANCING_WEBHOOK_SECRET: ${NORTHSTAR_FINANCING_WEBHOOK_SECRET:?Set financing webhook secret in .env.production}
+      NORTHSTAR_FLEET_WEBHOOK_SECRET: ${NORTHSTAR_FLEET_WEBHOOK_SECRET:?Set fleet webhook secret in .env.production}
+      NORTHSTAR_REQUIRE_LIVE_PROVIDERS: "true"
+    expose:
+      - "4173"
+    volumes:
+      - northstar-data:/app/data
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4173/api/ready').then(r => { if (!r.ok) process.exit(1); }).catch(() => process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 5
+
+  https:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    environment:
+      NORTHSTAR_HOST: ${NORTHSTAR_HOST:?Set NORTHSTAR_HOST in .env.production}
+    depends_on:
+      northstar:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  northstar-data:
+  caddy-data:
+  caddy-config:

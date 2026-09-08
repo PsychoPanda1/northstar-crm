@@ -1,0 +1,4 @@
+{$NORTHSTAR_HOST} {
+  encode gzip
+  reverse_proxy northstar:4173
+}

@@ -1,6 +1,6 @@
 # Northstar production activation
 
-Northstar is implementation-complete for the checked local workflows, but a production-equivalent launch still requires deployment-owned services and credentials. Use this checklist for each service-business tenant.
+Northstar is implementation-complete for the checked local workflows, but a production-equivalent launch still requires deployment-owned services and credentials. Use this checklist for each service-business tenant. For a repeatable single-host launch, start from `docker-compose.production.yml`, `deploy/Caddyfile`, and `.env.production.example`; the Compose handoff deliberately keeps readiness fail-closed until the deployment-specific values are supplied.
 
 ## 1. Provision the deployment
 
