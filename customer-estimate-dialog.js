@@ -5,6 +5,10 @@
   dialog.id = 'customer-estimate-dialog'; dialog.className = 'workflow-dialog';
   dialog.innerHTML = '<button class="dialog-close" type="button" data-close-estimate-action aria-label="Close">×</button><div class="dialog-kicker">CUSTOMER SELF-SERVICE</div><h2 data-estimate-action-title>Review estimate</h2><p data-estimate-action-help></p><form><div data-estimate-action-fields></div><div class="workflow-actions"><button class="ghost-btn" type="button" data-close-estimate-action>Cancel</button><button class="primary-btn" type="submit" data-estimate-action-submit>Continue</button></div><p class="form-message" data-estimate-action-status role="status" aria-live="polite"></p></form>';
   document.body.append(dialog);
+  dialog.setAttribute('aria-labelledby', 'customer-estimate-dialog-title');
+  dialog.setAttribute('aria-describedby', 'customer-estimate-dialog-help');
+  dialog.querySelector('[data-estimate-action-title]').id = 'customer-estimate-dialog-title';
+  dialog.querySelector('[data-estimate-action-help]').id = 'customer-estimate-dialog-help';
   const form = dialog.querySelector('form'); const fields = dialog.querySelector('[data-estimate-action-fields]'); const title = dialog.querySelector('[data-estimate-action-title]'); const help = dialog.querySelector('[data-estimate-action-help]'); const status = dialog.querySelector('[data-estimate-action-status]'); const submit = dialog.querySelector('[data-estimate-action-submit]');
   dialog.querySelectorAll('[data-close-estimate-action]').forEach((button) => button.addEventListener('click', () => dialog.close()));
   const open = (button) => {
