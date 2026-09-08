@@ -4,7 +4,7 @@ const html = readFileSync(new URL('index.html', root), 'utf8');
 const source = readFileSync(new URL('route-optimization-dialog.js', root), 'utf8');
 const assert = (condition, message) => { if (!condition) throw new Error(message); };
 assert(html.includes('/route-optimization-dialog.js'), 'route optimization dialog is not loaded');
-assert(source.includes('data-route-optimize-all') && source.includes('data-route-optimize'), 'route optimization triggers are incomplete');
+assert(source.includes('#dispatch-route-optimize') && source.includes('data-route-optimize-all') && source.includes('data-route-optimize'), 'route optimization triggers are incomplete');
 assert(source.includes('optimizeRoutes') && source.includes('optimizeRoute') && source.includes('respectTimeWindows'), 'route optimization APIs or time-window protection are missing');
 assert(source.includes('showModal') && source.includes('stopImmediatePropagation') && source.includes('role="status"'), 'route optimization dialog is not accessible or does not replace prompts');
 assert(source.includes('crypto.randomUUID'), 'route optimization mutations are not retry-safe');
