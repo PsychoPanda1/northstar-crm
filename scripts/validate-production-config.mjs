@@ -33,17 +33,32 @@ const tenants = parseJson('NORTHSTAR_TENANTS_JSON', []);
 const serviceTenants = parseJson('NORTHSTAR_SERVICE_TENANTS_JSON', {});
 const serviceOrigins = parseJson('NORTHSTAR_SERVICE_ORIGINS_JSON', {});
 const catalog = parseJson('NORTHSTAR_CATALOG_JSON', []);
+const validDigest = (value) => /^[0-9a-f]{64}$/i.test(String(value || '')) || /^scrypt\$[0-9a-f]{32}\$[0-9a-f]{128}$/i.test(String(value || ''));
+const configuredOwners = parseJson('NORTHSTAR_OWNERS_JSON', []);
+const oidcAccounts = parseJson('NORTHSTAR_OIDC_ACCOUNTS_JSON', []);
+const ownerTenantIds = new Set([
+  ...(Array.isArray(configuredOwners) ? configuredOwners.filter((item) => validDigest(item?.passwordDigest)).map((item) => String(item?.tenantId || '')) : []),
+  ...(Array.isArray(oidcAccounts) ? oidcAccounts.filter((item) => String(item?.role || '').toLowerCase() === 'owner').map((item) => String(item?.tenantId || '')) : []),
+  ...(values.NORTHSTAR_OWNER_EMAIL && validDigest(values.NORTHSTAR_OWNER_PASSWORD_DIGEST) ? [String(values.NORTHSTAR_OWNER_TENANT_ID || '')] : [])
+].filter(Boolean));
 if (!Array.isArray(tenants) || !tenants.length) errors.push('NORTHSTAR_TENANTS_JSON must contain at least one tenant');
 if (!serviceTenants || Array.isArray(serviceTenants) || !Object.keys(serviceTenants).length) errors.push('NORTHSTAR_SERVICE_TENANTS_JSON must map at least one service key');
 if (!Array.isArray(catalog) || !catalog.length) errors.push('NORTHSTAR_CATALOG_JSON must contain at least one catalog item');
 const tenantIds = new Set((Array.isArray(tenants) ? tenants : []).map((item) => String(item?.slug || '')));
+const mappedTenantIds = new Set();
 for (const [service, tenantId] of Object.entries(serviceTenants || {})) {
   if (!tenantIds.has(String(tenantId))) errors.push(`service ${service} maps to an unknown tenant`);
+  else mappedTenantIds.add(String(tenantId));
   const origins = serviceOrigins?.[service];
   if (!Array.isArray(origins) || !origins.length) errors.push(`service ${service} has no HTTPS origin binding`);
   for (const origin of origins || []) httpsUrl(`origin for ${service}`, origin);
 }
 for (const item of Array.isArray(catalog) ? catalog : []) if (!tenantIds.has(String(item?.tenantId || ''))) errors.push(`catalog item ${item?.id || '(unnamed)'} maps to an unknown tenant`);
+for (const tenantId of tenantIds) {
+  if (!mappedTenantIds.has(tenantId)) errors.push(`tenant ${tenantId} has no service mapping`);
+  if (!Array.isArray(catalog) || !catalog.some((item) => String(item?.tenantId || '') === tenantId)) errors.push(`tenant ${tenantId} has no catalog item`);
+  if (!ownerTenantIds.has(tenantId)) errors.push(`tenant ${tenantId} has no valid owner account`);
+}
 
 const oidcConfigured = Boolean(values.NORTHSTAR_OIDC_ISSUER || values.NORTHSTAR_OIDC_AUDIENCE || values.NORTHSTAR_OIDC_JWKS_URL || values.NORTHSTAR_OIDC_ACCOUNTS_JSON);
 if (oidcConfigured) {

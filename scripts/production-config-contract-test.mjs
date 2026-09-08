@@ -12,6 +12,8 @@ for (const snippet of [
   'NORTHSTAR_REQUIRE_LIVE_PROVIDERS',
   'NORTHSTAR_BACKUP_MAX_AGE_HOURS',
   'NORTHSTAR_EXPECTED_WRITERS',
-  'payment setup provider is missing'
+  'payment setup provider is missing',
+  'has no service mapping',
+  'has no valid owner account'
 ]) assert(source.includes(snippet), `production config contract missing: ${snippet}`);
 console.log('Northstar production config contract passed');
