@@ -61,8 +61,6 @@ NORTHSTAR_ASSETS.push('/plan-status-dialog.js');
 NORTHSTAR_ASSETS.push('/vehicle-maintenance-dialog.js');
 NORTHSTAR_ASSETS.push('/service-plan-request-dialog.js');
 NORTHSTAR_ASSETS.push('/technician-scorecard-config-dialog.js');
-NORTHSTAR_ASSETS.push('/dispatch-bulk-assign-dialog.js');
-NORTHSTAR_ASSETS.push('/dispatch-bulk-status-dialog.js');
 NORTHSTAR_ASSETS.push('/change-order-dialog.js');
 NORTHSTAR_ASSETS.push('/task-dialog.js');
 NORTHSTAR_ASSETS.push('/replenishment-order-dialog.js');
