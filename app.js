@@ -544,6 +544,20 @@ new MutationObserver(() => { void decorateAccountingIntegrationHealth(); }).obse
   const drawerElement = document.querySelector('#record-drawer');
   const repository = window.northstarRepository;
   if (!list || !drawerElement || !repository?.scopeCatalogItemServices) return;
+  const dialog = document.createElement('dialog');
+  dialog.className = 'workflow-dialog';
+  dialog.id = 'catalog-service-scope-dialog';
+  dialog.innerHTML = '<button class="dialog-close" type="button" data-close-catalog-scope aria-label="Close">×</button><div class="dialog-kicker">PRICEBOOK</div><h2>Limit to landing pages</h2><p>Choose the attached service pages where this pricebook item should be offered. Leave the field blank to show it on every attached page.</p><form><label>Service keys<input name="serviceKeys" type="text" autocomplete="off" placeholder="plumbing, electrician" aria-describedby="catalog-scope-help" /></label><p id="catalog-scope-help" class="form-message" role="status" aria-live="polite"></p><div class="workflow-actions"><button class="ghost-btn" type="button" data-close-catalog-scope>Cancel</button><button class="primary-btn" type="submit">Save landing-page scope</button></div></form>';
+  document.body.append(dialog);
+  dialog.querySelectorAll('[data-close-catalog-scope]').forEach((button) => button.addEventListener('click', () => dialog.close()));
+  const chooseScope = (current) => new Promise((resolve) => {
+    const form = dialog.querySelector('form'); const input = form.elements.serviceKeys; const message = form.querySelector('.form-message'); let settled = false;
+    const finish = (value) => { if (settled) return; settled = true; dialog.removeEventListener('close', onClose); resolve(value); };
+    const onClose = () => finish(null);
+    input.value = current || ''; message.textContent = ''; dialog.addEventListener('close', onClose, { once: true });
+    form.onsubmit = (event) => { event.preventDefault(); const keys = [...new Set(input.value.split(',').map((key) => key.trim().toLowerCase()).filter(Boolean))]; if (keys.length > 20 || keys.some((key) => !/^[a-z0-9-]{2,80}$/.test(key))) { message.textContent = 'Use up to 20 lowercase service keys separated by commas.'; return; } dialog.removeEventListener('close', onClose); dialog.close(); finish(keys); };
+    dialog.showModal(); input.focus();
+  });
   const decorate = () => {
     if (drawerElement.dataset.view !== 'catalog' || !['owner', 'dispatcher'].includes(sessionRole)) return;
     list.querySelectorAll('.record-card').forEach((card) => {
@@ -560,12 +574,10 @@ new MutationObserver(() => { void decorateAccountingIntegrationHealth(); }).obse
   list.addEventListener('click', async (event) => {
     const button = event.target.closest('[data-catalog-service-scope]');
     if (!button || drawerElement.dataset.view !== 'catalog') return;
-    const raw = window.prompt('Landing-page service keys, comma-separated. Leave blank to show on every attached page.', '');
-    if (raw === null) return;
-    const serviceKeys = [...new Set(raw.split(',').map((key) => key.trim().toLowerCase()).filter(Boolean))];
     button.disabled = true;
-    try { await repository.scopeCatalogItemServices(button.dataset.catalogServiceScope, serviceKeys); showToast(serviceKeys.length ? `Service limited to ${serviceKeys.join(', ')}.` : 'Service shown on every attached landing page.'); openRecords('catalog'); }
+    try { const catalog = await repository.list('catalog'); const item = catalog.find((candidate) => candidate.id === button.dataset.catalogServiceScope); if (!item) throw new Error('catalog_item_not_found'); const serviceKeys = await chooseScope(Array.isArray(item.serviceKeys) ? item.serviceKeys.join(', ') : ''); if (serviceKeys === null) return; await repository.scopeCatalogItemServices(button.dataset.catalogServiceScope, serviceKeys); showToast(serviceKeys.length ? `Service limited to ${serviceKeys.join(', ')}.` : 'Service shown on every attached landing page.'); openRecords('catalog'); }
     catch { showToast('Could not update landing-page service scope. Use attached lowercase service keys.'); button.disabled = false; }
+    finally { button.disabled = false; }
   });
   decorate();
 })();
