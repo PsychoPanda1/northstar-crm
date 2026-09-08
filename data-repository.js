@@ -512,9 +512,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async markJobNoShow(id, reason) {
+  async markJobNoShow(id, reason, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for no-show updates');
-    const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/no-show`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ reason }) });
+    const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/no-show`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ reason }) });
     if (!response.ok) throw new Error('no-show update failed');
     return response.json();
   }
