@@ -554,9 +554,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async remindUpcomingJobs(hours = 24, channel = 'SMS') {
+  async remindUpcomingJobs(hours = 24, channel = 'SMS', idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for appointment reminders');
-    const response = await fetch('/api/dispatch/reminders', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ hours, channel }) });
+    const response = await fetch('/api/dispatch/reminders', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ hours, channel }) });
     if (!response.ok) throw new Error('upcoming appointment reminders failed');
     return response.json();
   }
