@@ -1116,7 +1116,9 @@ const server = createServer(async (req, res) => {
       const selected = new Set(changes.map((item) => item.jobId));
       const jobs = changes.map((item) => saved.jobs.find((job) => job.id === item.jobId));
       const plans = changes.map((change, index) => ({ job: jobs[index], slot: jobs[index] ? bookingSlotRecordsFor(claims.tenantId, { days: 14, durationMinutes: jobs[index].pricebookDurationAtCreation || tenants[claims.tenantId].appointmentMinutes }).find((candidate) => candidate.id === change.slotId) : null }));
-      if (changes.length && changes.length <= 50 && jobs.every(Boolean) && plans.every((plan) => plan.slot) && !jobs.some((job) => ['Completed', 'Canceled'].includes(job.status))) {
+      const idempotencyKey = String(req.headers['idempotency-key'] || '').trim().slice(0, 100);
+      const existingRequest = idempotencyKey ? saved.bulkRescheduleRequests.find((item) => item.key === idempotencyKey) : null;
+      if (!existingRequest && changes.length && changes.length <= 50 && jobs.every(Boolean) && plans.every((plan) => plan.slot) && !jobs.some((job) => ['Completed', 'Canceled'].includes(job.status))) {
         const conflict = bulkRescheduleCapacityConflictFor(claims.tenantId, plans, selected);
         if (conflict) return json(res, 409, { error: 'capacity_target_conflict', ...conflict });
         const activeJobs = saved.jobs.filter((job) => !selected.has(job.id) && !['Completed', 'Canceled', 'No-show'].includes(job.status));
