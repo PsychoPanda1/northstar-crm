@@ -26,9 +26,12 @@ try {
   const login = await request('/api/auth/demo-login?service=plumbing', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ service: 'plumbing' }) });
   const headers = { authorization: `Bearer ${login.body.token}`, 'content-type': 'application/json' };
   const dispatch = await request('/api/integrations/messages/dispatch', { method: 'POST', headers, body: JSON.stringify({ limit: 10 }) });
+  const messageHeaders = { ...headers, 'idempotency-key': 'message-create-retry-1' };
+  const messageCreate = await request('/api/messages', { method: 'POST', headers: messageHeaders, body: JSON.stringify({ customerId: 'retry_customer', channel: 'SMS', message: 'Please confirm the appointment.' }) });
+  const messageConflict = await request('/api/messages', { method: 'POST', headers: messageHeaders, body: JSON.stringify({ customerId: 'retry_customer', channel: 'SMS', message: 'Please cancel the appointment.' }) });
   const messages = await request('/api/messages', { headers: { authorization: headers.authorization } });
   const saved = JSON.parse(readFileSync(dataFile, 'utf8'))['clearwater-plumbing'].messages.find((item) => item.id === 'retry_message');
-  if (!login.response.ok || dispatch.response.status !== 200 || dispatch.body.retrying !== 1 || dispatch.body.failed !== 0 || providerCalls !== 1 || lastAuthorization !== 'Bearer tenant-message-key' || saved.status !== 'Queued (provider pending)' || saved.deliveryState !== 'Retry scheduled' || saved.deliveryAttempt !== 1 || !saved.nextRetryAt || !messages.body.items?.some((item) => item.id === 'retry_message' && item.deliveryState === 'Retry scheduled')) throw new Error('transient message failure was not scheduled for bounded retry');
+  if (!login.response.ok || dispatch.response.status !== 200 || dispatch.body.retrying !== 1 || dispatch.body.failed !== 0 || providerCalls !== 1 || lastAuthorization !== 'Bearer tenant-message-key' || messageCreate.response.status !== 201 || messageConflict.response.status !== 409 || messageConflict.body.error !== 'idempotency_key_reused' || saved.status !== 'Queued (provider pending)' || saved.deliveryState !== 'Retry scheduled' || saved.deliveryAttempt !== 1 || !saved.nextRetryAt || !messages.body.items?.some((item) => item.id === 'retry_message' && item.deliveryState === 'Retry scheduled')) throw new Error('transient message failure or create idempotency contract failed');
 console.log('Northstar message retry test passed');
 await import('./message-read-test.mjs');
 } finally {
