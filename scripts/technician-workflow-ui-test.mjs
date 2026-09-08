@@ -13,7 +13,10 @@ for (const snippet of [
   "'/api/public/technician-job/complete'",
   "'/api/public/technician-job/labor'",
   'reportValidity()',
-  'stopImmediatePropagation()'
+  'stopImmediatePropagation()',
+  'northstarFieldFetch',
+  'new AbortController()',
+  'timeoutMs: 60000'
 ]) {
   if (![html, source].some((text) => text.includes(snippet))) throw new Error(`Missing technician workflow UI contract: ${snippet}`);
 }
