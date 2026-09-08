@@ -37,6 +37,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Owner job closeout uses a validated accessible dialog with bounded completion notes and retry-safe idempotency
 - Owner customer profiles use a validated contact-preferences dialog so SMS and email opt-outs are explicit before follow-up is queued
 - Owner customer profiles use a bounded tag editor with normalized values, a 12-tag limit, and retry-safe persistence for segmentation workflows
+- Owner customer profiles use a validated service-location dialog with bounded addresses and retry-safe persistence for dispatch and repeat bookings
 - Customer asset records with durable customer links, serial/install context, retry-safe creation, and automatic timeline events
 - Consolidated customer profiles spanning work history, equipment, billing, plans, and activity
 - Tenant-scoped customer import supports dry-run validation, normalized contact matching, bounded batches, and idempotent migration retries
