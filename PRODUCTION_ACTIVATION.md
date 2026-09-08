@@ -23,6 +23,7 @@ Northstar is implementation-complete for the checked local workflows, but a prod
 - Configure automated backups, restore testing, retention, and secret rotation.
 - Run `npm run test:sqlite-backup` during the release drill and record the restored database verification result before accepting traffic.
 - Set a distinct `NORTHSTAR_BACKUP_FILE` (or deployment-managed equivalent) and confirm `/api/ready` reports `backupConfiguration: true` before accepting traffic.
+- Set `NORTHSTAR_BACKUP_MAX_AGE_HOURS` to the maximum acceptable recovery-point age (1–720 hours; default 24); `/api/ready` fails closed when the backup is missing, invalid, or stale.
 - Confirm audit-ledger and tenant-integrity checks remain healthy after a restart.
 
 ## 3. Activate providers deliberately

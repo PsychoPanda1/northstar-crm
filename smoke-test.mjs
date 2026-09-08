@@ -16,6 +16,7 @@ const tempDir = mkdtempSync(join(tmpdir(), 'northstar-smoke-'));
 const dataFile = join(tempDir, 'state.json');
 writeFileSync(dataFile, '{malformed primary snapshot');
 writeFileSync(`${dataFile}.tmp`, JSON.stringify({ 'test-hvac': { customers: [{ id: 'RECOVERY-CUSTOMER', tenantId: 'test-hvac', name: 'Recovered Customer', phone: '8435550199', location: '1 Recovery Way' }], userAccounts: [{ id: 'USER-LEGACY', tenantId: 'test-hvac', name: 'Legacy Technician', email: 'legacy.technician@example.test', role: 'technician', passwordDigest: createHmac('sha256', 'smoke-session-secret-32-character-key').update('legacy-technician-pass').digest('hex'), status: 'Active' }] } }));
+writeFileSync(`${dataFile}.backup`, JSON.stringify({ 'johnson-service-co': {}, 'clearwater-plumbing': {}, 'lowcountry-wash-co': {}, 'palmetto-electric': {}, 'harbor-shine': {}, 'test-hvac': {} }));
 const webhookSecret = 'smoke-webhook-secret-32-character-key';
 const messageWebhookSecret = 'smoke-message-webhook-secret-32-key';
 const callWebhookSecret = 'smoke-call-webhook-secret-32-character-key';
