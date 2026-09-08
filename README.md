@@ -29,6 +29,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Campaign-level marketing performance is available in the owner portal and as a tenant-scoped CSV export
 - Accounts-receivable aging shows open balances by due-date bucket plus customer-level collection priorities
 - Open receivables can be exported as a tenant-scoped collection-worklist CSV
+- Owners can queue invoice payment requests through an accessible SMS/email dialog that displays the current balance, honors contact opt-outs, and preserves provider-pending delivery state
 - Owner/dispatcher reactivation campaigns queue deduplicated SMS/email follow-ups for customers without a recent completed service, with optional internal-tag targeting
 - Tenant-scoped demo repository with persistent task completion, action state, and operational notifications
 - Owner CSV exports for customer, lead, dispatch, estimate, invoice, plan, and activity workspaces
