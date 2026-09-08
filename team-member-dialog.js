@@ -1,5 +1,5 @@
 (() => {
-  const trigger = document.querySelector('#add-team');
+  const trigger = document.querySelector('#add-team-member, #add-team');
   const repository = window.northstarRepository;
   if (!trigger || !repository?.createTeamMember || document.querySelector('#team-member-dialog')) return;
   const dialog = document.createElement('dialog'); dialog.id = 'team-member-dialog'; dialog.className = 'workflow-dialog';
