@@ -1674,9 +1674,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async remindEstimate(id, channel = 'SMS') {
+  async remindEstimate(id, channel = 'SMS', idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for estimate reminders');
-    const response = await fetch(`/api/estimates/${encodeURIComponent(id)}/remind`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ channel }) });
+    const response = await fetch(`/api/estimates/${encodeURIComponent(id)}/remind`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ channel }) });
     if (!response.ok) throw new Error('estimate reminder failed');
     return response.json();
   }
