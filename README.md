@@ -102,6 +102,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Replenishment plans use a validated vendor dialog and show the recommended material count before creating owner-approved purchase orders
 - Inventory transfers use an accessible material-aware source/destination dialog with live on-hand context, whole-number validation, and audited idempotent movement
 - Scheduled report delivery uses a validated saved-view, recipient, and cadence dialog while keeping aggregate CSV delivery provider-pending and tenant-scoped
+- Payroll period creation uses a bounded date-range dialog for immutable draft snapshots before owner/accountant approval and provider handoff
 - Technician scorecards rank field performance using transparent completion, margin, reliability, and time-capture components over a selected reporting period
 - Multi-technician job crews with primary-technician compatibility, skill validation, schedule-conflict checks, and audit history
 - Configurable tenant pricebook items for consistent service quoting across landing pages and the owner portal, including category, default duration, and taxable metadata
