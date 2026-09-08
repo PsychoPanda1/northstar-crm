@@ -51,6 +51,7 @@ const env = {
   NORTHSTAR_FLEET_WEBHOOK_SECRET: 'fleet-secret-32-characters-for-test'
 };
 writeFileSync(invalidDataFile, JSON.stringify({ 'johnson-service-co': { customers: [{ id: 'cross-tenant-record', tenantId: 'other-tenant', name: 'Invalid record' }] } }));
+if (!nativeSqliteAvailable) writeFileSync(`${dataFile}.backup`, JSON.stringify({ 'johnson-service-co': {}, 'clearwater-plumbing': {}, 'lowcountry-wash-co': {}, 'palmetto-electric': {}, 'harbor-shine': {} }));
 
 const child = spawn(process.execPath, ['server.mjs'], { cwd: root, env, stdio: ['ignore', 'ignore', 'pipe'] });
 child.stderr.on('data', (chunk) => process.stderr.write(chunk));
