@@ -108,6 +108,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Fleet maintenance uses a validated service-due and odometer dialog with owner-controlled audited updates
 - Service-plan request fulfillment uses a structured resolution-note dialog with request context and preserved audit history
 - Technician scorecard configuration uses a live total-100 weight editor with bounded inputs and owner-only persistence
+- Bulk dispatch assignment uses a roster-backed technician selector with selected-job context and atomic server validation
 - Technician scorecards rank field performance using transparent completion, margin, reliability, and time-capture components over a selected reporting period
 - Multi-technician job crews with primary-technician compatibility, skill validation, schedule-conflict checks, and audit history
 - Configurable tenant pricebook items for consistent service quoting across landing pages and the owner portal, including category, default duration, and taxable metadata
