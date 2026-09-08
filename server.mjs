@@ -1094,6 +1094,22 @@ const server = createServer(async (req, res) => {
       recordAudit(saved, claims, 'job.vehicle.assigned', 'job', job.id, `${vehicle.name} · ${vehicle.licensePlate}`);
       persist(); return json(res, 200, { job, vehicle, duplicate: false });
     }
+    const retryableCustomerPreferencesMatch = pathname.match(/^\/api\/customers\/([^/]+)\/preferences$/);
+    if (retryableCustomerPreferencesMatch && req.method === 'POST') {
+      const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' });
+      if (!['owner', 'dispatcher'].includes(claims.role)) return json(res, 403, { error: 'forbidden' });
+      const saved = state.get(claims.tenantId); const customer = saved.customers.find((item) => item.id === retryableCustomerPreferencesMatch[1]);
+      if (!customer) return json(res, 404, { error: 'customer_not_found' });
+      const body = await readBody(req); if ((body.smsOptOut !== undefined && typeof body.smsOptOut !== 'boolean') || (body.emailOptOut !== undefined && typeof body.emailOptOut !== 'boolean')) return json(res, 422, { error: 'boolean_contact_preferences_required' });
+      const current = customer.contactPreferences || { smsOptOut: false, emailOptOut: false }; const contactPreferences = { smsOptOut: body.smsOptOut === undefined ? Boolean(current.smsOptOut) : body.smsOptOut, emailOptOut: body.emailOptOut === undefined ? Boolean(current.emailOptOut) : body.emailOptOut };
+      const idempotencyKey = String(req.headers['idempotency-key'] || '').trim().slice(0, 100); const fingerprint = payloadFingerprint(contactPreferences);
+      if (idempotencyKey && customer.contactPreferencesIdempotencyKey === idempotencyKey) { if (customer.contactPreferencesIdempotencyFingerprint !== fingerprint) return json(res, 409, { error: 'idempotency_key_reused' }); return json(res, 200, { customerId: customer.id, contactPreferences, duplicate: true }); }
+      customer.contactPreferences = contactPreferences; customer.contactPreferencesUpdatedAt = new Date().toISOString();
+      if (idempotencyKey) { customer.contactPreferencesIdempotencyKey = idempotencyKey; customer.contactPreferencesIdempotencyFingerprint = fingerprint; }
+      const preferenceNote = 'SMS ' + (contactPreferences.smsOptOut ? 'opted out' : 'enabled') + ' · Email ' + (contactPreferences.emailOptOut ? 'opted out' : 'enabled') + '.';
+      recordActivity(saved, customer.name, 'Contact preferences', preferenceNote, 'Updated'); recordAudit(saved, claims, 'customer.contact_preferences.updated', 'customer', customer.id, preferenceNote); persist();
+      return json(res, 200, { customerId: customer.id, contactPreferences, duplicate: false });
+    }
     const retryableJobCrewMatch = pathname.match(/^\/api\/jobs\/([^/]+)\/crew$/);
     if (retryableJobCrewMatch && req.method === 'POST') {
       const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' });

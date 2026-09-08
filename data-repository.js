@@ -1304,9 +1304,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async updateCustomerPreferences(customerId, preferences) {
+  async updateCustomerPreferences(customerId, preferences, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for customer contact preferences');
-    const response = await fetch(`/api/customers/${encodeURIComponent(customerId)}/preferences`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify(preferences) });
+    const response = await fetch(`/api/customers/${encodeURIComponent(customerId)}/preferences`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify(preferences) });
     if (!response.ok) throw new Error('customer contact preferences update failed');
     return response.json();
   }
