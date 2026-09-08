@@ -22,6 +22,7 @@ const releaseReadiness = readFileSync(`${root}release-readiness-owner.js`, 'utf8
 const catalogEditor = readFileSync(`${root}catalog-editor-dialog.js`, 'utf8');
 const customerEdit = readFileSync(`${root}customer-edit-dialog.js`, 'utf8');
 const catalogCreate = readFileSync(`${root}catalog-create-dialog.js`, 'utf8');
+const inventoryCycleCount = readFileSync(`${root}inventory-cycle-count-dialog.js`, 'utf8');
 const planStatusOwner = readFileSync(`${root}plan-status-owner.js`, 'utf8');
 const server = readFileSync(`${root}server.mjs`, 'utf8');
 const portal = readFileSync(`${root}PORTAL_CONTRACT.md`, 'utf8');
@@ -284,6 +285,7 @@ assert(index.includes('request-reply-dialog.js') && northstarServiceWorker.inclu
 assert(index.includes('job-status-dialog.js') && northstarServiceWorker.includes("'/job-status-dialog.js'") && northstarServiceWorker.includes("'northstar-shell-v40'"), 'owner job status is not safely wired');
 assert(index.includes('customer-edit-dialog.js') && northstarServiceWorker.includes("'/customer-edit-dialog.js'") && customerEdit.includes('updateCustomer') && customerEdit.includes('stopImmediatePropagation()'), 'owner customer editing is not safely wired');
 assert(index.includes('catalog-create-dialog.js') && northstarServiceWorker.includes("'/catalog-create-dialog.js'") && catalogCreate.includes('createCatalogItem') && catalogCreate.includes('stopImmediatePropagation()') && catalogCreate.includes('durationMinutes'), 'owner catalog creation is not safely wired');
+assert(index.includes('inventory-cycle-count-dialog.js') && northstarServiceWorker.includes("'/inventory-cycle-count-dialog.js'") && inventoryCycleCount.includes('listInventoryLocations') && inventoryCycleCount.includes('adjustInventory') && inventoryCycleCount.includes('stopImmediatePropagation()'), 'owner inventory cycle counts are not safely wired');
 assert(index.includes('asset-lookup-dialog.js') && northstarServiceWorker.includes("'/asset-lookup-dialog.js'") && northstarServiceWorker.includes("'northstar-shell-v32'"), 'owner equipment lookup is not safely wired');
 assert(index.includes('review-request-dialog.js') && northstarServiceWorker.includes("'/review-request-dialog.js'") && northstarServiceWorker.includes("'northstar-shell-v33'"), 'owner review requests are not safely wired');
 assert(index.includes('asset-service-due-dialog.js') && northstarServiceWorker.includes("'/asset-service-due-dialog.js'") && northstarServiceWorker.includes("'northstar-shell-v34'"), 'owner equipment service reminders are not safely wired');
