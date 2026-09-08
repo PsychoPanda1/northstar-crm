@@ -9,6 +9,8 @@ assert.match(technician, /\/api\/public\/technician-job\/forms/);
 assert.match(technician, /data-field-id/);
 assert.match(technician, /showWhen/);
 assert.match(technician, /idempotency-key/);
+assert.match(app, /Configure forms/);
+assert.match(app, /data-catalog-forms/);
 assert.doesNotMatch(app, /Structured technician forms as JSON/);
 assert.match(owner, /structured-form-editor/);
 assert.match(owner, /data-form-builder/);
