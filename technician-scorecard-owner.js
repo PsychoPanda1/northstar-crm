@@ -7,6 +7,11 @@
   button.id = 'technician-scorecards-view';
   button.textContent = 'Technician scorecards';
   reportView.after(button);
+  const configButton = document.createElement('button');
+  configButton.className = 'ghost-btn';
+  configButton.id = 'technician-scorecards-config';
+  configButton.textContent = 'Configure scorecard weights';
+  reportView.after(configButton);
   const escape = (value) => String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
   button.addEventListener('click', async () => {
     const startDate = window.prompt('Scorecard start date (YYYY-MM-DD, blank for all)', '') ?? '';
@@ -22,5 +27,16 @@
       drawer.classList.add('open');
       drawer.setAttribute('aria-hidden', 'false');
     } catch { showToast('Technician scorecards unavailable.'); } finally { button.disabled = false; }
+  });
+  configButton.addEventListener('click', async () => {
+    configButton.disabled = true;
+    try {
+      const current = (await repository.getTechnicianScorecardConfig()).weights || { completion: 40, margin: 25, reliability: 20, timeCapture: 15 };
+      const values = {};
+      for (const [key, label] of [['completion', 'Completion'], ['margin', 'Margin'], ['reliability', 'Reliability'], ['timeCapture', 'Time capture']]) { const value = window.prompt(`${label} weight (all four weights must total 100)`, String(current[key])); if (value === null) return; values[key] = Number(value); }
+      if (Object.values(values).some((value) => !Number.isInteger(value) || value < 0 || value > 100) || Object.values(values).reduce((sum, value) => sum + value, 0) !== 100) { showToast('Scorecard weights must be whole numbers totaling 100.'); return; }
+      await repository.setTechnicianScorecardConfig(values);
+      showToast('Technician scorecard weights saved.');
+    } catch { showToast('Could not save technician scorecard weights.'); } finally { configButton.disabled = false; }
   });
 })();

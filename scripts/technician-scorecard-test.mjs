@@ -21,10 +21,14 @@ try {
   child = spawn(process.execPath, ['server.mjs'], { cwd: root, env, stdio: 'ignore' });
   await waitForServer();
   const login = await post('/api/auth/demo-login?service=plumbing', { service: 'plumbing', role: 'owner' });
-  const scorecards = await request('/api/reports/technician-scorecards', { headers: { authorization: `Bearer ${login.body.token}` } });
+  const headers = { authorization: `Bearer ${login.body.token}` };
+  const config = await request('/api/reports/technician-scorecards/config', { headers });
+  const invalidConfig = await request('/api/reports/technician-scorecards/config', { method: 'PATCH', headers: { ...headers, 'content-type': 'application/json' }, body: JSON.stringify({ weights: { completion: 50, margin: 25, reliability: 20, timeCapture: 10 } }) });
+  const savedConfig = await request('/api/reports/technician-scorecards/config', { method: 'PATCH', headers: { ...headers, 'content-type': 'application/json' }, body: JSON.stringify({ weights: { completion: 50, margin: 20, reliability: 20, timeCapture: 10 } }) });
+  const scorecards = await request('/api/reports/technician-scorecards', { headers });
   const alex = scorecards.body.scorecards?.find((item) => item.technician === 'Alex Rivera');
   const jordan = scorecards.body.scorecards?.find((item) => item.technician === 'Jordan Lee');
-  if (!login.response.ok || scorecards.response.status !== 200 || !alex || alex.completed !== 1 || alex.completionRate !== 100 || alex.grade !== 'A' || alex.score <= 80 || !jordan || jordan.noShows !== 1 || jordan.completionRate !== 0 || jordan.score >= alex.score) throw new Error('technician scorecards did not derive tenant-scoped performance metrics');
+  if (!login.response.ok || config.response.status !== 200 || invalidConfig.response.status !== 422 || invalidConfig.body.error !== 'scorecard_weights_must_total_100' || savedConfig.response.status !== 200 || scorecards.response.status !== 200 || scorecards.body.weights?.completion !== 50 || !alex || alex.completed !== 1 || alex.completionRate !== 100 || alex.grade !== 'A' || alex.score <= 80 || !jordan || jordan.noShows !== 1 || jordan.completionRate !== 0 || jordan.score >= alex.score) throw new Error('technician scorecards did not derive tenant-scoped performance metrics or enforce configurable weights');
   const persisted = JSON.parse(readFileSync(dataFile, 'utf8'));
   if (!persisted[tenantId].jobs?.length) throw new Error('scorecard read unexpectedly mutated operational data');
   console.log('Northstar technician scorecard test passed');

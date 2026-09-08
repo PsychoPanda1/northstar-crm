@@ -292,6 +292,20 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async getTechnicianScorecardConfig() {
+    if (!this.remote) throw new Error('API required for technician scorecard configuration');
+    const response = await fetch('/api/reports/technician-scorecards/config', { headers: { authorization: `Bearer ${this.token}` } });
+    if (!response.ok) throw new Error('technician scorecard configuration unavailable');
+    return response.json();
+  }
+
+  async setTechnicianScorecardConfig(weights, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for technician scorecard configuration');
+    const response = await fetch('/api/reports/technician-scorecards/config', { method: 'PATCH', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ weights }) });
+    if (!response.ok) throw new Error('technician scorecard configuration failed');
+    return response.json();
+  }
+
   async getPayrollReport(startDate = '', endDate = '') {
     if (!this.remote) throw new Error('API required for payroll reporting');
     const query = new URLSearchParams(); if (startDate) query.set('startDate', startDate); if (endDate) query.set('endDate', endDate);
