@@ -1,0 +1,20 @@
+(() => {
+  const repository = window.northstarRepository;
+  const trigger = document.querySelector('#add-catalog-item');
+  if (!repository?.createCatalogItem || !trigger || document.querySelector('#catalog-create-dialog')) return;
+  const dialog = document.createElement('dialog'); dialog.id = 'catalog-create-dialog'; dialog.className = 'workflow-dialog';
+  dialog.innerHTML = '<button class="dialog-close" type="button" data-close-catalog-create aria-label="Close">×</button><div class="dialog-kicker">PRICEBOOK</div><h2 id="catalog-create-title">Add pricebook service</h2><p id="catalog-create-help">Define the service once so landing pages, estimates, dispatch, and technician forms share the same scope.</p><form><label>Service name<input name="name" maxlength="120" required /></label><label>Description<textarea name="description" rows="3" maxlength="300" required></textarea></label><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><label>Starting price<input name="priceFrom" maxlength="40" required /></label><label>Category<input name="category" maxlength="60" value="General" required /></label></div><label>Default duration (minutes)<input name="durationMinutes" type="number" min="15" max="1440" step="1" value="60" required /></label><label><input name="taxable" type="checkbox" checked /> Taxable service</label><label>Field checklist steps<input name="checklist" maxlength="1000" value="Arrived on site, Work performed and documented, Customer handoff completed" /></label><label>Required technician forms<input name="formNames" maxlength="1000" placeholder="Safety inspection, Customer handoff" /></label><div class="workflow-actions"><button class="ghost-btn" type="button" data-close-catalog-create>Cancel</button><button class="primary-btn" type="submit">Add service</button></div><p class="form-message" data-catalog-create-status role="status" aria-live="polite"></p></form>';
+  dialog.setAttribute('aria-labelledby', 'catalog-create-title'); dialog.setAttribute('aria-describedby', 'catalog-create-help'); document.body.append(dialog);
+  const form = dialog.querySelector('form'); const status = dialog.querySelector('[data-catalog-create-status]'); const submit = form.querySelector('[type="submit"]');
+  dialog.querySelectorAll('[data-close-catalog-create]').forEach((button) => button.addEventListener('click', () => dialog.close()));
+  trigger.addEventListener('click', (event) => { event.preventDefault(); event.stopImmediatePropagation(); form.reset(); status.textContent = ''; submit.disabled = false; dialog.showModal(); form.elements.name.focus(); }, true);
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault(); if (!form.reportValidity()) return; const durationMinutes = Number(form.elements.durationMinutes.value);
+    if (!Number.isInteger(durationMinutes) || durationMinutes < 15 || durationMinutes > 1440) { status.textContent = 'Duration must be a whole number from 15 to 1,440 minutes.'; return; }
+    const fields = { name: form.elements.name.value.trim(), description: form.elements.description.value.trim(), priceFrom: form.elements.priceFrom.value.trim(), category: form.elements.category.value.trim(), durationMinutes, taxable: form.elements.taxable.checked, checklist: form.elements.checklist.value.trim(), formNames: form.elements.formNames.value.split(',').map((value) => value.trim()).filter(Boolean) };
+    if (!fields.name || !fields.description || !fields.priceFrom || !fields.category) { status.textContent = 'Complete the service name, description, price, and category.'; return; }
+    submit.disabled = true; status.textContent = 'Adding pricebook service…';
+    try { await repository.createCatalogItem(fields.name, fields.description, fields.priceFrom, crypto.randomUUID(), fields.category, fields.durationMinutes, fields.taxable, fields.checklist, fields.formNames); dialog.close(); showToast('Pricebook item added.'); openRecords('catalog'); }
+    catch { status.textContent = 'Could not add the pricebook service. Check the fields and try again.'; submit.disabled = false; }
+  });
+})();
