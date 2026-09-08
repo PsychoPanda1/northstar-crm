@@ -1119,6 +1119,9 @@ const server = createServer(async (req, res) => {
       if (changes.length && changes.length <= 50 && jobs.every(Boolean) && plans.every((plan) => plan.slot) && !jobs.some((job) => ['Completed', 'Canceled'].includes(job.status))) {
         const conflict = bulkRescheduleCapacityConflictFor(claims.tenantId, plans, selected);
         if (conflict) return json(res, 409, { error: 'capacity_target_conflict', ...conflict });
+        const activeJobs = saved.jobs.filter((job) => !selected.has(job.id) && !['Completed', 'Canceled', 'No-show'].includes(job.status));
+        const appointmentConflict = plans.map((plan) => activeJobs.find((candidate) => candidate.time === plan.slot.label || candidate.slotId === plan.slot.id || rangesOverlap(Date.parse(candidate.startsAt || ''), Date.parse(candidate.endsAt || ''), Date.parse(plan.slot.startsAt), Date.parse(plan.slot.endsAt)))).find(Boolean);
+        if (appointmentConflict) return json(res, 409, { error: 'appointment_time_unavailable', conflictJobId: appointmentConflict.id, conflictTime: appointmentConflict.time || null });
       }
     }
     if (pathname === '/api/ready' && req.method === 'GET' && process.env.NODE_ENV === 'production' && !sessionRotationConfigurationValid) return json(res, 503, { ok: false, service: 'northstar-api', version: '0.3.0', checks: { sessionRotationConfiguration: false }, failedChecks: ['sessionRotationConfiguration'], issues: [{ key: 'sessionRotationConfiguration', message: 'NORTHSTAR_SESSION_SECRET_PREVIOUS must be empty or a distinct 32-character-or-longer prior secret.' }] });
