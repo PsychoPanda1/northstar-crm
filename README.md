@@ -131,6 +131,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Dispatch map handoff uses a structured date and technician picker while preserving the tenant-authorized ordered route manifest
 - Route-calendar export uses a structured date and technician picker with technician-session scoping and authenticated iCalendar download
 - Marketing and technician reports use an accessible validated date-range dialog while preserving tenant-scoped report APIs
+- Report CSV exports use the same validated period controls while preserving active filters and grouping
 - Technician en-route ETA, job completion acknowledgment, and labor capture use accessible validated dialogs while reusing the encrypted offline queue and idempotent field-action boundary
 - Dispatch assignment uses an accessible roster picker for single and bulk jobs, while server-side skill, availability, and schedule-conflict checks remain authoritative
 - Multi-party invoice billing uses an accessible validated bill-to dialog with existing profile prefill, contact details, payment terms, and server-side tenant-scoped validation
