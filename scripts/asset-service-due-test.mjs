@@ -21,8 +21,12 @@ try {
   if (customer.response.status !== 201) throw new Error('asset due test customer failed');
   const asset = await request('/api/assets', { method: 'POST', headers: { ...auth, 'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({ customerId: customer.body.id, name: 'Tankless water heater', serial: 'WH-9', installed: '2024-01-01', nextServiceDue: '2099-04-15' }) });
   if (asset.response.status !== 201 || asset.body.nextServiceDue !== '2099-04-15') throw new Error('asset service due creation failed');
+  const retryKey = 'asset-create-retry-key';
+  const retry = await request('/api/assets', { method: 'POST', headers: { ...auth, 'idempotency-key': retryKey }, body: JSON.stringify({ customerId: customer.body.id, name: 'Boiler', serial: 'B-1', installed: '2025-01-01' }) });
+  const conflict = await request('/api/assets', { method: 'POST', headers: { ...auth, 'idempotency-key': retryKey }, body: JSON.stringify({ customerId: customer.body.id, name: 'Different equipment', serial: 'D-1', installed: '2025-01-01' }) });
+  if (retry.response.status !== 201 || conflict.response.status !== 409 || conflict.body.error !== 'idempotency_key_reused') throw new Error('asset create idempotency conflict was not enforced');
   const listed = await request('/api/assets?search=Asset%20Due%20Customer', { headers: auth });
-  if (!listed.response.ok || listed.body.items?.[0]?.serviceDueStatus !== 'Scheduled') throw new Error('asset service due status projection failed');
+  if (!listed.response.ok || listed.body.items?.find((item) => item.id === asset.body.id)?.serviceDueStatus !== 'Scheduled') throw new Error('asset service due status projection failed');
   const alertAsset = await request(`/api/assets/${encodeURIComponent(asset.body.id)}`, { method: 'PATCH', headers: { ...auth, 'idempotency-key': crypto.randomUUID() }, body: JSON.stringify({ nextServiceDue: '2000-04-15' }) });
   const notifications = await request('/api/notifications', { headers: auth });
   if (!alertAsset.response.ok || !notifications.body.items?.some((item) => item.assetId === asset.body.id && item.title === 'Asset service overdue')) throw new Error('asset service due alert was not surfaced');
