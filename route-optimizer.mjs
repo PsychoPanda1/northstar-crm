@@ -51,12 +51,18 @@ const compareStart = (a, b) => {
   return a.job.id.localeCompare(b.job.id);
 };
 
-export const optimizeCoordinateRoute = (stops, start = null, options = {}) => {
-  const respectTimeWindows = options.respectTimeWindows !== false;
-  const travelSpeedKph = Number.isFinite(Number(options.travelSpeedKph)) && Number(options.travelSpeedKph) > 0 ? Number(options.travelSpeedKph) : null;
+const nearestNeighborRoute = (stops, start, respectTimeWindows, travelSpeedKph, seed = null) => {
   const remaining = stops.slice().sort(compareStart);
   const ordered = [];
   let current = start || null;
+  if (seed) {
+    const seedIndex = remaining.findIndex((item) => item.job.id === seed.job.id);
+    if (seedIndex >= 0) {
+      const first = remaining.splice(seedIndex, 1)[0];
+      ordered.push(first);
+      current = first.coordinates;
+    }
+  }
   while (remaining.length) {
     const feasible = respectTimeWindows && travelSpeedKph && ordered.length
       ? remaining.filter((candidate) => respectsTimeWindows([...ordered, candidate], start, travelSpeedKph))
@@ -72,6 +78,20 @@ export const optimizeCoordinateRoute = (stops, start = null, options = {}) => {
     remaining.splice(remaining.indexOf(next), 1);
     ordered.push(next);
     current = next.coordinates;
+  }
+  return ordered;
+};
+
+export const optimizeCoordinateRoute = (stops, start = null, options = {}) => {
+  const respectTimeWindows = options.respectTimeWindows !== false;
+  const travelSpeedKph = Number.isFinite(Number(options.travelSpeedKph)) && Number(options.travelSpeedKph) > 0 ? Number(options.travelSpeedKph) : null;
+  let ordered = nearestNeighborRoute(stops, start, respectTimeWindows, travelSpeedKph);
+  if (!respectTimeWindows && !start && stops.length > 3) {
+    const seeds = stops.slice().sort(compareStart).slice(0, Math.min(12, stops.length));
+    for (const seed of seeds) {
+      const candidate = nearestNeighborRoute(stops, null, false, travelSpeedKph, seed);
+      if (routeDistanceKm(candidate, null) + 0.001 < routeDistanceKm(ordered, null)) ordered = candidate;
+    }
   }
   let improved = true;
   let passes = 0;
