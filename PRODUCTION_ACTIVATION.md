@@ -46,6 +46,14 @@ Never place provider credentials in tenant manifests, browser code, exported sna
 
 ## 4. Verify before accepting traffic
 
+Before starting the production Compose stack, run the secret-safe configuration preflight against the private env file:
+
+```sh
+NORTHSTAR_ENV_FILE=.env.production npm run validate:production-config
+```
+
+The preflight checks tenant/service/catalog alignment, HTTPS origin bindings, identity setup, secret length, and live provider coverage without printing secret values. `/api/ready` remains authoritative after startup.
+
 Run the local release suite first:
 
 ```sh
