@@ -465,6 +465,7 @@ const validPhone = (value) => !value || String(value).replace(/\D/g, '').length 
 const isStrongSecret = (value) => String(value || '').length >= 32;
 const monitoringConfigurationValid = process.env.NODE_ENV !== 'production' || isStrongSecret(METRICS_SECRET);
 const webhookRotationConfigurationValid = [ [PAYMENT_WEBHOOK_SECRET_PREVIOUS, PAYMENT_WEBHOOK_SECRET], [MESSAGE_WEBHOOK_SECRET_PREVIOUS, MESSAGE_WEBHOOK_SECRET], [CALL_WEBHOOK_SECRET_PREVIOUS, CALL_WEBHOOK_SECRET], [FINANCING_WEBHOOK_SECRET_PREVIOUS, FINANCING_WEBHOOK_SECRET], [FLEET_WEBHOOK_SECRET_PREVIOUS, FLEET_WEBHOOK_SECRET] ].every(([previous, current]) => !previous || isStrongSecret(previous) && previous !== current);
+const sessionRotationConfigurationValid = !SESSION_SECRET_PREVIOUS || isStrongSecret(SESSION_SECRET_PREVIOUS) && SESSION_SECRET_PREVIOUS !== SECRET;
 const isPasswordDigest = (value) => /^[0-9a-f]{64}$/i.test(String(value || '').trim()) || /^scrypt\$[0-9a-f]{32}\$[0-9a-f]{128}$/i.test(String(value || '').trim());
 const allowOwnerLogin = (req, identity = '') => { const key = `${clientAddress(req)}|${String(identity || '').trim().toLowerCase().slice(0, 120)}`; const now = Date.now(); pruneRateLimitWindows(ownerLoginWindows, now); const window = ownerLoginWindows.get(key); if (!window || now - window.startedAt >= 15 * 60_000) { ownerLoginWindows.set(key, { startedAt: now, count: 1 }); return true; } if (window.count >= OWNER_LOGIN_RATE_LIMIT) return false; window.count += 1; return true; };
 const secureTextEqual = (left, right) => { const a = Buffer.from(String(left)); const b = Buffer.from(String(right)); return a.length === b.length && timingSafeEqual(a, b); };
@@ -1083,6 +1084,7 @@ const server = createServer(async (req, res) => {
     applySecurityHeaders(res);
     const requestUrl = new URL(req.url, `http://${req.headers.host}`);
     const pathname = requestUrl.pathname;
+    if (pathname === '/api/ready' && req.method === 'GET' && process.env.NODE_ENV === 'production' && !sessionRotationConfigurationValid) return json(res, 503, { ok: false, service: 'northstar-api', version: '0.3.0', checks: { sessionRotationConfiguration: false }, failedChecks: ['sessionRotationConfiguration'], issues: [{ key: 'sessionRotationConfiguration', message: 'NORTHSTAR_SESSION_SECRET_PREVIOUS must be empty or a distinct 32-character-or-longer prior secret.' }] });
     if (pathname === '/api/purchase-orders/replenishment' && req.method === 'POST' && req.headers['idempotency-key']) { const replayClaims = authenticate(req); if (replayClaims) { const replayKey = String(req.headers['idempotency-key']).trim().slice(0, 100); const replayOrders = state.get(replayClaims.tenantId).purchaseOrders.filter((item) => item.replenishmentBatchIdempotencyKey === replayKey); if (replayOrders.length) return json(res, 200, { orders: replayOrders.map((item) => recordsFor(replayClaims.tenantId, 'purchaseOrders').find((record) => record.id === item.id)).filter(Boolean), duplicate: true }); } }
     const retrySafeEstimateReminderMatch = pathname.match(/^\/api\/estimates\/(EST-[^/]+)\/remind$/);
     if (retrySafeEstimateReminderMatch && req.method === 'POST') {
