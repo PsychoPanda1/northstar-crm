@@ -540,16 +540,16 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async notifyJob(id, template, channel = 'SMS') {
+  async notifyJob(id, template, channel = 'SMS', idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for job notifications');
-    const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/notify`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ template, channel }) });
+    const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/notify`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ template, channel }) });
     if (!response.ok) throw new Error('job notification failed');
     return response.json();
   }
 
-  async remindJob(id, channel = 'SMS') {
+  async remindJob(id, channel = 'SMS', idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for appointment reminders');
-    const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/remind`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ channel }) });
+    const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/remind`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ channel }) });
     if (!response.ok) throw new Error('appointment reminder failed');
     return response.json();
   }
