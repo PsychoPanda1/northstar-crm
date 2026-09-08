@@ -53,6 +53,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Structured technician checklists required before mobile completion
 - Owners can attach up to 12 required technician form templates to a pricebook service; those forms are copied into new booked or converted jobs and must be completed before closeout
 - Owners can configure and preview those technician forms through a bounded visual builder for form names, field types, select options, required fields, and conditional visibility, with an advanced JSON editor retained for migrations
+- Workspace setup round-trips guided landing-page intake fields, including select choices, so owners can edit connected service qualification without silently dropping booking options
 - Owners and dispatchers can revise a job checklist before field work begins, with audit history and server-enforced locking after start
 - All API and static responses receive a browser security baseline; production mode additionally enables HSTS
 - CI runs a Node 20/22 verification matrix with a ten-minute timeout, stale-run cancellation, manual reruns, and a production-configured container readiness smoke check
