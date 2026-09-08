@@ -119,6 +119,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Customer service-plan visits and pause/resume/change/cancel requests use accessible validated dialogs with tenant-scoped plans, saved locations, availability, idempotent submissions, and explicit service-office follow-up states
 - Field-team creation uses an accessible role-and-skill dialog while preserving idempotent tenant-scoped roster creation for dispatch recommendations
 - Dispatch route optimization uses an accessible date, technician, depot, and travel-speed dialog while preserving server-side time-window safety and retry-safe mutations
+- Larger technician routes use a bounded deterministic beam search before 2-opt refinement, improving time-window-safe ordering without unbounded dispatch latency
 - Inbound calls can be converted into dispatchable jobs through an accessible booking dialog that captures appointment time, service, address, priority, and a retry-safe booking key
 - Completed jobs can be invoiced through a structured quote-to-cash dialog with validated amount, payment terms, line items, accepted-estimate scope preservation, and retry-safe creation
 - Release verification tolerates slower CI runner startup for the isolated rate-limit server while retaining the same healthcheck contract

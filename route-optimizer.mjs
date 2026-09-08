@@ -82,10 +82,61 @@ const nearestNeighborRoute = (stops, start, respectTimeWindows, travelSpeedKph, 
   return ordered;
 };
 
+// A greedy route can choose a nearby stop that makes a later appointment
+// unreachable even though another feasible ordering exists. Keep the search
+// bounded for owner-facing dispatch responsiveness, but retain several
+// feasible partial routes so larger service days get a better global result.
+const beamTimeWindowRoute = (stops, start, travelSpeedKph) => {
+  const beamWidth = stops.length > 32 ? 10 : 16;
+  const seedLimit = Math.min(stops.length, beamWidth);
+  let beam = stops.slice().sort(compareStart).slice(0, seedLimit).map((item) => ({
+    ordered: [item],
+    remaining: stops.filter((candidate) => candidate.job.id !== item.job.id),
+    feasible: true
+  }));
+  let expanded = 0;
+  for (let depth = 1; depth < stops.length && beam.length; depth += 1) {
+    const candidates = [];
+    for (const path of beam) {
+      for (const next of path.remaining) {
+        expanded += 1;
+        const ordered = [...path.ordered, next];
+        candidates.push({
+          ordered,
+          remaining: path.remaining.filter((item) => item.job.id !== next.job.id),
+          feasible: respectsTimeWindows(ordered, start, travelSpeedKph)
+        });
+        if (expanded >= 12000) break;
+      }
+      if (expanded >= 12000) break;
+    }
+    const feasible = candidates.filter((item) => item.feasible);
+    const ranked = (feasible.length ? feasible : candidates).sort((a, b) => {
+      const distanceDelta = routeDistanceKm(a.ordered, start) - routeDistanceKm(b.ordered, start);
+      if (Math.abs(distanceDelta) > 0.001) return distanceDelta;
+      return a.ordered.map((item) => item.job.id).join('|').localeCompare(b.ordered.map((item) => item.job.id).join('|'));
+    });
+    beam = ranked.slice(0, beamWidth);
+    if (expanded >= 12000) break;
+  }
+  const complete = beam.filter((item) => item.remaining.length === 0 && item.feasible);
+  if (!complete.length) return null;
+  complete.sort((a, b) => routeDistanceKm(a.ordered, start) - routeDistanceKm(b.ordered, start));
+  return complete[0].ordered;
+};
+
 export const optimizeCoordinateRoute = (stops, start = null, options = {}) => {
   const respectTimeWindows = options.respectTimeWindows !== false;
   const travelSpeedKph = Number.isFinite(Number(options.travelSpeedKph)) && Number(options.travelSpeedKph) > 0 ? Number(options.travelSpeedKph) : null;
   let ordered = nearestNeighborRoute(stops, start, respectTimeWindows, travelSpeedKph);
+  let method = respectTimeWindows ? (travelSpeedKph ? 'coordinate_nearest_neighbor_2opt_travel_time_safe' : 'coordinate_nearest_neighbor_2opt_time_safe') : 'coordinate_nearest_neighbor_2opt';
+  if (respectTimeWindows && travelSpeedKph && stops.length > 4) {
+    const beam = beamTimeWindowRoute(stops, start, travelSpeedKph);
+    if (beam) {
+      ordered = beam;
+      method = 'coordinate_beam_search_2opt_travel_time_safe';
+    }
+  }
   if (!respectTimeWindows && !start && stops.length > 3) {
     const seeds = stops.slice().sort(compareStart).slice(0, Math.min(12, stops.length));
     for (const seed of seeds) {
@@ -114,5 +165,5 @@ export const optimizeCoordinateRoute = (stops, start = null, options = {}) => {
     }
   }
   const timeWindowFeasible = !respectTimeWindows || respectsTimeWindows(ordered, start, travelSpeedKph);
-  return { ordered, distanceKm: Number(routeDistanceKm(ordered, start).toFixed(2)), estimatedTravelMinutes: estimatedTravelMinutes(ordered, start, travelSpeedKph || 32), passes, timeWindowFeasible, method: respectTimeWindows ? (travelSpeedKph ? 'coordinate_nearest_neighbor_2opt_travel_time_safe' : 'coordinate_nearest_neighbor_2opt_time_safe') : 'coordinate_nearest_neighbor_2opt' };
+  return { ordered, distanceKm: Number(routeDistanceKm(ordered, start).toFixed(2)), estimatedTravelMinutes: estimatedTravelMinutes(ordered, start, travelSpeedKph || 32), passes, timeWindowFeasible, method };
 };
