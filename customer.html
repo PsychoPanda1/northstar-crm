@@ -140,6 +140,9 @@
 </script>
 <script>
 (() => {
+  const nativePortalFetch = globalThis.fetch.bind(globalThis);
+  globalThis.northstarPortalFetch = async (input, init = {}) => { const timeoutMs = Number(init.timeoutMs ?? 20000); const controller = typeof globalThis.AbortController === 'function' ? new globalThis.AbortController() : null; if (!controller || typeof globalThis.setTimeout !== 'function') return nativePortalFetch(input, init); const timeout = globalThis.setTimeout(() => controller.abort(), Number.isFinite(timeoutMs) && timeoutMs > 0 ? timeoutMs : 20000); const { timeoutMs: _timeoutMs, ...requestInit } = init; try { return await nativePortalFetch(input, { ...requestInit, signal: controller.signal }); } finally { globalThis.clearTimeout(timeout); } };
+  globalThis.fetch = globalThis.northstarPortalFetch;
   const token = new URLSearchParams(location.search).get('token');
   const button = document.querySelector('[data-action="message"]');
   if (!token || !button) return;
