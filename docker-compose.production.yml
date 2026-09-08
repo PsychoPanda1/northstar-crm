@@ -49,7 +49,24 @@ services:
       - caddy-data:/data
       - caddy-config:/config
 
+  prometheus:
+    image: ${PROMETHEUS_IMAGE:-prom/prometheus:v2.55.1}
+    restart: unless-stopped
+    depends_on:
+      northstar:
+        condition: service_healthy
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=${PROMETHEUS_RETENTION:-15d}
+    volumes:
+      - ./deploy/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./deploy/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - ./secrets/northstar_metrics.secret:/run/secrets/northstar_metrics:ro
+      - prometheus-data:/prometheus
+
 volumes:
   northstar-data:
   caddy-data:
   caddy-config:
+  prometheus-data:

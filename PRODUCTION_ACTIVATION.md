@@ -54,6 +54,8 @@ NORTHSTAR_ENV_FILE=.env.production npm run validate:production-config
 
 The preflight checks tenant/service/catalog alignment, HTTPS origin bindings, identity setup, secret length, and live provider coverage without printing secret values. `/api/ready` remains authoritative after startup.
 
+The production Compose profile also starts an internal Prometheus scraper. Create `secrets/northstar_metrics.secret` with the same value as `NORTHSTAR_METRICS_SECRET`; keep the file outside version control. It retains metrics on a named volume and alerts on target outages, storage integrity failures, invalid backups, and failed provider queues.
+
 Run the local release suite first:
 
 ```sh

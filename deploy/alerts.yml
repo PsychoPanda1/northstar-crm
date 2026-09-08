@@ -1,0 +1,35 @@
+groups:
+  - name: northstar-production
+    rules:
+      - alert: NorthstarTargetDown
+        expr: up{job="northstar"} == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: Northstar metrics endpoint is unavailable
+          description: Prometheus cannot scrape the authenticated Northstar metrics endpoint.
+      - alert: NorthstarStorageIntegrityFailed
+        expr: northstar_storage_integrity{job="northstar"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: Northstar persistent storage integrity failed
+          description: Stop accepting traffic and follow the restore runbook.
+      - alert: NorthstarBackupInvalid
+        expr: northstar_backup_valid{job="northstar"} == 0
+        for: 10m
+        labels:
+          severity: critical
+        annotations:
+          summary: Northstar backup is missing or invalid
+          description: The last-known-good backup is not currently valid.
+      - alert: NorthstarProviderQueueFailed
+        expr: sum by (queue) (northstar_queue_failed{job="northstar"}) > 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: Northstar provider queue has failed work
+          description: Review the authenticated Operations health workspace before retrying.
