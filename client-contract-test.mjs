@@ -26,6 +26,7 @@ const inventoryCycleCount = readFileSync(`${root}inventory-cycle-count-dialog.js
 const inventoryTransfer = readFileSync(`${root}inventory-transfer-dialog.js`, 'utf8');
 const reportSchedule = readFileSync(`${root}report-schedule-dialog.js`, 'utf8');
 const payrollPeriod = readFileSync(`${root}payroll-period-dialog.js`, 'utf8');
+const estimateMedia = readFileSync(`${root}estimate-media-dialog.js`, 'utf8');
 const replenishmentDialog = readFileSync(`${root}replenishment-order-dialog.js`, 'utf8');
 const dispatchRecovery = readFileSync(`${root}dispatch-recovery-dialog.js`, 'utf8');
 const planStatusOwner = readFileSync(`${root}plan-status-owner.js`, 'utf8');
@@ -294,6 +295,7 @@ assert(index.includes('inventory-cycle-count-dialog.js') && northstarServiceWork
 assert(index.includes('inventory-transfer-dialog.js') && northstarServiceWorker.includes("'/inventory-transfer-dialog.js'") && inventoryTransfer.includes('transferInventory') && inventoryTransfer.includes('listInventoryLocations') && inventoryTransfer.includes('stopImmediatePropagation()'), 'owner inventory transfers are not safely wired');
 assert(index.includes('report-schedule-dialog.js') && northstarServiceWorker.includes("'/report-schedule-dialog.js'") && reportSchedule.includes('listCustomReportViews') && reportSchedule.includes('createCustomReportSchedule') && reportSchedule.includes('stopImmediatePropagation()'), 'owner report scheduling is not safely wired');
 assert(index.includes('payroll-period-dialog.js') && northstarServiceWorker.includes("'/payroll-period-dialog.js'") && payrollPeriod.includes('createPayrollRun') && payrollPeriod.includes('stopImmediatePropagation()'), 'owner payroll period creation is not safely wired');
+assert(index.includes('estimate-media-dialog.js') && northstarServiceWorker.includes("'/estimate-media-dialog.js'") && estimateMedia.includes('addEstimateMedia') && estimateMedia.includes("parsed?.protocol !== 'https:'") && estimateMedia.includes('stopImmediatePropagation()'), 'owner estimate media attachment is not safely wired');
 assert(index.includes('replenishment-order-dialog.js') && northstarServiceWorker.includes("'/replenishment-order-dialog.js'") && replenishmentDialog.includes('getInventoryReplenishment') && replenishmentDialog.includes('createReplenishmentOrders') && replenishmentDialog.includes('stopImmediatePropagation()'), 'owner replenishment ordering is not safely wired');
 assert(index.includes('dispatch-recovery-dialog.js') && northstarServiceWorker.includes("'/dispatch-recovery-dialog.js'") && dispatchRecovery.includes('markJobNoShow') && dispatchRecovery.includes('rebookJob') && dispatchRecovery.includes('getAvailability') && dispatchRecovery.includes('stopImmediatePropagation()'), 'owner dispatch recovery is not safely wired');
 assert(index.includes('asset-lookup-dialog.js') && northstarServiceWorker.includes("'/asset-lookup-dialog.js'") && northstarServiceWorker.includes("'northstar-shell-v32'"), 'owner equipment lookup is not safely wired');
