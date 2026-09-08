@@ -494,6 +494,17 @@ const issueInvoiceToken = (invoice) => { const payload = Buffer.from(JSON.string
 const readInvoiceToken = (token) => { const [payload, signature] = String(token || '').split('.'); if (!payload || !signature) return null; const expected = sign(payload); if (signature.length !== expected.length || !timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) return null; try { const claims = JSON.parse(Buffer.from(payload, 'base64url')); return claims.scope === 'invoice' && claims.exp > Date.now() && tenants[claims.tenantId] ? claims : null; } catch { return null; } };
 const cookieValue = (req, name) => String(req.headers.cookie || '').split(';').map((part) => part.trim().split('=')) .find(([key]) => key === name)?.[1] || '';
 const sessionTokenFromCookie = (req) => { try { return decodeURIComponent(cookieValue(req, 'northstar_session')); } catch { return ''; } };
+const cookieSessionMutationOriginAllowed = (req) => {
+  if (!sessionTokenFromCookie(req) || String(req.headers.authorization || '').startsWith('Bearer ')) return true;
+  const origin = String(req.headers.origin || '').trim();
+  if (!origin) return false;
+  try {
+    const parsed = new URL(origin);
+    const protocol = String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim() || (process.env.NODE_ENV === 'production' ? 'https' : 'http');
+    const sameHost = parsed.origin === `${protocol}://${String(req.headers.host || '').trim()}`;
+    return sameHost || ALLOWED_ORIGINS.has(parsed.origin);
+  } catch { return false; }
+};
 const runtimeAccountsFor = (tenantId) => (state.get(tenantId).userAccounts || []).filter((item) => item.status !== 'Suspended');
 const authenticate = (req) => {
   const raw = req.headers.authorization || '';
@@ -1650,6 +1661,7 @@ const server = createServer(async (req, res) => {
       return json(res, 200, { ...result, duplicate: false });
     }
     if (req.method === 'OPTIONS' && pathname.startsWith('/api/')) { const origin = String(req.headers.origin || ''); const requestedService = requestUrl.searchParams.get('service'); const serviceBoundPath = ['/api/public/tenant', '/api/public/catalog', '/api/public/availability', '/api/public/bookings', '/api/public/leads'].includes(pathname); if (!originAllowedForService(origin, serviceBoundPath ? requestedService : '')) return json(res, 403, { error: 'origin_not_allowed' }); res.setHeader('access-control-allow-origin', origin); res.setHeader('access-control-allow-methods', 'GET,POST,PATCH,PUT,OPTIONS'); res.setHeader('access-control-allow-headers', 'content-type,authorization,idempotency-key,x-northstar-signature'); res.setHeader('access-control-max-age', '600'); res.setHeader('vary', 'Origin'); res.writeHead(204); return res.end(); }
+    if (pathname.startsWith('/api/') && !['GET', 'HEAD', 'OPTIONS'].includes(req.method) && !pathname.startsWith('/api/webhooks/') && !cookieSessionMutationOriginAllowed(req)) return json(res, 403, { error: 'same_origin_required' });
     if (pathname === '/api/integrations/leads/dispatch' && req.method === 'POST') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); if (!['owner', 'dispatcher'].includes(claims.role)) return json(res, 403, { error: 'forbidden' }); if (!leadProviderConfigured(claims.tenantId)) return json(res, 503, { error: 'lead_provider_not_configured' }); const saved = state.get(claims.tenantId); const body = await readBody(req); const result = await dispatchLeads(saved, claims, body.limit); if (result.error) return json(res, 503, result); return json(res, 200, result); }
     if (pathname === '/api/integrations/inventory/dispatch' && req.method === 'POST') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); if (!['owner', 'dispatcher', 'accountant'].includes(claims.role)) return json(res, 403, { error: 'forbidden' }); if (!inventoryProviderConfigured(claims.tenantId)) return json(res, 503, { error: 'inventory_provider_not_configured' }); const saved = state.get(claims.tenantId); const body = await readBody(req); const result = await dispatchInventoryTransactions(saved, claims, body.limit); if (result.error) return json(res, 503, result); return json(res, 200, result); }
     if (pathname === '/api/integrations/accounting/dispatch' && req.method === 'POST') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); if (!['owner', 'accountant'].includes(claims.role)) return json(res, 403, { error: 'forbidden' }); if (!accountingProviderConfigured(claims.tenantId)) return json(res, 503, { error: 'accounting_provider_not_configured' }); const saved = state.get(claims.tenantId); const body = await readBody(req); const result = await dispatchAccountingRecords(saved, claims, body.limit); if (result.error) return json(res, 503, result); return json(res, 200, result); }
