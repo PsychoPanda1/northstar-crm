@@ -1318,16 +1318,16 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async updateJobChecklist(jobId, items) {
+  async updateJobChecklist(jobId, items, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for checklist management');
-    const response = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/checklist`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ items }) });
+    const response = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/checklist`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ items }) });
     if (!response.ok) throw new Error('job checklist update failed');
     return response.json();
   }
 
-  async setJobFormRequirements(jobId, formNames) {
+  async setJobFormRequirements(jobId, formNames, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for form requirements');
-    const response = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/form-requirements`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ formNames }) });
+    const response = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/form-requirements`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ formNames }) });
     if (!response.ok) throw new Error('job form requirements update failed');
     return response.json();
   }
