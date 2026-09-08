@@ -2802,7 +2802,7 @@ if (sqliteStore && BACKUP_FILE && !existsSync(BACKUP_FILE)) { try { sqliteStore.
 if (AUTOMATION_INTERVAL_MS) void runScheduledAutomations().catch((error) => console.error(JSON.stringify({ automation: 'scheduled-startup', error: String(error?.message || error) })));
 const automationTimer = AUTOMATION_INTERVAL_MS ? setInterval(() => { void runScheduledAutomations().catch((error) => console.error(JSON.stringify({ automation: 'scheduled', error: String(error?.message || error) }))); }, AUTOMATION_INTERVAL_MS) : null;
 automationTimer?.unref();
-server.listen(PORT, () => console.log(`Northstar CRM running at http://localhost:${PORT}`));
+server.listen(PORT, () => console.log(`Northstar CRM running at http://localhost:${server.address()?.port || PORT}`));
 const shutdown = () => server.close(() => process.exit(0));
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
