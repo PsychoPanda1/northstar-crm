@@ -1353,9 +1353,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async assignJobVehicle(jobId, vehicleId) {
+  async assignJobVehicle(jobId, vehicleId, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for fleet');
-    const response = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/vehicle`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ vehicleId }) });
+    const response = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/vehicle`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ vehicleId }) });
     if (!response.ok) throw new Error('vehicle assignment failed');
     return response.json();
   }
@@ -1367,9 +1367,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async updateVehicleStatus(vehicleId, status) {
+  async updateVehicleStatus(vehicleId, status, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for fleet');
-    const response = await fetch(`/api/vehicles/${encodeURIComponent(vehicleId)}/status`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ status }) });
+    const response = await fetch(`/api/vehicles/${encodeURIComponent(vehicleId)}/status`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ status }) });
     if (!response.ok) throw new Error('vehicle status update failed');
     return response.json();
   }

@@ -137,6 +137,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Fleet status changes use a validated Active/Maintenance/Retired dialog backed by the tenant-authorized vehicle API
 - Fleet maintenance uses a bounded service-due date and odometer dialog with explicit clear-date behavior and tenant-authorized persistence
 - Dispatch vehicle assignment uses an active-fleet picker with tenant-authorized assignment and server-side lifecycle/conflict checks
+- Vehicle assignment and Active/Maintenance/Retired fleet status changes use idempotent retries so intermittent owner or dispatch connections cannot duplicate fleet mutations
 - Bulk dispatch assignment and status changes use an accessible multi-job workflow with tenant-authorized technician selection and lifecycle validation
 - Manual route sequencing uses a loaded stop manifest with unique-position validation and tenant-authorized route-order updates
 - Bulk invoicing uses a completed-job batch review with per-job amounts, shared line-item validation, payment terms, and idempotent server submission

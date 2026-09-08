@@ -1057,6 +1057,43 @@ const server = createServer(async (req, res) => {
       recordAudit(saved, claims, 'job.visit.status', 'visit', visit.id, `${job.id} · ${visit.status}`);
       persist(); return json(res, 200, { ...visit, duplicate: false });
     }
+    const retryableVehicleStatusMatch = pathname.match(/^\/api\/vehicles\/([^/]+)\/status$/);
+    if (retryableVehicleStatusMatch && req.method === 'POST') {
+      const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' });
+      if (!['owner', 'dispatcher'].includes(claims.role)) return json(res, 403, { error: 'forbidden' });
+      const saved = state.get(claims.tenantId); const vehicle = saved.vehicles.find((item) => item.id === retryableVehicleStatusMatch[1]);
+      if (!vehicle) return json(res, 404, { error: 'vehicle_not_found' });
+      const body = await readBody(req); const status = String(body.status || '').trim();
+      if (!['Active', 'Maintenance', 'Retired'].includes(status)) return json(res, 422, { error: 'invalid_vehicle_status' });
+      const idempotencyKey = String(req.headers['idempotency-key'] || '').trim().slice(0, 100); const fingerprint = payloadFingerprint({ status });
+      if (idempotencyKey && vehicle.statusIdempotencyKey === idempotencyKey) { if (vehicle.statusIdempotencyFingerprint !== fingerprint) return json(res, 409, { error: 'idempotency_key_reused' }); return json(res, 200, { vehicle, duplicate: true }); }
+      if (vehicle.status === status) return json(res, 200, { vehicle, duplicate: true });
+      const previous = vehicle.status || 'Active'; vehicle.status = status; vehicle.updatedAt = new Date().toISOString();
+      if (idempotencyKey) { vehicle.statusIdempotencyKey = idempotencyKey; vehicle.statusIdempotencyFingerprint = fingerprint; }
+      recordAudit(saved, claims, 'vehicle.status.updated', 'vehicle', vehicle.id, `${previous} -> ${status}`);
+      persist(); return json(res, 200, { vehicle, duplicate: false });
+    }
+    const retryableVehicleAssignmentMatch = pathname.match(/^\/api\/jobs\/([^/]+)\/vehicle$/);
+    if (retryableVehicleAssignmentMatch && req.method === 'POST') {
+      const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' });
+      if (!['owner', 'dispatcher'].includes(claims.role)) return json(res, 403, { error: 'forbidden' });
+      const saved = state.get(claims.tenantId); const job = saved.jobs.find((item) => item.id === retryableVehicleAssignmentMatch[1]);
+      if (!job) return json(res, 404, { error: 'job_not_found' });
+      if (['Completed', 'Canceled'].includes(job.status)) return json(res, 409, { error: 'terminal_job_vehicle_locked' });
+      const body = await readBody(req); const vehicleId = String(body.vehicleId || ''); const vehicle = saved.vehicles.find((item) => item.id === vehicleId);
+      if (!vehicle) return json(res, 404, { error: 'vehicle_not_found' });
+      if (vehicle.status !== 'Active') return json(res, 409, { error: 'vehicle_not_active' });
+      const idempotencyKey = String(req.headers['idempotency-key'] || '').trim().slice(0, 100); const fingerprint = payloadFingerprint({ vehicleId });
+      if (idempotencyKey && job.vehicleIdempotencyKey === idempotencyKey) { if (job.vehicleIdempotencyFingerprint !== fingerprint) return json(res, 409, { error: 'idempotency_key_reused' }); return json(res, 200, { job, vehicle, duplicate: true }); }
+      if (job.vehicleId === vehicle.id) return json(res, 200, { job, vehicle, duplicate: true });
+      const conflict = saved.jobs.find((candidate) => candidate.id !== job.id && candidate.vehicleId === vehicle.id && !['Completed', 'Canceled'].includes(candidate.status) && (candidate.time === job.time || rangesOverlap(Date.parse(candidate.startsAt || ''), Date.parse(candidate.endsAt || ''), Date.parse(job.startsAt || ''), Date.parse(job.endsAt || ''))));
+      if (conflict) return json(res, 409, { error: 'vehicle_schedule_conflict', conflictJobId: conflict.id, conflictTime: conflict.time });
+      job.vehicleId = vehicle.id; job.vehicle = vehicle.name; job.updatedAt = new Date().toISOString();
+      if (idempotencyKey) { job.vehicleIdempotencyKey = idempotencyKey; job.vehicleIdempotencyFingerprint = fingerprint; }
+      recordActivity(saved, job.customer || job.customerId, 'Fleet', `Assigned ${vehicle.name} to ${job.service}.`, 'Vehicle assigned');
+      recordAudit(saved, claims, 'job.vehicle.assigned', 'job', job.id, `${vehicle.name} · ${vehicle.licensePlate}`);
+      persist(); return json(res, 200, { job, vehicle, duplicate: false });
+    }
     const retryableJobCrewMatch = pathname.match(/^\/api\/jobs\/([^/]+)\/crew$/);
     if (retryableJobCrewMatch && req.method === 'POST') {
       const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' });
