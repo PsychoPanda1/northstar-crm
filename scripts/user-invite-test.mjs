@@ -27,7 +27,7 @@ try {
   if (!login.response.ok || !login.body.token) throw new Error('owner login failed');
   const authorization = { authorization: `Bearer ${login.body.token}`, 'content-type': 'application/json', 'idempotency-key': 'invite-once' };
   const invite = await request('/api/users/invites', { method: 'POST', headers: authorization, body: JSON.stringify({ name: 'New Dispatcher', email: 'dispatcher@example.test', role: 'dispatcher' }) });
-  if (invite.response.status !== 201 || !invite.body.inviteUrl || !invite.body.invite?.expiresAt) throw new Error('invite creation failed');
+  if (invite.response.status !== 201 || !invite.body.inviteUrl || !invite.body.invite?.expiresAt || invite.body.delivery?.channel !== 'Email' || invite.body.delivery?.status !== 'Queued (provider pending)') throw new Error('invite creation did not queue an auditable email delivery');
   if (JSON.stringify(invite.body).includes('tokenHash')) throw new Error('invite hash leaked');
   const token = new URL(invite.body.inviteUrl).searchParams.get('token');
   if (!token) throw new Error('invite token missing from returned URL');
