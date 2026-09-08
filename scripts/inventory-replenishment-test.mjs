@@ -24,7 +24,9 @@ try {
   const headers = { authorization: `Bearer ${login.body.token}` };
   const plan = await request('/api/inventory-replenishment', { headers });
   const item = plan.body.items?.find((candidate) => candidate.materialId === materialId);
-  if (!login.response.ok || plan.response.status !== 200 || !item || item.priority !== 'Low stock' || item.targetQuantity !== 12 || item.openPurchaseQuantity !== 4 || item.recommendedPurchaseQuantity !== 5 || item.locations?.find((location) => location.id === 'truck_alpha')?.shortage !== 5 || plan.body.summary?.critical !== 0) throw new Error('replenishment planning did not calculate tenant-scoped stock gaps and open purchase coverage');
+  const orders = await request('/api/purchase-orders/replenishment', { method: 'POST', headers: { ...headers, 'content-type': 'application/json', 'idempotency-key': 'replenishment-batch-1' }, body: JSON.stringify({ materialIds: [materialId], vendor: 'Supply House' }) });
+  const duplicate = await request('/api/purchase-orders/replenishment', { method: 'POST', headers: { ...headers, 'content-type': 'application/json', 'idempotency-key': 'replenishment-batch-1' }, body: JSON.stringify({ materialIds: [materialId], vendor: 'Supply House' }) });
+  if (!login.response.ok || plan.response.status !== 200 || !item || item.priority !== 'Low stock' || item.targetQuantity !== 12 || item.openPurchaseQuantity !== 4 || item.recommendedPurchaseQuantity !== 5 || item.locations?.find((location) => location.id === 'truck_alpha')?.shortage !== 5 || plan.body.summary?.critical !== 0 || orders.response.status !== 201 || orders.body.orders?.[0]?.quantity !== 5 || duplicate.response.status !== 200 || !duplicate.body.duplicate) throw new Error('replenishment planning did not calculate tenant-scoped stock gaps, open purchase coverage, or safe batch ordering');
   const persisted = JSON.parse(readFileSync(dataFile, 'utf8'));
   if (!persisted[tenantId].materials?.some((material) => material.id === materialId)) throw new Error('replenishment planning unexpectedly mutated inventory');
   console.log('Northstar inventory replenishment test passed');

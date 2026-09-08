@@ -1172,6 +1172,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async createReplenishmentOrders(materialIds, vendor, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for replenishment orders');
+    const response = await fetch('/api/purchase-orders/replenishment', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ materialIds, vendor }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'replenishment order creation failed');
+    return response.json();
+  }
+
   async receivePurchaseOrder(id, quantity = null, idempotencyKey = crypto.randomUUID(), locationId = '') {
     if (!this.remote) throw new Error('API required for purchase order receiving');
     const body = { ...(quantity === null ? {} : { quantity }), ...(locationId ? { locationId } : {}) };

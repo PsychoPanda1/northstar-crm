@@ -22,6 +22,7 @@ NORTHSTAR_ASSETS.push('/commission-rate-owner.js');
 NORTHSTAR_ASSETS.push('/customer-tax-owner.js');
 NORTHSTAR_ASSETS.push('/customer-merge-owner.js');
 NORTHSTAR_ASSETS.push('/technician-scorecard-owner.js');
+NORTHSTAR_ASSETS.push('/inventory-replenishment-owner.js');
 const NORTHSTAR_OWNER_PATHS = ['/portal', '/portal/', '/index.html'];
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(NORTHSTAR_SHELL_CACHE).then((cache) => cache.addAll([...NORTHSTAR_SHELLS, ...NORTHSTAR_ASSETS])).then(() => self.skipWaiting()));
