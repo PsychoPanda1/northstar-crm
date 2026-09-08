@@ -1360,9 +1360,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async assignJobCrew(jobId, technicians) {
+  async assignJobCrew(jobId, technicians, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for crew management');
-    const response = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/crew`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ technicians }) });
+    const response = await fetch(`/api/jobs/${encodeURIComponent(jobId)}/crew`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ technicians }) });
     if (!response.ok) throw new Error('job crew assignment failed');
     return response.json();
   }

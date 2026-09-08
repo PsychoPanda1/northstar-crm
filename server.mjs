@@ -1038,6 +1038,31 @@ const server = createServer(async (req, res) => {
     applySecurityHeaders(res);
     const requestUrl = new URL(req.url, `http://${req.headers.host}`);
     const pathname = requestUrl.pathname;
+    const retryableJobCrewMatch = pathname.match(/^\/api\/jobs\/([^/]+)\/crew$/);
+    if (retryableJobCrewMatch && req.method === 'POST') {
+      const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' });
+      if (!['owner', 'dispatcher'].includes(claims.role)) return json(res, 403, { error: 'forbidden' });
+      const saved = state.get(claims.tenantId); const job = saved.jobs.find((item) => item.id === retryableJobCrewMatch[1]);
+      if (!job) return json(res, 404, { error: 'job_not_found' });
+      if (['Completed', 'Canceled'].includes(job.status)) return json(res, 409, { error: 'terminal_job_crew_locked' });
+      const body = await readBody(req); const names = [...new Set((Array.isArray(body.technicians) ? body.technicians : []).map((name) => String(name || '').trim()).filter(Boolean))];
+      if (!names.length || names.length > 8) return json(res, 422, { error: 'one_to_eight_technicians_required' });
+      const idempotencyKey = String(req.headers['idempotency-key'] || '').trim().slice(0, 100); const fingerprint = payloadFingerprint({ technicians: names });
+      if (idempotencyKey && job.crewIdempotencyKey === idempotencyKey) { if (job.crewIdempotencyFingerprint !== fingerprint) return json(res, 409, { error: 'idempotency_key_reused' }); return json(res, 200, { job, duplicate: true }); }
+      const requiredSkill = job.requiredSkill || tenants[claims.tenantId].serviceLabel;
+      const members = names.map((name) => teamFor(claims.tenantId).find((member) => member.name === name));
+      if (members.some((member) => !member)) return json(res, 422, { error: 'technician_not_on_team' });
+      if (members.some((member) => member.skills.length && !member.skills.some((skill) => skill.toLowerCase() === requiredSkill.toLowerCase()))) return json(res, 422, { error: 'technician_missing_required_skill', requiredSkill });
+      const conflict = names.map((name) => ({ name, conflict: scheduleConflictFor(claims.tenantId, job.id, name, job.time, Date.parse(job.startsAt || ''), Date.parse(job.endsAt || '')) })).find((item) => item.conflict);
+      if (conflict) return json(res, 409, { error: 'technician_schedule_conflict', technician: conflict.name, conflictJobId: conflict.conflict.id, conflictTime: conflict.conflict.time });
+      if (Array.isArray(job.crew) && job.crew.join('|') === names.join('|')) return json(res, 200, { job, duplicate: true });
+      job.crew = names; job.technician = names[0]; job.updatedAt = new Date().toISOString();
+      if (job.status === 'Unassigned') { job.status = 'Confirmed'; queueJobNotification(saved, job, 'confirmation'); }
+      if (idempotencyKey) { job.crewIdempotencyKey = idempotencyKey; job.crewIdempotencyFingerprint = fingerprint; }
+      recordActivity(saved, job.customer || job.customerId, 'Dispatch', `Assigned crew ${names.join(', ')} to ${job.service}.`, job.status);
+      recordAudit(saved, claims, 'job.crew.assigned', 'job', job.id, names.join(', '));
+      persist(); return json(res, 200, { job, duplicate: false });
+    }
     const retryableJobUpdateMatch = pathname.match(/^\/api\/jobs\/([^/]+)\/(assign|status)$/);
     if (retryableJobUpdateMatch && req.method === 'POST') {
       const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' });

@@ -33,7 +33,7 @@
         submit.disabled = true;
         message.textContent = 'Checking skills and schedule…';
         try {
-          await repository.assignJobCrew(button.dataset.crewAssign, technicians);
+          await repository.assignJobCrew(button.dataset.crewAssign, technicians, crypto.randomUUID());
           dialog.close();
           notify(`Crew assigned: ${technicians.join(', ')}.`);
           document.querySelector('#drawer-refresh')?.click();
