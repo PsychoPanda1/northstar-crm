@@ -37,6 +37,11 @@ try {
   if (replay.response.status !== 410 || replay.body.error !== 'invite_expired_or_invalid') throw new Error('invite was reusable');
   const secondInvite = await request('/api/users/invites', { method: 'POST', headers: { ...authorization, 'idempotency-key': 'invite-revoke-once' }, body: JSON.stringify({ name: 'Revoked Technician', email: 'revoked@example.test', role: 'technician' }) });
   if (secondInvite.response.status !== 201) throw new Error('second invite creation failed');
+  const resent = await request(`/api/users/invites/${encodeURIComponent(secondInvite.body.invite.id)}/resend`, { method: 'POST', headers: { ...authorization, 'idempotency-key': 'invite-resend-once' }, body: '{}' });
+  if (resent.response.status !== 200 || !resent.body.inviteUrl || resent.body.inviteUrl === secondInvite.body.inviteUrl || resent.body.delivery?.channel !== 'Email') throw new Error('invite resend did not rotate the link and queue a fresh email');
+  const oldToken = new URL(secondInvite.body.inviteUrl).searchParams.get('token');
+  const oldAccept = await request('/api/auth/invites/accept', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ token: oldToken, password: 'technician-password-123' }) });
+  if (oldAccept.response.status !== 410) throw new Error('previous invite token remained valid after resend');
   const revoke = await request(`/api/users/invites/${encodeURIComponent(secondInvite.body.invite.id)}/revoke`, { method: 'POST', headers: authorization, body: '{}' });
   if (revoke.response.status !== 200 || revoke.body.invite?.status !== 'Revoked') throw new Error('invite revocation failed');
   const revokedToken = new URL(secondInvite.body.inviteUrl).searchParams.get('token');

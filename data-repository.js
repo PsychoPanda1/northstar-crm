@@ -1417,6 +1417,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async resendUserInvite(id, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for user invitations');
+    const response = await fetch(`/api/users/invites/${encodeURIComponent(id)}/resend`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: '{}' });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'user invitation resend failed');
+    return response.json();
+  }
+
   async revokeUserInvite(id) {
     if (!this.remote) throw new Error('API required for user invitations');
     const response = await fetch(`/api/users/invites/${encodeURIComponent(id)}/revoke`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: '{}' });

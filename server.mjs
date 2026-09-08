@@ -1912,6 +1912,35 @@ if (pathname === '/api/ready' && req.method === 'GET') { const checks = { config
       persist();
       return json(res, 201, { invite: { id: invite.id, email, role, expiresAt, status: invite.status }, inviteUrl, delivery: { id: inviteMessage.id, channel: inviteMessage.channel, status: inviteMessage.status }, duplicate: false });
     }
+    const inviteResendMatch = pathname.match(/^\/api\/users\/invites\/([^/]+)\/resend$/);
+    if (inviteResendMatch && req.method === 'POST') {
+      const claims = authenticate(req);
+      if (!claims) return json(res, 401, { error: 'unauthorized' });
+      if (claims.role !== 'owner') return json(res, 403, { error: 'owner_required' });
+      const saved = state.get(claims.tenantId);
+      const invite = (saved.userInvites || []).find((item) => item.id === inviteResendMatch[1]);
+      if (!invite) return json(res, 404, { error: 'invite_not_found' });
+      if (invite.status === 'Accepted') return json(res, 409, { error: 'accepted_invite_locked' });
+      const idempotencyKey = String(req.headers['idempotency-key'] || '').trim().slice(0, 100);
+      if (idempotencyKey && invite.resendIdempotencyKey === idempotencyKey) return json(res, 409, { error: 'invite_resend_already_processed' });
+      const rawToken = randomBytes(32).toString('base64url');
+      const now = new Date().toISOString();
+      const expiresAt = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+      const service = Object.entries(serviceTenant).find(([, tenantId]) => tenantId === claims.tenantId)?.[0] || 'default';
+      const inviteUrl = publicUrlFor(req, `/accept-invite.html?service=${encodeURIComponent(service)}&token=${encodeURIComponent(rawToken)}`);
+      invite.tokenHash = inviteTokenHash(rawToken);
+      invite.status = 'Pending';
+      invite.expiresAt = expiresAt;
+      invite.resentAt = now;
+      invite.resendCount = Number(invite.resendCount || 0) + 1;
+      const inviteMessage = queueUserInviteMessage(saved, invite, inviteUrl);
+      invite.messageId = inviteMessage.id;
+      invite.resendDelivery = { id: inviteMessage.id, channel: inviteMessage.channel, status: inviteMessage.status };
+      if (idempotencyKey) invite.resendIdempotencyKey = idempotencyKey;
+      recordAudit(saved, claims, 'user.invite.resent', 'user_invite', invite.id, `${invite.email} · ${invite.role} · expires ${expiresAt}`);
+      persist();
+      return json(res, 200, { invite: { id: invite.id, email: invite.email, role: invite.role, expiresAt, status: invite.status }, inviteUrl, delivery: invite.resendDelivery, duplicate: false });
+    }
     const inviteRevokeMatch = pathname.match(/^\/api\/users\/invites\/([^/]+)\/revoke$/);
     if (inviteRevokeMatch && req.method === 'POST') {
       const claims = authenticate(req);
