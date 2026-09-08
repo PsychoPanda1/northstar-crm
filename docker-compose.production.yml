@@ -2,6 +2,9 @@ services:
   northstar:
     image: ${NORTHSTAR_IMAGE:-ghcr.io/psychopanda1/northstar-crm:latest}
     restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
     env_file:
       - .env.production
     environment:

@@ -17,5 +17,5 @@ ENV NORTHSTAR_REQUIRE_LIVE_PROVIDERS=true
 USER node
 EXPOSE 4173
 VOLUME ["/app/data"]
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 CMD node -e "fetch('http://127.0.0.1:' + (process.env.PORT || 4173) + '/api/ready').then(r => { if (!r.ok) process.exit(1); }).catch(() => process.exit(1))"
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 CMD node -e "fetch('http://127.0.0.1:' + (process.env.PORT || 4173) + '/api/ready').then(async r => { const body = await r.json(); if (!r.ok || body.ok !== true || Object.values(body.checks || {}).some(value => value !== true)) process.exit(1); }).catch(() => process.exit(1))"
 CMD ["node", "server.mjs"]

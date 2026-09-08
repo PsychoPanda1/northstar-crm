@@ -12,6 +12,8 @@ for (const snippet of [
   'NORTHSTAR_REQUIRE_SQLITE: "true"',
   'NORTHSTAR_EXPECTED_WRITERS: "1"',
   'NORTHSTAR_BACKUP_FILE: /app/data/northstar.sqlite.backup',
+  'read_only: true',
+  '- /tmp',
   'condition: service_healthy',
   './deploy/Caddyfile:/etc/caddy/Caddyfile:ro',
   '443:443'
