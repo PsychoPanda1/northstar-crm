@@ -1091,7 +1091,7 @@ const bulkRescheduleCapacityConflictFor = (tenantId, plans, selected) => {
     if (/^\d{4}-\d{2}-\d{2}$/.test(String(target.date || '')) && minutes > 0) targetsByDate.set(target.date, (targetsByDate.get(target.date) || 0) + minutes);
   }
   for (const [date, targetMinutes] of targetsByDate) {
-    const plannedMinutes = saved.jobs.filter((job) => !selected.has(job.id) && !['Completed', 'Canceled', 'No-show'].includes(job.status) && localDateFor(job.startsAt, tenant.timeZone)).filter((job) => localDateFor(job.startsAt, tenant.timeZone) === date).reduce((sum, job) => {
+    const plannedMinutes = saved.jobs.filter((job) => !selected.has(job.id) && !['Completed', 'Canceled', 'No-show'].includes(job.status) && Number.isFinite(Date.parse(job.startsAt || '')) && localDateFor(job.startsAt, tenant.timeZone) === date).reduce((sum, job) => {
       const start = Date.parse(job.startsAt || ''); const end = Date.parse(job.endsAt || '');
       return Number.isFinite(start) && Number.isFinite(end) && end > start ? sum + Math.round((end - start) / 60000) : sum;
     }, 0);
