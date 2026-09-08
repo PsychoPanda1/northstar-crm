@@ -70,6 +70,9 @@ for (const item of Array.isArray(catalog) ? catalog : []) {
     if (new Set(keys).size !== keys.length || keys.some((key) => !/^[a-z0-9-]{2,80}$/.test(key) || serviceTenants[key] !== String(item?.tenantId || ''))) errors.push(`catalog item ${item?.id || '(unnamed)'} has a cross-tenant or invalid landing-page service scope`);
   }
 }
+for (const [service, tenantId] of Object.entries(serviceTenants || {})) {
+  if (!Array.isArray(catalog) || !catalog.some((item) => String(item?.tenantId || '') === String(tenantId) && (!item?.serviceKeys?.length || item.serviceKeys.map((key) => String(key || '').trim().toLowerCase()).includes(String(service).trim().toLowerCase())))) errors.push(`service ${service} has no visible catalog item`);
+}
 for (const tenantId of tenantIds) {
   if (!mappedTenantIds.has(tenantId)) errors.push(`tenant ${tenantId} has no service mapping`);
   if (!Array.isArray(catalog) || !catalog.some((item) => String(item?.tenantId || '') === tenantId)) errors.push(`tenant ${tenantId} has no catalog item`);

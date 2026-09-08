@@ -19,6 +19,7 @@ for (const snippet of [
   'invalid service details',
   'landing-page service scope',
   'cross-tenant or invalid landing-page service scope',
+  'has no visible catalog item',
   'unique non-empty tenant slugs'
 ]) assert(source.includes(snippet), `production config contract missing: ${snippet}`);
 console.log('Northstar production config contract passed');
