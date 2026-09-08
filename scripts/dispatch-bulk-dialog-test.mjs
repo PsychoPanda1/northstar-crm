@@ -7,6 +7,8 @@ assert.match(source, /data-dispatch-bulk-assign/);
 assert.match(source, /data-bulk-status/);
 assert.match(source, /bulkAssignJobs/);
 assert.match(source, /bulkUpdateJobStatus/);
+assert.match(source, /bulkRescheduleJobs/);
+assert.match(source, /data-bulk-reschedule/);
 assert.match(source, /stopImmediatePropagation/);
 assert.match(source, /form\.reportValidity/);
 assert.match(source, /aria-live="polite"/);

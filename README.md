@@ -22,6 +22,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Signed inbound call tracking with customer/job matching, unknown-caller lead creation, missed-call handling, owner call ledger, and CSV export
 - Provider-supplied call recordings are stored as HTTPS-only metadata, redacted from call list payloads, and available through an owner/dispatcher-only recording handoff until the provider URL expires
 - Dispatch capacity planning with technician/day targets, planned minutes, remaining capacity, and utilization
+- Atomic bulk rescheduling lets dispatchers move up to 50 active jobs onto unique available slots after weather, staffing, or route disruptions, with conflict preflight, customer notifications, audit history, and idempotent retries
 - Dispatch board filters for status, priority, technician, crew membership, and unassigned work
 - Marketing source reporting summarizes landing-page leads, conversions, conversion rate, and attributed lead value
 - Landing-page campaign attribution preserves bounded UTM and click-ID context on public leads and booked jobs for source-aware follow-up

@@ -679,6 +679,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async bulkRescheduleJobs(changes, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for bulk dispatch rescheduling');
+    const response = await fetch('/api/dispatch/bulk-reschedule', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ changes }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'bulk reschedule failed');
+    return response.json();
+  }
+
   async getPaymentSetupHealth() {
     if (!this.remote) throw new Error('API required for payment setup health');
     const response = await fetch('/api/integrations/payment-setup/health', { headers: { authorization: `Bearer ${this.token}` } });
