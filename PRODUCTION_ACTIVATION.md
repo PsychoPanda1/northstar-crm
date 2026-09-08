@@ -91,6 +91,18 @@ GitHub Actions workflow. Supply the deployed HTTPS origin and optional service
 key in the workflow inputs; the workflow only reads the repository and does not
 need provider credentials.
 
+To promote an already-published versioned GHCR image to a configured Docker host,
+run the manual `Deploy Northstar production` workflow. The target host must
+already contain `docker-compose.production.yml`, `.env.production`, and the
+Prometheus metrics secret file, and its Docker login must be authorized to pull
+`ghcr.io/psychopanda1/northstar-crm`. Configure the repository secrets
+`PRODUCTION_SSH_PRIVATE_KEY` and `PRODUCTION_SSH_KNOWN_HOSTS`; enter the exact
+version tag, SSH host/user/path, and public HTTPS origin. The workflow pulls only
+the selected version, waits for all in-container readiness checks, and then
+verifies the public `/api/ready` endpoint. It does not transfer application
+secrets through workflow inputs or treat a successful image publication as a
+production release.
+
 `/api/ready` must return HTTP 200 with every returned check true. Validate at least one complete tenant journey: landing-page lead or booking → customer → estimate → approval → scheduled job → technician closeout → invoice → signed payment settlement → customer portal conversation. Confirm the corresponding audit events, provider delivery states, notifications, and customer-safe payloads.
 
 ## 5. Release and handoff

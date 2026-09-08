@@ -62,6 +62,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - A production Compose handoff runs the pinned GHCR image behind Caddy-managed HTTPS with persistent SQLite state, backup volume, readiness-gated startup, and a secret-safe `.env.production.example` template
 - A secret-safe production configuration preflight validates tenant/service/catalog alignment, HTTPS origin bindings, identity setup, secret strength, and live-provider coverage before startup
 - The production Compose profile includes an internal, authenticated Prometheus scraper with durable retention and alerts for readiness, storage integrity, backups, and failed provider queues
+- A manual GitHub deployment workflow promotes a selected attested GHCR version to a preconfigured Docker host over pinned SSH trust, waits for in-container readiness, and verifies the public HTTPS origin without accepting application secrets as workflow inputs
 - Technician photo evidence with bounded HTTPS metadata, captions, timestamps, and owner-visible job records
 - Technician offline updates use an encrypted AES-GCM local queue with token-derived key material, legacy migration, bounded server replay batches, encrypted failed-action envelopes, cross-device retry, durable sync receipts, owner-visible failure notifications, idempotent replay, and explicit conflict review
 - Equipment records support tenant-scoped lookup by barcode, serial number, or asset ID, returning the linked customer equipment history for fast field identification

@@ -1,0 +1,107 @@
+name: Deploy Northstar production
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Existing GHCR image tag to deploy, for example v0.1.59'
+        required: true
+        type: string
+      deployment_url:
+        description: 'Public HTTPS origin to verify after deployment'
+        required: true
+        type: string
+      deploy_host:
+        description: 'SSH host or IP of the Docker deployment server'
+        required: true
+        type: string
+      deploy_user:
+        description: 'SSH user with permission to run Docker Compose'
+        required: true
+        type: string
+      deploy_path:
+        description: 'Absolute path containing docker-compose.production.yml and .env.production'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      IMAGE: ghcr.io/${{ github.repository }}:${{ inputs.image_tag }}
+      DEPLOYMENT_URL: ${{ inputs.deployment_url }}
+      DEPLOY_HOST: ${{ inputs.deploy_host }}
+      DEPLOY_USER: ${{ inputs.deploy_user }}
+      DEPLOY_PATH: ${{ inputs.deploy_path }}
+    steps:
+      - name: Validate deployment inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$IMAGE" =~ ^ghcr\.io/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+:v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo 'image_tag must be a semantic version tag such as v0.1.59' >&2; exit 1; }
+          [[ "$DEPLOYMENT_URL" =~ ^https://[^/]+/?$ ]] || { echo 'deployment_url must be an HTTPS origin without a path' >&2; exit 1; }
+          [[ "$DEPLOY_HOST" != *$'\n'* && "$DEPLOY_USER" != *$'\n'* && "$DEPLOY_PATH" = /* ]] || { echo 'invalid SSH deployment input' >&2; exit 1; }
+
+      - name: Configure SSH trust
+        shell: bash
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.PRODUCTION_SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.PRODUCTION_SSH_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          test -n "$SSH_PRIVATE_KEY" || { echo 'PRODUCTION_SSH_PRIVATE_KEY is required' >&2; exit 1; }
+          test -n "$SSH_KNOWN_HOSTS" || { echo 'PRODUCTION_SSH_KNOWN_HOSTS is required' >&2; exit 1; }
+          install -m 700 -d "$HOME/.ssh"
+          printf '%s\n' "$SSH_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/known_hosts"
+          eval "$(ssh-agent -s)"
+          printf '%s\n' "$SSH_PRIVATE_KEY" | ssh-add -
+          echo "SSH_AUTH_SOCK=$SSH_AUTH_SOCK" >> "$GITHUB_ENV"
+
+      - name: Pull and restart the attested image
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -o BatchMode=yes "$DEPLOY_USER@$DEPLOY_HOST" bash -s -- "$DEPLOY_PATH" "$IMAGE" <<'REMOTE'
+          set -euo pipefail
+          deploy_path="$1"
+          image="$2"
+          case "$deploy_path" in /*) ;; *) echo 'deployment path must be absolute' >&2; exit 1 ;; esac
+          case "$image" in ghcr.io/*:v[0-9]*.[0-9]*.[0-9]*) ;; *) echo 'image must be a versioned GHCR image' >&2; exit 1 ;; esac
+          cd "$deploy_path"
+          test -f docker-compose.production.yml
+          test -f .env.production
+          export NORTHSTAR_IMAGE="$image"
+          docker compose -f docker-compose.production.yml pull northstar
+          docker compose -f docker-compose.production.yml up -d --remove-orphans northstar https prometheus
+          for attempt in $(seq 1 30); do
+            if docker compose -f docker-compose.production.yml exec -T northstar node -e "fetch('http://127.0.0.1:4173/api/ready').then(async r => { const body = await r.json(); if (!r.ok || body.ok !== true || Object.values(body.checks || {}).some(value => value !== true)) process.exit(1); }).catch(() => process.exit(1))"; then
+              exit 0
+            fi
+            sleep 2
+          done
+          docker compose -f docker-compose.production.yml ps
+          exit 1
+          REMOTE
+
+      - name: Verify the public HTTPS deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+          DEPLOYMENT_URL="$DEPLOYMENT_URL" node - <<'NODE'
+          (async () => {
+            const raw = String(process.env.DEPLOYMENT_URL || '').replace(/\/$/, '');
+            const base = new URL(raw);
+            const response = await fetch(`${base.origin}/api/ready`, { signal: AbortSignal.timeout(30000) });
+            const body = await response.json().catch(() => ({}));
+            if (!response.ok || body.ok !== true || Object.values(body.checks || {}).some((value) => value !== true)) {
+              console.error(JSON.stringify({ status: response.status, body }, null, 2));
+              process.exit(1);
+            }
+            console.log(`Production deployment ready: ${base.origin}`);
+          })().catch((error) => { console.error(error.message); process.exit(1); });
+          NODE
