@@ -146,7 +146,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Report CSV exports use the same validated period controls while preserving active filters and grouping
 - Estimate package details use a structured multi-option editor with bounded included-work lines and authorized persistence
 - Technician en-route ETA, job completion acknowledgment, and labor capture use accessible validated dialogs while reusing the encrypted offline queue and idempotent field-action boundary
-- Dispatch assignment uses an accessible roster picker for single and bulk jobs, while server-side skill, availability, and schedule-conflict checks remain authoritative
+- Dispatch assignment uses an accessible roster picker for single and bulk jobs, with idempotent single-job assignment/status retries while server-side skill, availability, lifecycle, and schedule-conflict checks remain authoritative
 - Multi-party invoice billing uses an accessible validated bill-to dialog with existing profile prefill, contact details, payment terms, and server-side tenant-scoped validation
 - Customer conversation replies and outbound SMS/email messages use an accessible composer with tenant-scoped customer selection, channel choice, provider-pending status, and auditable delivery
 - Conversation threads persist owner read acknowledgments with tenant-scoped audit events, so unread customer messages remain visible until an authorized workspace user opens the thread

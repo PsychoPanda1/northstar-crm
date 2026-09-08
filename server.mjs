@@ -1038,6 +1038,62 @@ const server = createServer(async (req, res) => {
     applySecurityHeaders(res);
     const requestUrl = new URL(req.url, `http://${req.headers.host}`);
     const pathname = requestUrl.pathname;
+    const retryableJobUpdateMatch = pathname.match(/^\/api\/jobs\/([^/]+)\/(assign|status)$/);
+    if (retryableJobUpdateMatch && req.method === 'POST') {
+      const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' });
+      if (!['owner', 'dispatcher'].includes(claims.role)) return json(res, 403, { error: 'forbidden' });
+      const saved = state.get(claims.tenantId); const job = saved.jobs.find((item) => item.id === retryableJobUpdateMatch[1]);
+      if (!job) return json(res, 404, { error: 'job_not_found' });
+      const body = await readBody(req); const action = retryableJobUpdateMatch[2];
+      const idempotencyKey = String(req.headers['idempotency-key'] || '').trim().slice(0, 100);
+      const fingerprint = payloadFingerprint({ action, ...(action === 'assign' ? { technician: String(body.technician || '') } : { status: String(body.status || ''), note: String(body.note || '') }) });
+      const storedKey = action === 'assign' ? job.assignmentIdempotencyKey : job.statusIdempotencyKey;
+      const storedFingerprint = action === 'assign' ? job.assignmentIdempotencyFingerprint : job.statusIdempotencyFingerprint;
+      if (idempotencyKey && storedKey === idempotencyKey) {
+        if (storedFingerprint !== fingerprint) return json(res, 409, { error: 'idempotency_key_reused' });
+        return json(res, 200, { ...job, duplicate: true });
+      }
+      let eventNote = ''; let automationTemplate = null;
+      if (action === 'assign') {
+        if (!body.technician || String(body.technician).length > 80) return json(res, 422, { error: 'technician_required' });
+        const technician = teamFor(claims.tenantId).find((member) => member.name === body.technician);
+        if (!technician) return json(res, 422, { error: 'technician_not_on_team' });
+        const requiredSkill = job.requiredSkill || tenants[claims.tenantId].serviceLabel;
+        if (technician.skills.length && !technician.skills.some((skill) => skill.toLowerCase() === requiredSkill.toLowerCase())) return json(res, 422, { error: 'technician_missing_required_skill', requiredSkill });
+        if (job.technician === technician.name) return json(res, 200, { ...job, duplicate: true });
+        const conflict = scheduleConflictFor(claims.tenantId, job.id, technician.name, job.time, Date.parse(job.startsAt || ''), Date.parse(job.endsAt || ''));
+        if (conflict) return json(res, 409, { error: 'technician_schedule_conflict', conflictJobId: conflict.id, conflictTime: conflict.time });
+        if (['Completed', 'Canceled'].includes(job.status)) return json(res, 409, { error: 'terminal_job_cannot_be_reassigned' });
+        if (Array.isArray(job.crew) && job.crew.length) job.crew = [technician.name, ...job.crew.filter((name) => name !== technician.name)]; else delete job.crew;
+        job.technician = technician.name;
+        delete job.routeOrder;
+        if (job.status === 'Unassigned') { job.status = 'Confirmed'; automationTemplate = 'confirmation'; }
+        eventNote = `Assigned ${job.service} to ${job.technician}.`;
+      } else {
+        const allowed = ['Unassigned', 'Confirmed', 'En route', 'In progress', 'Completed', 'Canceled'];
+        const transitions = { Unassigned: ['Confirmed', 'Canceled'], Confirmed: ['Unassigned', 'En route', 'Canceled'], 'En route': ['In progress', 'Canceled'], 'In progress': ['Canceled'] };
+        if (!allowed.includes(body.status)) return json(res, 422, { error: 'invalid_job_status' });
+        if (body.status === 'Completed') return json(res, 409, { error: 'use_completion_endpoint' });
+        if (body.status === job.status) return json(res, 200, { ...job, duplicate: true });
+        if (!transitions[job.status]?.includes(body.status)) return json(res, 409, { error: 'invalid_job_transition', from: job.status, to: body.status });
+        if (['En route', 'In progress'].includes(body.status) && !job.technician) return json(res, 409, { error: 'technician_required_before_status' });
+        job.status = body.status;
+        if (body.status === 'Canceled') closeOpenVisitsFor(job, claims, body.note || 'Canceled by staff.');
+        syncCurrentVisitStatus(saved, job, body.status, claims);
+        if (body.status === 'En route') job.enRouteAt = new Date().toISOString();
+        automationTemplate = body.status === 'En route' ? 'en_route' : null;
+        eventNote = `${job.service} marked ${job.status}.`;
+      }
+      job.updatedAt = new Date().toISOString();
+      if (idempotencyKey) {
+        if (action === 'assign') { job.assignmentIdempotencyKey = idempotencyKey; job.assignmentIdempotencyFingerprint = fingerprint; }
+        else { job.statusIdempotencyKey = idempotencyKey; job.statusIdempotencyFingerprint = fingerprint; }
+      }
+      recordActivity(saved, job.customer || job.customerId, 'Dispatch', eventNote, job.status);
+      recordAudit(saved, claims, action === 'assign' ? 'job.assigned' : 'job.status.updated', 'job', job.id, eventNote);
+      if (automationTemplate) queueJobNotification(saved, job, automationTemplate);
+      persist(); return json(res, 200, { ...job, duplicate: false });
+    }
     if (pathname === '/api/public/technician-day' && req.method === 'GET') { const claims = readTechnicianToken(requestUrl.searchParams.get('token')); if (!claims) return json(res, 401, { error: 'invalid_technician_token' }); const tenant = tenants[claims.tenantId]; const requestedDate = String(requestUrl.searchParams.get('date') || '').trim(); const date = requestedDate || localDateFor(Date.now(), tenant.timeZone); if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return json(res, 422, { error: 'valid_technician_date_required' }); const saved = state.get(claims.tenantId); const jobs = saved.jobs.filter((job) => jobHasTechnician(job, claims.technician) && jobCoversLocalDate(claims.tenantId, job, date) && !['Canceled', 'No-show'].includes(job.status)).sort((a, b) => (Number.isFinite(a.routeOrder) ? a.routeOrder : Number.MAX_SAFE_INTEGER) - (Number.isFinite(b.routeOrder) ? b.routeOrder : Number.MAX_SAFE_INTEGER) || Date.parse(a.startsAt || '') - Date.parse(b.startsAt || '')); return json(res, 200, { date, timeZone: tenant.timeZone, technician: claims.technician, jobs: jobs.map((job) => ({ id: job.id, service: job.service, customer: job.customer, location: job.location || 'Address pending', time: job.time || null, startsAt: job.startsAt || null, endsAt: job.endsAt || null, status: job.status, priority: job.priority || 'Normal', url: `/technician.html?token=${encodeURIComponent(issueTechnicianToken({ ...job, technician: claims.technician }))}` })) }); }
     if (pathname === '/api/public/customer-portal' && req.method === 'GET') { const claims = readCustomerToken(requestUrl.searchParams.get('token')); if (!claims) return json(res, 401, { error: 'invalid_customer_token' }); const portal = customerPortalResponseFor(claims.tenantId, claims.customerId); if (!portal) return json(res, 404, { error: 'customer_not_found' }); return json(res, 200, portal); }
     if (pathname === '/api/plans/billing-cycle' && req.method === 'POST') { const claims = authenticate(req); if (!claims) return json(res, 401, { error: 'unauthorized' }); if (!['owner', 'accountant'].includes(claims.role)) return json(res, 403, { error: 'forbidden' }); const saved = state.get(claims.tenantId); const body = await readBody(req); const period = String(body.period || '').trim(); const due = String(body.due || 'Due on receipt').trim().slice(0, 80); if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(period)) return json(res, 422, { error: 'billing_period_required' }); const idempotencyKey = String(req.headers['idempotency-key'] || '').trim().slice(0, 100); const fingerprint = payloadFingerprint({ period, due }); const cycle = idempotencyKey ? (saved.planBillingCycles || []).find((item) => item.idempotencyKey === idempotencyKey) : null; if (cycle) { if (cycle.fingerprint !== fingerprint) return json(res, 409, { error: 'idempotency_key_reused' }); return json(res, 200, { period, due, invoices: cycle.invoiceIds.map((id) => saved.invoices.find((item) => item.id === id)).filter(Boolean), duplicate: true }); } const result = billPlansForPeriod(saved, claims.tenantId, period, due, idempotencyKey); saved.planBillingCycles = saved.planBillingCycles || []; saved.planBillingCycles.push({ id: `PBC-${Date.now()}`, tenantId: claims.tenantId, idempotencyKey, fingerprint, period, invoiceIds: result.invoices.map((item) => item.id), createdAt: new Date().toISOString() }); recordAudit(saved, claims, 'plan.billing_cycle.completed', 'plan-billing', period, `${result.created} created · ${result.duplicates} existing`); persist(); return json(res, 200, { ...result, duplicate: false }); }
