@@ -10,5 +10,6 @@ const assert = (condition, message) => { if (!condition) throw new Error(message
 assert(index.includes('/dispatch-priority-dialog.js'), 'dispatch priority dialog is not loaded');
 assert(worker.includes("'/dispatch-priority-dialog.js'"), 'dispatch priority dialog is not cached');
 for (const marker of ['dispatch-priority-dialog', 'name="priority"', 'Emergency', 'stopImmediatePropagation()', 'showModal()', 'updateJobPriority']) assert(dialog.includes(marker), `dispatch priority dialog missing ${marker}`);
-assert(repository.includes('async updateJobPriority(id, priority)'), 'job priority repository method missing');
+assert(repository.includes('async updateJobPriority(id, priority, idempotencyKey = crypto.randomUUID())') && repository.includes("'idempotency-key': idempotencyKey"), 'job priority repository method is not retry-safe');
+assert(dialog.includes('crypto.randomUUID'), 'dispatch priority mutation is not retry-safe');
 console.log('Northstar dispatch priority dialog contract passed.');

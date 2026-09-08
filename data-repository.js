@@ -491,9 +491,9 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
-  async updateJobPriority(id, priority) {
+  async updateJobPriority(id, priority, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for job priority updates');
-    const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/priority`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json' }, body: JSON.stringify({ priority }) });
+    const response = await fetch(`/api/jobs/${encodeURIComponent(id)}/priority`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ priority }) });
     if (!response.ok) throw new Error('job priority update failed');
     return response.json();
   }

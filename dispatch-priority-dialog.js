@@ -22,7 +22,7 @@
       submit.disabled = true;
       message('Saving…');
       try {
-        await repository.updateJobPriority(jobId, form.elements.priority.value);
+        await repository.updateJobPriority(jobId, form.elements.priority.value, crypto.randomUUID());
         message('Priority saved.');
         setTimeout(() => { dialog.close(); document.querySelector('[data-view="dispatch"]')?.click(); }, 450);
       } catch { message('Could not update priority. Completed, canceled, and no-show jobs cannot be changed.'); }
