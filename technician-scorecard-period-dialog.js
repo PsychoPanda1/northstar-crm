@@ -27,10 +27,12 @@
     const submit = form.querySelector('[type="submit"]');
     submit.disabled = true; if (activeButton) activeButton.disabled = true; message.textContent = 'Loading scorecards…';
     try {
-      const report = await repository.getTechnicianScorecards({ startDate, endDate });
+      const [report, config] = await Promise.all([repository.getTechnicianScorecards({ startDate, endDate }), repository.getTechnicianScorecardConfig?.() || Promise.resolve({ weights: { completion: 40, margin: 25, reliability: 20, timeCapture: 15 } })]);
+      const weights = config?.weights || { completion: 40, margin: 25, reliability: 20, timeCapture: 15 };
+      const weightLabel = `completion ${weights.completion}%, margin ${weights.margin}%, reliability ${weights.reliability}%, time capture ${weights.timeCapture}%`;
       const cards = (report.scorecards || []).map((item) => `<article class="report-card"><div><span class="record-id">${escape(item.technician)}</span><h3>${escape(item.grade)} · ${Number(item.score).toFixed(1)} / 100</h3><p>${item.completed} completed of ${item.jobs} jobs · ${Number(item.completionRate).toFixed(1)}% completion · ${Number(item.marginRate).toFixed(1)}% margin · ${item.noShows} no-shows</p></div><span class="record-status">${escape(item.grade)}</span></article>`).join('');
       drawer.dataset.view = 'technician-scorecards'; title.textContent = 'Technician scorecards'; search.value = '';
-      list.innerHTML = `<div class="report-period">${escape(report.period)} · weighted operational score: completion 40%, margin 25%, reliability 20%, time capture 15%</div>${cards || '<div class="empty-state">No technician activity matches this period.</div>'}`;
+      list.innerHTML = `<div class="report-period">${escape(report.period)} · weighted operational score: ${escape(weightLabel)}</div>${cards || '<div class="empty-state">No technician activity matches this period.</div>'}`;
       drawer.classList.add('open'); drawer.setAttribute('aria-hidden', 'false'); close();
     } catch { message.textContent = 'Technician scorecards are unavailable. Check the selected period and try again.'; }
     finally { submit.disabled = false; if (activeButton) activeButton.disabled = false; }
