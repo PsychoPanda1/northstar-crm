@@ -128,6 +128,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Bulk dispatch assignment and status changes use an accessible multi-job workflow with tenant-authorized technician selection and lifecycle validation
 - Manual route sequencing uses a loaded stop manifest with unique-position validation and tenant-authorized route-order updates
 - Bulk invoicing uses a completed-job batch review with per-job amounts, shared line-item validation, payment terms, and idempotent server submission
+- Dispatch map handoff uses a structured date and technician picker while preserving the tenant-authorized ordered route manifest
 - Technician en-route ETA, job completion acknowledgment, and labor capture use accessible validated dialogs while reusing the encrypted offline queue and idempotent field-action boundary
 - Dispatch assignment uses an accessible roster picker for single and bulk jobs, while server-side skill, availability, and schedule-conflict checks remain authoritative
 - Multi-party invoice billing uses an accessible validated bill-to dialog with existing profile prefill, contact details, payment terms, and server-side tenant-scoped validation
