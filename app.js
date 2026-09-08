@@ -539,6 +539,37 @@ new MutationObserver(() => { void decorateAccountingIntegrationHealth(); }).obse
   });
 })();
 
+(() => {
+  const list = document.querySelector('#record-list');
+  const drawerElement = document.querySelector('#record-drawer');
+  const repository = window.northstarRepository;
+  if (!list || !drawerElement || !repository?.scopeCatalogItemServices) return;
+  const decorate = () => {
+    if (drawerElement.dataset.view !== 'catalog' || !['owner', 'dispatcher'].includes(sessionRole)) return;
+    list.querySelectorAll('.record-card').forEach((card) => {
+      const edit = card.querySelector('[data-catalog-action="edit"]');
+      const actions = edit?.closest('.record-actions');
+      if (!edit || !actions || actions.querySelector('[data-catalog-service-scope]')) return;
+      const button = document.createElement('button');
+      button.type = 'button'; button.className = 'ghost-btn'; button.dataset.catalogServiceScope = edit.dataset.catalogId; button.textContent = 'Landing pages';
+      actions.append(button);
+    });
+  };
+  new MutationObserver(decorate).observe(list, { childList: true, subtree: true });
+  new MutationObserver(decorate).observe(drawerElement, { attributes: true, attributeFilter: ['data-view'] });
+  list.addEventListener('click', async (event) => {
+    const button = event.target.closest('[data-catalog-service-scope]');
+    if (!button || drawerElement.dataset.view !== 'catalog') return;
+    const raw = window.prompt('Landing-page service keys, comma-separated. Leave blank to show on every attached page.', '');
+    if (raw === null) return;
+    const serviceKeys = [...new Set(raw.split(',').map((key) => key.trim().toLowerCase()).filter(Boolean))];
+    button.disabled = true;
+    try { await repository.scopeCatalogItemServices(button.dataset.catalogServiceScope, serviceKeys); showToast(serviceKeys.length ? `Service limited to ${serviceKeys.join(', ')}.` : 'Service shown on every attached landing page.'); openRecords('catalog'); }
+    catch { showToast('Could not update landing-page service scope. Use attached lowercase service keys.'); button.disabled = false; }
+  });
+  decorate();
+})();
+
 (() => { const materialsLink = document.querySelector('[data-view="materials"]'); const list = document.querySelector('#record-list'); const repository = window.northstarRepository; if (!materialsLink || !list || !repository?.getInventoryReplenishment || document.querySelector('#inventory-replenishment-view')) return; const button = document.createElement('button'); button.className = 'ghost-btn'; button.id = 'inventory-replenishment-view'; button.textContent = 'Replenishment plan'; materialsLink.after(button); const escape = (value) => escapeHtml(String(value ?? '')); button.addEventListener('click', async () => { button.disabled = true; try { const result = await repository.getInventoryReplenishment(); const items = result.items || []; drawer.dataset.view = 'inventory-replenishment'; drawerTitle.textContent = 'Inventory replenishment'; recordSearch.value = ''; recordList.innerHTML = `<div class="report-period">${result.summary?.materials || 0} material${result.summary?.materials === 1 ? '' : 's'} below threshold · ${result.summary?.recommendedUnits || 0} units recommended · ${result.summary?.openPurchaseUnits || 0} units already on order</div>${items.map((item) => `<article class="record-card"><div><span class="record-id">${escape(item.materialId)}</span><h3>${escape(item.name)} · ${escape(item.priority)}</h3><p>${escape((item.locations || []).map((location) => `${location.name}: ${location.onHand} on hand`).join(' · '))} · Target ${item.targetQuantity} · Order ${item.recommendedPurchaseQuantity} · Open PO ${item.openPurchaseQuantity}</p><div class="record-actions"><button class="ghost-btn" data-material-action="reorder" data-material-id="${escape(item.materialId)}" data-material-name="${escape(item.name)}" data-material-unit-cost="${escape(item.unitCost)}">Create purchase order</button></div></div><span class="record-status">${escape(item.priority)}</span></article>`).join('') || '<div class="empty-state">No materials need replenishment. Set reorder points on inventory items to activate planning.</div>'}`; drawer.classList.add('open'); drawer.setAttribute('aria-hidden', 'false'); } catch { showToast('Replenishment plan unavailable.'); } finally { button.disabled = false; } }); })();
 +(() => {
   const button = document.querySelector('#import-leads');

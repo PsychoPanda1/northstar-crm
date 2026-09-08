@@ -30,7 +30,7 @@
     "test:service-plan-autopay": "node scripts/service-plan-autopay-test.mjs",
     "test:customer-plan-visit": "node scripts/customer-plan-visit-test.mjs",
     "test:review-idempotency": "node scripts/review-idempotency-test.mjs",
-    "test:catalog-idempotency": "node scripts/catalog-idempotency-test.mjs",
+    "test:catalog-idempotency": "node scripts/catalog-idempotency-test.mjs && node scripts/catalog-service-scope-test.mjs",
     "test:catalog-bulk": "node scripts/catalog-bulk-test.mjs",
     "test:lead-assignment": "node scripts/lead-assignment-test.mjs",
     "test:lead-bulk-status": "node scripts/lead-bulk-status-test.mjs",

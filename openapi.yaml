@@ -76,6 +76,35 @@ paths:
                       $ref: '#/components/schemas/CatalogItem'
         '404':
           $ref: '#/components/responses/UnknownService'
+  /api/catalog/{catalogId}/services:
+    patch:
+      summary: Scope a pricebook item to attached landing-page services
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: catalogId
+          in: path
+          required: true
+          schema: { type: string }
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [serviceKeys]
+              properties:
+                serviceKeys:
+                  type: array
+                  maxItems: 20
+                  items: { type: string, pattern: '^[a-z0-9-]{2,80}$' }
+      responses:
+        '200': { description: Pricebook service scope updated }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/IdempotencyConflict' }
+        '422': { $ref: '#/components/responses/ValidationError' }
   /api/settings/workspace:
     get:
       summary: Read the authenticated tenant service profile
@@ -2028,6 +2057,10 @@ components:
         priceFrom: { type: string }
         durationMinutes: { type: integer, minimum: 15 }
         category: { type: string }
+        serviceKeys:
+          type: array
+          maxItems: 20
+          items: { type: string, pattern: '^[a-z0-9-]{2,80}$' }
         formNames:
           type: array
           maxItems: 12

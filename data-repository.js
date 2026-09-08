@@ -1088,6 +1088,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async scopeCatalogItemServices(id, serviceKeys, idempotencyKey = crypto.randomUUID()) {
+    if (!this.remote) throw new Error('API required for catalog editing');
+    const response = await fetch(`/api/catalog/${encodeURIComponent(id)}/services`, { method: 'PATCH', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ serviceKeys }) });
+    if (!response.ok) throw new Error((await response.json().catch(() => ({}))).error || 'catalog service scope update failed');
+    return response.json();
+  }
+
   async assignLead(id, assignedTo, idempotencyKey = crypto.randomUUID()) {
     if (!this.remote) throw new Error('API required for lead assignment');
     const response = await fetch(`/api/leads/${encodeURIComponent(id)}/assign`, { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ assignedTo }) });
