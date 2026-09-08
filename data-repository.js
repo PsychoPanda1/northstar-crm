@@ -1017,6 +1017,13 @@ class NorthstarDemoRepository {
     return response.json();
   }
 
+  async importJobs(jobs, { dryRun = false, idempotencyKey = crypto.randomUUID() } = {}) {
+    if (!this.remote) throw new Error('API required for job import');
+    const response = await fetch('/api/jobs/import', { method: 'POST', headers: { authorization: `Bearer ${this.token}`, 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify({ jobs, dryRun }) });
+    if (!response.ok) throw new Error('job import failed');
+    return response.json();
+  }
+
   async getAssetHistory(id) {
     if (!this.remote) throw new Error('API required for asset history');
     const response = await fetch(`/api/assets/${encodeURIComponent(id)}/history`, { headers: { authorization: `Bearer ${this.token}` } });
