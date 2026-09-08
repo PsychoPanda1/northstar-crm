@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const bookingSource = readFileSync(join(root, 'booking.html'), 'utf8');
-if (!bookingSource.includes('select.required') || !bookingSource.includes('Choose a service before selecting an appointment time.')) throw new Error('booking page must require an explicit service when a catalog is populated');
+if (!bookingSource.includes('select.required') || !bookingSource.includes('Choose a service before selecting an appointment time.') || !bookingSource.includes("form.setAttribute('aria-describedby','message')") || !bookingSource.includes('message.tabIndex=-1')) throw new Error('booking page must require an explicit service and expose focusable validation feedback');
 const publicFetchSource = readFileSync(join(root, 'northstar-public-fetch.js'), 'utf8');
 if (!publicFetchSource.includes('northstarPublicFetch') || !publicFetchSource.includes('AbortController') || !publicFetchSource.includes('timeoutMs ?? 20000') || !publicFetchSource.includes('controller.abort()')) throw new Error('public page fetch guard is incomplete');
 for (const page of ['accept-invite.html', 'change-order.html', 'estimate.html', 'invoice.html', 'review.html']) if (!readFileSync(join(root, page), 'utf8').includes('northstar-public-fetch.js')) throw new Error(`${page} does not load the public fetch guard`);
