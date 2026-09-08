@@ -64,6 +64,11 @@ for (const [service, tenantId] of Object.entries(serviceTenants || {})) {
 for (const item of Array.isArray(catalog) ? catalog : []) {
   if (!tenantIds.has(String(item?.tenantId || ''))) errors.push(`catalog item ${item?.id || '(unnamed)'} maps to an unknown tenant`);
   if (String(item?.name || '').trim().length < 2 || String(item?.description || '').trim().length < 3 || !String(item?.priceFrom || '').trim() || !Number.isInteger(Number(item?.durationMinutes ?? 60)) || Number(item?.durationMinutes ?? 60) < 15 || Number(item?.durationMinutes ?? 60) > 1440) errors.push(`catalog item ${item?.id || '(unnamed)'} has invalid service details`);
+  if (item?.serviceKeys !== undefined) {
+    if (!Array.isArray(item.serviceKeys) || item.serviceKeys.length > 20) errors.push(`catalog item ${item?.id || '(unnamed)'} has invalid landing-page service scope`);
+    const keys = Array.isArray(item.serviceKeys) ? item.serviceKeys.map((key) => String(key || '').trim().toLowerCase()) : [];
+    if (new Set(keys).size !== keys.length || keys.some((key) => !/^[a-z0-9-]{2,80}$/.test(key) || serviceTenants[key] !== String(item?.tenantId || ''))) errors.push(`catalog item ${item?.id || '(unnamed)'} has a cross-tenant or invalid landing-page service scope`);
+  }
 }
 for (const tenantId of tenantIds) {
   if (!mappedTenantIds.has(tenantId)) errors.push(`tenant ${tenantId} has no service mapping`);
