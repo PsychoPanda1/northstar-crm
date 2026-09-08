@@ -16,5 +16,5 @@ for (const snippet of ["id = 'customer-estimate-dialog'", '/api/public/estimate/
 for (const snippet of ['Estimate change requested', 'data-estimate-line-items', 'Review and update scope']) {
   if (!app.includes(snippet)) throw new Error(`estimate change notification action missing: ${snippet}`);
 }
-if (!server.includes('N-estimate-change-${estimate.id}')) throw new Error('estimate change notification contract missing');
+if (!server.includes('N-estimate-change-${estimate.id}') || !server.includes("estimateId: item.id.slice('N-estimate-change-'.length)")) throw new Error('estimate change notification contract missing');
 console.log('Northstar customer estimate dialog checks passed');

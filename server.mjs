@@ -1404,7 +1404,7 @@ const server = createServer(async (req, res) => {
       if (!['owner', 'dispatcher', 'accountant'].includes(claims.role)) return json(res, 403, { error: 'forbidden' });
       const fleetNotifications = [...fleetTelemetryNotificationsFor(claims.tenantId), ...fleetMaintenanceNotificationsFor(claims.tenantId)];
       const query = String(requestUrl.searchParams.get('search') || '').trim().toLowerCase();
-      const allItems = [...actionableNotificationsFor(claims.tenantId), ...fleetNotifications];
+      const allItems = [...actionableNotificationsFor(claims.tenantId), ...fleetNotifications].map((item) => item.id?.startsWith('N-estimate-change-') && !item.estimateId ? { ...item, estimateId: item.id.slice('N-estimate-change-'.length) } : item);
       const items = query ? allItems.filter((item) => Object.values(item).some((value) => String(value || '').toLowerCase().includes(query))) : allItems;
       const page = Number(requestUrl.searchParams.get('page') || 1);
       const pageSize = Number(requestUrl.searchParams.get('pageSize') || 200);
