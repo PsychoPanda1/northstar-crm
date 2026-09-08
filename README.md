@@ -107,6 +107,7 @@ Northstar is a polished, responsive CRM dashboard concept for field-service busi
 - Privacy-safe technician tracking heartbeat with customer-safe live-status metadata and owner audit evidence
 - Technician tracking keeps a bounded 24-ping history per job for dispatch review, while the history endpoint returns coordinates only to authorized staff or the assigned technician
 - Dispatch-triggered confirmation, en-route, and completion message templates linked to jobs
+- Owner-configurable, tenant-scoped confirmation, reschedule, en-route, and completion message templates with bounded `{service}`, `{time}`, `{technician}`, and `{arrival}` placeholders; safe defaults remain active when a template is omitted
 - Owner/dispatcher no-show recording with reason, timeline, and audit evidence
 - No-show recovery from the dispatch board and owner action queue with available-slot and technician-conflict checks
 - Rescheduling an appointment queues a customer-facing reschedule notification and timeline event

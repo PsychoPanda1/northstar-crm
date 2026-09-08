@@ -2237,6 +2237,15 @@ components:
         defaultTaxRate: { type: number, minimum: 0, maximum: 30 }
         autoAssignOnlineBookings: { type: boolean }
         intakeFields: { type: array, maxItems: 8, uniqueItems: true, items: { $ref: '#/components/schemas/IntakeField' } }
+        messageTemplates:
+          type: object
+          description: Owner-controlled customer notification copy. Supported placeholders are {service}, {time}, {technician}, and {arrival}.
+          additionalProperties: false
+          properties:
+            confirmation: { type: string, minLength: 1, maxLength: 500 }
+            rescheduled: { type: string, minLength: 1, maxLength: 500 }
+            en_route: { type: string, minLength: 1, maxLength: 500 }
+            completed: { type: string, minLength: 1, maxLength: 500 }
     WorkspaceSettingsUpdate:
       allOf:
         - $ref: '#/components/schemas/WorkspaceSettings'

@@ -19,6 +19,7 @@ assert(settings.includes('data-settings-launch-checklist'), 'owner launch checkl
 assert(settings.includes('At least one active service in the pricebook'), 'launch checklist omits pricebook readiness');
 assert(settings.includes('Deployment readiness gate passing'), 'launch checklist omits deployment readiness');
 assert(settings.includes('repository.getLandingPageKeys()'), 'launch checklist does not inspect connected landing pages');
+assert(settings.includes('data-settings-message-templates') && settings.includes('messageTemplates'), 'workspace settings UI omits customer notification templates');
 const userAccess = readFileSync(`${root}/user-access-owner.js`, 'utf8');
 assert(userAccess.includes('createUserInvite') && userAccess.includes('resetUserPassword') && userAccess.includes('revokeUserInvite') && userAccess.includes('updateUserStatus'), 'owner user access dialog is incomplete');
 console.log('Northstar workspace settings UI contract passed');
