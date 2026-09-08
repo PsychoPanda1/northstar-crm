@@ -12,5 +12,5 @@ for (const snippet of ['integration-recovery-owner.js', 'data-integration-recove
 for (const role of ["lead: ['owner', 'dispatcher']", "message: ['owner', 'dispatcher']", "payment: ['owner', 'accountant']", "inventory: ['owner', 'dispatcher', 'accountant']", "accounting: ['owner', 'accountant']", "document: ['owner', 'dispatcher', 'accountant']", "payroll: ['owner', 'accountant']"]) {
   if (!script.includes(role)) throw new Error(`integration recovery role boundary missing: ${role}`);
 }
-if (!serviceWorker.includes("'/integration-recovery-owner.js'") || !serviceWorker.includes('northstar-shell-v19')) throw new Error('integration recovery asset must remain installable offline');
+if (!serviceWorker.includes("'/integration-recovery-owner.js'") || !serviceWorker.includes('northstar-shell-v20')) throw new Error('integration recovery asset must remain installable offline');
 console.log('Northstar integration recovery UI checks passed');
